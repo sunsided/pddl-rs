@@ -23,6 +23,15 @@ pub enum Type<'a> {
     EitherOf(Vec<PrimitiveType<'a>>),
 }
 
+impl<'a> Type<'a> {
+    pub fn len(&self) -> usize {
+        match self {
+            Type::Exactly(_) => 1,
+            Type::EitherOf(v) => v.len(),
+        }
+    }
+}
+
 impl<'a> Default for Type<'a> {
     fn default() -> Self {
         Self::Exactly(TYPE_OBJECT)
