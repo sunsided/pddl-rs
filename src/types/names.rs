@@ -7,18 +7,21 @@ use std::ops::Deref;
 pub struct Name<'a>(&'a str);
 
 impl<'a> Name<'a> {
+    #[inline(always)]
     pub const fn from_str(name: &'a str) -> Self {
         Self(name)
     }
 }
 
 impl<'a> From<&'a str> for Name<'a> {
+    #[inline(always)]
     fn from(value: &'a str) -> Self {
         Self::from_str(value)
     }
 }
 
 impl<'a> AsRef<str> for Name<'a> {
+    #[inline(always)]
     fn as_ref(&self) -> &str {
         &self.0
     }
@@ -27,6 +30,7 @@ impl<'a> AsRef<str> for Name<'a> {
 impl<'a> Deref for Name<'a> {
     type Target = str;
 
+    #[inline(always)]
     fn deref(&self) -> &Self::Target {
         &self.0
     }
