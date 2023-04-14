@@ -1,8 +1,7 @@
 //! Provides parsers for types.
 
 use crate::parsers::{definition_section, parse_primitive_type, space_separated_list1};
-use crate::types::PrimitiveType;
-use crate::Type;
+use crate::types::{PrimitiveType, Type};
 use nom::error::ErrorKind;
 use nom::{error_position, IResult};
 
@@ -11,7 +10,7 @@ use nom::{error_position, IResult};
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_type;
-/// # use pddl::Type;
+/// # use pddl::types::Type;
 /// assert_eq!(parse_type("object"), Ok(("", Type::Exactly("object".into()))));
 /// assert_eq!(parse_type("(either object number)"), Ok(("", Type::from_iter(["object", "number"]))));
 ///```

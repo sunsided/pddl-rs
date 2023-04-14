@@ -1,7 +1,7 @@
 //! Provides parsers for requirements.
 
 use crate::parsers::{definition_section, space_separated_list1};
-use crate::requirement::{names, Requirement};
+use crate::types::requirement::{names, Requirement};
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::error::ErrorKind;
@@ -12,7 +12,7 @@ use nom::{error_position, IResult};
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_require_def;
-/// # use pddl::Requirement;
+/// # use pddl::types::Requirement;
 /// assert_eq!(parse_require_def("(:requirements :adl)"), Ok(("", vec![Requirement::Adl])));
 /// assert_eq!(parse_require_def("(:requirements :strips :typing)"), Ok(("", vec![Requirement::Strips, Requirement::Typing])));
 /// assert_eq!(parse_require_def("(:requirements\n:strips   :typing  )"), Ok(("", vec![Requirement::Strips, Requirement::Typing])));

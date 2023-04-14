@@ -1,6 +1,7 @@
 //! Provides parsers for names.
 
 use crate::parsers::number::parse_digit;
+use crate::types::Name;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::character::is_alphabetic;
@@ -15,10 +16,10 @@ use nom::{error_position, IResult};
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_name;
-/// assert_eq!(parse_name("abcde"), Ok(("", "abcde")));
-/// assert_eq!(parse_name("a-1_2"), Ok(("", "a-1_2")));
-/// assert_eq!(parse_name("Z01"), Ok(("", "Z01")));
-/// assert_eq!(parse_name("x-_-_"), Ok(("", "x-_-_")));
+/// assert_eq!(parse_name("abcde"), Ok(("", "abcde".into())));
+/// assert_eq!(parse_name("a-1_2"), Ok(("", "a-1_2".into())));
+/// assert_eq!(parse_name("Z01"), Ok(("", "Z01".into())));
+/// assert_eq!(parse_name("x-_-_"), Ok(("", "x-_-_".into())));
 ///
 /// assert!(parse_name("").is_err());
 /// assert!(parse_name(".").is_err());
@@ -26,8 +27,9 @@ use nom::{error_position, IResult};
 /// assert!(parse_name("0124").is_err());
 /// assert!(parse_name("-1").is_err());
 ///```
-pub fn parse_name(input: &str) -> IResult<&str, &str> {
-    recognize(tuple((parse_alpha, many0(parse_any_char))))(input)
+pub fn parse_name(input: &str) -> IResult<&str, Name> {
+    let (remaining, name) = recognize(tuple((parse_alpha, many0(parse_any_char))))(input)?;
+    Ok((remaining, Name::from(name)))
 }
 
 /// Parses a decimal, i.e. `.<digit>⁺`.
@@ -54,7 +56,7 @@ mod test {
 
     #[test]
     fn parse_name_works() {
-        assert_eq!(parse_name("abcde"), Ok(("", "abcde")));
+        assert_eq!(parse_name("abcde"), Ok(("", "abcde".into())));
     }
 
     #[test]

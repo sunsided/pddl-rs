@@ -1,17 +1,18 @@
 //! Contains types.
 
+use crate::types::Name;
 use std::ops::Deref;
 
 /// The `object` type.
-const TYPE_OBJECT: PrimitiveType<'static> = PrimitiveType("object");
+const TYPE_OBJECT: PrimitiveType<'static> = PrimitiveType(Name::from_str("object"));
 
 /// The `number` type.
 #[allow(dead_code)]
-const TYPE_NUMBER: PrimitiveType<'static> = PrimitiveType("number");
+const TYPE_NUMBER: PrimitiveType<'static> = PrimitiveType(Name::from_str("number"));
 
 /// A primitive type.
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
-pub struct PrimitiveType<'a>(&'a str);
+pub struct PrimitiveType<'a>(Name<'a>);
 
 /// A type selection from `<primitive-type> | (either <primitive-type>)`.
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -66,6 +67,12 @@ impl<'a> FromIterator<&'a str> for Type<'a> {
 
 impl<'a> From<&'a str> for PrimitiveType<'a> {
     fn from(value: &'a str) -> Self {
+        Self(Name::from_str(value))
+    }
+}
+
+impl<'a> From<Name<'a>> for PrimitiveType<'a> {
+    fn from(value: Name<'a>) -> Self {
         Self(value)
     }
 }
