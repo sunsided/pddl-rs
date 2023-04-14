@@ -1,11 +1,10 @@
 //! Provides parsers for types.
 
-use crate::parsers::{definition_section, parse_primitive_type, space_separated_list1, ws};
+use crate::parsers::{definition_section, parse_primitive_type, space_separated_list1};
 use crate::types::PrimitiveType;
 use crate::Type;
-use nom::branch::alt;
-use nom::combinator::map_parser;
-use nom::IResult;
+use nom::error::ErrorKind;
+use nom::{error_position, IResult};
 
 /// Parses a primitive type, i.e. `object | <name>`.
 ///
@@ -17,25 +16,15 @@ use nom::IResult;
 /// assert_eq!(parse_type("(either object number)"), Ok(("", Type::from_iter(["object", "number"]))));
 ///```
 pub fn parse_type(input: &str) -> IResult<&str, Type> {
-    let single = ws(map_parser(parse_primitive_type, multiply));
-
-    let (remaining, types) = alt((single, parse_either_type))(input)?;
-
-    if types.len() == 1 {
-        Ok((remaining, Type::Exactly(types.into_iter().next().unwrap())))
-    } else {
-        Ok((
-            remaining,
-            Type::EitherOf(types.into_iter().map(PrimitiveType::from).collect()),
-        ))
+    if let Ok((remaining, r#type)) = parse_primitive_type(input) {
+        return Ok((remaining, Type::Exactly(r#type)));
     }
-}
 
-/// Helper parser that maps a single [`PrimitiveType`] into a vector.
-fn multiply<'a>(
-    input: PrimitiveType<'a>,
-) -> Result<(PrimitiveType<'a>, Vec<PrimitiveType<'a>>), nom::Err<nom::error::Error<&str>>> {
-    Ok((PrimitiveType::default(), vec![input]))
+    if let Ok((remaining, types)) = parse_either_type(input) {
+        return Ok((remaining, Type::EitherOf(types)));
+    }
+
+    Err(nom::Err::Failure(error_position!(input, ErrorKind::Alt)))
 }
 
 /// Parses a either type, i.e. `(either a b c)`.
