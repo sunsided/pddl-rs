@@ -5,7 +5,6 @@ use crate::types::PrimitiveType;
 use crate::Type;
 use nom::branch::alt;
 use nom::combinator::map_parser;
-use nom::multi::many_m_n;
 use nom::IResult;
 
 /// Parses a primitive type, i.e. `object | <name>`.
@@ -18,15 +17,12 @@ use nom::IResult;
 /// assert_eq!(parse_type("(either object number)"), Ok(("", Type::from_iter(["object", "number"]))));
 ///```
 pub fn parse_type(input: &str) -> IResult<&str, Type> {
-    let single = ws(map_parser(
-        parse_primitive_type,
-        many_m_n(1, 1, parse_primitive_type),
-    ));
+    let single = ws(map_parser(parse_primitive_type, multiply));
 
     let (remaining, types) = alt((single, parse_either_type))(input)?;
 
     if types.len() == 1 {
-        Ok((remaining, Type::Exactly(types[0].into())))
+        Ok((remaining, Type::Exactly(types.into_iter().next().unwrap())))
     } else {
         Ok((
             remaining,
@@ -35,8 +31,15 @@ pub fn parse_type(input: &str) -> IResult<&str, Type> {
     }
 }
 
+/// Helper parser that maps a single [`PrimitiveType`] into a vector.
+fn multiply<'a>(
+    input: PrimitiveType<'a>,
+) -> Result<(PrimitiveType<'a>, Vec<PrimitiveType<'a>>), nom::Err<nom::error::Error<&str>>> {
+    Ok((PrimitiveType::default(), vec![input]))
+}
+
 /// Parses a either type, i.e. `(either a b c)`.
-fn parse_either_type(input: &str) -> IResult<&str, Vec<&str>> {
+fn parse_either_type(input: &str) -> IResult<&str, Vec<PrimitiveType>> {
     definition_section("either", space_separated_list1(parse_primitive_type))(input)
 }
 
@@ -61,7 +64,10 @@ mod tests {
     fn either_specific_works() {
         assert_eq!(
             parse_either_type("(either object number)"),
-            Ok(("", vec!["object", "number"]))
+            Ok((
+                "",
+                vec![PrimitiveType::from("object"), PrimitiveType::from("number")]
+            ))
         );
     }
 }
