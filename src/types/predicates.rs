@@ -48,7 +48,7 @@ impl<'a> AsRef<str> for Predicate<'a> {
 }
 
 impl<'a> Deref for Predicate<'a> {
-    type Target = str;
+    type Target = Name<'a>;
 
     #[inline(always)]
     fn deref(&self) -> &Self::Target {

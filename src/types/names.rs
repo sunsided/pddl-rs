@@ -11,6 +11,14 @@ impl<'a> Name<'a> {
     pub const fn from_str(name: &'a str) -> Self {
         Self(name)
     }
+
+    pub const fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub const fn len(&self) -> usize {
+        self.0.len()
+    }
 }
 
 impl<'a> From<&'a str> for Name<'a> {
