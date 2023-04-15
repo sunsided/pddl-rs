@@ -6,6 +6,8 @@ mod primitive_type;
 mod requirements;
 mod r#type;
 mod variable;
+mod term;
+mod function_term;
 
 pub use function_symbol::parse_function_symbol;
 pub use name::parse_name;
@@ -21,6 +23,8 @@ pub use primitive_type::parse_primitive_type;
 pub use r#type::parse_type;
 pub use requirements::{parse_require_def, parse_require_key};
 pub use variable::parse_variable;
+pub use term::parse_term;
+pub use function_term::parse_function_term;
 
 /// A combinator that takes a parser `inner` and produces a parser that also consumes both leading and
 /// trailing whitespace, returning the output of `inner`.
