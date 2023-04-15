@@ -29,8 +29,3 @@ pub fn parse_term(input: &str) -> IResult<&str, Term> {
 
     return Err(nom::Err::Error(error_position!(input, ErrorKind::Alt)));
 }
-
-#[cfg(test)]
-mod test {
-    use super::*;
-}

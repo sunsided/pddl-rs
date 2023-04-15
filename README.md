@@ -31,7 +31,7 @@ listed in the paper:
 - [ ] `<typed list (x)>`
 - [x] `<primitive-type>`
 - [x] `<type>`
-- [ ] `<emptyOr (x)>`
+- [x] `<emptyOr (x)>`
 - [ ] `<action-def>`
 - [ ] `<action-symbol>`
 - [ ] `<action-def body>`
