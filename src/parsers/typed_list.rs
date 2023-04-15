@@ -13,34 +13,33 @@ use crate::types::Typed;
 /// # use nom::character::complete::alpha1;
 /// # use pddl::parsers::{parse_name, typed_list};
 /// # use pddl::types::{Name, PrimitiveType, Type, Typed};
-/// let object = Type::from(PrimitiveType::from(Name::from_str("object")));
 ///
 /// // Single implicitly typed element.
-/// assert_eq!(typed_list(parse_name)("abc"), Ok(("", vec![Typed::new(Name::from_str("abc"), object.clone())])));
+/// assert_eq!(typed_list(parse_name)("abc"), Ok(("", vec![
+///     Typed::new(Name::from_str("abc"), Type::OBJECT)
+/// ])));
 ///
 /// // Multiple implicitly typed elements.
 /// assert_eq!(typed_list(parse_name)("abc def\nghi"), Ok(("", vec![
-///     Typed::new(Name::from_str("abc"), object.clone()),
-///     Typed::new(Name::from_str("def"), object.clone()),
-///     Typed::new(Name::from_str("ghi"), object.clone()),
+///     Typed::new(Name::from_str("abc"), Type::OBJECT),
+///     Typed::new(Name::from_str("def"), Type::OBJECT),
+///     Typed::new(Name::from_str("ghi"), Type::OBJECT),
 /// ])));
 ///
 /// // Multiple explicitly typed elements.
-/// let word = Type::from(PrimitiveType::from(Name::from_str("word")));
-/// let room = Type::from(PrimitiveType::from(Name::from_str("room")));
 /// assert_eq!(typed_list(parse_name)("abc def - word kitchen - room"), Ok(("", vec![
-///     Typed::new(Name::from_str("abc"), word.clone()),
-///     Typed::new(Name::from_str("def"), word.clone()),
-///     Typed::new(Name::from_str("kitchen"), room.clone()),
+///     Typed::new(Name::from_str("abc"), Type::from("word")),
+///     Typed::new(Name::from_str("def"), Type::from("word")),
+///     Typed::new(Name::from_str("kitchen"), Type::from("room")),
 /// ])));
 ///
 /// // Mixed
 /// assert_eq!(typed_list(parse_name)("abc def - word\nkitchen - room\nuvw xyz"), Ok(("", vec![
-///     Typed::new(Name::from_str("abc"), word.clone()),
-///     Typed::new(Name::from_str("def"), word),
-///     Typed::new(Name::from_str("kitchen"), room),
-///     Typed::new(Name::from_str("uvw"), object.clone()),
-///     Typed::new(Name::from_str("xyz"), object),
+///     Typed::new(Name::from_str("abc"), Type::from("word")),
+///     Typed::new(Name::from_str("def"), Type::from("word")),
+///     Typed::new(Name::from_str("kitchen"), Type::from("room")),
+///     Typed::new(Name::from_str("uvw"), Type::OBJECT),
+///     Typed::new(Name::from_str("xyz"), Type::OBJECT),
 /// ])));
 /// ```
 pub fn typed_list<'a, F, O>(

@@ -24,6 +24,12 @@ pub enum Type<'a> {
 }
 
 impl<'a> Type<'a> {
+    /// The predefined type `object`.
+    pub const OBJECT: Type<'a> = Type::Exactly(TYPE_OBJECT);
+
+    /// The predefined type `number`.
+    pub const NUMBER: Type<'a> = Type::Exactly(TYPE_NUMBER);
+
     pub fn len(&self) -> usize {
         match self {
             Type::Exactly(_) => 1,
