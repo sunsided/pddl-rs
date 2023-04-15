@@ -4,11 +4,11 @@ use crate::types::Name;
 use std::ops::Deref;
 
 /// The `object` type.
-const TYPE_OBJECT: PrimitiveType<'static> = PrimitiveType(Name::from_str("object"));
+pub const TYPE_OBJECT: PrimitiveType<'static> = PrimitiveType(Name::from_str("object"));
 
 /// The `number` type.
 #[allow(dead_code)]
-const TYPE_NUMBER: PrimitiveType<'static> = PrimitiveType(Name::from_str("number"));
+pub const TYPE_NUMBER: PrimitiveType<'static> = PrimitiveType(Name::from_str("number"));
 
 /// A primitive type.
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]

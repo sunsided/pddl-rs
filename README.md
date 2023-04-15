@@ -28,7 +28,7 @@ listed in the paper:
 - [ ] `<function type>`
 - [ ] `<constraints>`
 - [ ] `<structure-def>`
-- [ ] `<typed list (x)>`
+- [x] `<typed list (x)>`
 - [x] `<primitive-type>`
 - [x] `<type>`
 - [x] `<emptyOr (x)>`

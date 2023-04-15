@@ -7,6 +7,7 @@ mod variables;
 mod term;
 mod function_term;
 mod action_symbols;
+mod typed;
 
 pub use function_symbols::FunctionSymbol;
 pub use action_symbols::ActionSymbol;
@@ -17,3 +18,8 @@ pub use requirement::Requirement;
 pub use variables::Variable;
 pub use term::Term;
 pub use function_term::FunctionTerm;
+pub use typed::Typed;
+
+// Internal re-exports.
+#[allow(unused_imports)]
+pub(crate) use r#type::{TYPE_OBJECT, TYPE_NUMBER};

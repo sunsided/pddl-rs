@@ -11,8 +11,9 @@ mod function_term;
 mod action_symbol;
 mod empty_or;
 mod utilities;
+mod typed_list;
 
-pub use empty_or::empty_or;
+// Parsers.
 pub use action_symbol::parse_action_symbol;
 pub use function_symbol::parse_function_symbol;
 pub use name::parse_name;
@@ -25,5 +26,10 @@ pub use variable::parse_variable;
 pub use term::parse_term;
 pub use function_term::parse_function_term;
 
+// Parser combinators.
+pub use empty_or::empty_or;
+pub use typed_list::typed_list;
+
+// Utility parser combinators.
 #[allow(unused_imports)]
 pub(crate) use utilities::{definition_section, ws, space_separated_list0, space_separated_list1};
