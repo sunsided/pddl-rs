@@ -33,7 +33,7 @@ listed in the paper:
 - [x] `<type>`
 - [x] `<emptyOr (x)>`
 - [ ] `<action-def>`
-- [ ] `<action-symbol>`
+- [x] `<action-symbol>`
 - [ ] `<action-def body>`
 - [ ] `<pre-GD>`
 - [ ] `<pref-GD>`

@@ -8,7 +8,9 @@ mod r#type;
 mod variable;
 mod term;
 mod function_term;
+mod action_symbol;
 
+pub use action_symbol::parse_action_symbol;
 use std::convert::Infallible;
 use nom::branch::alt;
 pub use function_symbol::parse_function_symbol;
