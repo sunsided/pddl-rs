@@ -21,7 +21,7 @@ listed in the paper:
 - [x] `<atomic formula skeleton>`
 - [x] `<predicate>`
 - [x] `<variable>`
-- [ ] `<atomic function skeleton>`
+- [x] `<atomic function skeleton>`
 - [x] `<function-symbol>`
 - [x] `<functions-def>`
 - [ ] `<function typed list (x)>`
