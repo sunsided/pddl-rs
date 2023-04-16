@@ -1,4 +1,5 @@
 mod action_symbols;
+pub(crate) mod assign_op;
 mod atomic_formula;
 mod atomic_formula_skeleton;
 mod atomic_function_skeleton;
@@ -18,6 +19,7 @@ mod types;
 mod variables;
 
 pub use action_symbols::ActionSymbol;
+pub use assign_op::AssignOp;
 pub use atomic_formula::{AtomicFormula, EqualityAtomicFormula, PredicateAtomicFormula};
 pub use atomic_formula_skeleton::AtomicFormulaSkeleton;
 pub use atomic_function_skeleton::AtomicFunctionSkeleton;

@@ -58,7 +58,7 @@ listed in the paper:
 - [ ] `<effect>`
 - [ ] `<c-effect>`
 - [ ] `<cond-effect>`
-- [ ] `<assign-op>`
+- [x] `<assign-op>`
 - [ ] `<durative-action-def>`
 - [ ] `<da-symbol>`
 - [ ] `<da-def body>`

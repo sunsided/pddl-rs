@@ -1,4 +1,5 @@
 mod action_symbol;
+mod assign_op;
 mod atomic_formula;
 mod atomic_formula_skeleton;
 mod atomic_function_skeleton;
@@ -22,6 +23,7 @@ mod variable;
 
 // Parsers.
 pub use action_symbol::parse_action_symbol;
+pub use assign_op::parse_assign_op;
 pub use atomic_formula::atomic_formula;
 pub use atomic_formula_skeleton::parse_atomic_formula_skeleton;
 pub use atomic_function_skeleton::parse_atomic_function_skeleton;
