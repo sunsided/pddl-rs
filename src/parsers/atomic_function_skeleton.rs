@@ -12,14 +12,14 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_atomic_function_skeleton;
-/// # use pddl::types::{Variable, AtomicFunctionSkeleton, Predicate, Typed, Type, FunctionSymbol};
+/// # use pddl::types::{Variable, AtomicFunctionSkeleton, Predicate, Typed, Type, FunctionSymbol, TypedList};
 ///
 /// assert_eq!(parse_atomic_function_skeleton("(battery-amount ?r - rover)"), Ok(("",
 ///     AtomicFunctionSkeleton::new(
 ///         FunctionSymbol::from("battery-amount"),
-///         vec![
+///         TypedList::from_iter([
 ///             Typed::new(Variable::from("r"), Type::Exactly("rover".into()))
-///         ])
+///         ]))
 /// )));
 /// ```
 pub fn parse_atomic_function_skeleton(input: &str) -> IResult<&str, AtomicFunctionSkeleton> {

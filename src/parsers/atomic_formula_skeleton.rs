@@ -12,15 +12,15 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_atomic_formula_skeleton;
-/// # use pddl::types::{Variable, AtomicFormulaSkeleton, Predicate, Typed, Type};
+/// # use pddl::types::{Variable, AtomicFormulaSkeleton, Predicate, Typed, Type, TypedList};
 ///
 /// assert_eq!(parse_atomic_formula_skeleton("(at ?x - physob ?y - location)"), Ok(("",
 ///     AtomicFormulaSkeleton::new(
 ///         Predicate::from("at"),
-///         vec![
+///         TypedList::from_iter([
 ///             Typed::new(Variable::from("x"), Type::Exactly("physob".into())),
 ///             Typed::new(Variable::from("y"), Type::Exactly("location".into()))
-///         ])
+///         ]))
 /// )));
 /// ```
 pub fn parse_atomic_formula_skeleton(input: &str) -> IResult<&str, AtomicFormulaSkeleton> {

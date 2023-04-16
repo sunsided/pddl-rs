@@ -10,15 +10,15 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_constants_def;
-/// # use pddl::types::{Variable, AtomicFormulaSkeleton, Predicate, Typed, Type, PredicateDefinitions, Constants, Name};
+/// # use pddl::types::{Variable, AtomicFormulaSkeleton, Predicate, Typed, Type, PredicateDefinitions, Constants, Name, TypedList};
 ///
 /// let input = "(:constants B P D - physob)";
 /// assert_eq!(parse_constants_def(input), Ok(("",
-///     Constants::new(vec![
+///     Constants::new(TypedList::from_iter([
 ///         Typed::new(Name::from("B"), Type::Exactly("physob".into())),
 ///         Typed::new(Name::from("P"), Type::Exactly("physob".into())),
 ///         Typed::new(Name::from("D"), Type::Exactly("physob".into())),
-///     ])
+///     ]))
 /// )));
 /// ```
 pub fn parse_constants_def(input: &str) -> IResult<&str, Constants> {
