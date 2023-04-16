@@ -4,6 +4,7 @@ mod atomic_formula;
 mod atomic_formula_skeleton;
 mod atomic_function_skeleton;
 mod c_effect;
+mod conditional_effect;
 mod constants;
 mod effect;
 mod function_symbols;
@@ -27,6 +28,7 @@ pub use atomic_formula::{AtomicFormula, EqualityAtomicFormula, PredicateAtomicFo
 pub use atomic_formula_skeleton::AtomicFormulaSkeleton;
 pub use atomic_function_skeleton::AtomicFunctionSkeleton;
 pub use c_effect::CEffect;
+pub use conditional_effect::ConditionalEffect;
 pub use constants::Constants;
 pub use effect::Effect;
 pub use function_symbols::FunctionSymbol;
