@@ -57,6 +57,7 @@ listed in the paper:
 - [x] `<decimal>`
 - [ ] `<effect>`
 - [ ] `<c-effect>`
+- [ ] `<p-effect>` (partially implemented)
 - [ ] `<cond-effect>`
 - [x] `<assign-op>`
 - [ ] `<durative-action-def>`
