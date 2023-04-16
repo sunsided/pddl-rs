@@ -1,7 +1,7 @@
 //! Contains typed elements.
 
-use std::ops::Deref;
 use crate::types::{Type, TYPE_OBJECT};
+use std::ops::Deref;
 
 /// A typed element.
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -16,11 +16,11 @@ impl<'a, O> Typed<'a, O> {
         Self::new(value, Type::Exactly(TYPE_OBJECT))
     }
 
-    pub const fn as_value(&self) -> &O {
+    pub const fn value_ref(&self) -> &O {
         &self.0
     }
 
-    pub const fn as_type(&self) -> &Type<'a> {
+    pub const fn type_ref(&self) -> &Type<'a> {
         &self.1
     }
 }
@@ -35,6 +35,6 @@ impl<'a, O> Deref for Typed<'a, O> {
     type Target = O;
 
     fn deref(&self) -> &Self::Target {
-        self.as_value()
+        self.value_ref()
     }
 }
