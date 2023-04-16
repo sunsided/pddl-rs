@@ -41,8 +41,8 @@ listed in the paper:
 - [ ] `<GD>`
 - [ ] `<f-comp>`
 - [ ] `<literal(t)>`
-- [ ] `<atomic formula(t)>`
-- [ ] `<term>`
+- [x] `<atomic formula(t)>`
+- [x] `<term>`
 - [x] `<function-term>`
 - [ ] `<f-exp>`
 - [ ] `<f-head>`
