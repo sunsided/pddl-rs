@@ -34,10 +34,10 @@ use crate::types::Typed;
 /// ])));
 ///
 /// // Mixed
-/// assert_eq!(typed_list(parse_name)("abc def - word\nkitchen - room\nuvw xyz"), Ok(("", vec![
+/// assert_eq!(typed_list(parse_name)("abc def - word\ngeorgia - (either state country)\nuvw xyz"), Ok(("", vec![
 ///     Typed::new(Name::from_str("abc"), Type::from("word")),
 ///     Typed::new(Name::from_str("def"), Type::from("word")),
-///     Typed::new(Name::from_str("kitchen"), Type::from("room")),
+///     Typed::new(Name::from_str("georgia"), Type::from_iter(["state", "country"])),
 ///     Typed::new(Name::from_str("uvw"), Type::OBJECT),
 ///     Typed::new(Name::from_str("xyz"), Type::OBJECT),
 /// ])));
