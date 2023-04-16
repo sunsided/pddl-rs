@@ -1,6 +1,7 @@
 mod action_symbol;
 mod atomic_formula;
 mod atomic_formula_skeleton;
+mod constants_def;
 mod empty_or;
 mod function_symbol;
 mod function_term;
@@ -21,6 +22,7 @@ mod variable;
 pub use action_symbol::parse_action_symbol;
 pub use atomic_formula::atomic_formula;
 pub use atomic_formula_skeleton::parse_atomic_formula_skeleton;
+pub use constants_def::parse_constants_def;
 pub use function_symbol::parse_function_symbol;
 pub use function_term::parse_function_term;
 pub use literal::literal;

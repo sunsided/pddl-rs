@@ -1,6 +1,7 @@
 mod action_symbols;
 mod atomic_formula;
 mod atomic_formula_skeleton;
+mod constants;
 mod function_symbols;
 mod function_term;
 mod literal;
@@ -16,6 +17,7 @@ mod variables;
 pub use action_symbols::ActionSymbol;
 pub use atomic_formula::{AtomicFormula, EqualityAtomicFormula, PredicateAtomicFormula};
 pub use atomic_formula_skeleton::AtomicFormulaSkeleton;
+pub use constants::Constants;
 pub use function_symbols::FunctionSymbol;
 pub use function_term::FunctionTerm;
 pub use literal::Literal;

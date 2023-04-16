@@ -5,7 +5,7 @@ use crate::types::PredicateDefinitions;
 use nom::combinator::map;
 use nom::IResult;
 
-/// Parser that parses an atomic formula skeleton, i.e. `(<predicate> <typed list (variable)>)`.
+/// Parser that parses predicate definitions, i.e. `(:predicates <atomic formula skeleton>⁺)`.
 ///
 /// ## Example
 /// ```
