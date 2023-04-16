@@ -40,7 +40,7 @@ listed in the paper:
 - [ ] `<pref-name>`
 - [ ] `<GD>`
 - [ ] `<f-comp>`
-- [ ] `<literal(t)>`
+- [x] `<literal(t)>`
 - [x] `<atomic formula(t)>`
 - [x] `<term>`
 - [x] `<function-term>`

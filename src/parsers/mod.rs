@@ -3,6 +3,7 @@ mod atomic_formula;
 mod empty_or;
 mod function_symbol;
 mod function_term;
+mod literal;
 mod name;
 mod number;
 mod predicate;
@@ -19,6 +20,7 @@ pub use action_symbol::parse_action_symbol;
 pub use atomic_formula::atomic_formula;
 pub use function_symbol::parse_function_symbol;
 pub use function_term::parse_function_term;
+pub use literal::literal;
 pub use name::parse_name;
 pub use number::parse_number;
 pub use predicate::parse_predicate;
@@ -34,4 +36,4 @@ pub use typed_list::typed_list;
 
 // Utility parser combinators.
 #[allow(unused_imports)]
-pub(crate) use utilities::{definition_section, space_separated_list0, space_separated_list1, ws};
+pub(crate) use utilities::{prefix_expr, space_separated_list0, space_separated_list1, ws};

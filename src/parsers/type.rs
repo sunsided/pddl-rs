@@ -1,6 +1,6 @@
 //! Provides parsers for types.
 
-use crate::parsers::{definition_section, parse_primitive_type, space_separated_list1};
+use crate::parsers::{parse_primitive_type, prefix_expr, space_separated_list1};
 use crate::types::{PrimitiveType, Type};
 use nom::error::ErrorKind;
 use nom::{error_position, IResult};
@@ -28,7 +28,7 @@ pub fn parse_type(input: &str) -> IResult<&str, Type> {
 
 /// Parses a either type, i.e. `(either a b c)`.
 fn parse_either_type(input: &str) -> IResult<&str, Vec<PrimitiveType>> {
-    definition_section("either", space_separated_list1(parse_primitive_type))(input)
+    prefix_expr("either", space_separated_list1(parse_primitive_type))(input)
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 //! Provides parsers for requirements.
 
-use crate::parsers::{definition_section, space_separated_list1};
+use crate::parsers::{prefix_expr, space_separated_list1};
 use crate::types::requirement::{names, Requirement};
 use nom::branch::alt;
 use nom::bytes::complete::tag;
@@ -19,7 +19,7 @@ use nom::{error_position, IResult};
 ///```
 pub fn parse_require_def(input: &str) -> IResult<&str, Vec<Requirement>> {
     let (remaining, req_keys) =
-        definition_section(":requirements", space_separated_list1(parse_require_key))(input)?;
+        prefix_expr(":requirements", space_separated_list1(parse_require_key))(input)?;
 
     let mut reqs = Vec::with_capacity(req_keys.len());
     for key in req_keys {

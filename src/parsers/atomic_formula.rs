@@ -1,3 +1,5 @@
+//! Provides parsers for atomic formulae.
+
 use crate::parsers::{parse_predicate, space_separated_list0, ws};
 use crate::types::AtomicFormula;
 use nom::branch::alt;
