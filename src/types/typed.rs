@@ -1,5 +1,6 @@
 //! Contains typed elements.
 
+use std::ops::Deref;
 use crate::types::{Type, TYPE_OBJECT};
 
 /// A typed element.
@@ -21,5 +22,19 @@ impl<'a, O> Typed<'a, O> {
 
     pub const fn as_type(&self) -> &Type<'a> {
         &self.1
+    }
+}
+
+impl<'a, O> From<O> for Typed<'a, O> {
+    fn from(value: O) -> Self {
+        Typed::new_object(value)
+    }
+}
+
+impl<'a, O> Deref for Typed<'a, O> {
+    type Target = O;
+
+    fn deref(&self) -> &Self::Target {
+        self.as_value()
     }
 }
