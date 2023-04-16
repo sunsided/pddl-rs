@@ -43,3 +43,21 @@ impl<'a, T> Deref for TypedList<'a, T> {
         self.0.as_slice()
     }
 }
+
+impl<'a, T> PartialEq<Vec<Typed<'_, T>>> for TypedList<'a, T>
+where
+    T: PartialEq,
+{
+    fn eq(&self, other: &Vec<Typed<'_, T>>) -> bool {
+        self.0.eq(other)
+    }
+}
+
+impl<'a, T> PartialEq<[Typed<'_, T>]> for TypedList<'a, T>
+where
+    T: PartialEq,
+{
+    fn eq(&self, other: &[Typed<'_, T>]) -> bool {
+        self.0.eq(other)
+    }
+}
