@@ -17,7 +17,7 @@ listed in the paper:
 - [x] `<require-key>`
 - [ ] `<types-def>`
 - [ ] `<constants-def>`
-- [ ] `<predicates-def>`
+- [x] `<predicates-def>`
 - [x] `<atomic formula skeleton>`
 - [x] `<predicate>`
 - [x] `<variable>`
