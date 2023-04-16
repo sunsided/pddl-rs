@@ -1,6 +1,6 @@
-# PDDL parser
+# PDDL parser (work in progress)
 
-A PDDL parser implementation in Rust.
+A PDDL 3.1 parser implementation in Rust.
 
 ## Implemented BNF Elements
 
