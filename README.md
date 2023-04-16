@@ -18,7 +18,7 @@ listed in the paper:
 - [ ] `<types-def>`
 - [ ] `<constants-def>`
 - [ ] `<predicates-def>`
-- [ ] `<atomic formula skeleton>`
+- [x] `<atomic formula skeleton>`
 - [x] `<predicate>`
 - [x] `<variable>`
 - [ ] `<atomic function skeleton>`
