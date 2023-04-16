@@ -56,8 +56,8 @@ listed in the paper:
 - [x] `<digit>`
 - [x] `<decimal>`
 - [ ] `<effect>`
-- [ ] `<c-effect>`
-- [ ] `<p-effect>` (partially implemented)
+- [ ] `<c-effect>` (partially implemented; missing `:conditional-effects` variant)
+- [ ] `<p-effect>` (partially implemented; missing `:numeric-fluents` and `:object-fluents` variants)
 - [ ] `<cond-effect>`
 - [x] `<assign-op>`
 - [ ] `<durative-action-def>`

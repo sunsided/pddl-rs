@@ -6,7 +6,7 @@ use nom::branch::alt;
 use nom::combinator::map;
 use nom::IResult;
 
-/// Parser combinator that parses a literal, i.e. `<atomic formula(t)> | (not <atomic formula(t)>)`.
+/// Parser combinator that parses p-effects.
 ///
 /// ## Example
 /// ```
