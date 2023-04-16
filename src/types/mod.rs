@@ -12,6 +12,7 @@ pub(crate) mod requirement;
 mod term;
 mod r#type;
 mod typed;
+mod types;
 mod variables;
 
 pub use action_symbols::ActionSymbol;
@@ -28,6 +29,7 @@ pub use r#type::{PrimitiveType, Type};
 pub use requirement::Requirement;
 pub use term::Term;
 pub use typed::Typed;
+pub use types::Types;
 pub use variables::Variable;
 
 // Internal re-exports.

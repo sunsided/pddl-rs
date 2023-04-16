@@ -15,6 +15,7 @@ mod requirements;
 mod term;
 mod r#type;
 mod typed_list;
+mod types_def;
 mod utilities;
 mod variable;
 
@@ -34,6 +35,7 @@ pub use primitive_type::parse_primitive_type;
 pub use r#type::parse_type;
 pub use requirements::{parse_require_def, parse_require_key};
 pub use term::parse_term;
+pub use types_def::parse_types_def;
 pub use variable::parse_variable;
 
 // Parser combinators.
