@@ -10,7 +10,7 @@ pub enum PrefGD<'a> {
 }
 
 impl<'a> PrefGD<'a> {
-    pub fn from_gd(gd: GD<'a>) -> Self {
+    pub const fn from_gd(gd: GD<'a>) -> Self {
         Self::GoalDefinition(gd)
     }
 
