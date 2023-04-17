@@ -25,7 +25,7 @@ listed in the paper:
 - [x] `<function-symbol>`
 - [x] `<functions-def>`
 - [ ] `<function typed list (x)>`
-- [ ] `<function type>`
+- [x] `<function type>`
 - [ ] `<constraints>`
 - [ ] `<structure-def>`
 - [x] `<typed list (x)>`

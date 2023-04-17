@@ -1,7 +1,7 @@
 //! Provides parsers for conditional effects.
 
-use crate::parsers::{parse_c_effect, parse_p_effect, prefix_expr, space_separated_list0};
-use crate::types::{ConditionalEffect, Effect};
+use crate::parsers::{parse_p_effect, prefix_expr, space_separated_list0};
+use crate::types::ConditionalEffect;
 use nom::branch::alt;
 use nom::combinator::map;
 use nom::IResult;
