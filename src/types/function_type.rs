@@ -8,6 +8,8 @@ use std::ops::Deref;
 pub struct FunctionType<'a>(Type<'a>);
 
 impl<'a> FunctionType<'a> {
+    pub const NUMBER: FunctionType<'static> = FunctionType::new(Type::NUMBER);
+
     pub const fn new(r#type: Type<'a>) -> Self {
         Self(r#type)
     }

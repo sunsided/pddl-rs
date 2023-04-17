@@ -1,6 +1,6 @@
 //! Contains typed elements.
 
-use crate::types::{Type, TYPE_OBJECT};
+use crate::types::Type;
 use std::ops::Deref;
 
 /// A typed element.
@@ -13,7 +13,7 @@ impl<'a, O> Typed<'a, O> {
     }
 
     pub const fn new_object(value: O) -> Self {
-        Self::new(value, Type::Exactly(TYPE_OBJECT))
+        Self::new(value, Type::OBJECT)
     }
 
     pub const fn value_ref(&self) -> &O {
