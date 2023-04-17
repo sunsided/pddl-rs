@@ -11,14 +11,15 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use nom::character::complete::alpha1;
-/// # use pddl::parsers::{parse_name, function_typed_list, parse_atomic_formula_skeleton};
-/// # use pddl::types::{Name, PrimitiveType, Type, Typed, FunctionTypedList, FunctionType, FunctionTyped, AtomicFormulaSkeleton, Predicate, TypedList, Variable};
+/// # use pddl::parsers::{function_typed_list, parse_atomic_function_skeleton};
+/// # use pddl::types::{AtomicFunctionSkeleton, FunctionSymbol, FunctionTyped, FunctionTypedList, Type, Typed, TypedList, Variable};
 ///
 /// // Single implicitly typed element.
-/// assert_eq!(function_typed_list(parse_atomic_formula_skeleton)("(battery-amount ?r - rover)"), Ok(("",
+/// assert_eq!(function_typed_list(parse_atomic_function_skeleton)("(battery-amount ?r - rover)"), Ok(("",
 ///     FunctionTypedList::from_iter([
-///         FunctionTyped::new_number(AtomicFormulaSkeleton::new(
-///                 Predicate::from_str("battery-amount"),
+///         FunctionTyped::new_number(
+///             AtomicFunctionSkeleton::new(
+///                 FunctionSymbol::from_str("battery-amount"),
 ///                 TypedList::from_iter([
 ///                     Typed::new(Variable::from("r"), Type::Exactly("rover".into()))
 ///                 ])

@@ -23,7 +23,7 @@ listed in the paper:
 - [x] `<variable>`
 - [x] `<atomic function skeleton>`
 - [x] `<function-symbol>`
-- [ ] `<functions-def>`
+- [x] `<functions-def>`
 - [x] `<function typed list (x)>`
 - [x] `<function type>`
 - [ ] `<constraints>`
