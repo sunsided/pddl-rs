@@ -36,7 +36,7 @@ listed in the paper:
 - [x] `<action-symbol>`
 - [ ] `<action-def body>`
 - [ ] `<pre-GD>`
-- [ ] `<pref-GD>`
+- [x] `<pref-GD>`
 - [x] `<pref-name>`
 - [x] `<GD>`
 - [ ] `<f-comp>`
