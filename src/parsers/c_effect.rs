@@ -1,8 +1,14 @@
 //! Provides parsers for c-effects.
 
-use crate::parsers::parse_p_effect;
+use crate::parsers::{
+    parse_cond_effect, parse_effect, parse_gd, parse_p_effect, parse_variable, prefix_expr,
+    typed_list,
+};
 use crate::types::CEffect;
+use nom::branch::alt;
+use nom::character::complete::{char, multispace1};
 use nom::combinator::map;
+use nom::sequence::{delimited, preceded, tuple};
 use nom::IResult;
 
 /// Parser combinator that parses c-effects.
@@ -10,7 +16,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// use pddl::parsers::parse_c_effect;
-/// use pddl::types::{AtomicFormula, CEffect, EqualityAtomicFormula, PEffect, Term};
+/// use pddl::types::{AtomicFormula, CEffect, Effect, EqualityAtomicFormula, PEffect, Term, Type, Typed, TypedList, Variable};
 /// assert_eq!(parse_c_effect("(= x y)"), Ok(("",
 ///     CEffect::PEffect(
 ///         PEffect::AtomicFormula(AtomicFormula::Equality(
@@ -31,9 +37,43 @@ use nom::IResult;
 ///         )
 ///     )
 /// )));
+///
+/// assert_eq!(parse_c_effect("(forall (?a ?b) (= ?a ?b))"), Ok(("",
+///     CEffect::new_forall(
+///         TypedList::from_iter([
+///             Typed::new_object(Variable::from_str("a")),
+///             Typed::new_object(Variable::from_str("b")),
+///         ]),
+///         Effect::new(CEffect::PEffect(
+///             PEffect::AtomicFormula(AtomicFormula::Equality(
+///                 EqualityAtomicFormula::new(
+///                     Term::Variable("a".into()),
+///                     Term::Variable("b".into()))
+///                 )
+///             )
+///         ))
+///     )
+/// )));
 /// ```
 pub fn parse_c_effect(input: &str) -> IResult<&str, CEffect> {
-    map(parse_p_effect, CEffect::from)(input)
+    let p_effect = map(parse_p_effect, CEffect::from);
+    let forall = map(
+        prefix_expr(
+            "forall",
+            tuple((
+                delimited(char('('), typed_list(parse_variable), char(')')),
+                preceded(multispace1, parse_effect),
+            )),
+        ),
+        CEffect::from,
+    );
+    let when = map(
+        prefix_expr(
+            "when",
+            tuple((parse_gd, preceded(multispace1, parse_cond_effect))),
+        ),
+        CEffect::from,
+    );
 
-    // TODO: Add :conditional-effects variants
+    alt((forall, when, p_effect))(input)
 }
