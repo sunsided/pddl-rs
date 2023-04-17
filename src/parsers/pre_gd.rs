@@ -74,6 +74,8 @@ pub fn parse_pre_gd(input: &str) -> IResult<&str, PreGD> {
         prefix_expr("and", space_separated_list0(parse_pre_gd)),
         PreGD::new_and,
     );
+
+    // :universal-preconditions
     let forall = map(
         prefix_expr(
             "forall",
