@@ -58,6 +58,7 @@ use nom::IResult;
 /// )));
 /// ```
 pub fn parse_pref_gd(input: &str) -> IResult<&str, PrefGD> {
+    // :preferences
     let pref_named = map(
         prefix_expr(
             "preference",
