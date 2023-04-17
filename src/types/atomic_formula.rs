@@ -10,6 +10,16 @@ pub enum AtomicFormula<'a, T> {
     Predicate(PredicateAtomicFormula<'a, T>),
 }
 
+impl<'a, T> AtomicFormula<'a, T> {
+    pub const fn new_equality(first: T, second: T) -> Self {
+        Self::Equality(EqualityAtomicFormula::new(first, second))
+    }
+
+    pub const fn new_predicate(predicate: Predicate<'a>, values: Vec<T>) -> Self {
+        Self::Predicate(PredicateAtomicFormula::new(predicate, values))
+    }
+}
+
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
 pub struct EqualityAtomicFormula<T> {
     first: T,

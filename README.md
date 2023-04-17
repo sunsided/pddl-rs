@@ -38,7 +38,7 @@ listed in the paper:
 - [ ] `<pre-GD>`
 - [ ] `<pref-GD>`
 - [ ] `<pref-name>`
-- [ ] `<GD>`
+- [x] `<GD>`
 - [ ] `<f-comp>`
 - [x] `<literal(t)>`
 - [x] `<atomic formula(t)>`
