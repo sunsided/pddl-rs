@@ -1,3 +1,4 @@
+mod action_definition;
 mod action_symbols;
 pub(crate) mod assign_op;
 mod atomic_formula;
@@ -31,6 +32,7 @@ mod typed_list;
 mod types;
 mod variables;
 
+pub use action_definition::ActionDefinition;
 pub use action_symbols::ActionSymbol;
 pub use assign_op::AssignOp;
 pub use atomic_formula::{AtomicFormula, EqualityAtomicFormula, PredicateAtomicFormula};
