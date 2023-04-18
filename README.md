@@ -27,7 +27,7 @@ listed in the paper:
 - [x] [`<function typed list (x)>`](src/parsers/function_typed_list.rs)
 - [x] [`<function type>`](src/parsers/function_type.rs)
 - [ ] `<constraints>`
-- [ ] `<structure-def>`
+- [ ] [`<structure-def>`](src/parsers/structure_def.rs) — partial implementation missing `:durative-actions` and `:derived-actions` variants.
 - [x] [`<typed list (x)>`](src/parsers/typed_list.rs)
 - [x] [`<primitive-type>`](src/parsers/primitive_type.rs)
 - [x] [`<type>`](src/parsers/type.rs)
