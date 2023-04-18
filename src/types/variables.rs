@@ -10,7 +10,7 @@ pub struct Variable<'a>(Name<'a>);
 impl<'a> Variable<'a> {
     #[inline(always)]
     pub const fn from_str(name: &'a str) -> Self {
-        Self(Name::from_str(name))
+        Self(Name::new(name))
     }
 
     #[inline(always)]
@@ -29,7 +29,7 @@ impl<'a> From<Name<'a>> for Variable<'a> {
 impl<'a> From<&'a str> for Variable<'a> {
     #[inline(always)]
     fn from(value: &'a str) -> Self {
-        Self(Name::from_str(value))
+        Self(Name::new(value))
     }
 }
 

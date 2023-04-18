@@ -8,7 +8,7 @@ pub struct Name<'a>(&'a str);
 
 impl<'a> Name<'a> {
     #[inline(always)]
-    pub const fn from_str(name: &'a str) -> Self {
+    pub const fn new(name: &'a str) -> Self {
         Self(name)
     }
 
@@ -24,7 +24,7 @@ impl<'a> Name<'a> {
 impl<'a> From<&'a str> for Name<'a> {
     #[inline(always)]
     fn from(value: &'a str) -> Self {
-        Self::from_str(value)
+        Self::new(value)
     }
 }
 

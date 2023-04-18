@@ -4,7 +4,7 @@ use crate::types::Requirement;
 use std::ops::Deref;
 
 /// A set of requirements.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Default, Clone, Eq, PartialEq)]
 pub struct Requirements(Vec<Requirement>);
 
 impl Requirements {

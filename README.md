@@ -12,7 +12,7 @@ listed in the paper:
 
 ### Domain Description
 
-- [ ] `<domain>`
+- [ ] [`<domain>`](src/parsers/domain.rs) — partial implementation missing `<constraints>`.
 - [x] [`<require-def>`](src/parsers/predicates_def.rs)
 - [x] [`<require-key>`](src/parsers/requirements.rs)
 - [x] [`<types-def>`](src/parsers/types_def.rs)

@@ -4,7 +4,7 @@ use crate::types::{Name, TypedList};
 use std::ops::Deref;
 
 /// A set of constants.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Default, Clone, Eq, PartialEq)]
 pub struct Constants<'a>(TypedList<'a, Name<'a>>);
 
 impl<'a> Constants<'a> {

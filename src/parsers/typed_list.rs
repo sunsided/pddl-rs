@@ -16,30 +16,30 @@ use nom::IResult;
 ///
 /// // Single implicitly typed element.
 /// assert_eq!(typed_list(parse_name)("abc"), Ok(("", TypedList::from_iter([
-///     Typed::new(Name::from_str("abc"), Type::OBJECT)
+///     Typed::new(Name::new("abc"), Type::OBJECT)
 /// ]))));
 ///
 /// // Multiple implicitly typed elements.
 /// assert_eq!(typed_list(parse_name)("abc def\nghi"), Ok(("", TypedList::from_iter([
-///     Typed::new(Name::from_str("abc"), Type::OBJECT),
-///     Typed::new(Name::from_str("def"), Type::OBJECT),
-///     Typed::new(Name::from_str("ghi"), Type::OBJECT),
+///     Typed::new(Name::new("abc"), Type::OBJECT),
+///     Typed::new(Name::new("def"), Type::OBJECT),
+///     Typed::new(Name::new("ghi"), Type::OBJECT),
 /// ]))));
 ///
 /// // Multiple explicitly typed elements.
 /// assert_eq!(typed_list(parse_name)("abc def - word kitchen - room"), Ok(("", TypedList::from_iter([
-///     Typed::new(Name::from_str("abc"), Type::from("word")),
-///     Typed::new(Name::from_str("def"), Type::from("word")),
-///     Typed::new(Name::from_str("kitchen"), Type::from("room")),
+///     Typed::new(Name::new("abc"), Type::from("word")),
+///     Typed::new(Name::new("def"), Type::from("word")),
+///     Typed::new(Name::new("kitchen"), Type::from("room")),
 /// ]))));
 ///
 /// // Mixed
 /// assert_eq!(typed_list(parse_name)("abc def - word\ngeorgia - (either state country)\nuvw xyz"), Ok(("", TypedList::from_iter([
-///     Typed::new(Name::from_str("abc"), Type::from("word")),
-///     Typed::new(Name::from_str("def"), Type::from("word")),
-///     Typed::new(Name::from_str("georgia"), Type::from_iter(["state", "country"])),
-///     Typed::new(Name::from_str("uvw"), Type::OBJECT),
-///     Typed::new(Name::from_str("xyz"), Type::OBJECT),
+///     Typed::new(Name::new("abc"), Type::from("word")),
+///     Typed::new(Name::new("def"), Type::from("word")),
+///     Typed::new(Name::new("georgia"), Type::from_iter(["state", "country"])),
+///     Typed::new(Name::new("uvw"), Type::OBJECT),
+///     Typed::new(Name::new("xyz"), Type::OBJECT),
 /// ]))));
 /// ```
 pub fn typed_list<'a, F, O>(inner: F) -> impl FnMut(&'a str) -> IResult<&'a str, TypedList<O>>

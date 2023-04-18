@@ -4,11 +4,11 @@ use crate::types::Name;
 use std::ops::Deref;
 
 /// The `object` type.
-pub const TYPE_OBJECT: PrimitiveType<'static> = PrimitiveType(Name::from_str("object"));
+pub const TYPE_OBJECT: PrimitiveType<'static> = PrimitiveType(Name::new("object"));
 
 /// The `number` type.
 #[allow(dead_code)]
-pub const TYPE_NUMBER: PrimitiveType<'static> = PrimitiveType(Name::from_str("number"));
+pub const TYPE_NUMBER: PrimitiveType<'static> = PrimitiveType(Name::new("number"));
 
 /// A primitive type.
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
@@ -82,7 +82,7 @@ impl<'a> FromIterator<&'a str> for Type<'a> {
 
 impl<'a> From<&'a str> for PrimitiveType<'a> {
     fn from(value: &'a str) -> Self {
-        Self(Name::from_str(value))
+        Self(Name::new(value))
     }
 }
 
