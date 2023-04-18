@@ -10,7 +10,7 @@ use std::fmt::{Display, Formatter};
 ///
 /// ## References
 /// - "Complete BNF description of PDDL 3.1 (completely corrected)", Daniel L. Kovacs (`dkovacs@mit.bme.hu`).
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Requirement {
     /// Basic STRIPS-style adds and deletes.
     Strips,
@@ -177,6 +177,29 @@ impl Requirement {
             Requirement::Preferences => names::PREFERENCES,
             Requirement::Constraints => names::CONSTRAINTS,
             Requirement::ActionCosts => names::ACTION_COSTS,
+        }
+    }
+
+    /// Expands a requirement into a list of requirements.
+    /// This can be helpful when dealing with requirements such as `:quantified-preconditions`,
+    /// `:fluents` and `:adl` that are shorthands for a set of other requirements.
+    pub fn expand(&self) -> Vec<Requirement> {
+        match self {
+            Requirement::QuantifiedPreconditions => vec![
+                Requirement::ExistentialPreconditions,
+                Requirement::UniversalPreconditions,
+            ],
+            Requirement::Fluents => vec![Requirement::NumericFluents, Requirement::ObjectFluents],
+            Requirement::Adl => vec![
+                Requirement::Strips,
+                Requirement::Typing,
+                Requirement::NegativePreconditions,
+                Requirement::DisjunctivePreconditions,
+                Requirement::Equality,
+                Requirement::QuantifiedPreconditions,
+                Requirement::ConditionalEffects,
+            ],
+            r => vec![*r],
         }
     }
 }
