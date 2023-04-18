@@ -18,10 +18,10 @@ use std::ops::Deref;
 /// assert_eq!(requirements.len(), 3);
 ///
 /// // The effective set of requirements contains eight values:
-/// //  :adl expands to seven values, including :strips;
+/// //  :adl expands to eight values, including :strips;
 /// //  :constraints is not part of :adl and therefore added.
 /// let effective = requirements.to_effective();
-/// assert_eq!(effective.len(), 8);
+/// assert_eq!(effective.len(), 9);
 ///
 /// // These are the effective values:
 /// assert!(effective.contains(&Requirement::Strips));
@@ -29,7 +29,8 @@ use std::ops::Deref;
 /// assert!(effective.contains(&Requirement::NegativePreconditions));
 /// assert!(effective.contains(&Requirement::DisjunctivePreconditions));
 /// assert!(effective.contains(&Requirement::Equality));
-/// assert!(effective.contains(&Requirement::QuantifiedPreconditions));
+/// assert!(effective.contains(&Requirement::ExistentialPreconditions));
+/// assert!(effective.contains(&Requirement::UniversalPreconditions));
 /// assert!(effective.contains(&Requirement::ConditionalEffects));
 /// assert!(effective.contains(&Requirement::Constraints));
 /// ```
