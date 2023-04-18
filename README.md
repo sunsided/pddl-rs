@@ -48,7 +48,7 @@ listed in the paper:
 - [ ] `<f-head>`
 - [ ] `<binary-op>`
 - [ ] `<multi-op>`
-- [ ] `<binary-comp>`
+- [x] [`<binary-comp>`](src/parsers/binary_comp.rs)
 - [x] [`<name>`](src/parsers/name.rs)
 - [x] [`<letter>`](src/parsers/name.rs)
 - [x] [`<any char>`](src/parsers/name.rs)
