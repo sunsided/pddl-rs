@@ -1,10 +1,9 @@
 //! Provides parsers for atomic formula skeletons.
 
-use crate::parsers::{parse_predicate, parse_variable, typed_list, ws};
+use crate::parsers::{parens, parse_predicate, parse_variable, typed_list, ws};
 use crate::types::AtomicFormulaSkeleton;
-use nom::character::complete::char;
 use nom::combinator::map;
-use nom::sequence::{delimited, tuple};
+use nom::sequence::tuple;
 use nom::IResult;
 
 /// Parser that parses an atomic formula skeleton, i.e. `(<predicate> <typed list (variable)>)`.
@@ -25,11 +24,7 @@ use nom::IResult;
 /// ```
 pub fn parse_atomic_formula_skeleton(input: &str) -> IResult<&str, AtomicFormulaSkeleton> {
     map(
-        delimited(
-            char('('),
-            tuple((parse_predicate, ws(typed_list(parse_variable)))),
-            char(')'),
-        ),
+        parens(tuple((parse_predicate, ws(typed_list(parse_variable))))),
         |tuple| AtomicFormulaSkeleton::from(tuple),
     )(input)
 }

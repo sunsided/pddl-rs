@@ -1,8 +1,8 @@
-//! Contains goal definitions.
+//! Contains precondition goal definitions.
 
 use crate::types::{PrefGD, Preference, TypedList, Variable};
 
-/// A goal definition.
+/// A precondition goal definition.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum PreGD<'a> {
     Preference(PrefGD<'a>),

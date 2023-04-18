@@ -1,6 +1,6 @@
 //! Provides parsers for atomic formulae.
 
-use crate::parsers::{parse_predicate, space_separated_list0, ws};
+use crate::parsers::{parens, parse_predicate, space_separated_list0, ws};
 use crate::types::AtomicFormula;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
@@ -43,11 +43,7 @@ where
     );
 
     let predicate = map(
-        delimited(
-            char('('),
-            tuple((parse_predicate, ws(space_separated_list0(inner)))),
-            char(')'),
-        ),
+        parens(tuple((parse_predicate, ws(space_separated_list0(inner))))),
         |tuple| AtomicFormula::Predicate(tuple.into()),
     );
 

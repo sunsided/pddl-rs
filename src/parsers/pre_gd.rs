@@ -1,13 +1,13 @@
 //! Provides parsers for goal definitions.
 
 use crate::parsers::{
-    parse_pref_gd, parse_variable, prefix_expr, space_separated_list0, typed_list,
+    parens, parse_pref_gd, parse_variable, prefix_expr, space_separated_list0, typed_list,
 };
 use crate::types::PreGD;
 use nom::branch::alt;
-use nom::character::complete::{char, multispace1};
+use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{delimited, preceded, tuple};
+use nom::sequence::{preceded, tuple};
 use nom::IResult;
 
 /// Parser for goal definitions.
@@ -80,7 +80,7 @@ pub fn parse_pre_gd(input: &str) -> IResult<&str, PreGD> {
         prefix_expr(
             "forall",
             tuple((
-                delimited(char('('), typed_list(parse_variable), char(')')),
+                parens(typed_list(parse_variable)),
                 preceded(multispace1, parse_pre_gd),
             )),
         ),

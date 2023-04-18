@@ -1,7 +1,7 @@
 //! Utility parsers.
 
 use nom::bytes::complete::tag;
-use nom::character::complete::{multispace0, multispace1};
+use nom::character::complete::{char, multispace0, multispace1};
 use nom::error::ParseError;
 use nom::multi::{separated_list0, separated_list1};
 use nom::sequence::{delimited, preceded};
@@ -47,11 +47,27 @@ where
     ws(separated_list1(multispace1, inner))
 }
 
+/// A combinator that takes a parser `inner` and produces a parser that consumes
+/// surrounding parentheses, returning the outputs of `inner`.
+pub fn parens<'a, F, O>(inner: F) -> impl FnMut(&'a str) -> IResult<&'a str, O>
+where
+    F: FnMut(&'a str) -> IResult<&'a str, O>,
+{
+    delimited(char('('), ws(inner), char(')'))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use nom::character::complete::alpha1;
     use nom::multi::separated_list1;
+
+    #[test]
+    fn parens_works() {
+        let input = "(content)";
+        let mut parser = parens(alpha1);
+        assert_eq!(parser(input), Ok(("", "content")));
+    }
 
     #[test]
     fn definition_section_works() {

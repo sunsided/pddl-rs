@@ -1,14 +1,14 @@
 //! Provides parsers for c-effects.
 
 use crate::parsers::{
-    parse_cond_effect, parse_effect, parse_gd, parse_p_effect, parse_variable, prefix_expr,
+    parens, parse_cond_effect, parse_effect, parse_gd, parse_p_effect, parse_variable, prefix_expr,
     typed_list,
 };
 use crate::types::CEffect;
 use nom::branch::alt;
-use nom::character::complete::{char, multispace1};
+use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{delimited, preceded, tuple};
+use nom::sequence::{preceded, tuple};
 use nom::IResult;
 
 /// Parser combinator that parses c-effects.
@@ -61,7 +61,7 @@ pub fn parse_c_effect(input: &str) -> IResult<&str, CEffect> {
         prefix_expr(
             "forall",
             tuple((
-                delimited(char('('), typed_list(parse_variable), char(')')),
+                parens(typed_list(parse_variable)),
                 preceded(multispace1, parse_effect),
             )),
         ),

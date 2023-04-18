@@ -32,9 +32,9 @@ listed in the paper:
 - [x] `<primitive-type>`
 - [x] `<type>`
 - [x] `<emptyOr (x)>`
-- [ ] `<action-def>`
+- [x] `<action-def>`
 - [x] `<action-symbol>`
-- [ ] `<action-def body>`
+- [x] `<action-def body>`
 - [x] `<pre-GD>`
 - [x] `<pref-GD>`
 - [x] `<pref-name>`

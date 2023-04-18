@@ -1,14 +1,14 @@
 //! Provides parsers for goal definitions.
 
 use crate::parsers::{
-    atomic_formula, literal, parse_term, parse_variable, prefix_expr, space_separated_list0,
-    typed_list,
+    atomic_formula, literal, parens, parse_term, parse_variable, prefix_expr,
+    space_separated_list0, typed_list,
 };
 use crate::types::GD;
 use nom::branch::alt;
-use nom::character::complete::{char, multispace1};
+use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{delimited, preceded, tuple};
+use nom::sequence::{preceded, tuple};
 use nom::IResult;
 
 /// Parser for goal definitions.
@@ -145,7 +145,7 @@ pub fn parse_gd(input: &str) -> IResult<&str, GD> {
         prefix_expr(
             "exists",
             tuple((
-                delimited(char('('), typed_list(parse_variable), char(')')),
+                parens(typed_list(parse_variable)),
                 preceded(multispace1, parse_gd),
             )),
         ),
@@ -157,7 +157,7 @@ pub fn parse_gd(input: &str) -> IResult<&str, GD> {
         prefix_expr(
             "forall",
             tuple((
-                delimited(char('('), typed_list(parse_variable), char(')')),
+                parens(typed_list(parse_variable)),
                 preceded(multispace1, parse_gd),
             )),
         ),
