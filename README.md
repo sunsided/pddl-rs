@@ -39,7 +39,7 @@ listed in the paper:
 - [x] [`<pref-GD>`](src/parsers/pref_gd.rs)
 - [x] [`<pref-name>`](src/parsers/pref_name.rs)
 - [x] [`<GD>`](src/parsers/gd.rs)
-- [ ] `<f-comp>`
+- [x] [`<f-comp>`](src/parsers/f_comp.rs)
 - [x] [`<literal(t)>`](src/parsers/literal.rs)
 - [x] [`<atomic formula(t)>`](src/parsers/atomic_formula.rs)
 - [x] [`<term>`](src/parsers/term.rs)

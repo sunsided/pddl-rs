@@ -3,7 +3,7 @@
 use crate::types::{Preference, PreferenceGD, TypedList, Variable};
 
 /// A precondition goal definition.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum PreGD<'a> {
     Preference(PreferenceGD<'a>),
     And(Vec<PreGD<'a>>),

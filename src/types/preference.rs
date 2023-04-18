@@ -3,7 +3,7 @@
 use crate::types::{PreferenceName, GD};
 
 /// A preference.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Preference<'a>(Option<PreferenceName<'a>>, GD<'a>);
 
 impl<'a> Preference<'a> {

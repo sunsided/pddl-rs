@@ -3,7 +3,7 @@
 use crate::types::{Preference, GD};
 
 /// A preferred goal definition.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum PreferenceGD<'a> {
     GoalDefinition(GD<'a>),
     Preference(Preference<'a>),
