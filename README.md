@@ -44,8 +44,8 @@ listed in the paper:
 - [x] [`<atomic formula(t)>`](src/parsers/atomic_formula.rs)
 - [x] [`<term>`](src/parsers/term.rs)
 - [x] [`<function-term>`](src/parsers/function_term.rs)
-- [ ] `<f-exp>`
-- [ ] `<f-head>`
+- [x] [`<f-exp>`](src/parsers/f_exp.rs)
+- [x] [`<f-head>`](src/parsers/f_head.rs)
 - [x] [`<binary-op>`](src/parsers/binary_op.rs)
 - [x] [`<multi-op>`](src/parsers/multi_op.rs)
 - [x] [`<binary-comp>`](src/parsers/binary_comp.rs)
