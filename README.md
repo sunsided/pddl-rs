@@ -13,53 +13,53 @@ listed in the paper:
 ### Domain Description
 
 - [ ] `<domain>`
-- [x] `<require-def>`
-- [x] `<require-key>`
-- [x] `<types-def>`
-- [x] `<constants-def>`
-- [x] `<predicates-def>`
-- [x] `<atomic formula skeleton>`
-- [x] `<predicate>`
-- [x] `<variable>`
-- [x] `<atomic function skeleton>`
-- [x] `<function-symbol>`
-- [x] `<functions-def>`
-- [x] `<function typed list (x)>`
-- [x] `<function type>`
+- [x] [`<require-def>`](src/parsers/predicates_def.rs)
+- [x] [`<require-key>`](src/parsers/requirements.rs)
+- [x] [`<types-def>`](src/parsers/types_def.rs)
+- [x] [`<constants-def>`](src/parsers/constants_def.rs)
+- [x] [`<predicates-def>`](src/parsers/predicates_def.rs)
+- [x] [`<atomic formula skeleton>`](src/parsers/atomic_formula_skeleton.rs)
+- [x] [`<predicate>`](src/parsers/predicate.rs)
+- [x] [`<variable>`](src/parsers/variable.rs)
+- [x] [`<atomic function skeleton>`](src/parsers/atomic_formula_skeleton.rs)
+- [x] [`<function-symbol>`](src/parsers/function_symbol.rs)
+- [x] [`<functions-def>`](src/parsers/functions_def.rs)
+- [x] [`<function typed list (x)>`](src/parsers/function_typed_list.rs)
+- [x] [`<function type>`](src/parsers/function_type.rs)
 - [ ] `<constraints>`
 - [ ] `<structure-def>`
-- [x] `<typed list (x)>`
-- [x] `<primitive-type>`
-- [x] `<type>`
-- [x] `<emptyOr (x)>`
-- [x] `<action-def>`
-- [x] `<action-symbol>`
-- [x] `<action-def body>`
-- [x] `<pre-GD>`
-- [x] `<pref-GD>`
-- [x] `<pref-name>`
-- [x] `<GD>`
+- [x] [`<typed list (x)>`](src/parsers/typed_list.rs)
+- [x] [`<primitive-type>`](src/parsers/primitive_type.rs)
+- [x] [`<type>`](src/parsers/type.rs)
+- [x] [`<emptyOr (x)>`](src/parsers/empty_or.rs)
+- [x] [`<action-def>`](src/parsers/action_def.rs)
+- [x] [`<action-symbol>`](src/parsers/action_symbol.rs)
+- [x] [`<action-def body>`](src/parsers/action_def.rs)
+- [x] [`<pre-GD>`](src/parsers/pre_gd.rs)
+- [x] [`<pref-GD>`](src/parsers/pref_gd.rs)
+- [x] [`<pref-name>`](src/parsers/pref_name.rs)
+- [x] [`<GD>`](src/parsers/gd.rs)
 - [ ] `<f-comp>`
-- [x] `<literal(t)>`
-- [x] `<atomic formula(t)>`
-- [x] `<term>`
-- [x] `<function-term>`
+- [x] [`<literal(t)>`](src/parsers/literal.rs)
+- [x] [`<atomic formula(t)>`](src/parsers/atomic_formula.rs)
+- [x] [`<term>`](src/parsers/term.rs)
+- [x] [`<function-term>`](src/parsers/function_term.rs)
 - [ ] `<f-exp>`
 - [ ] `<f-head>`
 - [ ] `<binary-op>`
 - [ ] `<multi-op>`
 - [ ] `<binary-comp>`
-- [x] `<name>`
-- [x] `<letter>`
-- [x] `<any char>`
-- [x] `<number>`
-- [x] `<digit>`
-- [x] `<decimal>`
-- [x] `<effect>`
-- [x] `<c-effect>`
-- [ ] `<p-effect>` (partially implemented; missing `:numeric-fluents` and `:object-fluents` variants)
-- [x] `<cond-effect>`
-- [x] `<assign-op>`
+- [x] [`<name>`](src/parsers/name.rs)
+- [x] [`<letter>`](src/parsers/name.rs)
+- [x] [`<any char>`](src/parsers/name.rs)
+- [x] [`<number>`](src/parsers/number.rs)
+- [x] [`<digit>`](src/parsers/number.rs)
+- [x] [`<decimal>`](src/parsers/number.rs)
+- [x] [`<effect>`](src/parsers/effect.rs)
+- [x] [`<c-effect>`](src/parsers/c_effect.rs)
+- [ ] [`<p-effect>`](src/parsers/p_effect.rs) (partially implemented; missing `:numeric-fluents` and `:object-fluents` variants)
+- [x] [`<cond-effect>`](src/parsers/cond_effect.rs)
+- [x] [`<assign-op>`](src/parsers/assign_op.rs)
 - [ ] `<durative-action-def>`
 - [ ] `<da-symbol>`
 - [ ] `<da-def body>`
@@ -108,24 +108,24 @@ requirement specific features are parsed unconditionally.
 A planner needs to ensure that it accepts or rejects a 
 plan accordingly based on the stated domain requirements.
 
-- [x] `:strips`
-- [x] `:typing`
-- [x] `:negative-preconditions`
-- [x] `:disjunctive-preconditions`
-- [x] `:equality`
-- [x] `:existential-preconditions`
-- [x] `:universal-preconditions`
-- [x] `:quantified-preconditions`
-- [x] `:conditional-effects`
-- [x] `:fluents`
-- [x] `:numeric-fluents`
-- [x] `:adl`
-- [x] `:durative-actions`
-- [x] `:duration-inequalities`
-- [x] `:continuous-effects`
-- [x] `:derived-predicates`
-- [x] `:timed-initial-literals`
-- [x] `:preferences`
-- [x] `:constraints`
-- [x] `:action-costs`
+- [x] [`:strips`](src/parsers/requirements.rs)
+- [x] [`:typing`](src/parsers/requirements.rs)
+- [x] [`:negative-preconditions`](src/parsers/requirements.rs)
+- [x] [`:disjunctive-preconditions`](src/parsers/requirements.rs)
+- [x] [`:equality`](src/parsers/requirements.rs)
+- [x] [`:existential-preconditions`](src/parsers/requirements.rs)
+- [x] [`:universal-preconditions`](src/parsers/requirements.rs)
+- [x] [`:quantified-preconditions`](src/parsers/requirements.rs)
+- [x] [`:conditional-effects`](src/parsers/requirements.rs)
+- [x] [`:fluents`](src/parsers/requirements.rs)
+- [x] [`:numeric-fluents`](src/parsers/requirements.rs)
+- [x] [`:adl`](src/parsers/requirements.rs)
+- [x] [`:durative-actions`](src/parsers/requirements.rs)
+- [x] [`:duration-inequalities`](src/parsers/requirements.rs)
+- [x] [`:continuous-effects`](src/parsers/requirements.rs)
+- [x] [`:derived-predicates`](src/parsers/requirements.rs)
+- [x] [`:timed-initial-literals`](src/parsers/requirements.rs)
+- [x] [`:preferences`](src/parsers/requirements.rs)
+- [x] [`:constraints`](src/parsers/requirements.rs)
+- [x] [`:action-costs`](src/parsers/requirements.rs)
 
