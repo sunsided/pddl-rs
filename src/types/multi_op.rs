@@ -1,5 +1,8 @@
+//! Contains the MultiOp type.
+
 use std::fmt::{Display, Formatter};
 
+/// An operation with multiple operands.
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum MultiOp {
     Multiplication,

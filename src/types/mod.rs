@@ -5,6 +5,7 @@ mod atomic_formula;
 mod atomic_formula_skeleton;
 mod atomic_function_skeleton;
 mod binary_comp;
+mod binary_op;
 mod c_effect;
 mod conditional_effect;
 mod constants;
@@ -41,6 +42,7 @@ pub use atomic_formula::{AtomicFormula, EqualityAtomicFormula, PredicateAtomicFo
 pub use atomic_formula_skeleton::AtomicFormulaSkeleton;
 pub use atomic_function_skeleton::AtomicFunctionSkeleton;
 pub use binary_comp::BinaryComp;
+pub use binary_op::BinaryOp;
 pub use c_effect::CEffect;
 pub use conditional_effect::ConditionalEffect;
 pub use constants::Constants;
