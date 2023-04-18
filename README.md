@@ -46,8 +46,8 @@ listed in the paper:
 - [x] [`<function-term>`](src/parsers/function_term.rs)
 - [ ] `<f-exp>`
 - [ ] `<f-head>`
-- [ ] `<binary-op>`
-- [ ] `<multi-op>`
+- [x] [`<binary-op>`](src/parsers/binary_op.rs)
+- [x] [`<multi-op>`](src/parsers/multi_op.rs)
 - [x] [`<binary-comp>`](src/parsers/binary_comp.rs)
 - [x] [`<name>`](src/parsers/name.rs)
 - [x] [`<letter>`](src/parsers/name.rs)
