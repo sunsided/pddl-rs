@@ -55,7 +55,7 @@ pub use p_effect::PEffect;
 pub use pre_gd::PreGD;
 pub use predicate_definitions::PredicateDefinitions;
 pub use predicates::Predicate;
-pub use pref_gd::PrefGD;
+pub use pref_gd::PreferenceGD;
 pub use pref_name::PreferenceName;
 pub use preference::Preference;
 pub use r#type::{PrimitiveType, Type};

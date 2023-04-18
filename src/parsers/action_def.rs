@@ -16,7 +16,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_action_def;
-/// # use pddl::types::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GD, Literal, Name, PEffect, Predicate, Preference, PrefGD, PreGD, Term, Type, Typed, TypedList, Variable};
+/// # use pddl::types::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GD, Literal, Name, PEffect, Predicate, Preference, PreferenceGD, PreGD, Term, Type, Typed, TypedList, Variable};
 ///
 /// let input = r#"(:action take-out
 ///                     :parameters (?x - physob)
@@ -32,7 +32,7 @@ use nom::IResult;
 ///         TypedList::from_iter([
 ///             Typed::new(Variable::from_str("x"), Type::Exactly("physob".into()))
 ///         ]),
-///         Some(PreGD::Preference(PrefGD::from_gd(
+///         Some(PreGD::Preference(PreferenceGD::from_gd(
 ///             GD::new_literal(
 ///                 Literal::new_not(
 ///                     AtomicFormula::new_equality(

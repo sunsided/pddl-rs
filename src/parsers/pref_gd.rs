@@ -1,7 +1,7 @@
 //! Provides parsers for preference goal definitions.
 
 use crate::parsers::{parse_gd, parse_pref_name, prefix_expr};
-use crate::types::{PrefGD, Preference};
+use crate::types::{Preference, PreferenceGD};
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::{map, opt};
@@ -13,11 +13,11 @@ use nom::IResult;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::parse_pref_gd;
-/// # use pddl::types::{AtomicFormula, EqualityAtomicFormula, GD, Literal, Name, Preference, PreferenceName, PrefGD, Term, TypedList, Variable};
+/// # use pddl::types::{AtomicFormula, EqualityAtomicFormula, GD, Literal, Name, Preference, PreferenceName, PreferenceGD, Term, TypedList, Variable};
 ///
 /// // Simple goal definition.
 /// assert_eq!(parse_pref_gd("(= x y)"), Ok(("",
-///     PrefGD::GoalDefinition(
+///     PreferenceGD::GoalDefinition(
 ///         GD::AtomicFormula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Name("x".into()),
@@ -29,7 +29,7 @@ use nom::IResult;
 ///
 /// // Named preference.
 /// assert_eq!(parse_pref_gd("(preference p (= x y))"), Ok(("",
-///     PrefGD::Preference(
+///     PreferenceGD::Preference(
 ///         Preference::new(
 ///             Some(PreferenceName::from("p")),
 ///             GD::AtomicFormula(
@@ -44,7 +44,7 @@ use nom::IResult;
 ///
 /// // Unnamed preference.
 /// assert_eq!(parse_pref_gd("(preference (= x y))"), Ok(("",
-///     PrefGD::Preference(
+///     PreferenceGD::Preference(
 ///         Preference::new(
 ///             None,
 ///             GD::AtomicFormula(
@@ -57,21 +57,21 @@ use nom::IResult;
 ///     )
 /// )));
 /// ```
-pub fn parse_pref_gd(input: &str) -> IResult<&str, PrefGD> {
+pub fn parse_pref_gd(input: &str) -> IResult<&str, PreferenceGD> {
     // :preferences
     let pref_named = map(
         prefix_expr(
             "preference",
             tuple((opt(parse_pref_name), preceded(multispace1, parse_gd))),
         ),
-        |(pref, gd)| PrefGD::from_preference(Preference::new(pref, gd)),
+        |(pref, gd)| PreferenceGD::from_preference(Preference::new(pref, gd)),
     );
 
     let pref_unnamed = map(prefix_expr("preference", parse_gd), |gd| {
-        PrefGD::from_preference(Preference::new(None, gd))
+        PreferenceGD::from_preference(Preference::new(None, gd))
     });
 
-    let gd = map(parse_gd, PrefGD::from_gd);
+    let gd = map(parse_gd, PreferenceGD::from_gd);
 
     alt((pref_named, pref_unnamed, gd))(input)
 }
