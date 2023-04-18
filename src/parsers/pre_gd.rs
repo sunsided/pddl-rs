@@ -15,11 +15,11 @@ use nom::IResult;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::{parse_pre_gd};
-/// # use pddl::types::{AtomicFormula, EqualityAtomicFormula, GD, Literal, Name, Preference, PreferenceName, PrefGD, PreGD, Term, Type, Typed, TypedList, Variable};
+/// # use pddl::types::{AtomicFormula, EqualityAtomicFormula, GD, Literal, Name, Preference, PreferenceName, PreferenceGD, PreGD, Term, Type, Typed, TypedList, Variable};
 ///
 /// assert_eq!(parse_pre_gd("(= x y)"), Ok(("",
 ///     PreGD::Preference(
-///         PrefGD::GoalDefinition(
+///         PreferenceGD::GoalDefinition(
 ///             GD::AtomicFormula(
 ///                 AtomicFormula::new_equality(
 ///                     Term::Name("x".into()),
@@ -32,7 +32,7 @@ use nom::IResult;
 ///
 /// assert_eq!(parse_pre_gd("(and (= x y) (= a b))"), Ok(("",
 ///     PreGD::new_and([
-///         PreGD::Preference(PrefGD::GoalDefinition(
+///         PreGD::Preference(PreferenceGD::GoalDefinition(
 ///             GD::AtomicFormula(
 ///                 AtomicFormula::new_equality(
 ///                     Term::Name("x".into()),
@@ -40,7 +40,7 @@ use nom::IResult;
 ///                 )
 ///             )
 ///         )),
-///         PreGD::Preference(PrefGD::GoalDefinition(
+///         PreGD::Preference(PreferenceGD::GoalDefinition(
 ///             GD::AtomicFormula(
 ///                 AtomicFormula::new_equality(
 ///                     Term::Name("a".into()),
@@ -57,7 +57,7 @@ use nom::IResult;
 ///             Typed::new(Variable::from_str("a"), Type::OBJECT),
 ///             Typed::new(Variable::from_str("b"), Type::OBJECT),
 ///         ]),
-///         PreGD::Preference(PrefGD::GoalDefinition(
+///         PreGD::Preference(PreferenceGD::GoalDefinition(
 ///             GD::AtomicFormula(
 ///                 AtomicFormula::new_equality(
 ///                     Term::Name("a".into()),
