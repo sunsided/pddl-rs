@@ -25,6 +25,6 @@ pub fn parse_assign_op(input: &str) -> IResult<&str, AssignOp> {
             tag(names::INCREASE),
             tag(names::DECREASE),
         )),
-        |s| AssignOp::try_from(s),
+        AssignOp::try_from,
     )(input)
 }
