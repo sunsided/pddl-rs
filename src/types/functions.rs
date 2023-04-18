@@ -1,10 +1,10 @@
-//! Provides function definitions;
+//! Provides function definitions.
 
 use crate::types::{AtomicFunctionSkeleton, FunctionTyped, FunctionTypedList};
 use std::ops::Deref;
 
 /// A set of functions.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Default, Clone, Eq, PartialEq)]
 pub struct Functions<'a>(FunctionTypedList<'a, AtomicFunctionSkeleton<'a>>);
 
 impl<'a> Functions<'a> {

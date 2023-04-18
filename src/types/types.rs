@@ -4,7 +4,7 @@ use crate::types::{Name, TypedList};
 use std::ops::Deref;
 
 /// A set of types.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Default, Clone, Eq, PartialEq)]
 pub struct Types<'a>(TypedList<'a, Name<'a>>);
 
 impl<'a> Types<'a> {

@@ -37,7 +37,7 @@ use nom::IResult;
 ///                 Literal::new_not(
 ///                     AtomicFormula::new_equality(
 ///                         Term::Variable(Variable::from_str("x")),
-///                         Term::Name(Name::from_str("B"))
+///                         Term::Name(Name::new("B"))
 ///                     )
 ///                 )
 ///             )

@@ -15,8 +15,14 @@ use std::ops::Deref;
 /// assert_eq!(tl[0].value_ref(), &Name::from("location"));
 /// assert_eq!(tl[1].value_ref(), &Name::from("physob"));
 /// ```
-#[derive(Debug, Default, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FunctionTypedList<'a, T>(Vec<FunctionTyped<'a, T>>);
+
+impl<'a, T> Default for FunctionTypedList<'a, T> {
+    fn default() -> Self {
+        Self(Vec::default())
+    }
+}
 
 impl<'a, T> FunctionTypedList<'a, T> {
     pub const fn new(list: Vec<FunctionTyped<'a, T>>) -> Self {

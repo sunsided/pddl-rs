@@ -2,6 +2,7 @@
 
 use crate::parsers::{prefix_expr, space_separated_list1};
 use crate::types::requirement::{names, Requirement};
+use crate::types::Requirements;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::error::ErrorKind;
@@ -12,12 +13,12 @@ use nom::{error_position, IResult};
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_require_def;
-/// # use pddl::types::Requirement;
-/// assert_eq!(parse_require_def("(:requirements :adl)"), Ok(("", vec![Requirement::Adl])));
-/// assert_eq!(parse_require_def("(:requirements :strips :typing)"), Ok(("", vec![Requirement::Strips, Requirement::Typing])));
-/// assert_eq!(parse_require_def("(:requirements\n:strips   :typing  )"), Ok(("", vec![Requirement::Strips, Requirement::Typing])));
+/// # use pddl::types::{Requirement, Requirements};
+/// assert_eq!(parse_require_def("(:requirements :adl)"), Ok(("", Requirements::new([Requirement::Adl]))));
+/// assert_eq!(parse_require_def("(:requirements :strips :typing)"), Ok(("", Requirements::new([Requirement::Strips, Requirement::Typing]))));
+/// assert_eq!(parse_require_def("(:requirements\n:strips   :typing  )"), Ok(("", Requirements::new([Requirement::Strips, Requirement::Typing]))));
 ///```
-pub fn parse_require_def(input: &str) -> IResult<&str, Vec<Requirement>> {
+pub fn parse_require_def(input: &str) -> IResult<&str, Requirements> {
     let (remaining, req_keys) =
         prefix_expr(":requirements", space_separated_list1(parse_require_key))(input)?;
 
@@ -29,7 +30,7 @@ pub fn parse_require_def(input: &str) -> IResult<&str, Vec<Requirement>> {
         }
     }
 
-    Ok((remaining, reqs))
+    Ok((remaining, Requirements::new(reqs)))
 }
 
 /// Parses a requirement key, i.e. `:strips`.
