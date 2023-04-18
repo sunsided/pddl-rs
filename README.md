@@ -57,7 +57,7 @@ listed in the paper:
 - [x] [`<decimal>`](src/parsers/number.rs)
 - [x] [`<effect>`](src/parsers/effect.rs)
 - [x] [`<c-effect>`](src/parsers/c_effect.rs)
-- [ ] [`<p-effect>`](src/parsers/p_effect.rs) (partially implemented; missing `:numeric-fluents` and `:object-fluents` variants)
+- [x] [`<p-effect>`](src/parsers/p_effect.rs)
 - [x] [`<cond-effect>`](src/parsers/cond_effect.rs)
 - [x] [`<assign-op>`](src/parsers/assign_op.rs)
 - [ ] `<durative-action-def>`

@@ -1,13 +1,13 @@
-use crate::types::FunctionSymbol;
 use crate::types::term::Term;
+use crate::types::FunctionSymbol;
 
 /// A function term.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FunctionTerm<'a>(FunctionSymbol<'a>, Vec<Term<'a>>);
 
 impl<'a> FunctionTerm<'a> {
-    pub const fn new(symbol: FunctionSymbol<'a>, terms: Vec<Term<'a>>) -> Self {
-        Self(symbol, terms)
+    pub fn new<I: IntoIterator<Item = Term<'a>>>(symbol: FunctionSymbol<'a>, terms: I) -> Self {
+        Self(symbol, terms.into_iter().collect())
     }
 }
 
