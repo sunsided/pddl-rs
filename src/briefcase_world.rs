@@ -31,7 +31,7 @@ pub const BRIEFCASE_WORLD: &'static str = r#"
 
 pub const BRIEFCASE_WORLD_PROBLEM: &'static str = r#"
     (define (problem get-paid)
-        (:domain briefcase-wordld)
+        (:domain briefcase-world)
         (:init (place home) (place office)
                (object p) (object d) (object b)
                (at B home) (at P home) (at D home) (in P))
