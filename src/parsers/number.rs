@@ -2,28 +2,32 @@
 
 use nom::character::complete::{char, digit1};
 use nom::character::is_digit;
-use nom::combinator::recognize;
+use nom::combinator::{map_res, recognize};
 use nom::error::ErrorKind;
 use nom::multi::many_m_n;
 use nom::sequence::tuple;
 use nom::{error_position, IResult};
+use std::str::FromStr;
 
 /// Parses a number, i.e. `<digit>⁺[<decimal>]`.
 ///
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_number;
-/// assert_eq!(parse_number("0"), Ok(("", "0")));
-/// assert_eq!(parse_number("1000a"), Ok(("a", "1000")));
-/// assert_eq!(parse_number("012"), Ok(("", "012")));
-/// assert_eq!(parse_number("1.234"), Ok(("", "1.234")));
+/// assert_eq!(parse_number("0"), Ok(("", 0.0)));
+/// assert_eq!(parse_number("1000a"), Ok(("a", 1000.0)));
+/// assert_eq!(parse_number("012"), Ok(("", 12.0)));
+/// assert_eq!(parse_number("1.234"), Ok(("", 1.234)));
 ///
 /// assert!(parse_number(".0").is_err());
 /// assert!(parse_number(".").is_err());
 /// assert!(parse_number("-1").is_err());
 ///```
-pub fn parse_number(input: &str) -> IResult<&str, &str> {
-    recognize(tuple((digit1, many_m_n(0, 1, parse_decimal))))(input)
+pub fn parse_number(input: &str) -> IResult<&str, f32> {
+    map_res(
+        recognize(tuple((digit1, many_m_n(0, 1, parse_decimal)))),
+        f32::from_str,
+    )(input)
 }
 
 /// Parses a decimal, i.e. `.<digit>⁺`.
