@@ -3,7 +3,7 @@
 use crate::types::{ActionSymbol, Effect, PreGD, TypedList, Variable};
 
 /// An action definition.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ActionDefinition<'a> {
     symbol: ActionSymbol<'a>,
     parameters: TypedList<'a, Variable<'a>>,

@@ -1,7 +1,7 @@
 //! Provides parsers for goal definitions.
 
 use crate::parsers::{
-    atomic_formula, literal, parens, parse_term, parse_variable, prefix_expr,
+    atomic_formula, literal, parens, parse_f_comp, parse_term, parse_variable, prefix_expr,
     space_separated_list0, typed_list,
 };
 use crate::types::GD;
@@ -16,7 +16,7 @@ use nom::IResult;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::parse_gd;
-/// # use pddl::types::{AtomicFormula, EqualityAtomicFormula, GD, Literal, Term, TypedList, Variable};
+/// # use pddl::types::{AtomicFormula, BinaryComp, BinaryOp, EqualityAtomicFormula, FComp, FExp, GD, Literal, Term, TypedList, Variable};
 ///
 /// // Atomic formula
 /// assert_eq!(parse_gd("(= x y)"), Ok(("",
@@ -113,6 +113,24 @@ use nom::IResult;
 ///         ))
 ///     )
 /// )));
+///
+/// assert_eq!(parse_gd("(= (+ 1.23 2.34) (+ 1.23 2.34))"), Ok(("",
+///     GD::new_f_comp(
+///         FComp::new(
+///             BinaryComp::Equal,
+///             FExp::new_binary_op(
+///                 BinaryOp::Addition,
+///                 FExp::new_number(1.23),
+///                 FExp::new_number(2.34),
+///             ),
+///             FExp::new_binary_op(
+///                 BinaryOp::Addition,
+///                 FExp::new_number(1.23),
+///                 FExp::new_number(2.34),
+///             )
+///         )
+///     )
+/// )));
 /// ```
 pub fn parse_gd(input: &str) -> IResult<&str, GD> {
     let af = map(atomic_formula(parse_term), GD::new_atomic_formula);
@@ -164,5 +182,8 @@ pub fn parse_gd(input: &str) -> IResult<&str, GD> {
         GD::new_forall_tuple,
     );
 
-    alt((af, literal, and, or, not, imply, exists, forall))(input)
+    // :numeric-fluents
+    let f_comp = map(parse_f_comp, GD::new_f_comp);
+
+    alt((af, literal, and, or, not, imply, exists, forall, f_comp))(input)
 }

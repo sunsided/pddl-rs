@@ -3,7 +3,7 @@
 use crate::types::CEffect;
 
 /// An effect.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Effect<'a> {
     /// Exactly the specified effect applies.
     Single(CEffect<'a>),

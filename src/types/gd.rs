@@ -1,9 +1,9 @@
 //! Contains goal definitions.
 
-use crate::types::{AtomicFormula, Literal, Term, TypedList, Variable};
+use crate::types::{AtomicFormula, FComp, Literal, Term, TypedList, Variable};
 
 /// A goal definition.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum GD<'a> {
     AtomicFormula(AtomicFormula<'a, Term<'a>>),
     /// Requires [NegativePreconditions](crate::types::Requirement::NegativePreconditions).
@@ -19,6 +19,8 @@ pub enum GD<'a> {
     Exists(TypedList<'a, Variable<'a>>, Box<GD<'a>>),
     /// Requires [UniversalPreconditions](crate::types::Requirement::UniversalPreconditions).
     ForAll(TypedList<'a, Variable<'a>>, Box<GD<'a>>),
+    /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
+    FComp(FComp<'a>),
 }
 
 impl<'a> GD<'a> {
@@ -75,5 +77,10 @@ impl<'a> GD<'a> {
     #[inline(always)]
     pub fn new_forall(variables: TypedList<'a, Variable<'a>>, gd: GD<'a>) -> Self {
         Self::ForAll(variables, Box::new(gd))
+    }
+
+    #[inline(always)]
+    pub const fn new_f_comp(f_comp: FComp<'a>) -> Self {
+        Self::FComp(f_comp)
     }
 }

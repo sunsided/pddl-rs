@@ -3,7 +3,7 @@
 use crate::types::{ConditionalEffect, Effect, PEffect, TypedList, Variable, GD};
 
 /// A c-effect.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum CEffect<'a> {
     PEffect(PEffect<'a>),
     /// Requires [ConditionalEffects](crate::types::Requirement::ConditionalEffects).
