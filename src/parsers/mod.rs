@@ -1,3 +1,4 @@
+mod action_def;
 mod action_symbol;
 mod assign_op;
 mod atomic_formula;
@@ -33,6 +34,7 @@ mod utilities;
 mod variable;
 
 // Parsers.
+pub use action_def::parse_action_def;
 pub use action_symbol::parse_action_symbol;
 pub use assign_op::parse_assign_op;
 pub use atomic_formula::atomic_formula;
@@ -70,4 +72,4 @@ pub use typed_list::typed_list;
 
 // Utility parser combinators.
 #[allow(unused_imports)]
-pub(crate) use utilities::{prefix_expr, space_separated_list0, space_separated_list1, ws};
+pub(crate) use utilities::{parens, prefix_expr, space_separated_list0, space_separated_list1, ws};
