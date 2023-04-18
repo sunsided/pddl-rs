@@ -3,7 +3,7 @@
 use crate::types::PEffect;
 
 /// A conditional effect.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ConditionalEffect<'a> {
     /// Exactly the specified effect applies.
     Single(PEffect<'a>),
