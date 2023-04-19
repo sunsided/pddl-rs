@@ -1,7 +1,8 @@
 //! Provides parsers for domain structure definitions.
 
-use crate::parsers::parse_action_def;
+use crate::parsers::{parse_action_def, parse_derived_predicate};
 use crate::types::StructureDef;
+use nom::branch::alt;
 use nom::combinator::map;
 use nom::IResult;
 
@@ -48,5 +49,8 @@ use nom::IResult;
 /// ))));
 /// ```
 pub fn parse_structure_def(input: &str) -> IResult<&str, StructureDef> {
-    map(parse_action_def, StructureDef::new_action)(input)
+    let action = map(parse_action_def, StructureDef::new_action);
+    // :derived-predicates
+    let derived = map(parse_derived_predicate, StructureDef::new_derived);
+    alt((derived, action))(input)
 }
