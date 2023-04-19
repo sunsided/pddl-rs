@@ -1,6 +1,6 @@
 //! Contains atomic formula skeletons.
 
-use crate::types::{Predicate, TypedList, Variable};
+use crate::types::{Name, Predicate, TypedList, Variable};
 
 /// An atomic formula skeleton.
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -15,6 +15,10 @@ impl<'a> AtomicFormulaSkeleton<'a> {
             predicate,
             variables: formula,
         }
+    }
+
+    pub fn name(&self) -> &Name<'a> {
+        self.predicate.as_ref()
     }
 
     /// Gets a reference to the predicate.

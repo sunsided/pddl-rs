@@ -2,6 +2,7 @@
 
 use crate::parsers::name::parse_name;
 use crate::types::Predicate;
+use nom::combinator::map;
 use nom::IResult;
 
 /// Parses a predicate, i.e. `<name>`.
@@ -21,6 +22,5 @@ use nom::IResult;
 /// assert!(parse_predicate("-1").is_err());
 ///```
 pub fn parse_predicate(input: &str) -> IResult<&str, Predicate> {
-    let (remaining, name) = parse_name(input)?;
-    Ok((remaining, name.into()))
+    map(parse_name, Predicate::from)(input)
 }

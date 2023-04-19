@@ -30,8 +30,8 @@ use nom::IResult;
 ///
 /// // Literal
 /// assert_eq!(parse_gd("(not (= x y))"), Ok(("",
-///     GD::Literal(
-///         Literal::new_not(
+///     GD::new_not(
+///         GD::new_atomic_formula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Name("x".into()),
 ///                 Term::Name("y".into())
@@ -43,7 +43,7 @@ use nom::IResult;
 /// // Conjunction (and)
 /// assert_eq!(parse_gd("(and (not (= x y)) (= x z))"), Ok(("",
 ///     GD::new_and([
-///         GD::Literal(Literal::new_not(
+///         GD::new_not(GD::new_atomic_formula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Name("x".into()),
 ///                 Term::Name("y".into())
@@ -59,7 +59,7 @@ use nom::IResult;
 /// // Disjunction (or)
 /// assert_eq!(parse_gd("(or (not (= x y)) (= x z))"), Ok(("",
 ///     GD::new_or([
-///         GD::Literal(Literal::new_not(
+///         GD::new_not(GD::new_atomic_formula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Name("x".into()),
 ///                 Term::Name("y".into())
@@ -75,7 +75,7 @@ use nom::IResult;
 /// // Implication
 /// assert_eq!(parse_gd("(imply (not (= x y)) (= x z))"), Ok(("",
 ///     GD::new_imply(
-///         GD::Literal(Literal::new_not(
+///         GD::new_not(GD::new_atomic_formula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Name("x".into()),
 ///                 Term::Name("y".into())
@@ -92,7 +92,7 @@ use nom::IResult;
 /// assert_eq!(parse_gd("(exists (?x ?y) (not (= ?x ?y)))"), Ok(("",
 ///     GD::new_exists(
 ///         TypedList::from_iter([Variable::from_str("x").into(), Variable::from_str("y").into()]),
-///         GD::Literal(Literal::new_not(
+///         GD::new_not(GD::new_atomic_formula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Variable("x".into()),
 ///                 Term::Variable("y".into())
@@ -105,7 +105,7 @@ use nom::IResult;
 /// assert_eq!(parse_gd("(forall (?x ?y) (not (= ?x ?y)))"), Ok(("",
 ///     GD::new_forall(
 ///         TypedList::from_iter([Variable::from_str("x").into(), Variable::from_str("y").into()]),
-///         GD::Literal(Literal::new_not(
+///         GD::new_not(GD::new_atomic_formula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Variable("x".into()),
 ///                 Term::Variable("y".into())
@@ -185,5 +185,5 @@ pub fn parse_gd(input: &str) -> IResult<&str, GD> {
     // :numeric-fluents
     let f_comp = map(parse_f_comp, GD::new_f_comp);
 
-    alt((af, literal, and, or, not, imply, exists, forall, f_comp))(input)
+    alt((and, or, not, imply, exists, forall, af, literal, f_comp))(input)
 }
