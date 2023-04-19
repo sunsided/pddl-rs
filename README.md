@@ -78,7 +78,7 @@ listed in the paper:
 - [ ] `<f-exp-da>`
 - [ ] `<assign-op-t>`
 - [ ] `<f-exp-t>`
-- [ ] `<derived-def>`
+- [x] [`<derived-def>`](src/parsers/derived_predicate.rs)
 
 ### Problem Description
 

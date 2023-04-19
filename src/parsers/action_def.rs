@@ -33,8 +33,8 @@ use nom::IResult;
 ///             Typed::new(Variable::from_str("x"), Type::Exactly("physob".into()))
 ///         ]),
 ///         Some(PreGD::Preference(PreferenceGD::from_gd(
-///             GD::new_literal(
-///                 Literal::new_not(
+///             GD::new_not(
+///                 GD::AtomicFormula(
 ///                     AtomicFormula::new_equality(
 ///                         Term::Variable(Variable::from_str("x")),
 ///                         Term::Name(Name::new("B"))
