@@ -2,6 +2,7 @@
 
 use crate::types::{AssignOp, BinaryOp, FExp, FHead, MultiOp};
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum FExpDa<'a> {
     Assign(AssignOp, FHead<'a>, Box<FExpDa<'a>>),
     BinaryOp(BinaryOp, Box<FExpDa<'a>>, Box<FExpDa<'a>>),
@@ -35,5 +36,11 @@ impl<'a> FExpDa<'a> {
 
     pub const fn new_f_exp(f_head: FExp<'a>) -> Self {
         Self::FExp(f_head)
+    }
+}
+
+impl<'a> From<FExp<'a>> for FExpDa<'a> {
+    fn from(value: FExp<'a>) -> Self {
+        FExpDa::new_f_exp(value)
     }
 }

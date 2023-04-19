@@ -75,7 +75,7 @@ listed in the paper:
 - [ ] `<da-effect>`
 - [ ] `<timed-effect>`
 - [ ] `<f-assign-da>`
-- [ ] `<f-exp-da>`
+- [x] [`<f-exp-da>`](src/parsers/f_exp_da.rs)
 - [x] [`<assign-op-t>`](src/parsers/assign_op_t.rs)
 - [x] [`<f-exp-t>`](src/parsers/f_exp_t.rs)
 - [x] [`<derived-def>`](src/parsers/derived_predicate.rs)
