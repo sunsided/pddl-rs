@@ -51,7 +51,7 @@ pub fn parse_require_def(input: &str) -> IResult<&str, Requirements> {
 /// assert_eq!(parse_require_key(":numeric-fluents"), Ok(("", ":numeric-fluents")));
 /// assert_eq!(parse_require_key(":adl"), Ok(("", ":adl")));
 /// assert_eq!(parse_require_key(":durative-actions"), Ok(("", ":durative-actions")));
-/// assert_eq!(parse_require_key(":durative-inequalities"), Ok(("", ":durative-inequalities")));
+/// assert_eq!(parse_require_key(":duration-inequalities"), Ok(("", ":duration-inequalities")));
 /// assert_eq!(parse_require_key(":continuous-effects"), Ok(("", ":continuous-effects")));
 /// assert_eq!(parse_require_key(":derived-predicates"), Ok(("", ":derived-predicates")));
 /// assert_eq!(parse_require_key(":timed-initial-literals"), Ok(("", ":timed-initial-literals")));
@@ -78,7 +78,7 @@ pub fn parse_require_key(input: &str) -> IResult<&str, &str> {
         tag(names::OBJECT_FLUENTS),
         tag(names::ADL),
         tag(names::DURATIVE_ACTIONS),
-        tag(names::DURATIVE_INEQUALITIES),
+        tag(names::DURATION_INEQUALITIES),
         tag(names::CONTINUOUS_EFFECTS),
         tag(names::DERIVED_PREDICATES),
         tag(names::TIMED_INITIAL_LITERALS),

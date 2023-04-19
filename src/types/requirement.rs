@@ -53,7 +53,7 @@ pub enum Requirement {
     /// Allows durative actions. Note that this does not imply [`NumericFluents`](Self::NumericFluents).
     DurativeActions,
     /// Allows duration constraints in durative actions using inequalities.
-    DurativeInequalities,
+    DurationInequalities,
     /// Allows durative actions to affect fluents continuously over the duration of the actions.
     ContinuousEffects,
     /// Allows predicates whose truth value is defined by a formula.
@@ -113,7 +113,7 @@ pub mod names {
     pub const OBJECT_FLUENTS: &'static str = ":object-fluents";
     pub const ADL: &'static str = ":adl";
     pub const DURATIVE_ACTIONS: &'static str = ":durative-actions";
-    pub const DURATIVE_INEQUALITIES: &'static str = ":durative-inequalities";
+    pub const DURATION_INEQUALITIES: &'static str = ":duration-inequalities";
     pub const CONTINUOUS_EFFECTS: &'static str = ":continuous-effects";
     pub const DERIVED_PREDICATES: &'static str = ":derived-predicates";
     pub const TIMED_INITIAL_LITERALS: &'static str = ":timed-initial-literals";
@@ -170,7 +170,7 @@ impl Requirement {
             Requirement::ObjectFluents => names::OBJECT_FLUENTS,
             Requirement::Adl => names::ADL,
             Requirement::DurativeActions => names::DURATIVE_ACTIONS,
-            Requirement::DurativeInequalities => names::DURATIVE_INEQUALITIES,
+            Requirement::DurationInequalities => names::DURATION_INEQUALITIES,
             Requirement::ContinuousEffects => names::CONTINUOUS_EFFECTS,
             Requirement::DerivedPredicates => names::DERIVED_PREDICATES,
             Requirement::TimedInitialLiterals => names::TIMED_INITIAL_LITERALS,
@@ -224,7 +224,7 @@ impl TryFrom<&str> for Requirement {
             names::OBJECT_FLUENTS => Ok(Requirement::ObjectFluents),
             names::ADL => Ok(Requirement::Adl),
             names::DURATIVE_ACTIONS => Ok(Requirement::DurativeActions),
-            names::DURATIVE_INEQUALITIES => Ok(Requirement::DurativeInequalities),
+            names::DURATION_INEQUALITIES => Ok(Requirement::DurationInequalities),
             names::CONTINUOUS_EFFECTS => Ok(Requirement::ContinuousEffects),
             names::DERIVED_PREDICATES => Ok(Requirement::DerivedPredicates),
             names::TIMED_INITIAL_LITERALS => Ok(Requirement::TimedInitialLiterals),
@@ -328,7 +328,7 @@ mod tests {
         assert_eq!(Requirement::NumericFluents, ":numeric-fluents");
         assert_eq!(Requirement::Adl, ":adl");
         assert_eq!(Requirement::DurativeActions, ":durative-actions");
-        assert_eq!(Requirement::DurativeInequalities, ":durative-inequalities");
+        assert_eq!(Requirement::DurationInequalities, ":duration-inequalities");
         assert_eq!(Requirement::ContinuousEffects, ":continuous-effects");
         assert_eq!(Requirement::DerivedPredicates, ":derived-predicates");
         assert_eq!(Requirement::TimedInitialLiterals, ":timed-initial-literals");
