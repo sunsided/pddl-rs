@@ -74,7 +74,7 @@ listed in the paper:
 - [ ] `<d-value>`
 - [ ] `<da-effect>`
 - [ ] `<timed-effect>`
-- [ ] `<f-assign-da>`
+- [x] [`<f-assign-da>`](src/parsers/f_assign_da.rs)
 - [x] [`<f-exp-da>`](src/parsers/f_exp_da.rs)
 - [x] [`<assign-op-t>`](src/parsers/assign_op_t.rs)
 - [x] [`<f-exp-t>`](src/parsers/f_exp_t.rs)
