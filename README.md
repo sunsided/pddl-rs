@@ -61,7 +61,7 @@ listed in the paper:
 - [x] [`<cond-effect>`](src/parsers/cond_effect.rs)
 - [x] [`<assign-op>`](src/parsers/assign_op.rs)
 - [ ] `<durative-action-def>`
-- [ ] `<da-symbol>`
+- [x] [`<da-symbol>`](src/parsers/da_symbol.rs)
 - [ ] `<da-def body>`
 - [ ] `<da-GD>`
 - [ ] `<pref-timed-GD>`
