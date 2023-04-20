@@ -15,9 +15,9 @@ use nom::IResult;
 ///
 /// ## Example
 /// ```
-/// use pddl::parsers::parse_timed_effect;
-/// use pddl::types::{AssignOp, AssignOpT, AtomicFormula, CEffect, ConditionalEffect, EqualityAtomicFormula, FAssignDa, FExpDa, FExpT, FHead, PEffect, Term, TimedEffect, TimeSpecifier};
-/// use pddl::types::FExpDa::FExp;
+/// # use pddl::parsers::parse_timed_effect;
+/// # use pddl::types::{AssignOp, AssignOpT, AtomicFormula, CEffect, ConditionalEffect, EqualityAtomicFormula, FAssignDa, FExpDa, FExpT, FHead, PEffect, Term, TimedEffect, TimeSpecifier};
+/// # use pddl::types::FExpDa::FExp;
 /// assert_eq!(parse_timed_effect("(at start (= x y))"), Ok(("",
 ///     TimedEffect::new_conditional(
 ///         TimeSpecifier::Start,

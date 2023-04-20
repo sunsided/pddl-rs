@@ -15,8 +15,8 @@ use nom::IResult;
 ///
 /// ## Example
 /// ```
-/// use pddl::parsers::parse_c_effect;
-/// use pddl::types::{AtomicFormula, CEffect, Effect, EqualityAtomicFormula, PEffect, Term, Type, Typed, TypedList, Variable};
+/// # use pddl::parsers::parse_c_effect;
+/// # use pddl::types::{AtomicFormula, CEffect, Effect, EqualityAtomicFormula, PEffect, Term, Type, Typed, TypedList, Variable};
 /// assert_eq!(parse_c_effect("(= x y)"), Ok(("",
 ///     CEffect::PEffect(
 ///         PEffect::AtomicFormula(AtomicFormula::Equality(
