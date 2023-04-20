@@ -66,7 +66,7 @@ listed in the paper:
 - [ ] `<da-GD>`
 - [ ] `<pref-timed-GD>`
 - [ ] `<timed-GD>`
-- [ ] `<time-specifier>`
+- [x] [`<time-specifier>`](src/parsers/time_specifier.rs)
 - [ ] `<interval>`
 - [ ] `<duration-constraint>`
 - [ ] `<simple-duration-constraint>`
