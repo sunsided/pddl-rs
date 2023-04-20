@@ -11,7 +11,7 @@ use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
 use nom::IResult;
 
-/// Parser combinator that parses c-effects.
+/// Parser that parses c-effects.
 ///
 /// ## Example
 /// ```

@@ -10,8 +10,8 @@ use nom::IResult;
 ///
 /// ## Example
 /// ```
-/// use pddl::parsers::parse_cond_effect;
-/// use pddl::types::{AtomicFormula, CEffect, ConditionalEffect, EqualityAtomicFormula, PEffect, Term};
+/// # use pddl::parsers::parse_cond_effect;
+/// # use pddl::types::{AtomicFormula, CEffect, ConditionalEffect, EqualityAtomicFormula, PEffect, Term};
 /// assert_eq!(parse_cond_effect("(= x y)"), Ok(("",
 ///     ConditionalEffect::Single(
 ///         PEffect::AtomicFormula(AtomicFormula::Equality(
@@ -22,6 +22,7 @@ use nom::IResult;
 ///         )
 ///     )
 /// )));
+///
 /// assert_eq!(parse_cond_effect("(and (= x y) (not (= ?a B)))"), Ok(("",
 ///     ConditionalEffect::All(vec![
 ///         PEffect::AtomicFormula(AtomicFormula::Equality(
