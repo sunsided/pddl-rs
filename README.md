@@ -67,7 +67,7 @@ listed in the paper:
 - [ ] `<pref-timed-GD>`
 - [ ] `<timed-GD>`
 - [x] [`<time-specifier>`](src/parsers/time_specifier.rs)
-- [ ] `<interval>`
+- [x] [`<interval>`](src/parsers/interval.rs)
 - [ ] `<duration-constraint>`
 - [ ] `<simple-duration-constraint>`
 - [ ] `<d-op>`
