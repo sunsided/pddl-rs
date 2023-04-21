@@ -75,5 +75,5 @@ pub fn parse_pref_timed_gd(input: &str) -> IResult<&str, PrefTimedGD> {
         PrefTimedGD::from,
     );
 
-    alt((required, preference))(input)
+    alt((preference, required))(input)
 }

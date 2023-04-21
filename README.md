@@ -63,7 +63,7 @@ listed in the paper:
 - [ ] `<durative-action-def>`
 - [x] [`<da-symbol>`](src/parsers/da_symbol.rs)
 - [ ] `<da-def body>`
-- [ ] `<da-GD>`
+- [x] [`<da-GD>`](src/parsers/da_gd.rs)
 - [x] [`<pref-timed-GD>`](src/parsers/pref_timed_gd.rs)
 - [x] [`<timed-GD>`](src/parsers/timed_gd.rs)
 - [x] [`<time-specifier>`](src/parsers/time_specifier.rs)
