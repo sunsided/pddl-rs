@@ -65,7 +65,7 @@ listed in the paper:
 - [ ] `<da-def body>`
 - [ ] `<da-GD>`
 - [ ] `<pref-timed-GD>`
-- [ ] `<timed-GD>`
+- [x] [`<timed-GD>`](src/parsers/timed_gd.rs)
 - [x] [`<time-specifier>`](src/parsers/time_specifier.rs)
 - [x] [`<interval>`](src/parsers/interval.rs)
 - [ ] `<duration-constraint>`
