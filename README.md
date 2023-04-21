@@ -72,7 +72,7 @@ listed in the paper:
 - [ ] `<simple-duration-constraint>`
 - [ ] `<d-op>`
 - [x] [`<d-value>`](src/parsers/d_value.rs)
-- [ ] `<da-effect>`
+- [x] [`<da-effect>`](src/parsers/da_effect.rs)
 - [x] [`<timed-effect>`](src/parsers/timed_effect.rs)
 - [x] [`<f-assign-da>`](src/parsers/f_assign_da.rs)
 - [x] [`<f-exp-da>`](src/parsers/f_exp_da.rs)
