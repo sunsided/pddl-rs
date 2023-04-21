@@ -1,9 +1,12 @@
+//! Contains the [`PrefTimedGD`] type.
+
 use crate::types::{PreferenceName, TimedGD};
 
 /// A (preferred) timed goal definition.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PrefTimedGD<'a> {
     Required(TimedGD<'a>),
+    /// Requires [Preferences](crate::types::Requirement::Preferences).
     Preference(Option<PreferenceName<'a>>, TimedGD<'a>),
 }
 

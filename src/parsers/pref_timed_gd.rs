@@ -63,6 +63,7 @@ use nom::IResult;
 pub fn parse_pref_timed_gd(input: &str) -> IResult<&str, PrefTimedGD> {
     let required = map(parse_timed_gd, PrefTimedGD::from);
 
+    // :preferences
     let preference = map(
         prefix_expr(
             "preference",
