@@ -14,11 +14,23 @@ use nom::IResult;
 /// ```
 /// # use pddl::parsers::parse_f_head;
 /// # use pddl::types::{Name, FunctionTerm, Variable, FunctionSymbol, Term, FHead};
-/// assert_eq!(parse_f_head("fun-sym"), Ok(("", FHead::new(FunctionSymbol::from_str("fun-sym")))));
-/// assert_eq!(parse_f_head("(fun-sym term)"), Ok(("", FHead::new_with_terms(FunctionSymbol::from_str("fun-sym"), [Term::Name("term".into())]))));
+/// assert_eq!(parse_f_head("fun-sym"), Ok(("",
+///     FHead::new(FunctionSymbol::from_str("fun-sym"))
+/// )));
+///
+/// assert_eq!(parse_f_head("(fun-sym)"), Ok(("",
+///     FHead::new(FunctionSymbol::from_str("fun-sym"))
+/// )));
+///
+/// assert_eq!(parse_f_head("(fun-sym term)"), Ok(("",
+///     FHead::new_with_terms(FunctionSymbol::from_str("fun-sym"), [
+///         Term::Name("term".into())
+///     ])
+/// )));
 ///```
 pub fn parse_f_head(input: &str) -> IResult<&str, FHead> {
     let simple = map(parse_function_symbol, FHead::new);
+    let simple_parens = map(parens(parse_function_symbol), FHead::new);
     let with_terms = map(
         parens(tuple((
             parse_function_symbol,
@@ -27,5 +39,5 @@ pub fn parse_f_head(input: &str) -> IResult<&str, FHead> {
         |(symbol, terms)| FHead::new_with_terms(symbol, terms),
     );
 
-    alt((simple, with_terms))(input)
+    alt((simple, simple_parens, with_terms))(input)
 }
