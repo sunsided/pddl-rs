@@ -35,14 +35,14 @@ impl<'a> ToTyped<'a, Variable<'a>> for Variable<'a> {
 impl<'a> From<Name<'a>> for Variable<'a> {
     #[inline(always)]
     fn from(value: Name<'a>) -> Self {
-        Self(value)
+        Variable::from_name(value)
     }
 }
 
 impl<'a> From<&'a str> for Variable<'a> {
     #[inline(always)]
     fn from(value: &'a str) -> Self {
-        Self(Name::new(value))
+        Variable::from_str(value)
     }
 }
 
