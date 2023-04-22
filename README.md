@@ -90,7 +90,7 @@ listed in the paper:
 - [ ] `<goal>`
 - [ ] `<constraints>`
 - [ ] `<pref-con-GD>`
-- [ ] `<con-GD>`
+- [ ] ~~`<con-GD>`~~ see "Lifting Restrictions" below
 - [ ] `<metric-spec>`
 - [ ] `<optimization>`
 - [ ] `<metric-f-exp>`
