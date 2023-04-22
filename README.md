@@ -68,7 +68,7 @@ listed in the paper:
 - [x] [`<timed-GD>`](src/parsers/timed_gd.rs)
 - [x] [`<time-specifier>`](src/parsers/time_specifier.rs)
 - [x] [`<interval>`](src/parsers/interval.rs)
-- [ ] `<duration-constraint>`
+- [x] [`<duration-constraint>`](src/parsers/duration_constraint.rs)
 - [x] [`<simple-duration-constraint>`](src/parsers/simple_duration_constraint.rs)
 - [x] [`<d-op>`](src/parsers/d_op.rs)
 - [x] [`<d-value>`](src/parsers/d_value.rs)
