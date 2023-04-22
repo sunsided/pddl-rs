@@ -4,7 +4,7 @@ use crate::parsers::{
     atomic_formula, literal, parens, parse_f_comp, parse_term, parse_variable, prefix_expr,
     space_separated_list0, typed_list,
 };
-use crate::types::GD;
+use crate::types::GoalDefinition;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
@@ -16,11 +16,11 @@ use nom::IResult;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::parse_gd;
-/// # use pddl::types::{AtomicFormula, BinaryComp, BinaryOp, EqualityAtomicFormula, FComp, FExp, GD, Literal, Term, TypedList, Variable};
+/// # use pddl::types::{AtomicFormula, BinaryComp, BinaryOp, EqualityAtomicFormula, FComp, FExp, GoalDefinition, Literal, Term, TypedList, Variable};
 ///
 /// // Atomic formula
 /// assert_eq!(parse_gd("(= x y)"), Ok(("",
-///     GD::AtomicFormula(
+///     GoalDefinition::AtomicFormula(
 ///         AtomicFormula::new_equality(
 ///             Term::Name("x".into()),
 ///             Term::Name("y".into())
@@ -30,8 +30,8 @@ use nom::IResult;
 ///
 /// // Literal
 /// assert_eq!(parse_gd("(not (= x y))"), Ok(("",
-///     GD::new_not(
-///         GD::new_atomic_formula(
+///     GoalDefinition::new_not(
+///         GoalDefinition::new_atomic_formula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Name("x".into()),
 ///                 Term::Name("y".into())
@@ -42,14 +42,14 @@ use nom::IResult;
 ///
 /// // Conjunction (and)
 /// assert_eq!(parse_gd("(and (not (= x y)) (= x z))"), Ok(("",
-///     GD::new_and([
-///         GD::new_not(GD::new_atomic_formula(
+///     GoalDefinition::new_and([
+///         GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Name("x".into()),
 ///                 Term::Name("y".into())
 ///             )
 ///         )),
-///         GD::AtomicFormula(AtomicFormula::new_equality(
+///         GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
 ///             Term::Name("x".into()),
 ///             Term::Name("z".into())
 ///         ))
@@ -58,14 +58,14 @@ use nom::IResult;
 ///
 /// // Disjunction (or)
 /// assert_eq!(parse_gd("(or (not (= x y)) (= x z))"), Ok(("",
-///     GD::new_or([
-///         GD::new_not(GD::new_atomic_formula(
+///     GoalDefinition::new_or([
+///         GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Name("x".into()),
 ///                 Term::Name("y".into())
 ///             )
 ///         )),
-///         GD::AtomicFormula(AtomicFormula::new_equality(
+///         GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
 ///             Term::Name("x".into()),
 ///             Term::Name("z".into())
 ///         ))
@@ -74,14 +74,14 @@ use nom::IResult;
 ///
 /// // Implication
 /// assert_eq!(parse_gd("(imply (not (= x y)) (= x z))"), Ok(("",
-///     GD::new_imply(
-///         GD::new_not(GD::new_atomic_formula(
+///     GoalDefinition::new_imply(
+///         GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Name("x".into()),
 ///                 Term::Name("y".into())
 ///             )
 ///         )),
-///         GD::AtomicFormula(AtomicFormula::new_equality(
+///         GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
 ///             Term::Name("x".into()),
 ///             Term::Name("z".into())
 ///         ))
@@ -90,9 +90,9 @@ use nom::IResult;
 ///
 /// // Existential preconditions
 /// assert_eq!(parse_gd("(exists (?x ?y) (not (= ?x ?y)))"), Ok(("",
-///     GD::new_exists(
+///     GoalDefinition::new_exists(
 ///         TypedList::from_iter([Variable::from_str("x").into(), Variable::from_str("y").into()]),
-///         GD::new_not(GD::new_atomic_formula(
+///         GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Variable("x".into()),
 ///                 Term::Variable("y".into())
@@ -103,9 +103,9 @@ use nom::IResult;
 ///
 /// // Universal preconditions
 /// assert_eq!(parse_gd("(forall (?x ?y) (not (= ?x ?y)))"), Ok(("",
-///     GD::new_forall(
+///     GoalDefinition::new_forall(
 ///         TypedList::from_iter([Variable::from_str("x").into(), Variable::from_str("y").into()]),
-///         GD::new_not(GD::new_atomic_formula(
+///         GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Variable("x".into()),
 ///                 Term::Variable("y".into())
@@ -115,7 +115,7 @@ use nom::IResult;
 /// )));
 ///
 /// assert_eq!(parse_gd("(= (+ 1.23 2.34) (+ 1.23 2.34))"), Ok(("",
-///     GD::new_f_comp(
+///     GoalDefinition::new_f_comp(
 ///         FComp::new(
 ///             BinaryComp::Equal,
 ///             FExp::new_binary_op(
@@ -132,30 +132,33 @@ use nom::IResult;
 ///     )
 /// )));
 /// ```
-pub fn parse_gd(input: &str) -> IResult<&str, GD> {
-    let af = map(atomic_formula(parse_term), GD::new_atomic_formula);
+pub fn parse_gd(input: &str) -> IResult<&str, GoalDefinition> {
+    let af = map(
+        atomic_formula(parse_term),
+        GoalDefinition::new_atomic_formula,
+    );
 
     // :negative-preconditions
-    let literal = map(literal(parse_term), GD::new_literal);
+    let literal = map(literal(parse_term), GoalDefinition::new_literal);
 
     let and = map(
         prefix_expr("and", space_separated_list0(parse_gd)),
-        GD::new_and,
+        GoalDefinition::new_and,
     );
 
     // :disjunctive-preconditions
     let or = map(
         prefix_expr("or", space_separated_list0(parse_gd)),
-        GD::new_or,
+        GoalDefinition::new_or,
     );
 
     // :disjunctive-preconditions
-    let not = map(prefix_expr("not", parse_gd), GD::new_not);
+    let not = map(prefix_expr("not", parse_gd), GoalDefinition::new_not);
 
     // :disjunctive-preconditions
     let imply = map(
         prefix_expr("imply", tuple((parse_gd, preceded(multispace1, parse_gd)))),
-        GD::new_imply_tuple,
+        GoalDefinition::new_imply_tuple,
     );
 
     // :existential-preconditions
@@ -167,7 +170,7 @@ pub fn parse_gd(input: &str) -> IResult<&str, GD> {
                 preceded(multispace1, parse_gd),
             )),
         ),
-        GD::new_exists_tuple,
+        GoalDefinition::new_exists_tuple,
     );
 
     // :universal-preconditions
@@ -179,11 +182,11 @@ pub fn parse_gd(input: &str) -> IResult<&str, GD> {
                 preceded(multispace1, parse_gd),
             )),
         ),
-        GD::new_forall_tuple,
+        GoalDefinition::new_forall_tuple,
     );
 
     // :numeric-fluents
-    let f_comp = map(parse_f_comp, GD::new_f_comp);
+    let f_comp = map(parse_f_comp, GoalDefinition::new_f_comp);
 
     alt((and, or, not, imply, exists, forall, af, literal, f_comp))(input)
 }

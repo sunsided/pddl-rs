@@ -1,6 +1,6 @@
 //! Provides parsers for domain structure definitions.
 
-use crate::parsers::{parse_action_def, parse_derived_predicate};
+use crate::parsers::{parse_action_def, parse_da_def, parse_derived_predicate};
 use crate::types::StructureDef;
 use nom::branch::alt;
 use nom::combinator::map;
@@ -9,9 +9,10 @@ use nom::IResult;
 /// Parses a domain structure definition.
 ///
 /// ## Example
+///
 /// ```
 /// # use pddl::parsers::{parse_structure_def};
-/// # use pddl::types::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GD, Literal, Name, PEffect, Predicate, Preference, PreferenceGD, PreGD, StructureDef, Term, Type, Typed, TypedList, Variable};
+/// # use pddl::types::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GoalDefinition, Literal, Name, PEffect, Predicate, Preference, PreferenceGD, PreGD, StructureDef, Term, ToTyped, Type, Typed, TypedList, Variable};
 ///
 /// let input = r#"(:action take-out
 ///                     :parameters (?x - physob)
@@ -23,15 +24,15 @@ use nom::IResult;
 ///
 /// assert_eq!(action, Ok(("",
 ///     StructureDef::new_action(ActionDefinition::new(
-///         ActionSymbol::from_str("take-out"),
+///         ActionSymbol::from("take-out"),
 ///         TypedList::from_iter([
-///             Typed::new(Variable::from_str("x"), Type::Exactly("physob".into()))
+///             Variable::from("x").to_typed("physob")
 ///         ]),
 ///         Some(PreGD::Preference(PreferenceGD::from_gd(
-///             GD::new_not(
-///                 GD::new_atomic_formula(
+///             GoalDefinition::new_not(
+///                 GoalDefinition::new_atomic_formula(
 ///                     AtomicFormula::new_equality(
-///                         Term::Variable(Variable::from_str("x")),
+///                         Term::Variable(Variable::from("x")),
 ///                         Term::Name(Name::new("B"))
 ///                     )
 ///                 )
@@ -40,8 +41,8 @@ use nom::IResult;
 ///         Some(Effect::new(CEffect::new_p_effect(
 ///             PEffect::NotAtomicFormula(
 ///                 AtomicFormula::new_predicate(
-///                     Predicate::from_str("in"),
-///                     vec![Term::Variable(Variable::from_str("x"))]
+///                     Predicate::from("in"),
+///                     vec![Term::Variable(Variable::from("x"))]
 ///                 )
 ///             )
 ///         )))
@@ -50,7 +51,9 @@ use nom::IResult;
 /// ```
 pub fn parse_structure_def(input: &str) -> IResult<&str, StructureDef> {
     let action = map(parse_action_def, StructureDef::new_action);
+    // :durative-actions
+    let durative = map(parse_da_def, StructureDef::new_durative_action);
     // :derived-predicates
     let derived = map(parse_derived_predicate, StructureDef::new_derived);
-    alt((derived, action))(input)
+    alt((derived, action, durative))(input)
 }

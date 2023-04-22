@@ -1,16 +1,16 @@
 //! Contains preference goal definitions.
 
-use crate::types::{Preference, GD};
+use crate::types::{GoalDefinition, Preference};
 
 /// A preferred goal definition.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PreferenceGD<'a> {
-    GoalDefinition(GD<'a>),
+    GoalDefinition(GoalDefinition<'a>),
     Preference(Preference<'a>),
 }
 
 impl<'a> PreferenceGD<'a> {
-    pub const fn from_gd(gd: GD<'a>) -> Self {
+    pub const fn from_gd(gd: GoalDefinition<'a>) -> Self {
         Self::GoalDefinition(gd)
     }
 
@@ -19,8 +19,8 @@ impl<'a> PreferenceGD<'a> {
     }
 }
 
-impl<'a> From<GD<'a>> for PreferenceGD<'a> {
-    fn from(value: GD<'a>) -> Self {
+impl<'a> From<GoalDefinition<'a>> for PreferenceGD<'a> {
+    fn from(value: GoalDefinition<'a>) -> Self {
         PreferenceGD::from_gd(value)
     }
 }

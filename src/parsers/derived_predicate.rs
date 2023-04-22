@@ -12,7 +12,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_derived_predicate;
-/// # use pddl::types::GD;
+/// # use pddl::types::GoalDefinition;
 ///
 /// let input = r#"(:derived (train-usable ?t - train)
 ///                     (and
@@ -23,7 +23,7 @@ use nom::IResult;
 ///
 /// let (remaining, predicate) = parse_derived_predicate(input).unwrap();
 /// assert_eq!(predicate.predicate().name(), &"train-usable".into());
-/// assert!(matches!(predicate.expression(), &GD::And(..)));
+/// assert!(matches!(predicate.expression(), &GoalDefinition::And(..)));
 ///```
 pub fn parse_derived_predicate(input: &str) -> IResult<&str, DerivedPredicate> {
     map(

@@ -13,13 +13,13 @@ use nom::IResult;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::{parse_pref_timed_gd};
-/// # use pddl::types::{AtomicFormula, GD, Interval, PrefTimedGD, Term, TimedGD, TimeSpecifier};
+/// # use pddl::types::{AtomicFormula, GoalDefinition, Interval, PrefTimedGD, Term, TimedGD, TimeSpecifier};
 ///
 /// assert_eq!(parse_pref_timed_gd("(at start (= x y))"), Ok(("",
 ///     PrefTimedGD::Required(
 ///         TimedGD::new_at(
 ///             TimeSpecifier::Start,
-///             GD::AtomicFormula(
+///             GoalDefinition::AtomicFormula(
 ///                 AtomicFormula::new_equality(
 ///                     Term::Name("x".into()),
 ///                     Term::Name("y".into())
@@ -35,7 +35,7 @@ use nom::IResult;
 ///         None,
 ///         TimedGD::new_over(
 ///             Interval::All,
-///             GD::AtomicFormula(
+///             GoalDefinition::AtomicFormula(
 ///                 AtomicFormula::new_equality(
 ///                     Term::Name("x".into()),
 ///                     Term::Name("y".into())
@@ -50,7 +50,7 @@ use nom::IResult;
 ///         Some("pref-name".into()),
 ///         TimedGD::new_over(
 ///             Interval::All,
-///             GD::AtomicFormula(
+///             GoalDefinition::AtomicFormula(
 ///                 AtomicFormula::new_equality(
 ///                     Term::Name("x".into()),
 ///                     Term::Name("y".into())

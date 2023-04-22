@@ -1,6 +1,6 @@
 //! Contains c-effects.
 
-use crate::types::{ConditionalEffect, Effect, PEffect, TypedList, Variable, GD};
+use crate::types::{ConditionalEffect, Effect, GoalDefinition, PEffect, TypedList, Variable};
 
 /// A c-effect.
 #[derive(Debug, Clone, PartialEq)]
@@ -9,7 +9,7 @@ pub enum CEffect<'a> {
     /// Requires [ConditionalEffects](crate::types::Requirement::ConditionalEffects).
     Forall(TypedList<'a, Variable<'a>>, Box<Effect<'a>>),
     /// Requires [ConditionalEffects](crate::types::Requirement::ConditionalEffects).
-    When(GD<'a>, ConditionalEffect<'a>),
+    When(GoalDefinition<'a>, ConditionalEffect<'a>),
 }
 
 impl<'a> CEffect<'a> {
@@ -21,7 +21,7 @@ impl<'a> CEffect<'a> {
         Self::Forall(variables, Box::new(effect))
     }
 
-    pub const fn new_when(gd: GD<'a>, effect: ConditionalEffect<'a>) -> Self {
+    pub const fn new_when(gd: GoalDefinition<'a>, effect: ConditionalEffect<'a>) -> Self {
         Self::When(gd, effect)
     }
 }
@@ -38,8 +38,8 @@ impl<'a> From<(TypedList<'a, Variable<'a>>, Effect<'a>)> for CEffect<'a> {
     }
 }
 
-impl<'a> From<(GD<'a>, ConditionalEffect<'a>)> for CEffect<'a> {
-    fn from(value: (GD<'a>, ConditionalEffect<'a>)) -> Self {
+impl<'a> From<(GoalDefinition<'a>, ConditionalEffect<'a>)> for CEffect<'a> {
+    fn from(value: (GoalDefinition<'a>, ConditionalEffect<'a>)) -> Self {
         CEffect::new_when(value.0, value.1)
     }
 }

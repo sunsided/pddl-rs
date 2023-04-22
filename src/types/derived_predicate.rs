@@ -1,13 +1,13 @@
 //! Contains types for derived predicates.
 
-use crate::types::{AtomicFormulaSkeleton, GD};
+use crate::types::{AtomicFormulaSkeleton, GoalDefinition};
 
 /// A derived predicate.
 #[derive(Debug, Clone, PartialEq)]
-pub struct DerivedPredicate<'a>(AtomicFormulaSkeleton<'a>, GD<'a>);
+pub struct DerivedPredicate<'a>(AtomicFormulaSkeleton<'a>, GoalDefinition<'a>);
 
 impl<'a> DerivedPredicate<'a> {
-    pub const fn new(formula: AtomicFormulaSkeleton<'a>, gd: GD<'a>) -> Self {
+    pub const fn new(formula: AtomicFormulaSkeleton<'a>, gd: GoalDefinition<'a>) -> Self {
         Self(formula, gd)
     }
 
@@ -15,13 +15,13 @@ impl<'a> DerivedPredicate<'a> {
         &self.0
     }
 
-    pub const fn expression(&self) -> &GD<'a> {
+    pub const fn expression(&self) -> &GoalDefinition<'a> {
         &self.1
     }
 }
 
-impl<'a> From<(AtomicFormulaSkeleton<'a>, GD<'a>)> for DerivedPredicate<'a> {
-    fn from(value: (AtomicFormulaSkeleton<'a>, GD<'a>)) -> Self {
+impl<'a> From<(AtomicFormulaSkeleton<'a>, GoalDefinition<'a>)> for DerivedPredicate<'a> {
+    fn from(value: (AtomicFormulaSkeleton<'a>, GoalDefinition<'a>)) -> Self {
         DerivedPredicate::new(value.0, value.1)
     }
 }
@@ -32,8 +32,8 @@ impl<'a> AsRef<AtomicFormulaSkeleton<'a>> for DerivedPredicate<'a> {
     }
 }
 
-impl<'a> AsRef<GD<'a>> for DerivedPredicate<'a> {
-    fn as_ref(&self) -> &GD<'a> {
+impl<'a> AsRef<GoalDefinition<'a>> for DerivedPredicate<'a> {
+    fn as_ref(&self) -> &GoalDefinition<'a> {
         self.expression()
     }
 }

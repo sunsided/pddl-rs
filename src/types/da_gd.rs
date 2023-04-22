@@ -1,30 +1,36 @@
-//! Contains the [`DAGD`] type.
+//! Contains the [`DurativeActionGoalDefinition`] type.
 
 use crate::types::{PrefTimedGD, TypedList, Variable};
 
 /// A durative action goal definition.
 #[derive(Debug, Clone, PartialEq)]
-pub enum DAGD<'a> {
+pub enum DurativeActionGoalDefinition<'a> {
     Timed(PrefTimedGD<'a>),
-    And(Vec<DAGD<'a>>),
+    And(Vec<DurativeActionGoalDefinition<'a>>),
     /// Requires [UniversalPreconditions](crate::types::Requirement::UniversalPreconditions).
-    Forall(TypedList<'a, Variable<'a>>, Box<DAGD<'a>>),
+    Forall(
+        TypedList<'a, Variable<'a>>,
+        Box<DurativeActionGoalDefinition<'a>>,
+    ),
 }
 
-impl<'a> DAGD<'a> {
+impl<'a> DurativeActionGoalDefinition<'a> {
     pub fn new_timed(pref: PrefTimedGD<'a>) -> Self {
         Self::Timed(pref)
     }
-    pub fn new_and<I: IntoIterator<Item = DAGD<'a>>>(prefs: I) -> Self {
+    pub fn new_and<I: IntoIterator<Item = DurativeActionGoalDefinition<'a>>>(prefs: I) -> Self {
         Self::And(prefs.into_iter().collect())
     }
-    pub fn new_forall(variables: TypedList<'a, Variable<'a>>, gd: DAGD<'a>) -> Self {
+    pub fn new_forall(
+        variables: TypedList<'a, Variable<'a>>,
+        gd: DurativeActionGoalDefinition<'a>,
+    ) -> Self {
         Self::Forall(variables, Box::new(gd))
     }
 }
 
-impl<'a> From<PrefTimedGD<'a>> for DAGD<'a> {
+impl<'a> From<PrefTimedGD<'a>> for DurativeActionGoalDefinition<'a> {
     fn from(value: PrefTimedGD<'a>) -> Self {
-        DAGD::new_timed(value)
+        DurativeActionGoalDefinition::new_timed(value)
     }
 }

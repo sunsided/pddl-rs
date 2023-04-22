@@ -17,7 +17,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_action_def, parse_domain};
-/// # use pddl::types::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GD, Literal, Name, PEffect, Predicate, Preference, PreferenceGD, PreGD, Term, Type, Typed, TypedList, Variable};
+/// # use pddl::types::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GoalDefinition, Literal, Name, PEffect, Predicate, Preference, PreferenceGD, PreGD, Term, Type, Typed, TypedList, Variable};
 ///
 /// let input = r#"(define (domain briefcase-world)
 ///       (:requirements :strips :equality :typing :conditional-effects)

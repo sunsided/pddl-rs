@@ -49,3 +49,15 @@ where
 
     alt((equality, predicate))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::parsers::parse_term;
+
+    #[test]
+    fn it_works() {
+        let input = "(can-move ?from-waypoint ?to-waypoint)";
+        let (_, _effect) = atomic_formula(parse_term)(input).unwrap();
+    }
+}
