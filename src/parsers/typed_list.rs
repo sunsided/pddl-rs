@@ -12,34 +12,34 @@ use nom::IResult;
 /// ```
 /// # use nom::character::complete::alpha1;
 /// # use pddl::parsers::{parse_name, typed_list};
-/// # use pddl::types::{Name, PrimitiveType, Type, Typed, TypedList};
+/// # use pddl::types::{Name, PrimitiveType, ToTyped, Type, Typed, TypedList};
 ///
 /// // Single implicitly typed element.
 /// assert_eq!(typed_list(parse_name)("abc"), Ok(("", TypedList::from_iter([
-///     Typed::new(Name::new("abc"), Type::OBJECT)
+///     Name::new("abc").to_typed(Type::OBJECT)
 /// ]))));
 ///
 /// // Multiple implicitly typed elements.
 /// assert_eq!(typed_list(parse_name)("abc def\nghi"), Ok(("", TypedList::from_iter([
-///     Typed::new(Name::new("abc"), Type::OBJECT),
-///     Typed::new(Name::new("def"), Type::OBJECT),
-///     Typed::new(Name::new("ghi"), Type::OBJECT),
+///     Name::new("abc").to_typed(Type::OBJECT),
+///     Name::new("def").to_typed(Type::OBJECT),
+///     Name::new("ghi").to_typed(Type::OBJECT)
 /// ]))));
 ///
 /// // Multiple explicitly typed elements.
 /// assert_eq!(typed_list(parse_name)("abc def - word kitchen - room"), Ok(("", TypedList::from_iter([
-///     Typed::new(Name::new("abc"), Type::from("word")),
-///     Typed::new(Name::new("def"), Type::from("word")),
-///     Typed::new(Name::new("kitchen"), Type::from("room")),
+///     Name::new("abc").to_typed("word"),
+///     Name::new("def").to_typed("word"),
+///     Name::new("kitchen").to_typed("room"),
 /// ]))));
 ///
 /// // Mixed
 /// assert_eq!(typed_list(parse_name)("abc def - word\ngeorgia - (either state country)\nuvw xyz"), Ok(("", TypedList::from_iter([
-///     Typed::new(Name::new("abc"), Type::from("word")),
-///     Typed::new(Name::new("def"), Type::from("word")),
-///     Typed::new(Name::new("georgia"), Type::from_iter(["state", "country"])),
-///     Typed::new(Name::new("uvw"), Type::OBJECT),
-///     Typed::new(Name::new("xyz"), Type::OBJECT),
+///     Name::new("abc").to_typed("word"),
+///     Name::new("def").to_typed("word"),
+///     Name::new("georgia").to_typed_either(["state", "country"]),
+///     Name::new("uvw").to_typed(Type::OBJECT),
+///     Name::new("xyz").to_typed(Type::OBJECT)
 /// ]))));
 /// ```
 pub fn typed_list<'a, F, O>(inner: F) -> impl FnMut(&'a str) -> IResult<&'a str, TypedList<O>>

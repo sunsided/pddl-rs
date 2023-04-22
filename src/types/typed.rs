@@ -1,6 +1,6 @@
 //! Contains typed elements.
 
-use crate::types::Type;
+use crate::types::{PrimitiveType, Type};
 use std::ops::Deref;
 
 /// A typed element.
@@ -23,6 +23,16 @@ impl<'a, O> Typed<'a, O> {
     pub const fn type_ref(&self) -> &Type<'a> {
         &self.1
     }
+}
+
+pub trait ToTyped<'a, T> {
+    /// Wraps the value into a [`Typed`] as [`Type::Exactly`] the specified type.
+    fn to_typed<I: Into<Type<'a>>>(self, r#type: I) -> Typed<'a, T>;
+    /// Wraps the value into a [`Typed`] as [`Type::EitherOf`] the specified types.
+    fn to_typed_either<I: IntoIterator<Item = P>, P: Into<PrimitiveType<'a>>>(
+        self,
+        r#type: I,
+    ) -> Typed<'a, T>;
 }
 
 impl<'a, O> From<O> for Typed<'a, O> {

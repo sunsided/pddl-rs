@@ -10,14 +10,14 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_constants_def;
-/// # use pddl::types::{Variable, AtomicFormulaSkeleton, Predicate, Typed, Type, PredicateDefinitions, Constants, Name, TypedList};
+/// # use pddl::types::{Variable, AtomicFormulaSkeleton, Predicate, Typed, Type, PredicateDefinitions, Constants, Name, TypedList, ToTyped};
 ///
 /// let input = "(:constants B P D - physob)";
 /// assert_eq!(parse_constants_def(input), Ok(("",
 ///     Constants::new(TypedList::from_iter([
-///         Typed::new(Name::from("B"), Type::Exactly("physob".into())),
-///         Typed::new(Name::from("P"), Type::Exactly("physob".into())),
-///         Typed::new(Name::from("D"), Type::Exactly("physob".into())),
+///         Name::from("B").to_typed("physob"),
+///         Name::from("P").to_typed("physob"),
+///         Name::from("D").to_typed("physob"),
 ///     ]))
 /// )));
 /// ```

@@ -68,15 +68,12 @@ impl<'a> From<Vec<PrimitiveType<'a>>> for Type<'a> {
     }
 }
 
-impl<'a> FromIterator<PrimitiveType<'a>> for Type<'a> {
-    fn from_iter<T: IntoIterator<Item = PrimitiveType<'a>>>(iter: T) -> Self {
-        Self::EitherOf(iter.into_iter().collect())
-    }
-}
-
-impl<'a> FromIterator<&'a str> for Type<'a> {
-    fn from_iter<T: IntoIterator<Item = &'a str>>(iter: T) -> Self {
-        Self::EitherOf(iter.into_iter().map(PrimitiveType::from).collect())
+impl<'a, P> FromIterator<P> for Type<'a>
+where
+    P: Into<PrimitiveType<'a>>,
+{
+    fn from_iter<T: IntoIterator<Item = P>>(iter: T) -> Self {
+        Self::EitherOf(iter.into_iter().map(|x| x.into()).collect())
     }
 }
 
