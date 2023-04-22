@@ -10,7 +10,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_predicates_def;
-/// # use pddl::types::{Variable, AtomicFormulaSkeleton, Predicate, Typed, Type, PredicateDefinitions, TypedList};
+/// # use pddl::types::{Variable, AtomicFormulaSkeleton, Predicate, Typed, Type, PredicateDefinitions, TypedList, ToTyped};
 ///
 /// let input = r#"(:predicates
 ///                     (at ?x - physob ?y - location)
@@ -22,14 +22,14 @@ use nom::IResult;
 ///         AtomicFormulaSkeleton::new(
 ///             Predicate::from("at"),
 ///             TypedList::from_iter([
-///                 Typed::new(Variable::from("x"), Type::Exactly("physob".into())),
-///                 Typed::new(Variable::from("y"), Type::Exactly("location".into()))
+///                 Variable::from("x").to_typed("physob"),
+///                 Variable::from("y").to_typed("location"),
 ///             ])),
 ///         AtomicFormulaSkeleton::new(
 ///             Predicate::from("in"),
 ///             TypedList::from_iter([
-///                 Typed::new(Variable::from("x"), Type::Exactly("physob".into())),
-///                 Typed::new(Variable::from("y"), Type::Exactly("physob".into()))
+///                 Variable::from("x").to_typed("physob"),
+///                 Variable::from("y").to_typed("physob"),
 ///             ]))
 ///     ])
 /// )));

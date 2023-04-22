@@ -1,5 +1,6 @@
 //! Contains names.
 
+use crate::types::{PrimitiveType, ToTyped, Type, Typed};
 use std::ops::Deref;
 
 /// A name.
@@ -18,6 +19,18 @@ impl<'a> Name<'a> {
 
     pub const fn len(&self) -> usize {
         self.0.len()
+    }
+}
+
+impl<'a> ToTyped<'a, Name<'a>> for Name<'a> {
+    fn to_typed<I: Into<Type<'a>>>(self, r#type: I) -> Typed<'a, Name<'a>> {
+        Typed::new(self, r#type.into())
+    }
+    fn to_typed_either<I: IntoIterator<Item = P>, P: Into<PrimitiveType<'a>>>(
+        self,
+        types: I,
+    ) -> Typed<'a, Name<'a>> {
+        Typed::new(self, Type::from_iter(types))
     }
 }
 

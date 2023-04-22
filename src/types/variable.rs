@@ -1,6 +1,7 @@
 //! Contains variables.
 
-use crate::types::Name;
+use crate::types::typed::ToTyped;
+use crate::types::{Name, PrimitiveType, Type, Typed};
 use std::ops::Deref;
 
 /// A variable name.
@@ -16,6 +17,18 @@ impl<'a> Variable<'a> {
     #[inline(always)]
     pub const fn from_name(name: Name<'a>) -> Self {
         Self(name)
+    }
+}
+
+impl<'a> ToTyped<'a, Variable<'a>> for Variable<'a> {
+    fn to_typed<I: Into<Type<'a>>>(self, r#type: I) -> Typed<'a, Variable<'a>> {
+        Typed::new(self, r#type.into())
+    }
+    fn to_typed_either<I: IntoIterator<Item = P>, P: Into<PrimitiveType<'a>>>(
+        self,
+        types: I,
+    ) -> Typed<'a, Variable<'a>> {
+        Typed::new(self, Type::from_iter(types))
     }
 }
 
