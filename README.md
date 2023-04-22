@@ -60,9 +60,9 @@ listed in the paper:
 - [x] [`<p-effect>`](src/parsers/p_effect.rs)
 - [x] [`<cond-effect>`](src/parsers/cond_effect.rs)
 - [x] [`<assign-op>`](src/parsers/assign_op.rs)
-- [ ] `<durative-action-def>`
+- [x] [`<durative-action-def>`](src/parsers/da_def.rs)
 - [x] [`<da-symbol>`](src/parsers/da_symbol.rs)
-- [ ] `<da-def body>`
+- [x] [`<da-def body>`](src/parsers/da_def.rs)
 - [x] [`<da-GD>`](src/parsers/da_gd.rs)
 - [x] [`<pref-timed-GD>`](src/parsers/pref_timed_gd.rs)
 - [x] [`<timed-GD>`](src/parsers/timed_gd.rs)

@@ -87,3 +87,14 @@ pub fn parse_timed_effect(input: &str) -> IResult<&str, TimedEffect> {
 
     alt((fluent, cond, continuous))(input)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        let input = "(at end (increase (distance-travelled) 5))";
+        let (_, _effect) = parse_timed_effect(input).unwrap();
+    }
+}

@@ -13,12 +13,12 @@ use nom::IResult;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::{parse_timed_gd};
-/// # use pddl::types::{AtomicFormula, GD, Interval, Term, TimedGD, TimeSpecifier};
+/// # use pddl::types::{AtomicFormula, GoalDefinition, Interval, Term, TimedGD, TimeSpecifier};
 ///
 /// assert_eq!(parse_timed_gd("(at start (= x y))"), Ok(("",
 ///     TimedGD::new_at(
 ///         TimeSpecifier::Start,
-///         GD::AtomicFormula(
+///         GoalDefinition::AtomicFormula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Name("x".into()),
 ///                 Term::Name("y".into())
@@ -30,7 +30,7 @@ use nom::IResult;
 /// assert_eq!(parse_timed_gd("(over all (= x y))"), Ok(("",
 ///     TimedGD::new_over(
 ///         Interval::All,
-///         GD::AtomicFormula(
+///         GoalDefinition::AtomicFormula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Name("x".into()),
 ///                 Term::Name("y".into())
@@ -57,4 +57,15 @@ pub fn parse_timed_gd(input: &str) -> IResult<&str, TimedGD> {
     );
 
     alt((at, over))(input)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        let input = "(over all (can-move ?from-waypoint ?to-waypoint))";
+        let (_, _gd) = parse_timed_gd(input).unwrap();
+    }
 }

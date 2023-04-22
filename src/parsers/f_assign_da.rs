@@ -24,3 +24,14 @@ pub fn parse_f_assign_da(input: &str) -> IResult<&str, FAssignDa> {
         FAssignDa::from,
     )(input)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        let input = "(increase (distance-travelled) 5)";
+        let (_, _effect) = parse_f_assign_da(input).unwrap();
+    }
+}

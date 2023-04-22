@@ -1,7 +1,7 @@
 //! Provides parsers for predicates.
 
 use crate::parsers::name::parse_name;
-use crate::types::DASymbol;
+use crate::types::DurativeActionSymbol;
 use nom::combinator::map;
 use nom::IResult;
 
@@ -12,6 +12,6 @@ use nom::IResult;
 /// # use pddl::parsers::parse_da_symbol;
 /// assert_eq!(parse_da_symbol("abcde"), Ok(("", "abcde".into())));
 ///```
-pub fn parse_da_symbol(input: &str) -> IResult<&str, DASymbol> {
-    map(parse_name, DASymbol::from)(input)
+pub fn parse_da_symbol(input: &str) -> IResult<&str, DurativeActionSymbol> {
+    map(parse_name, DurativeActionSymbol::from)(input)
 }

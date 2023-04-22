@@ -13,12 +13,12 @@ use nom::IResult;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::parse_pref_gd;
-/// # use pddl::types::{AtomicFormula, EqualityAtomicFormula, GD, Literal, Name, Preference, PreferenceName, PreferenceGD, Term, TypedList, Variable};
+/// # use pddl::types::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Name, Preference, PreferenceName, PreferenceGD, Term, TypedList, Variable};
 ///
 /// // Simple goal definition.
 /// assert_eq!(parse_pref_gd("(= x y)"), Ok(("",
 ///     PreferenceGD::GoalDefinition(
-///         GD::AtomicFormula(
+///         GoalDefinition::AtomicFormula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Name("x".into()),
 ///                 Term::Name("y".into())
@@ -32,7 +32,7 @@ use nom::IResult;
 ///     PreferenceGD::Preference(
 ///         Preference::new(
 ///             Some(PreferenceName::from("p")),
-///             GD::AtomicFormula(
+///             GoalDefinition::AtomicFormula(
 ///                 AtomicFormula::new_equality(
 ///                     Term::Name("x".into()),
 ///                     Term::Name("y".into())
@@ -47,7 +47,7 @@ use nom::IResult;
 ///     PreferenceGD::Preference(
 ///         Preference::new(
 ///             None,
-///             GD::AtomicFormula(
+///             GoalDefinition::AtomicFormula(
 ///                 AtomicFormula::new_equality(
 ///                     Term::Name("x".into()),
 ///                     Term::Name("y".into())

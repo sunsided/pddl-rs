@@ -18,6 +18,16 @@ use nom::IResult;
 /// let input = "()";
 /// assert_eq!(parse_duration_constraint(input), Ok(("", None)));
 ///
+/// let input = "(= ?duration 5)";
+/// assert_eq!(parse_duration_constraint(input), Ok(("",
+///     Some(DurationConstraint::new_simple(
+///         SimpleDurationConstraint::Op(
+///             DOp::Equal,
+///             Number(5.)
+///         )
+///     ))
+/// )));
+///
 /// let input = "(at end (<= ?duration 1.23))";
 /// assert_eq!(parse_duration_constraint(input), Ok(("",
 ///     Some(DurationConstraint::new_simple(
