@@ -98,5 +98,16 @@ pub fn parse_p_effect(input: &str) -> IResult<&str, PEffect> {
         |(f_term, term)| PEffect::new_object_fluent(f_term, Some(term)),
     );
 
-    alt((numeric, object_undefined, object, is_not, is))(input)
+    alt((object_undefined, object, numeric, is_not, is))(input)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        let input = "(can-move ?from-waypoint ?to-waypoint)";
+        let (_, _effect) = parse_p_effect(input).unwrap();
+    }
 }
