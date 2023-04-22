@@ -27,8 +27,32 @@ impl<'a, O> Typed<'a, O> {
 
 pub trait ToTyped<'a, T> {
     /// Wraps the value into a [`Typed`] as [`Type::Exactly`] the specified type.
+    ///
+    /// ## Example
+    /// ```
+    /// use pddl::types::{Name, PrimitiveType, ToTyped, Type, Typed};
+    /// assert_eq!(
+    ///     Name::from("kitchen").to_typed("room"),
+    ///     Typed::new(Name::from("kitchen"), Type::Exactly(PrimitiveType::from("room")))
+    /// );
+    /// ```
     fn to_typed<I: Into<Type<'a>>>(self, r#type: I) -> Typed<'a, T>;
+
     /// Wraps the value into a [`Typed`] as [`Type::EitherOf`] the specified types.
+    ///
+    /// ## Example
+    /// ```
+    /// use pddl::types::{Name, PrimitiveType, ToTyped, Type, Typed};
+    /// assert_eq!(
+    ///     Name::from("georgia").to_typed_either(["country", "state"]),
+    ///     Typed::new(Name::from("georgia"), Type::EitherOf(
+    ///         vec![
+    ///             PrimitiveType::from("country"),
+    ///             PrimitiveType::from("state")
+    ///         ])
+    ///     )
+    /// );
+    /// ```
     fn to_typed_either<I: IntoIterator<Item = P>, P: Into<PrimitiveType<'a>>>(
         self,
         r#type: I,
