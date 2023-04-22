@@ -69,8 +69,8 @@ listed in the paper:
 - [x] [`<time-specifier>`](src/parsers/time_specifier.rs)
 - [x] [`<interval>`](src/parsers/interval.rs)
 - [ ] `<duration-constraint>`
-- [ ] `<simple-duration-constraint>`
-- [ ] `<d-op>`
+- [x] [`<simple-duration-constraint>`](src/parsers/simple_duration_constraint.rs)
+- [x] [`<d-op>`](src/parsers/d_op.rs)
 - [x] [`<d-value>`](src/parsers/d_value.rs)
 - [x] [`<da-effect>`](src/parsers/da_effect.rs)
 - [x] [`<timed-effect>`](src/parsers/timed_effect.rs)
