@@ -15,7 +15,7 @@ use nom::{error_position, IResult};
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::domain::parse_name;
+/// # use pddl::parsers::utility::parse_name;
 /// assert_eq!(parse_name("abcde"), Ok(("", "abcde".into())));
 /// assert_eq!(parse_name("a-1_2"), Ok(("", "a-1_2".into())));
 /// assert_eq!(parse_name("Z01"), Ok(("", "Z01".into())));

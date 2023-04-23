@@ -49,7 +49,7 @@ listed in the paper:
 - [x] [`<binary-op>`](src/parsers/domain/binary_op.rs)
 - [x] [`<multi-op>`](src/parsers/domain/multi_op.rs)
 - [x] [`<binary-comp>`](src/parsers/domain/binary_comp.rs)
-- [x] [`<name>`](src/parsers/domain/name.rs)
+- [x] [`<name>`](src/parsers/utility/name.rs)
 - [x] [`<letter>`](src/parsers/domain/name.rs)
 - [x] [`<any char>`](src/parsers/domain/name.rs)
 - [x] [`<number>`](src/parsers/utility/number.rs)
