@@ -3,6 +3,7 @@ name = "pddl"
 version = "0.0.1"
 description ="A PDDL 3.1 parser"
 license = "EUPL-1.2"
+documentation = "https://docs.rs/pddl"
 categories = ["parser-implementations", "science", "simulation"]
 keywords = ["pddl", "planning", "parser"]
 repository = "https://github.com/sunsided/pddl-rs"
