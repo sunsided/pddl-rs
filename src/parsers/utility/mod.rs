@@ -1,8 +1,12 @@
 //! Utility parsers such as [`typed_list`](crate::parsers::utility::typed_list) and [`empty_or`](crate::parsers::utility::empty_or).
 
 mod empty_or;
+pub(crate) mod number;
 mod typed_list;
 mod utilities;
+
+// Parsers
+pub use number::parse_number;
 
 // Parser combinators.
 pub use empty_or::empty_or;

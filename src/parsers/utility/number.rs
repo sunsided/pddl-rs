@@ -13,7 +13,7 @@ use std::str::FromStr;
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::domain::parse_number;
+/// # use pddl::parsers::utility::parse_number;
 /// assert_eq!(parse_number("0"), Ok(("", 0.0)));
 /// assert_eq!(parse_number("1000a"), Ok(("a", 1000.0)));
 /// assert_eq!(parse_number("012"), Ok(("", 12.0)));

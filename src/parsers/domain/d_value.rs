@@ -1,6 +1,7 @@
 //! Provides parsers for d-values.
 
-use crate::parsers::domain::{parse_f_exp, parse_number};
+use crate::parsers::domain::parse_f_exp;
+use crate::parsers::utility::parse_number;
 use crate::types::domain::DValue;
 use nom::branch::alt;
 use nom::combinator::map;
