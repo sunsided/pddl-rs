@@ -8,7 +8,7 @@ use nom::IResult;
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::{parse_problem_constraints_def, parse_functions_def};
+/// # use pddl::parsers::{parse_problem_constraints_def};
 /// # use pddl::types::{ConGD, PrefConGD};
 ///
 /// let input = "(:constraints (preference test (and)))";

@@ -18,7 +18,7 @@ use nom::IResult;
 ///
 /// // Simple goal definition.
 /// assert_eq!(parse_pref_gd("(= x y)"), Ok(("",
-///     PreferenceGD::GoalDefinition(
+///     PreferenceGD::Goal(
 ///         GoalDefinition::AtomicFormula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Name("x".into()),

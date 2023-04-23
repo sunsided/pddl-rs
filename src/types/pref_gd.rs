@@ -5,13 +5,13 @@ use crate::types::{GoalDefinition, Preference};
 /// A preferred goal definition.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PreferenceGD<'a> {
-    GoalDefinition(GoalDefinition<'a>),
+    Goal(GoalDefinition<'a>),
     Preference(Preference<'a>),
 }
 
 impl<'a> PreferenceGD<'a> {
     pub const fn from_gd(gd: GoalDefinition<'a>) -> Self {
-        Self::GoalDefinition(gd)
+        Self::Goal(gd)
     }
 
     pub fn from_preference(pref: Preference<'a>) -> Self {
