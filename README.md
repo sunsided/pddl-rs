@@ -88,7 +88,7 @@ listed in the paper:
 - [ ] `<init-el>`
 - [ ] `<basic-function-term>`
 - [ ] `<goal>`
-- [ ] `<constraints>`
+- [x] [`<constraints>`](src/parsers/problem_constraints_def.rs)
 - [x] [`<pref-con-GD>`](src/parsers/pref_con_gd.rs)
 - [x] [~~`<con-GD>`~~](src/parsers/con_gd.rs) (uses embedded modal operators below)
 - [x] [`<metric-spec>`](src/parsers/metric_spec.rs)
