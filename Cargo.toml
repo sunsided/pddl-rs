@@ -1,6 +1,6 @@
 [package]
 name = "pddl"
-version = "0.0.0"
+version = "0.0.1"
 description ="A PDDL 3.1 parser"
 license = "EUPL-1.2"
 categories = ["parser-implementations", "science", "simulation"]
