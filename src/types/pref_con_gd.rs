@@ -39,3 +39,9 @@ impl<'a> PrefConGD<'a> {
         }
     }
 }
+
+impl<'a> Default for PrefConGD<'a> {
+    fn default() -> Self {
+        PrefConGD::And(Vec::default())
+    }
+}

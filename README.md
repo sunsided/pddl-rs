@@ -82,7 +82,7 @@ listed in the paper:
 
 ### Problem Description
 
-- [ ] `<problem>`
+- [x] [`<problem>`](src/parsers/problem.rs)
 - [x] [`<object declaration>`](src/parsers/objects_def.rs)
 - [x] [`<init>`](src/parsers/init_def.rs)
 - [x] [`<init-el>`](src/parsers/init_el.rs)

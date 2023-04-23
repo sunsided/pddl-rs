@@ -8,11 +8,11 @@ use nom::IResult;
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::{parse_goal_def};
+/// # use pddl::parsers::{parse_problem_goal_def};
 /// use pddl::types::{AtomicFormula, GoalDefinition, PreferenceGD, PreGD, Term};
 ///
 /// let input = "(:goal (= x y))";
-/// assert_eq!(parse_goal_def(input), Ok(("",
+/// assert_eq!(parse_problem_goal_def(input), Ok(("",
 ///     PreGD::Preference(
 ///         PreferenceGD::Goal(
 ///             GoalDefinition::AtomicFormula(
@@ -25,6 +25,6 @@ use nom::IResult;
 ///     )
 /// )));
 /// ```
-pub fn parse_goal_def(input: &str) -> IResult<&str, PreGD> {
+pub fn parse_problem_goal_def(input: &str) -> IResult<&str, PreGD> {
     prefix_expr(":goal", parse_pre_gd)(input)
 }
