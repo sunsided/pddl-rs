@@ -2,7 +2,7 @@
 
 use crate::types::CEffect;
 
-/// An effect.
+/// An effect. Occurs e.g. in a [`ActionDefinition`](crate::types::ActionDefinition).
 #[derive(Debug, Clone, PartialEq)]
 pub enum Effect<'a> {
     /// Exactly the specified effect applies.

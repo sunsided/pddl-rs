@@ -2,7 +2,8 @@
 
 use crate::types::{AssignOp, AtomicFormula, FExp, FHead, FunctionTerm, Term};
 
-/// A p-effect.
+/// A p-effect. Occurs as part of a [`CEffect`](crate::types::CEffect) (within an [`Effect`](crate::types::Effect))
+/// or a [`ConditionalEffect`](crate::types::ConditionalEffect).
 #[derive(Debug, Clone, PartialEq)]
 pub enum PEffect<'a> {
     AtomicFormula(AtomicFormula<'a, Term<'a>>),
