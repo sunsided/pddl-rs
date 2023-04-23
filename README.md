@@ -26,6 +26,8 @@ Parsers were implemented based on the BNF elements listed in the paper:
 > "Complete BNF description of PDDL 3.1 (completely corrected)",
 > _Daniel L. Kovacs_
 
+Additional elements were added based on the individual specification papers.
+
 ### Domain Description
 
 - [x] [`<domain>`](src/parsers/domain.rs)
@@ -95,6 +97,12 @@ Parsers were implemented based on the BNF elements listed in the paper:
 - [x] [`<assign-op-t>`](src/parsers/assign_op_t.rs)
 - [x] [`<f-exp-t>`](src/parsers/f_exp_t.rs)
 - [x] [`<derived-def>`](src/parsers/derived_predicate.rs)
+
+Additional elements:
+
+- [x] [`<extension-def>`](src/parsers/domain.rs)
+- [ ] `<domain-vars-def>`
+- [ ] `<timeless-def>`
 
 ### Problem Description
 
