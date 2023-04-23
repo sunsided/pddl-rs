@@ -1,4 +1,4 @@
-//! Provide assignment operations.
+//! Provide assignment operations via the [`AssignOp`] type.
 
 use std::borrow::Borrow;
 use std::fmt::{Display, Formatter};

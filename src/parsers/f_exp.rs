@@ -40,7 +40,7 @@ use nom::IResult;
 /// )));
 ///
 /// assert_eq!(parse_f_exp("fun-sym"), Ok(("",
-///     FExp::new_f_head(
+///     FExp::new_function(
 ///         FHead::new(FunctionSymbol::from_str("fun-sym"))
 ///     )
 /// )));
@@ -76,7 +76,7 @@ pub fn parse_f_exp(input: &str) -> IResult<&str, FExp> {
     );
 
     // :numeric-fluents
-    let f_head = map(parse_f_head, FExp::new_f_head);
+    let f_head = map(parse_f_head, FExp::new_function);
 
     alt((number, binary_op, multi_op, negated, f_head))(input)
 }

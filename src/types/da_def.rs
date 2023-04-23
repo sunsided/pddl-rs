@@ -1,4 +1,4 @@
-//! Contains the [`DurativeActionDefinition`] type.
+//! Contains durative action definitions via the [`DurativeActionDefinition`] type.
 
 use crate::types::TypedVariables;
 use crate::types::{

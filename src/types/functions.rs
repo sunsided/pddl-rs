@@ -1,4 +1,4 @@
-//! Provides function definitions.
+//! Provides function definitions via the [`Functions`] type.
 
 use crate::types::{AtomicFunctionSkeleton, FunctionTyped, FunctionTypedList};
 use std::ops::Deref;
@@ -10,6 +10,11 @@ pub struct Functions<'a>(FunctionTypedList<'a, AtomicFunctionSkeleton<'a>>);
 impl<'a> Functions<'a> {
     pub const fn new(functions: FunctionTypedList<'a, AtomicFunctionSkeleton<'a>>) -> Self {
         Self(functions)
+    }
+
+    /// Gets the values.
+    pub fn values(&self) -> &FunctionTypedList<'a, AtomicFunctionSkeleton<'a>> {
+        &self.0
     }
 }
 

@@ -1,4 +1,4 @@
-//! Contains the [`DurativeActionEffect`] type.
+//! Contains durative action effects via the [`DurativeActionEffect`] type.
 
 use crate::types::TypedVariables;
 use crate::types::{DurativeActionGoalDefinition, TimedEffect};

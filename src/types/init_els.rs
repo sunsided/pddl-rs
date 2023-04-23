@@ -8,8 +8,13 @@ use std::ops::Deref;
 pub struct InitElements<'a>(Vec<InitElement<'a>>);
 
 impl<'a> InitElements<'a> {
-    pub fn new<E: IntoIterator<Item = InitElement<'a>>>(iter: E) -> Self {
-        Self(iter.into_iter().collect())
+    pub const fn new(iter: Vec<InitElement<'a>>) -> Self {
+        Self(iter)
+    }
+
+    /// Gets the values.
+    pub fn values(&self) -> &[InitElement<'a>] {
+        self.0.as_slice()
     }
 }
 
@@ -23,6 +28,6 @@ impl<'a> Deref for InitElements<'a> {
 
 impl<'a> FromIterator<InitElement<'a>> for InitElements<'a> {
     fn from_iter<T: IntoIterator<Item = InitElement<'a>>>(iter: T) -> Self {
-        InitElements::new(iter)
+        InitElements::new(iter.into_iter().collect())
     }
 }

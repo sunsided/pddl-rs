@@ -1,8 +1,11 @@
+//! Contains the [`Domain`] type.
+
 use crate::types::{
     ConGD, Constants, Functions, PredicateDefinitions, Requirements, StructureDefs,
 };
 use crate::types::{Name, Types};
 
+/// The `Domain` type specifies a problem domain in which to plan.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Domain<'a> {
     name: Name<'a>,
@@ -41,34 +44,45 @@ impl<'a> Domain<'a> {
         }
     }
 
+    /// Gets the domain name.
     pub const fn name(&self) -> &Name<'a> {
         &self.name
     }
 
+    /// Returns the optional domain requirements.
+    /// If no requirements were specified by the domain, [Strips](crate::types::Requirement::Strips) is implied.
     pub const fn requirements(&self) -> &Requirements {
         &self.requirements
     }
 
+    /// Returns the optional type declarations.
+    /// Requires [Typing](crate::types::Requirement::Typing).
     pub const fn types(&self) -> &Types<'a> {
         &self.types
     }
 
+    /// Returns the optional constant definitions.
     pub const fn constants(&self) -> &Constants<'a> {
         &self.constants
     }
 
+    /// Returns the optional predicate definitions.
     pub const fn predicates(&self) -> &PredicateDefinitions<'a> {
         &self.predicates
     }
 
+    /// Returns the optional function definitions.
+    /// Requires [Fluents](crate::types::Requirement::Fluents).
     pub const fn functions(&self) -> &Functions<'a> {
         &self.functions
     }
 
+    /// Returns the optional constraint declaration.
     pub const fn constraints(&self) -> &ConGD<'a> {
         &self.constraints
     }
 
+    /// Returns the domain structure definitions.
     pub const fn structure(&self) -> &StructureDefs<'a> {
         &self.structure
     }

@@ -38,6 +38,12 @@ impl<'a> Type<'a> {
     }
 }
 
+impl<'a> PrimitiveType<'a> {
+    pub fn new(name: Name<'a>) -> Self {
+        Self(name)
+    }
+}
+
 impl<'a> Default for Type<'a> {
     fn default() -> Self {
         Self::Exactly(TYPE_OBJECT)
@@ -77,15 +83,13 @@ where
     }
 }
 
-impl<'a> From<&'a str> for PrimitiveType<'a> {
-    fn from(value: &'a str) -> Self {
-        Self(Name::new(value))
-    }
-}
-
-impl<'a> From<Name<'a>> for PrimitiveType<'a> {
-    fn from(value: Name<'a>) -> Self {
-        Self(value)
+impl<'a, T> From<T> for PrimitiveType<'a>
+where
+    T: Into<Name<'a>>,
+{
+    #[inline(always)]
+    fn from(value: T) -> Self {
+        PrimitiveType::new(value.into())
     }
 }
 

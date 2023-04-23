@@ -1,4 +1,4 @@
-//! Contains the f-exp type.
+//! Contains function expressions via the [`FExp`] type.
 
 use crate::types::{BinaryOp, FHead, MultiOp, Number};
 
@@ -11,7 +11,7 @@ pub enum FExp<'a> {
     BinaryOp(BinaryOp, Box<FExp<'a>>, Box<FExp<'a>>),
     MultiOp(MultiOp, Box<FExp<'a>>, Vec<FExp<'a>>),
     Negative(Box<FExp<'a>>),
-    FHead(FHead<'a>),
+    Function(FHead<'a>),
 }
 
 impl<'a> FExp<'a> {
@@ -36,7 +36,7 @@ impl<'a> FExp<'a> {
         Self::Negative(Box::new(value))
     }
 
-    pub const fn new_f_head(f_head: FHead<'a>) -> Self {
-        Self::FHead(f_head)
+    pub const fn new_function(f_head: FHead<'a>) -> Self {
+        Self::Function(f_head)
     }
 }

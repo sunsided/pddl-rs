@@ -1,4 +1,4 @@
-//! Contains the f-exp-t type.
+//! Contains timed function expressions via the [`FExpT`] type.
 
 use crate::types::FExp;
 

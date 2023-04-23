@@ -16,11 +16,13 @@ impl<'a, O> Typed<'a, O> {
         Self::new(value, Type::OBJECT)
     }
 
-    pub const fn value_ref(&self) -> &O {
+    /// Gets the value.
+    pub const fn value(&self) -> &O {
         &self.0
     }
 
-    pub const fn type_ref(&self) -> &Type<'a> {
+    /// Gets the assigned type.
+    pub const fn type_(&self) -> &Type<'a> {
         &self.1
     }
 }
@@ -69,6 +71,6 @@ impl<'a, O> Deref for Typed<'a, O> {
     type Target = O;
 
     fn deref(&self) -> &Self::Target {
-        self.value_ref()
+        self.value()
     }
 }

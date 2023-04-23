@@ -11,6 +11,11 @@ impl<'a> StructureDefs<'a> {
     pub fn new<I: IntoIterator<Item = StructureDef<'a>>>(defs: I) -> Self {
         Self(defs.into_iter().collect())
     }
+
+    /// Gets the values.
+    pub fn values(&self) -> &[StructureDef<'a>] {
+        self.0.as_slice()
+    }
 }
 
 impl<'a> Deref for StructureDefs<'a> {

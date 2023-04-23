@@ -20,10 +20,12 @@ impl LengthSpec {
         Self::new(None, Some(parallel))
     }
 
+    /// Gets the serial value.
     pub const fn serial(&self) -> Option<u64> {
         self.serial
     }
 
+    /// Gets the parallel value.
     pub const fn parallel(&self) -> Option<u64> {
         self.parallel
     }

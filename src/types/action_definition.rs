@@ -1,4 +1,4 @@
-//! Contains action definitions.
+//! Contains action definitions via the [`ActionDefinition`] type.
 
 use crate::types::TypedVariables;
 use crate::types::{ActionSymbol, Effect, PreGD};

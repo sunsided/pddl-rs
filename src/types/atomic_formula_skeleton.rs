@@ -1,4 +1,4 @@
-//! Contains atomic formula skeletons.
+//! Contains atomic formula skeletons via the [`AtomicFormulaSkeleton`] type.
 
 use crate::types::Predicate;
 use crate::types::{Name, TypedVariables};
@@ -23,12 +23,12 @@ impl<'a> AtomicFormulaSkeleton<'a> {
     }
 
     /// Gets a reference to the predicate.
-    pub const fn predicate_ref(&self) -> &Predicate<'a> {
+    pub const fn predicate(&self) -> &Predicate<'a> {
         &self.predicate
     }
 
     /// Gets a reference to the variables.
-    pub fn variables_ref(&self) -> &TypedVariables<'a> {
+    pub fn variables(&self) -> &TypedVariables<'a> {
         &self.variables
     }
 }

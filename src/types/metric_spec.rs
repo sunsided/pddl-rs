@@ -2,6 +2,7 @@
 
 use crate::types::{MetricFExp, Optimization};
 
+/// A metric specification.
 /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
 #[derive(Debug, Clone, PartialEq)]
 pub struct MetricSpec<'a> {
@@ -14,11 +15,13 @@ impl<'a> MetricSpec<'a> {
         Self { optimization, exp }
     }
 
+    /// Gets the optimization instruction.
     pub const fn optimization(&self) -> Optimization {
         self.optimization
     }
 
-    pub const fn exp(&self) -> &MetricFExp<'a> {
+    /// Gets the expression to optimize.
+    pub const fn expression(&self) -> &MetricFExp<'a> {
         &self.exp
     }
 }

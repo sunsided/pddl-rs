@@ -10,10 +10,12 @@ impl<'a> BasicFunctionTerm<'a> {
         Self(symbol, names.into_iter().collect())
     }
 
+    /// Returns the function symbol.
     pub const fn symbol(&self) -> &FunctionSymbol<'a> {
         &self.0
     }
 
+    /// Returns the associated names.
     pub fn names(&self) -> &[Name<'a>] {
         self.1.as_slice()
     }

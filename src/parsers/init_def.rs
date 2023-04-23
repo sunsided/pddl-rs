@@ -14,7 +14,7 @@ use nom::IResult;
 ///
 /// let input = "(:init (train-not-in-use train1) (at 10 (train-not-in-use train2)))";
 /// assert_eq!(parse_problem_init_def(input), Ok(("",
-///     InitElements::new([
+///     InitElements::from_iter([
 ///         InitElement::new_literal(
 ///             NameLiteral::new(
 ///                 AtomicFormula::new_predicate(

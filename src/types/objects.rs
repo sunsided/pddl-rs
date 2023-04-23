@@ -11,6 +11,10 @@ impl<'a> Objects<'a> {
     pub fn new<I: IntoIterator<Item = Typed<'a, Name<'a>>>>(objects: I) -> Self {
         Self(objects.into_iter().collect())
     }
+
+    pub fn values(&self) -> &TypedNames<'a> {
+        &self.0
+    }
 }
 
 impl<'a> From<TypedNames<'a>> for Objects<'a> {

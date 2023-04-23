@@ -1,4 +1,4 @@
-//! Contains function types.
+//! Contains function types via the [`FunctionType`] ... type.
 
 use crate::types::{PrimitiveType, Type};
 use std::ops::Deref;
@@ -8,9 +8,13 @@ use std::ops::Deref;
 pub struct FunctionType<'a>(Type<'a>);
 
 impl<'a> FunctionType<'a> {
-    pub const NUMBER: FunctionType<'static> = FunctionType::new(Type::NUMBER);
+    pub const NUMBER: FunctionType<'static> = FunctionType::from(Type::NUMBER);
 
-    pub const fn new(r#type: Type<'a>) -> Self {
+    pub fn new<T: Into<Type<'a>>>(r#type: T) -> Self {
+        Self(r#type.into())
+    }
+
+    pub const fn from(r#type: Type<'a>) -> Self {
         Self(r#type)
     }
 }

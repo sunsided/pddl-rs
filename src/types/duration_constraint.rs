@@ -1,4 +1,4 @@
-//! Contains the [`DurationConstraint`] type.
+//! Contains duration constraints via the [`DurationConstraint`] type.
 
 use crate::types::SimpleDurationConstraint;
 
@@ -18,6 +18,20 @@ impl<'a> DurationConstraint<'a> {
         let vec: Vec<_> = constraints.into_iter().collect();
         debug_assert!(!vec.is_empty());
         Self::And(vec)
+    }
+
+    pub fn len(&self) -> usize {
+        match self {
+            DurationConstraint::Simple(_) => 1,
+            DurationConstraint::And(cs) => cs.len(),
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        match self {
+            DurationConstraint::Simple(_) => false,
+            DurationConstraint::And(xs) => xs.is_empty(),
+        }
     }
 }
 

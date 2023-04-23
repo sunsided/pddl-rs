@@ -1,3 +1,5 @@
+//! Contains typed function elements via the [`FunctionTypedList`] type.
+
 use crate::types::function_typed::FunctionTyped;
 use std::ops::Deref;
 
@@ -28,6 +30,11 @@ impl<'a, T> Default for FunctionTypedList<'a, T> {
 impl<'a, T> FunctionTypedList<'a, T> {
     pub const fn new(list: Vec<FunctionTyped<'a, T>>) -> Self {
         Self(list)
+    }
+
+    /// Gets the values.
+    pub fn values(&self) -> &[FunctionTyped<'a, T>] {
+        self.0.as_slice()
     }
 }
 

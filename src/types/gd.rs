@@ -1,4 +1,4 @@
-//! Contains goal definitions.
+//! Contains goal definitions via the [`GoalDefinition`] type.
 
 use crate::types::TermLiteral;
 use crate::types::{AtomicFormula, FComp, Term, TypedVariables};

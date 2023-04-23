@@ -11,6 +11,11 @@ impl<'a> Types<'a> {
     pub const fn new(predicates: TypedNames<'a>) -> Self {
         Self(predicates)
     }
+
+    /// Gets the values.
+    pub fn values(&self) -> &TypedNames<'a> {
+        &self.0
+    }
 }
 
 impl<'a> Deref for Types<'a> {
