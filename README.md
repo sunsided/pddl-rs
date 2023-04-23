@@ -12,7 +12,7 @@ listed in the paper:
 
 ### Domain Description
 
-- [ ] [`<domain>`](src/parsers/domain.rs) — partial implementation missing `<constraints>`.
+- [x] [`<domain>`](src/parsers/domain.rs)
 - [x] [`<require-def>`](src/parsers/predicates_def.rs)
 - [x] [`<require-key>`](src/parsers/requirements.rs)
 - [x] [`<types-def>`](src/parsers/types_def.rs)
@@ -26,7 +26,7 @@ listed in the paper:
 - [x] [`<functions-def>`](src/parsers/functions_def.rs)
 - [x] [`<function typed list (x)>`](src/parsers/function_typed_list.rs)
 - [x] [`<function type>`](src/parsers/function_type.rs)
-- [ ] `<constraints>`
+- [x] [`<constraints>`](src/parsers/domain_constraints_def.rs)
 - [x] [`<structure-def>`](src/parsers/structure_def.rs)
 - [x] [`<typed list (x)>`](src/parsers/typed_list.rs)
 - [x] [`<primitive-type>`](src/parsers/primitive_type.rs)

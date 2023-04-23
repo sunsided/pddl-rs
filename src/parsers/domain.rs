@@ -1,11 +1,11 @@
 //! Provides parsers for domain definitions.
 
 use crate::parsers::{
-    parse_constants_def, parse_functions_def, parse_predicates_def, parse_require_def,
-    parse_structure_def,
+    parse_constants_def, parse_domain_constraints_def, parse_functions_def, parse_predicates_def,
+    parse_require_def, parse_structure_def,
 };
 use crate::parsers::{parse_name, parse_types_def, prefix_expr, space_separated_list1, ws};
-use crate::types::Types;
+use crate::types::{ConGD, Types};
 use crate::types::{
     Constants, Domain, Functions, PredicateDefinitions, Requirements, StructureDefs,
 };
@@ -27,6 +27,7 @@ use nom::IResult;
 ///       (:constants B P D - physob)
 ///       (:predicates (at ?x - physob ?y - location)
 ///                    (in ?x ?y - physob))
+///       (:constraints (and))
 ///
 ///       (:action mov-B
 ///            :parameters (?m ?l - location)
@@ -56,6 +57,7 @@ use nom::IResult;
 /// assert_eq!(domain.types().len(), 2);
 /// assert_eq!(domain.constants().len(), 3);
 /// assert_eq!(domain.predicates().len(), 2);
+/// assert!(domain.constraints().is_empty());
 /// assert_eq!(domain.structure().len(), 3);
 /// ```
 pub fn parse_domain(input: &str) -> IResult<&str, Domain> {
@@ -65,11 +67,14 @@ pub fn parse_domain(input: &str) -> IResult<&str, Domain> {
             tuple((
                 prefix_expr("domain", parse_name),
                 opt(preceded(multispace1, parse_require_def)),
+                // :typing
                 opt(preceded(multispace1, parse_types_def)),
                 opt(preceded(multispace1, parse_constants_def)),
                 opt(preceded(multispace1, parse_predicates_def)),
+                // :fluents
                 opt(preceded(multispace1, parse_functions_def)),
-                // TODO: add constraints (:constraints requirement)
+                // :constraints
+                opt(preceded(multispace1, parse_domain_constraints_def)),
                 opt(preceded(
                     multispace1,
                     map(
@@ -79,7 +84,7 @@ pub fn parse_domain(input: &str) -> IResult<&str, Domain> {
                 )),
             )),
         )),
-        |(name, require, types, constants, predicates, functions, structure)| {
+        |(name, require, types, constants, predicates, functions, constraints, structure)| {
             Domain::new(
                 name,
                 require.unwrap_or(Requirements::default()),
@@ -87,6 +92,7 @@ pub fn parse_domain(input: &str) -> IResult<&str, Domain> {
                 constants.unwrap_or(Constants::default()),
                 predicates.unwrap_or(PredicateDefinitions::default()),
                 functions.unwrap_or(Functions::default()),
+                constraints.unwrap_or(ConGD::default()),
                 structure.unwrap_or(StructureDefs::default()),
             )
         },

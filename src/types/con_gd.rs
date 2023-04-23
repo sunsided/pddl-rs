@@ -16,6 +16,12 @@ pub enum ConGD<'a> {
     HoldAfter(Number, Con2GD<'a>),
 }
 
+impl<'a> Default for ConGD<'a> {
+    fn default() -> Self {
+        Self::And(Vec::default())
+    }
+}
+
 /// A type that represents either a [`GoalDefinition`] or an embedded [`ConGD`].
 #[derive(Debug, Clone, PartialEq)]
 pub enum Con2GD<'a> {
@@ -71,6 +77,23 @@ impl<'a> ConGD<'a> {
     pub const fn new_hold_after(number: Number, gd: Con2GD<'a>) -> Self {
         Self::HoldAfter(number, gd)
     }
+
+    pub fn is_empty(&self) -> bool {
+        match self {
+            ConGD::And(x) => x.is_empty(),
+            ConGD::Forall(_, x) => x.is_empty(),
+            ConGD::AtEnd(x) => x.is_empty(),
+            ConGD::Always(x) => x.is_empty(),
+            ConGD::Sometime(x) => x.is_empty(),
+            ConGD::Within(_, x) => x.is_empty(),
+            ConGD::AtMostOnce(x) => x.is_empty(),
+            ConGD::SometimeAfter(x, y) => x.is_empty() && y.is_empty(),
+            ConGD::SometimeBefore(x, y) => x.is_empty() && y.is_empty(),
+            ConGD::AlwaysWithin(_, x, y) => x.is_empty() && y.is_empty(),
+            ConGD::HoldDuring(_, _, x) => x.is_empty(),
+            ConGD::HoldAfter(_, x) => x.is_empty(),
+        }
+    }
 }
 
 impl<'a> Con2GD<'a> {
@@ -80,6 +103,13 @@ impl<'a> Con2GD<'a> {
 
     pub const fn new_goal(gd: GoalDefinition<'a>) -> Self {
         Self::Goal(gd)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        match self {
+            Self::Goal(gd) => gd.is_empty(),
+            Self::Nested(gd) => gd.is_empty(),
+        }
     }
 }
 
