@@ -1,17 +1,17 @@
 //! Contains atomic formula skeletons.
 
-use crate::types::{Name, TypedList};
-use crate::types::{Predicate, Variable};
+use crate::types::Predicate;
+use crate::types::{Name, TypedVariables};
 
 /// An atomic formula skeleton.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct AtomicFormulaSkeleton<'a> {
     predicate: Predicate<'a>,
-    variables: TypedList<'a, Variable<'a>>,
+    variables: TypedVariables<'a>,
 }
 
 impl<'a> AtomicFormulaSkeleton<'a> {
-    pub const fn new(predicate: Predicate<'a>, formula: TypedList<'a, Variable<'a>>) -> Self {
+    pub const fn new(predicate: Predicate<'a>, formula: TypedVariables<'a>) -> Self {
         Self {
             predicate,
             variables: formula,
@@ -28,13 +28,13 @@ impl<'a> AtomicFormulaSkeleton<'a> {
     }
 
     /// Gets a reference to the variables.
-    pub fn variables_ref(&self) -> &TypedList<'a, Variable<'a>> {
+    pub fn variables_ref(&self) -> &TypedVariables<'a> {
         &self.variables
     }
 }
 
-impl<'a> From<(Predicate<'a>, TypedList<'a, Variable<'a>>)> for AtomicFormulaSkeleton<'a> {
-    fn from(value: (Predicate<'a>, TypedList<'a, Variable<'a>>)) -> Self {
+impl<'a> From<(Predicate<'a>, TypedVariables<'a>)> for AtomicFormulaSkeleton<'a> {
+    fn from(value: (Predicate<'a>, TypedVariables<'a>)) -> Self {
         AtomicFormulaSkeleton::new(value.0, value.1)
     }
 }

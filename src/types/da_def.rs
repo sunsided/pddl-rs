@@ -1,15 +1,14 @@
 //! Contains the [`DurativeActionDefinition`] type.
 
-use crate::types::TypedList;
+use crate::types::TypedVariables;
 use crate::types::{
     DurationConstraint, DurativeActionEffect, DurativeActionGoalDefinition, DurativeActionSymbol,
-    Variable,
 };
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DurativeActionDefinition<'a> {
     symbol: DurativeActionSymbol<'a>,
-    parameters: TypedList<'a, Variable<'a>>,
+    parameters: TypedVariables<'a>,
     duration: Option<DurationConstraint<'a>>,
     condition: Option<DurativeActionGoalDefinition<'a>>,
     effect: Option<DurativeActionEffect<'a>>,
@@ -18,7 +17,7 @@ pub struct DurativeActionDefinition<'a> {
 impl<'a> DurativeActionDefinition<'a> {
     pub const fn new(
         symbol: DurativeActionSymbol<'a>,
-        parameters: TypedList<'a, Variable<'a>>,
+        parameters: TypedVariables<'a>,
         duration: Option<DurationConstraint<'a>>,
         condition: Option<DurativeActionGoalDefinition<'a>>,
         effect: Option<DurativeActionEffect<'a>>,
@@ -36,7 +35,7 @@ impl<'a> DurativeActionDefinition<'a> {
         &self.symbol
     }
 
-    pub const fn parameters(&self) -> &TypedList<'a, Variable<'a>> {
+    pub const fn parameters(&self) -> &TypedVariables<'a> {
         &self.parameters
     }
 
@@ -59,8 +58,8 @@ impl<'a> AsRef<DurativeActionSymbol<'a>> for DurativeActionDefinition<'a> {
     }
 }
 
-impl<'a> AsRef<TypedList<'a, Variable<'a>>> for DurativeActionDefinition<'a> {
-    fn as_ref(&self) -> &TypedList<'a, Variable<'a>> {
+impl<'a> AsRef<TypedVariables<'a>> for DurativeActionDefinition<'a> {
+    fn as_ref(&self) -> &TypedVariables<'a> {
         self.parameters()
     }
 }

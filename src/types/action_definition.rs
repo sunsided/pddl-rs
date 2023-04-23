@@ -1,13 +1,13 @@
 //! Contains action definitions.
 
-use crate::types::TypedList;
-use crate::types::{ActionSymbol, Effect, PreGD, Variable};
+use crate::types::TypedVariables;
+use crate::types::{ActionSymbol, Effect, PreGD};
 
 /// An action definition.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionDefinition<'a> {
     symbol: ActionSymbol<'a>,
-    parameters: TypedList<'a, Variable<'a>>,
+    parameters: TypedVariables<'a>,
     precondition: Option<PreGD<'a>>,
     effect: Option<Effect<'a>>,
 }
@@ -15,7 +15,7 @@ pub struct ActionDefinition<'a> {
 impl<'a> ActionDefinition<'a> {
     pub const fn new(
         symbol: ActionSymbol<'a>,
-        parameters: TypedList<'a, Variable<'a>>,
+        parameters: TypedVariables<'a>,
         precondition: Option<PreGD<'a>>,
         effect: Option<Effect<'a>>,
     ) -> Self {
@@ -31,7 +31,7 @@ impl<'a> ActionDefinition<'a> {
         &self.symbol
     }
 
-    pub const fn parameters(&self) -> &TypedList<'a, Variable<'a>> {
+    pub const fn parameters(&self) -> &TypedVariables<'a> {
         &self.parameters
     }
 

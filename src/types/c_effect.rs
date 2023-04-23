@@ -1,14 +1,14 @@
 //! Contains c-effects.
 
-use crate::types::TypedList;
-use crate::types::{ConditionalEffect, Effect, GoalDefinition, PEffect, Variable};
+use crate::types::TypedVariables;
+use crate::types::{ConditionalEffect, Effect, GoalDefinition, PEffect};
 
 /// A c-effect.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CEffect<'a> {
     PEffect(PEffect<'a>),
     /// Requires [ConditionalEffects](crate::types::Requirement::ConditionalEffects).
-    Forall(TypedList<'a, Variable<'a>>, Box<Effect<'a>>),
+    Forall(TypedVariables<'a>, Box<Effect<'a>>),
     /// Requires [ConditionalEffects](crate::types::Requirement::ConditionalEffects).
     When(GoalDefinition<'a>, ConditionalEffect<'a>),
 }
@@ -18,7 +18,7 @@ impl<'a> CEffect<'a> {
         Self::PEffect(effect)
     }
 
-    pub fn new_forall(variables: TypedList<'a, Variable<'a>>, effect: Effect<'a>) -> Self {
+    pub fn new_forall(variables: TypedVariables<'a>, effect: Effect<'a>) -> Self {
         Self::Forall(variables, Box::new(effect))
     }
 
@@ -33,8 +33,8 @@ impl<'a> From<PEffect<'a>> for CEffect<'a> {
     }
 }
 
-impl<'a> From<(TypedList<'a, Variable<'a>>, Effect<'a>)> for CEffect<'a> {
-    fn from(value: (TypedList<'a, Variable<'a>>, Effect<'a>)) -> Self {
+impl<'a> From<(TypedVariables<'a>, Effect<'a>)> for CEffect<'a> {
+    fn from(value: (TypedVariables<'a>, Effect<'a>)) -> Self {
         CEffect::new_forall(value.0, value.1)
     }
 }

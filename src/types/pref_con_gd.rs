@@ -1,12 +1,12 @@
 //! Contains the type [`PrefConGD`].
 
-use crate::types::{ConGD, PreferenceName, TypedList, Variable};
+use crate::types::{ConGD, PreferenceName, TypedVariables};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PrefConGD<'a> {
     And(Vec<PrefConGD<'a>>),
     /// Requires [UniversalPreconditions](crate::types::Requirement::UniversalPreconditions).
-    Forall(TypedList<'a, Variable<'a>>, Box<PrefConGD<'a>>),
+    Forall(TypedVariables<'a>, Box<PrefConGD<'a>>),
     /// Requires [Preferences](crate::types::Requirement::Preferences).
     Preference(Option<PreferenceName<'a>>, ConGD<'a>),
     Goal(ConGD<'a>),
@@ -18,7 +18,7 @@ impl<'a> PrefConGD<'a> {
         Self::And(iter.into_iter().collect())
     }
 
-    pub fn new_forall(variables: TypedList<'a, Variable<'a>>, gd: PrefConGD<'a>) -> Self {
+    pub fn new_forall(variables: TypedVariables<'a>, gd: PrefConGD<'a>) -> Self {
         Self::Forall(variables, Box::new(gd))
     }
 

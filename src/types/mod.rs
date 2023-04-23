@@ -143,3 +143,9 @@ pub use variable::Variable;
 // Internal re-exports.
 #[allow(unused_imports)]
 pub(crate) use r#type::{TYPE_NUMBER, TYPE_OBJECT};
+
+pub type NameLiteral<'a> = Literal<'a, Name<'a>>;
+pub type TermLiteral<'a> = Literal<'a, Term<'a>>;
+
+pub type TypedVariables<'a> = TypedList<'a, Variable<'a>>;
+pub type TypedNames<'a> = TypedList<'a, Name<'a>>;
