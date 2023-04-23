@@ -1,7 +1,10 @@
-use crate::types::{GoalDefinition, Number};
+use crate::types::{GoalDefinition, Number, TypedList, Variable};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConGD<'a> {
+    And(Vec<ConGD<'a>>),
+    Forall(TypedList<'a, Variable<'a>>, Box<ConGD<'a>>),
+    AtEnd(GoalDefinition<'a>),
     Always(Con2GD<'a>),
     Sometime(Con2GD<'a>),
     Within(Number, Con2GD<'a>),
@@ -21,6 +24,18 @@ pub enum Con2GD<'a> {
 }
 
 impl<'a> ConGD<'a> {
+    pub fn new_and<G: IntoIterator<Item = ConGD<'a>>>(goals: G) -> Self {
+        Self::And(goals.into_iter().collect())
+    }
+
+    pub fn new_for_all(variables: TypedList<'a, Variable<'a>>, gd: ConGD<'a>) -> Self {
+        Self::Forall(variables, Box::new(gd))
+    }
+
+    pub const fn new_at_end(gd: GoalDefinition<'a>) -> Self {
+        Self::AtEnd(gd)
+    }
+
     pub const fn new_always(gd: Con2GD<'a>) -> Self {
         Self::Always(gd)
     }
