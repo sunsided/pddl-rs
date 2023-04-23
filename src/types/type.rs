@@ -123,7 +123,7 @@ impl AsRef<str> for PrimitiveType {
 }
 
 impl Deref for PrimitiveType {
-    type Target = str;
+    type Target = Name;
 
     fn deref(&self) -> &Self::Target {
         &self.0

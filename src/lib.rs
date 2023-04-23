@@ -90,3 +90,7 @@ pub use parsers::Parser;
 
 // re-export types
 pub use types::*;
+
+#[cfg_attr(docsrs, doc(cfg(feature = "pretty")))]
+#[cfg(feature = "pretty")]
+pub(crate) mod pretty_print;
