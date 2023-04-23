@@ -1,5 +1,10 @@
 # PDDL parser (work in progress)
 
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/sunsided/pddl-rs/rust.yml)
+![docs.rs](https://img.shields.io/docsrs/pddl)
+![Crates.io](https://img.shields.io/crates/v/pddl)
+![Crates.io](https://img.shields.io/crates/l/pddl)
+
 A PDDL 3.1 parser implementation in Rust based on [nom](https://crates.io/crates/nom). See [`src/briefcase_world.rs`](src/briefcase_world.rs) for an example.
 
 Parser and domain/problem types can be used separately and will be completely 
