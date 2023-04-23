@@ -99,17 +99,14 @@ pub fn parse_domain(input: &str) -> IResult<&str, Domain> {
             constraints,
             structure,
         )| {
-            Domain::new(
-                name,
-                extends.unwrap_or(Vec::default()),
-                require.unwrap_or(Requirements::default()),
-                types.unwrap_or(Types::default()),
-                constants.unwrap_or(Constants::default()),
-                predicates.unwrap_or(PredicateDefinitions::default()),
-                functions.unwrap_or(Functions::default()),
-                constraints.unwrap_or(ConGD::default()),
-                structure.unwrap_or(StructureDefs::default()),
-            )
+            Domain::builder(name, structure.unwrap_or(StructureDefs::default()))
+                .with_extends(extends.unwrap_or(Vec::default()))
+                .with_requirements(require.unwrap_or(Requirements::default()))
+                .with_types(types.unwrap_or(Types::default()))
+                .with_constants(constants.unwrap_or(Constants::default()))
+                .with_predicates(predicates.unwrap_or(PredicateDefinitions::default()))
+                .with_functions(functions.unwrap_or(Functions::default()))
+                .with_constraints(constraints.unwrap_or(ConGD::default()))
         },
     )(input)
 }

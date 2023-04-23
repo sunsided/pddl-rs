@@ -69,6 +69,7 @@ mod term;
 mod time_specifier;
 mod timed_effect;
 mod timed_gd;
+mod timeless_def;
 mod r#type;
 mod typed_list;
 mod types_def;
@@ -144,6 +145,7 @@ pub use term::parse_term;
 pub use time_specifier::parse_time_specifier;
 pub use timed_effect::parse_timed_effect;
 pub use timed_gd::parse_timed_gd;
+pub use timeless_def::parse_timeless_def;
 pub use types_def::parse_types_def;
 pub use variable::parse_variable;
 

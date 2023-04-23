@@ -1,7 +1,7 @@
 //! Contains the [`Domain`] type.
 
 use crate::types::{
-    ConGD, Constants, Functions, PredicateDefinitions, Requirement, Requirements, StructureDefs,
+    ConGD, Constants, Functions, PredicateDefinitions, Requirements, StructureDefs, Timeless,
 };
 use crate::types::{Name, Types};
 
@@ -9,45 +9,23 @@ use crate::types::{Name, Types};
 #[derive(Debug, Clone, PartialEq)]
 pub struct Domain<'a> {
     name: Name<'a>,
-    /// PDDL 1.2
+    // TODO: PDDL 1.2 - deprecated?
     extends: Vec<Name<'a>>,
     requirements: Requirements,
-    /// Requires [Typing](Requirement::Typing).
+    /// Requires [Typing](crate::types::Requirement::Typing).
     types: Types<'a>,
     constants: Constants<'a>,
     predicates: PredicateDefinitions<'a>,
-    /// Requires [Fluents](Requirement::Fluents).
+    /// Requires [Fluents](crate::types::Requirement::Fluents).
     functions: Functions<'a>,
-    /// Requires [Constraints](Requirement::Constraints).
+    /// Requires [Constraints](crate::types::Requirement::Constraints).
     constraints: ConGD<'a>,
+    // TODO: PDDL 1.2 - deprecated?
+    timeless: Timeless<'a>,
     structure: StructureDefs<'a>,
 }
 
 impl<'a> Domain<'a> {
-    pub fn new(
-        name: Name<'a>,
-        extends: Vec<Name<'a>>,
-        requirements: Requirements,
-        types: Types<'a>,
-        constants: Constants<'a>,
-        predicates: PredicateDefinitions<'a>,
-        functions: Functions<'a>,
-        constraints: ConGD<'a>,
-        structure: StructureDefs<'a>,
-    ) -> Self {
-        Self {
-            name,
-            extends,
-            requirements,
-            types,
-            constants,
-            predicates,
-            functions,
-            constraints,
-            structure,
-        }
-    }
-
     /// Creates a builder to easily construct problems.
     pub fn builder(name: Name<'a>, structure: StructureDefs<'a>) -> Self {
         Self {
@@ -59,6 +37,7 @@ impl<'a> Domain<'a> {
             predicates: PredicateDefinitions::default(),
             functions: Functions::default(),
             constraints: ConGD::default(),
+            timeless: Timeless::default(),
             structure,
         }
     }
@@ -71,11 +50,8 @@ impl<'a> Domain<'a> {
     }
 
     /// Adds a list of optional domain requirements.
-    pub fn with_requirements<R: IntoIterator<Item = Requirement>>(
-        mut self,
-        requirements: R,
-    ) -> Self {
-        self.requirements = requirements.into_iter().collect();
+    pub fn with_requirements(mut self, requirements: Requirements) -> Self {
+        self.requirements = requirements;
         self
     }
 
@@ -109,6 +85,12 @@ impl<'a> Domain<'a> {
         self
     }
 
+    /// Adds a list of timeless predicates.
+    pub fn with_timeless(mut self, timeless: Timeless<'a>) -> Self {
+        self.timeless = timeless;
+        self
+    }
+
     /// Gets the domain name.
     pub const fn name(&self) -> &Name<'a> {
         &self.name
@@ -121,13 +103,13 @@ impl<'a> Domain<'a> {
     }
 
     /// Returns the optional domain requirements.
-    /// If no requirements were specified by the domain, [Strips](Requirement::Strips) is implied.
+    /// If no requirements were specified by the domain, [Strips](crate::types::Requirement::Strips) is implied.
     pub const fn requirements(&self) -> &Requirements {
         &self.requirements
     }
 
     /// Returns the optional type declarations.
-    /// Requires [Typing](Requirement::Typing).
+    /// Requires [Typing](crate::types::Requirement::Typing).
     pub const fn types(&self) -> &Types<'a> {
         &self.types
     }

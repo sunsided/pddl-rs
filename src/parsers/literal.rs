@@ -17,10 +17,24 @@ use nom::IResult;
 /// # use pddl::types::{AtomicFormula, EqualityAtomicFormula, PredicateAtomicFormula, Predicate, Literal};
 ///
 /// assert_eq!(literal(parse_name)("(= x y)"), Ok(("",
-///     Literal::AtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new("x".into(), "y".into())))
+///     Literal::AtomicFormula(
+///         AtomicFormula::Equality(
+///             EqualityAtomicFormula::new(
+///                 "x".into(),
+///                 "y".into()
+///             )
+///         )
+///     )
 /// )));
 /// assert_eq!(literal(parse_name)("(not (= x y))"), Ok(("",
-///     Literal::NotAtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new("x".into(), "y".into())))
+///     Literal::NotAtomicFormula(
+///         AtomicFormula::Equality(
+///             EqualityAtomicFormula::new(
+///                 "x".into(),
+///                 "y".into()
+///             )
+///         )
+///     )
 /// )));
 /// ```
 pub fn literal<'a, F, O>(inner: F) -> impl FnMut(&'a str) -> IResult<&'a str, Literal<O>>
