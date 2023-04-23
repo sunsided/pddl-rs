@@ -1,7 +1,7 @@
 //! Contains the [`DurativeActionEffect`] type.
 
-use crate::types::TypedList;
-use crate::types::{DurativeActionGoalDefinition, TimedEffect, Variable};
+use crate::types::TypedVariables;
+use crate::types::{DurativeActionGoalDefinition, TimedEffect};
 
 /// A durative action effect.
 #[derive(Debug, Clone, PartialEq)]
@@ -10,7 +10,7 @@ pub enum DurativeActionEffect<'a> {
     /// Conjunction: All effects apply (i.e. a and b and c ..).
     All(Vec<DurativeActionEffect<'a>>),
     /// Requires [ConditionalEffects](crate::types::Requirement::ConditionalEffects).
-    Forall(TypedList<'a, Variable<'a>>, Box<DurativeActionEffect<'a>>),
+    Forall(TypedVariables<'a>, Box<DurativeActionEffect<'a>>),
     /// Requires [ConditionalEffects](crate::types::Requirement::ConditionalEffects).
     When(DurativeActionGoalDefinition<'a>, TimedEffect<'a>),
 }
@@ -22,10 +22,7 @@ impl<'a> DurativeActionEffect<'a> {
     pub fn new_and<E: IntoIterator<Item = DurativeActionEffect<'a>>>(effect: E) -> Self {
         Self::All(effect.into_iter().collect())
     }
-    pub fn new_forall(
-        variables: TypedList<'a, Variable<'a>>,
-        effect: DurativeActionEffect<'a>,
-    ) -> Self {
+    pub fn new_forall(variables: TypedVariables<'a>, effect: DurativeActionEffect<'a>) -> Self {
         Self::Forall(variables, Box::new(effect))
     }
     pub const fn new_when(gd: DurativeActionGoalDefinition<'a>, effect: TimedEffect<'a>) -> Self {
@@ -45,10 +42,8 @@ impl<'a> FromIterator<DurativeActionEffect<'a>> for DurativeActionEffect<'a> {
     }
 }
 
-impl<'a> From<(TypedList<'a, Variable<'a>>, DurativeActionEffect<'a>)>
-    for DurativeActionEffect<'a>
-{
-    fn from(value: (TypedList<'a, Variable<'a>>, DurativeActionEffect<'a>)) -> Self {
+impl<'a> From<(TypedVariables<'a>, DurativeActionEffect<'a>)> for DurativeActionEffect<'a> {
+    fn from(value: (TypedVariables<'a>, DurativeActionEffect<'a>)) -> Self {
         Self::new_forall(value.0, value.1)
     }
 }

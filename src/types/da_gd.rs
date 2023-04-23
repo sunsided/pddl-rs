@@ -1,7 +1,7 @@
 //! Contains the [`DurativeActionGoalDefinition`] type.
 
-use crate::types::TypedList;
-use crate::types::{PrefTimedGD, Variable};
+use crate::types::PrefTimedGD;
+use crate::types::TypedVariables;
 
 /// A durative action goal definition.
 #[derive(Debug, Clone, PartialEq)]
@@ -9,10 +9,7 @@ pub enum DurativeActionGoalDefinition<'a> {
     Timed(PrefTimedGD<'a>),
     And(Vec<DurativeActionGoalDefinition<'a>>),
     /// Requires [UniversalPreconditions](crate::types::Requirement::UniversalPreconditions).
-    Forall(
-        TypedList<'a, Variable<'a>>,
-        Box<DurativeActionGoalDefinition<'a>>,
-    ),
+    Forall(TypedVariables<'a>, Box<DurativeActionGoalDefinition<'a>>),
 }
 
 impl<'a> DurativeActionGoalDefinition<'a> {
@@ -22,10 +19,7 @@ impl<'a> DurativeActionGoalDefinition<'a> {
     pub fn new_and<I: IntoIterator<Item = DurativeActionGoalDefinition<'a>>>(prefs: I) -> Self {
         Self::And(prefs.into_iter().collect())
     }
-    pub fn new_forall(
-        variables: TypedList<'a, Variable<'a>>,
-        gd: DurativeActionGoalDefinition<'a>,
-    ) -> Self {
+    pub fn new_forall(variables: TypedVariables<'a>, gd: DurativeActionGoalDefinition<'a>) -> Self {
         Self::Forall(variables, Box::new(gd))
     }
 }

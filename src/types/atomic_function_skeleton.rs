@@ -1,17 +1,17 @@
 //! Contains atomic function skeletons.
 
-use crate::types::{FunctionSymbol, Variable};
-use crate::types::{Typed, TypedList};
+use crate::types::Typed;
+use crate::types::{FunctionSymbol, TypedVariables, Variable};
 
 /// An atomic function skeleton.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct AtomicFunctionSkeleton<'a> {
     symbol: FunctionSymbol<'a>,
-    variables: TypedList<'a, Variable<'a>>,
+    variables: TypedVariables<'a>,
 }
 
 impl<'a> AtomicFunctionSkeleton<'a> {
-    pub const fn new(symbol: FunctionSymbol<'a>, variables: TypedList<'a, Variable<'a>>) -> Self {
+    pub const fn new(symbol: FunctionSymbol<'a>, variables: TypedVariables<'a>) -> Self {
         Self { symbol, variables }
     }
 
@@ -21,13 +21,13 @@ impl<'a> AtomicFunctionSkeleton<'a> {
     }
 
     /// Gets a reference to the variables.
-    pub fn variables_ref(&self) -> &TypedList<'a, Variable<'a>> {
+    pub fn variables_ref(&self) -> &TypedVariables<'a> {
         &self.variables
     }
 }
 
-impl<'a> From<(FunctionSymbol<'a>, TypedList<'a, Variable<'a>>)> for AtomicFunctionSkeleton<'a> {
-    fn from(value: (FunctionSymbol<'a>, TypedList<'a, Variable<'a>>)) -> Self {
+impl<'a> From<(FunctionSymbol<'a>, TypedVariables<'a>)> for AtomicFunctionSkeleton<'a> {
+    fn from(value: (FunctionSymbol<'a>, TypedVariables<'a>)) -> Self {
         AtomicFunctionSkeleton::new(value.0, value.1)
     }
 }
