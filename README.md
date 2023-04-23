@@ -93,7 +93,7 @@ listed in the paper:
 - [ ] ~~`<con-GD>`~~ see "Lifting Restrictions" below
 - [ ] `<metric-spec>`
 - [x] [`<optimization>`](src/parsers/optimization.rs)
-- [ ] `<metric-f-exp>`
+- [x] [`<metric-f-exp>`](src/parsers/metric_f_exp.rs)
 - [x] [`<length-spec>`](src/parsers/length_spec.rs)
 
 ### Lifting Restrictions
