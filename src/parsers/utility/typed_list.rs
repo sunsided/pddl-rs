@@ -1,3 +1,5 @@
+//! Provides the [`typed_list`] parser combinator.
+
 use crate::parsers::domain::parse_type;
 use crate::parsers::utility::{space_separated_list0, space_separated_list1, ws};
 use crate::types::domain::{Typed, TypedList};

@@ -1,4 +1,4 @@
-//! Utility parsers.
+//! Utility parsers such as [`typed_list`](crate::parsers::utility::typed_list) and [`empty_or`](crate::parsers::utility::empty_or).
 
 mod empty_or;
 mod typed_list;
