@@ -31,10 +31,11 @@ pub enum Con2GD<'a> {
 
 impl<'a> ConGD<'a> {
     pub fn new_and<G: IntoIterator<Item = ConGD<'a>>>(goals: G) -> Self {
+        // TODO: Flatten `(and (and a b) (and x y))` into `(and a b c y)`.
         Self::And(goals.into_iter().collect())
     }
 
-    pub fn new_for_all(variables: TypedList<'a, Variable<'a>>, gd: ConGD<'a>) -> Self {
+    pub fn new_forall(variables: TypedList<'a, Variable<'a>>, gd: ConGD<'a>) -> Self {
         Self::Forall(variables, Box::new(gd))
     }
 
@@ -80,7 +81,7 @@ impl<'a> ConGD<'a> {
 
     pub fn is_empty(&self) -> bool {
         match self {
-            ConGD::And(x) => x.is_empty(),
+            ConGD::And(x) => x.iter().all(|y| y.is_empty()),
             ConGD::Forall(_, x) => x.is_empty(),
             ConGD::AtEnd(x) => x.is_empty(),
             ConGD::Always(x) => x.is_empty(),

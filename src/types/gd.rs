@@ -37,11 +37,13 @@ impl<'a> GoalDefinition<'a> {
 
     #[inline(always)]
     pub fn new_and<T: IntoIterator<Item = GoalDefinition<'a>>>(values: T) -> Self {
+        // TODO: Flatten `(and (and a b) (and x y))` into `(and a b c y)`.
         Self::And(values.into_iter().collect())
     }
 
     #[inline(always)]
     pub fn new_or<T: IntoIterator<Item = GoalDefinition<'a>>>(values: T) -> Self {
+        // TODO: Flatten `(or (or a b) (or x y))` into `(or a b c y)`.
         Self::Or(values.into_iter().collect())
     }
 
@@ -89,8 +91,8 @@ impl<'a> GoalDefinition<'a> {
         match self {
             GoalDefinition::AtomicFormula(_) => false,
             GoalDefinition::Literal(_) => false,
-            GoalDefinition::And(x) => x.is_empty(),
-            GoalDefinition::Or(x) => x.is_empty(),
+            GoalDefinition::And(x) => x.iter().all(|y| y.is_empty()),
+            GoalDefinition::Or(x) => x.iter().all(|y| y.is_empty()),
             GoalDefinition::Not(x) => x.is_empty(),
             GoalDefinition::Imply(x, y) => x.is_empty() && y.is_empty(),
             GoalDefinition::Exists(_, x) => x.is_empty(),
