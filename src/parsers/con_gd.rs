@@ -10,7 +10,7 @@ use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
 use nom::IResult;
 
-/// Parser combinator that parses conditional effects.
+/// Parses conditional goal definitions.
 ///
 /// ## Example
 /// ```
@@ -48,7 +48,7 @@ use nom::IResult;
 /// )));
 ///
 /// assert_eq!(parse_con_gd("(forall (?x ?z) (sometime (= ?x ?z)))"), Ok(("",
-///     ConGD::new_for_all(
+///     ConGD::new_forall(
 ///         TypedList::from_iter([
 ///             Variable::from("x").to_typed(Type::OBJECT),
 ///             Variable::from("z").to_typed(Type::OBJECT),
@@ -171,7 +171,7 @@ pub fn parse_con_gd(input: &str) -> IResult<&str, ConGD> {
                 preceded(multispace1, parse_con_gd),
             )),
         ),
-        |(vars, gd)| ConGD::new_for_all(vars, gd),
+        |(vars, gd)| ConGD::new_forall(vars, gd),
     );
 
     let at_end = map(prefix_expr("at end", parse_gd), ConGD::new_at_end);

@@ -37,11 +37,13 @@ impl<'a> GoalDefinition<'a> {
 
     #[inline(always)]
     pub fn new_and<T: IntoIterator<Item = GoalDefinition<'a>>>(values: T) -> Self {
+        // TODO: Flatten `(and (and a b) (and x y))` into `(and a b c y)`.
         Self::And(values.into_iter().collect())
     }
 
     #[inline(always)]
     pub fn new_or<T: IntoIterator<Item = GoalDefinition<'a>>>(values: T) -> Self {
+        // TODO: Flatten `(or (or a b) (or x y))` into `(or a b c y)`.
         Self::Or(values.into_iter().collect())
     }
 
