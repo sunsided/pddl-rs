@@ -1,8 +1,15 @@
 [package]
 name = "pddl"
 version = "0.0.0"
+description ="A PDDL 3.1 parser"
+license = "EUPL-1.2"
+categories = ["parser-implementations", "science", "simulation"]
+keywords = ["pddl", "planning", "parser"]
+repository = "https://github.com/sunsided/pddl-rs"
+readme = "README.md"
 authors = ["Markus Mayer <widemeadows@gmail.com>"]
 edition = "2021"
+rust-version = "1.69.0"
 
 [dependencies]
 nom = "7.1.3"
