@@ -1,7 +1,7 @@
 //! Provides parsers for f-exps.
 
-use crate::parsers::domain::{parse_binary_op, parse_f_head, parse_multi_op, parse_number};
-use crate::parsers::utility::{parens, space_separated_list1};
+use crate::parsers::domain::{parse_binary_op, parse_f_head, parse_multi_op};
+use crate::parsers::utility::{parens, parse_number, space_separated_list1};
 use crate::types::domain::FExp;
 use nom::branch::alt;
 use nom::character::complete::{char, multispace0, multispace1};

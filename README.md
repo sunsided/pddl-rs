@@ -52,7 +52,7 @@ listed in the paper:
 - [x] [`<name>`](src/parsers/domain/name.rs)
 - [x] [`<letter>`](src/parsers/domain/name.rs)
 - [x] [`<any char>`](src/parsers/domain/name.rs)
-- [x] [`<number>`](src/parsers/domain/number.rs)
+- [x] [`<number>`](src/parsers/utility/number.rs)
 - [x] [`<digit>`](src/parsers/domain/number.rs)
 - [x] [`<decimal>`](src/parsers/domain/number.rs)
 - [x] [`<effect>`](src/parsers/domain/effect.rs)
