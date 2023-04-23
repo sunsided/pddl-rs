@@ -1,9 +1,10 @@
 //! Provides parsers for timed effects.
 
 use crate::parsers::domain::{
-    parens, parse_assign_op_t, parse_cond_effect, parse_f_assign_da, parse_f_exp_t, parse_f_head,
-    parse_time_specifier, prefix_expr,
+    parse_assign_op_t, parse_cond_effect, parse_f_assign_da, parse_f_exp_t, parse_f_head,
+    parse_time_specifier,
 };
+use crate::parsers::utility::{parens, prefix_expr};
 use crate::types::domain::TimedEffect;
 use nom::branch::alt;
 use nom::character::complete::multispace1;

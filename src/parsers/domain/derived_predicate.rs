@@ -1,6 +1,7 @@
 //! Provides parsers for derived predicates.
 
-use crate::parsers::domain::{parse_atomic_formula_skeleton, parse_gd, prefix_expr};
+use crate::parsers::domain::{parse_atomic_formula_skeleton, parse_gd};
+use crate::parsers::utility::prefix_expr;
 use crate::types::domain::DerivedPredicate;
 use nom::character::complete::multispace1;
 use nom::combinator::map;

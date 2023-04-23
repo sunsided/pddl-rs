@@ -1,6 +1,7 @@
 //! Provides parsers for effects.
 
-use crate::parsers::domain::{parse_c_effect, prefix_expr, space_separated_list0};
+use crate::parsers::domain::parse_c_effect;
+use crate::parsers::utility::{prefix_expr, space_separated_list0};
 use crate::types::domain::Effect;
 use nom::branch::alt;
 use nom::combinator::map;

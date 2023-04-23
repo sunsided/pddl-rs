@@ -1,6 +1,7 @@
 //! Provides parsers for atomic formula skeletons.
 
-use crate::parsers::domain::{parens, parse_predicate, parse_variable, typed_list, ws};
+use crate::parsers::domain::{parse_predicate, parse_variable};
+use crate::parsers::utility::{parens, typed_list, ws};
 use crate::types::domain::AtomicFormulaSkeleton;
 use nom::combinator::map;
 use nom::sequence::tuple;

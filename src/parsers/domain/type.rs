@@ -1,6 +1,7 @@
 //! Provides parsers for types.
 
-use crate::parsers::domain::{parse_primitive_type, prefix_expr, space_separated_list1};
+use crate::parsers::domain::parse_primitive_type;
+use crate::parsers::utility::{prefix_expr, space_separated_list1};
 use crate::types::domain::{PrimitiveType, Type};
 use nom::error::ErrorKind;
 use nom::{error_position, IResult};

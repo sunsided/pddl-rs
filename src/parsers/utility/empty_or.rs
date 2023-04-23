@@ -1,3 +1,5 @@
+//! Provides the [`empty_or`] parser combinator.
+
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
@@ -8,7 +10,8 @@ use nom::IResult;
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::domain::{empty_or, parse_variable};
+/// # use pddl::parsers::domain::parse_variable;
+/// # use pddl::parsers::utility::empty_or;
 /// # use pddl::types::domain::Variable;
 /// let mut parser = empty_or(parse_variable);
 /// assert_eq!(parser("()"), Ok(("", None)));

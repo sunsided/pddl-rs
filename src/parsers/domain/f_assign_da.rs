@@ -1,6 +1,7 @@
 //! Provides parsers for f-assign-das.
 
-use crate::parsers::domain::{parens, parse_assign_op, parse_f_exp_da, parse_f_head};
+use crate::parsers::domain::{parse_assign_op, parse_f_exp_da, parse_f_head};
+use crate::parsers::utility::parens;
 use crate::types::domain::FAssignDa;
 use nom::character::complete::multispace1;
 use nom::combinator::map;

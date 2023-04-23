@@ -1,8 +1,7 @@
 //! Provides parsers for duration constraints.
 
-use crate::parsers::domain::{
-    parse_simple_duration_constraint, prefix_expr, space_separated_list1,
-};
+use crate::parsers::domain::parse_simple_duration_constraint;
+use crate::parsers::utility::{prefix_expr, space_separated_list1};
 use crate::types::domain::DurationConstraint;
 use nom::branch::alt;
 use nom::bytes::complete::tag;

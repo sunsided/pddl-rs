@@ -1,6 +1,7 @@
 //! Provides parsers for (preferred) timed goal definitions.
 
-use crate::parsers::domain::{parse_pref_name, parse_timed_gd, prefix_expr};
+use crate::parsers::domain::{parse_pref_name, parse_timed_gd};
+use crate::parsers::utility::prefix_expr;
 use crate::types::domain::PrefTimedGD;
 use nom::branch::alt;
 use nom::character::complete::multispace1;

@@ -28,10 +28,10 @@ listed in the paper:
 - [x] [`<function type>`](src/parsers/domain/function_type.rs)
 - [ ] `<constraints>`
 - [x] [`<structure-def>`](src/parsers/domain/structure_def.rs)
-- [x] [`<typed list (x)>`](src/parsers/domain/typed_list.rs)
+- [x] [`<typed list (x)>`](src/parsers/utility/typed_list.rs)
 - [x] [`<primitive-type>`](src/parsers/domain/primitive_type.rs)
 - [x] [`<type>`](src/parsers/domain/type.rs)
-- [x] [`<emptyOr (x)>`](src/parsers/domain/empty_or.rs)
+- [x] [`<emptyOr (x)>`](src/parsers/utility/empty_or.rs)
 - [x] [`<action-def>`](src/parsers/domain/action_def.rs)
 - [x] [`<action-symbol>`](src/parsers/domain/action_symbol.rs)
 - [x] [`<action-def body>`](src/parsers/domain/action_def.rs)

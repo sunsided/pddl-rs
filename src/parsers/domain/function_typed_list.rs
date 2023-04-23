@@ -1,4 +1,5 @@
-use crate::parsers::domain::{parse_type, space_separated_list0, space_separated_list1, ws};
+use crate::parsers::domain::parse_type;
+use crate::parsers::utility::{space_separated_list0, space_separated_list1, ws};
 use crate::types::domain::{FunctionType, FunctionTyped, FunctionTypedList};
 use nom::character::complete::char;
 use nom::combinator::map;
