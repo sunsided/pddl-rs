@@ -53,29 +53,29 @@ impl<'a> ConGD<'a> {
         Self::HoldDuring(begin, end, gd)
     }
 
-    pub const fn new_after(number: Number, gd: Con2GD<'a>) -> Self {
+    pub const fn new_hold_after(number: Number, gd: Con2GD<'a>) -> Self {
         Self::HoldAfter(number, gd)
     }
 }
 
 impl<'a> Con2GD<'a> {
-    pub fn new_con_gd(gd: ConGD<'a>) -> Self {
+    pub fn new_nested(gd: ConGD<'a>) -> Self {
         Self::Nested(Box::new(gd))
     }
 
-    pub const fn new_gd(gd: GoalDefinition<'a>) -> Self {
+    pub const fn new_goal(gd: GoalDefinition<'a>) -> Self {
         Self::Goal(gd)
     }
 }
 
 impl<'a> From<ConGD<'a>> for Con2GD<'a> {
     fn from(value: ConGD<'a>) -> Self {
-        Con2GD::new_con_gd(value)
+        Con2GD::new_nested(value)
     }
 }
 
 impl<'a> From<GoalDefinition<'a>> for Con2GD<'a> {
     fn from(value: GoalDefinition<'a>) -> Self {
-        Con2GD::new_gd(value)
+        Con2GD::new_goal(value)
     }
 }

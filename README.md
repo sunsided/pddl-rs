@@ -90,7 +90,7 @@ listed in the paper:
 - [ ] `<goal>`
 - [ ] `<constraints>`
 - [ ] `<pref-con-GD>`
-- [ ] ~~`<con-GD>`~~ see "Lifting Restrictions" below
+- [x] [~~`<con-GD>`~~](src/parsers/con_gd.rs) (uses embedded modal operators below)
 - [x] [`<metric-spec>`](src/parsers/metric_spec.rs)
 - [x] [`<optimization>`](src/parsers/optimization.rs)
 - [x] [`<metric-f-exp>`](src/parsers/metric_f_exp.rs)
@@ -98,8 +98,10 @@ listed in the paper:
 
 ### Lifting Restrictions
 
-- [ ] `<con-GD>`
-- [ ] `<con2-GD>`
+Using embedded modal operators:
+
+- [x] [`<con-GD>`](src/parsers/con_gd.rs)
+- [x] [`<con2-GD>`](src/parsers/con_gd.rs)
 
 ### Requirements
 
