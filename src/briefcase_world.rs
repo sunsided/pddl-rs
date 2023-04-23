@@ -42,7 +42,7 @@ pub const BRIEFCASE_WORLD_PROBLEM: &'static str = r#"
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parsers::domain::parse_domain;
+    use crate::parsers::parse_domain;
 
     #[test]
     fn parse_domain_works() {
