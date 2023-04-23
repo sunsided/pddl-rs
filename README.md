@@ -85,7 +85,7 @@ listed in the paper:
 - [ ] `<problem>`
 - [ ] `<object declaration>`
 - [ ] `<init>`
-- [ ] `<init-el>`
+- [x] [`<init-el>`](src/parsers/init_el.rs)
 - [x] [`<basic-function-term>`](src/parsers/basic_function_term.rs)
 - [x] [`<goal>`](src/parsers/goal_def.rs)
 - [x] [`<constraints>`](src/parsers/problem_constraints_def.rs)

@@ -15,8 +15,11 @@ impl<'a, T> AtomicFormula<'a, T> {
         Self::Equality(EqualityAtomicFormula::new(first, second))
     }
 
-    pub const fn new_predicate(predicate: Predicate<'a>, values: Vec<T>) -> Self {
-        Self::Predicate(PredicateAtomicFormula::new(predicate, values))
+    pub fn new_predicate<V: IntoIterator<Item = T>>(predicate: Predicate<'a>, values: V) -> Self {
+        Self::Predicate(PredicateAtomicFormula::new(
+            predicate,
+            values.into_iter().collect(),
+        ))
     }
 }
 
