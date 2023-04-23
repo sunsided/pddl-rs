@@ -66,6 +66,10 @@ pub fn parse_domain(input: &str) -> IResult<&str, Domain> {
             "define",
             tuple((
                 prefix_expr("domain", parse_name),
+                opt(preceded(
+                    multispace1,
+                    prefix_expr(":extends", space_separated_list1(parse_name)),
+                )),
                 opt(preceded(multispace1, parse_require_def)),
                 // :typing
                 opt(preceded(multispace1, parse_types_def)),
@@ -84,9 +88,20 @@ pub fn parse_domain(input: &str) -> IResult<&str, Domain> {
                 )),
             )),
         )),
-        |(name, require, types, constants, predicates, functions, constraints, structure)| {
+        |(
+            name,
+            extends,
+            require,
+            types,
+            constants,
+            predicates,
+            functions,
+            constraints,
+            structure,
+        )| {
             Domain::new(
                 name,
+                extends.unwrap_or(Vec::default()),
                 require.unwrap_or(Requirements::default()),
                 types.unwrap_or(Types::default()),
                 constants.unwrap_or(Constants::default()),
