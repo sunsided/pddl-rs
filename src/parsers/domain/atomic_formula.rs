@@ -15,7 +15,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use nom::character::complete::alpha1;
-/// # use pddl::parsers::domain::{parse_name, atomic_formula};
+/// # use pddl::parsers::domain::atomic_formula;
+/// # use pddl::parsers::utility::parse_name;
 /// # use pddl::types::domain::{AtomicFormula, EqualityAtomicFormula, Name, PredicateAtomicFormula, PrimitiveType, Type, Typed, Predicate};
 ///
 /// assert_eq!(atomic_formula(parse_name)("(= x y)"), Ok(("",

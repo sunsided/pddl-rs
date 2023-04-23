@@ -1,6 +1,7 @@
 //! Provides parsers for terms.
 
-use crate::parsers::domain::{parse_function_term, parse_name, parse_variable};
+use crate::parsers::domain::{parse_function_term, parse_variable};
+use crate::parsers::utility::parse_name;
 use crate::types::domain::Term;
 use nom::error::ErrorKind;
 use nom::{error_position, IResult};

@@ -1,6 +1,6 @@
 //! Provides parsers for action symbols.
 
-use crate::parsers::domain::name::parse_name;
+use crate::parsers::utility::parse_name;
 use crate::types::domain::ActionSymbol;
 use nom::IResult;
 

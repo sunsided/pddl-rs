@@ -14,8 +14,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use nom::character::complete::alpha1;
-/// # use pddl::parsers::domain::parse_name;
-/// # use pddl::parsers::utility::typed_list;
+/// # use pddl::parsers::utility::{parse_name, typed_list};
 /// # use pddl::types::domain::{Name, PrimitiveType, ToTyped, Type, Typed, TypedList};
 ///
 /// // Single implicitly typed element.

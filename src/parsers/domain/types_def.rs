@@ -1,7 +1,6 @@
 //! Provides parsers for constant definitions.
 
-use crate::parsers::domain::parse_name;
-use crate::parsers::utility::{prefix_expr, typed_list};
+use crate::parsers::utility::{parse_name, prefix_expr, typed_list};
 use crate::types::domain::Types;
 use nom::combinator::map;
 use nom::IResult;
