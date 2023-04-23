@@ -1,9 +1,7 @@
 //! Provides parsers for durative action effects.
 
-use crate::parsers::domain::{
-    parens, parse_da_gd, parse_timed_effect, parse_variable, prefix_expr, space_separated_list0,
-    typed_list,
-};
+use crate::parsers::domain::{parse_da_gd, parse_timed_effect, parse_variable};
+use crate::parsers::{parens, prefix_expr, space_separated_list0, typed_list};
 use crate::types::domain::DurativeActionEffect;
 use nom::branch::alt;
 use nom::character::complete::multispace1;

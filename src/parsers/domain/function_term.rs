@@ -1,6 +1,7 @@
 //! Provides parsers for function terms.
 
-use crate::parsers::domain::{parse_function_symbol, parse_term, space_separated_list0};
+use crate::parsers::domain::{parse_function_symbol, parse_term};
+use crate::parsers::space_separated_list0;
 use crate::types::domain::FunctionTerm;
 use nom::bytes::complete::tag;
 use nom::sequence::{delimited, tuple};

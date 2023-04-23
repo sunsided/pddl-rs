@@ -1,9 +1,9 @@
 //! Provides parsers for p-effects.
 
 use crate::parsers::domain::{
-    atomic_formula, parens, parse_assign_op, parse_f_exp, parse_f_head, parse_function_term,
-    parse_term, prefix_expr,
+    atomic_formula, parse_assign_op, parse_f_exp, parse_f_head, parse_function_term, parse_term,
 };
+use crate::parsers::{parens, prefix_expr};
 use crate::types::domain::PEffect;
 use nom::branch::alt;
 use nom::bytes::complete::tag;

@@ -1,6 +1,6 @@
 //! Provides parsers for requirements.
 
-use crate::parsers::domain::{prefix_expr, space_separated_list1};
+use crate::parsers::{prefix_expr, space_separated_list1};
 use crate::types::domain::requirement::{names, Requirement};
 use crate::types::domain::Requirements;
 use nom::branch::alt;

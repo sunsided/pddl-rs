@@ -1,8 +1,7 @@
 //! Provides parsers for simple duration constraints.
 
-use crate::parsers::domain::{
-    parens, parse_d_op, parse_d_value, parse_time_specifier, prefix_expr,
-};
+use crate::parsers::domain::{parse_d_op, parse_d_value, parse_time_specifier};
+use crate::parsers::{parens, prefix_expr};
 use crate::types::domain::SimpleDurationConstraint;
 use nom::branch::alt;
 use nom::bytes::complete::tag;

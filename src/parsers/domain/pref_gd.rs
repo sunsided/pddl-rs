@@ -1,6 +1,7 @@
 //! Provides parsers for preference goal definitions.
 
-use crate::parsers::domain::{parse_gd, parse_pref_name, prefix_expr};
+use crate::parsers::domain::{parse_gd, parse_pref_name};
+use crate::parsers::prefix_expr;
 use crate::types::domain::{Preference, PreferenceGD};
 use nom::branch::alt;
 use nom::character::complete::multispace1;

@@ -1,6 +1,7 @@
 //! Provides parsers for atomic formulae.
 
-use crate::parsers::domain::{parens, parse_predicate, space_separated_list0, ws};
+use crate::parsers::domain::parse_predicate;
+use crate::parsers::{parens, space_separated_list0, ws};
 use crate::types::domain::AtomicFormula;
 use nom::branch::alt;
 use nom::bytes::complete::tag;

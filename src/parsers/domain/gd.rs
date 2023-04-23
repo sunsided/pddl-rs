@@ -1,9 +1,7 @@
 //! Provides parsers for goal definitions.
 
-use crate::parsers::domain::{
-    atomic_formula, literal, parens, parse_f_comp, parse_term, parse_variable, prefix_expr,
-    space_separated_list0, typed_list,
-};
+use crate::parsers::domain::{atomic_formula, literal, parse_f_comp, parse_term, parse_variable};
+use crate::parsers::{parens, prefix_expr, space_separated_list0, typed_list};
 use crate::types::domain::GoalDefinition;
 use nom::branch::alt;
 use nom::character::complete::multispace1;

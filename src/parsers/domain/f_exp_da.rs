@@ -1,8 +1,7 @@
 //! Provides parsers for f-exp-da values..
 
-use crate::parsers::domain::{
-    parens, parse_binary_op, parse_f_exp, parse_multi_op, space_separated_list1,
-};
+use crate::parsers::domain::{parse_binary_op, parse_f_exp, parse_multi_op};
+use crate::parsers::{parens, space_separated_list1};
 use crate::types::domain::FExpDa;
 use nom::branch::alt;
 use nom::bytes::complete::tag;

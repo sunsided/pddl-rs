@@ -22,7 +22,6 @@ mod derived_predicate;
 mod domain;
 mod duration_constraint;
 mod effect;
-mod empty_or;
 mod f_assign_da;
 mod f_comp;
 mod f_exp;
@@ -56,9 +55,7 @@ mod time_specifier;
 mod timed_effect;
 mod timed_gd;
 mod r#type;
-mod typed_list;
 mod types_def;
-mod utilities;
 mod variable;
 
 // Parsers.
@@ -119,11 +116,3 @@ pub use timed_effect::parse_timed_effect;
 pub use timed_gd::parse_timed_gd;
 pub use types_def::parse_types_def;
 pub use variable::parse_variable;
-
-// Parser combinators.
-pub use empty_or::empty_or;
-pub use typed_list::typed_list;
-
-// Utility parser combinators.
-#[allow(unused_imports)]
-pub(crate) use utilities::{parens, prefix_expr, space_separated_list0, space_separated_list1, ws};
