@@ -14,6 +14,11 @@ impl<'a> Name<'a> {
         Self(name)
     }
 
+    #[inline(always)]
+    pub const fn as_str(&self) -> &'a str {
+        self.0
+    }
+
     pub const fn is_empty(&self) -> bool {
         self.0.is_empty()
     }

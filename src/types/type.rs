@@ -109,7 +109,7 @@ impl<'a> AsRef<str> for PrimitiveType<'a> {
 }
 
 impl<'a> Deref for PrimitiveType<'a> {
-    type Target = str;
+    type Target = Name<'a>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
