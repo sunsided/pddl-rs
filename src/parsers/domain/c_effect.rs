@@ -3,7 +3,7 @@
 use crate::parsers::domain::{
     parse_cond_effect, parse_effect, parse_gd, parse_p_effect, parse_variable,
 };
-use crate::parsers::{parens, prefix_expr, typed_list};
+use crate::parsers::utility::{parens, prefix_expr, typed_list};
 use crate::types::domain::CEffect;
 use nom::branch::alt;
 use nom::character::complete::multispace1;

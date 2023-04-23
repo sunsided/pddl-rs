@@ -1,7 +1,7 @@
 //! Provides parsers for f-comps.
 
 use crate::parsers::domain::{parse_binary_comp, parse_f_exp};
-use crate::parsers::parens;
+use crate::parsers::utility::parens;
 use crate::types::domain::FComp;
 use nom::character::complete::multispace1;
 use nom::combinator::map;

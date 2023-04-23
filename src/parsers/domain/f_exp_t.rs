@@ -1,7 +1,7 @@
 //! Provides parsers for f-exps.
 
 use crate::parsers::domain::parse_f_exp;
-use crate::parsers::prefix_expr;
+use crate::parsers::utility::prefix_expr;
 use crate::types::domain::FExpT;
 use nom::branch::alt;
 use nom::bytes::complete::tag;

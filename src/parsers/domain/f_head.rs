@@ -1,7 +1,7 @@
 //! Provides parsers for f-heads.
 
 use crate::parsers::domain::{parse_function_symbol, parse_term};
-use crate::parsers::{parens, space_separated_list0};
+use crate::parsers::utility::{parens, space_separated_list0};
 use crate::types::domain::FHead;
 use nom::branch::alt;
 use nom::character::complete::multispace1;

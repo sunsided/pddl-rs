@@ -9,7 +9,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_variable;
-/// # use pddl::parsers::empty_or;
+/// # use pddl::parsers::utility::empty_or;
 /// # use pddl::types::domain::Variable;
 /// let mut parser = empty_or(parse_variable);
 /// assert_eq!(parser("()"), Ok(("", None)));

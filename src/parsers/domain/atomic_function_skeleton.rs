@@ -1,7 +1,7 @@
 //! Provides parsers for atomic function skeletons.
 
 use crate::parsers::domain::{parse_function_symbol, parse_variable};
-use crate::parsers::{parens, typed_list, ws};
+use crate::parsers::utility::{parens, typed_list, ws};
 use crate::types::domain::AtomicFunctionSkeleton;
 use nom::combinator::map;
 use nom::sequence::tuple;

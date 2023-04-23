@@ -4,7 +4,7 @@ use crate::parsers::domain::{
     parse_constants_def, parse_functions_def, parse_name, parse_predicates_def, parse_require_def,
     parse_structure_def, parse_types_def,
 };
-use crate::parsers::{prefix_expr, space_separated_list1, ws};
+use crate::parsers::utility::{prefix_expr, space_separated_list1, ws};
 use crate::types::domain::{
     Constants, Domain, Functions, PredicateDefinitions, Requirements, StructureDefs, Types,
 };

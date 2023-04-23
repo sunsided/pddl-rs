@@ -1,7 +1,7 @@
 //! Provides parsers for action definitions.
 
 use crate::parsers::domain::{parse_action_symbol, parse_effect, parse_pre_gd, parse_variable};
-use crate::parsers::{empty_or, parens, prefix_expr, typed_list, ws};
+use crate::parsers::utility::{empty_or, parens, prefix_expr, typed_list, ws};
 use crate::types::domain::ActionDefinition;
 use nom::bytes::complete::tag;
 use nom::character::complete::multispace1;

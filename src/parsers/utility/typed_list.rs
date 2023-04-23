@@ -1,5 +1,5 @@
 use crate::parsers::domain::parse_type;
-use crate::parsers::{space_separated_list0, space_separated_list1, ws};
+use crate::parsers::utility::{space_separated_list0, space_separated_list1, ws};
 use crate::types::domain::{Typed, TypedList};
 use nom::character::complete::char;
 use nom::combinator::map;
@@ -13,7 +13,7 @@ use nom::IResult;
 /// ```
 /// # use nom::character::complete::alpha1;
 /// # use pddl::parsers::domain::parse_name;
-/// # use pddl::parsers::typed_list;
+/// # use pddl::parsers::utility::typed_list;
 /// # use pddl::types::domain::{Name, PrimitiveType, ToTyped, Type, Typed, TypedList};
 ///
 /// // Single implicitly typed element.

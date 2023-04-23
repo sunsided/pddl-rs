@@ -1,7 +1,7 @@
 //! Provides parsers for goal definitions.
 
 use crate::parsers::domain::{parse_pref_gd, parse_variable};
-use crate::parsers::{parens, prefix_expr, space_separated_list0, typed_list};
+use crate::parsers::utility::{parens, prefix_expr, space_separated_list0, typed_list};
 use crate::types::domain::PreGD;
 use nom::branch::alt;
 use nom::character::complete::multispace1;

@@ -1,7 +1,7 @@
 //! Provides parsers for literals.
 
 use crate::parsers::domain::atomic_formula;
-use crate::parsers::prefix_expr;
+use crate::parsers::utility::prefix_expr;
 use crate::types::domain::Literal;
 use nom::branch::alt;
 use nom::combinator::map;

@@ -1,7 +1,7 @@
 //! Provides parsers for predicate definitions.
 
 use crate::parsers::domain::parse_atomic_formula_skeleton;
-use crate::parsers::{prefix_expr, space_separated_list1};
+use crate::parsers::utility::{prefix_expr, space_separated_list1};
 use crate::types::domain::PredicateDefinitions;
 use nom::combinator::map;
 use nom::IResult;

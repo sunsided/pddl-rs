@@ -3,7 +3,7 @@
 use crate::parsers::domain::{
     parse_da_effect, parse_da_gd, parse_da_symbol, parse_duration_constraint, parse_variable,
 };
-use crate::parsers::{empty_or, parens, prefix_expr, typed_list};
+use crate::parsers::utility::{empty_or, parens, prefix_expr, typed_list};
 use crate::types::domain::DurativeActionDefinition;
 use nom::bytes::complete::tag;
 use nom::character::complete::multispace1;
