@@ -2,7 +2,7 @@
 
 use crate::parsers::domain::{parse_function_symbol, parse_term};
 use crate::parsers::utility::{parens, space_separated_list0};
-use crate::types::domain::FHead;
+use crate::types::FHead;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
@@ -14,7 +14,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_f_head;
-/// # use pddl::types::domain::{FunctionTerm, Variable, FunctionSymbol, Term, FHead};
+/// # use pddl::types::{FunctionTerm, Variable, FunctionSymbol, Term, FHead};
 /// assert_eq!(parse_f_head("fun-sym"), Ok(("",
 ///     FHead::new(FunctionSymbol::from_str("fun-sym"))
 /// )));

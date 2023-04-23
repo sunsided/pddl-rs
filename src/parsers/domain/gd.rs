@@ -2,7 +2,7 @@
 
 use crate::parsers::domain::{atomic_formula, literal, parse_f_comp, parse_term, parse_variable};
 use crate::parsers::utility::{parens, prefix_expr, space_separated_list0, typed_list};
-use crate::types::domain::GoalDefinition;
+use crate::types::GoalDefinition;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
@@ -14,8 +14,8 @@ use nom::IResult;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::domain::parse_gd;
-/// # use pddl::types::domain::{AtomicFormula, BinaryComp, BinaryOp, EqualityAtomicFormula, FComp, FExp, GoalDefinition, Literal, Term, Variable};
-/// # use pddl::types::utility::TypedList;
+/// # use pddl::types::{AtomicFormula, BinaryComp, BinaryOp, EqualityAtomicFormula, FComp, FExp, GoalDefinition, Literal, Term, Variable};
+/// # use pddl::types::TypedList;
 ///
 /// // Atomic formula
 /// assert_eq!(parse_gd("(= x y)"), Ok(("",

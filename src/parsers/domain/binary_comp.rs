@@ -1,6 +1,6 @@
 //! Provides parsers for binary comparison operations.
 
-use crate::types::domain::BinaryComp;
+use crate::types::BinaryComp;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map_res;
@@ -11,7 +11,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_binary_comp;
-/// # use pddl::types::domain::{AssignOp, BinaryComp};
+/// # use pddl::types::{AssignOp, BinaryComp};
 /// assert_eq!(parse_binary_comp(">"), Ok(("", BinaryComp::GreaterThan)));
 /// assert_eq!(parse_binary_comp("<"), Ok(("", BinaryComp::LessThan)));
 /// assert_eq!(parse_binary_comp("="), Ok(("", BinaryComp::Equal)));

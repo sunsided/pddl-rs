@@ -2,7 +2,7 @@
 
 use crate::parsers::domain::{parse_action_symbol, parse_effect, parse_pre_gd, parse_variable};
 use crate::parsers::utility::{empty_or, parens, prefix_expr, typed_list, ws};
-use crate::types::domain::ActionDefinition;
+use crate::types::ActionDefinition;
 use nom::bytes::complete::tag;
 use nom::character::complete::multispace1;
 use nom::combinator::{map, opt};
@@ -14,8 +14,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_action_def;
-/// use pddl::types::domain::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GoalDefinition, PEffect, Predicate, PreferenceGD, PreGD, Term, Variable};
-/// # use pddl::types::utility::{Name, ToTyped, TypedList};
+/// # use pddl::types::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GoalDefinition, PEffect, Predicate, PreferenceGD, PreGD, Term, Variable};
+/// # use pddl::types::{Name, ToTyped, TypedList};
 ///
 /// let input = r#"(:action take-out
 ///                     :parameters (?x - physob)

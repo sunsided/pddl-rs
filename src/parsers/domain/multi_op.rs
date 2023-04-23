@@ -1,6 +1,6 @@
 //! Provides parsers for multi-operand operations.
 
-use crate::types::domain::MultiOp;
+use crate::types::MultiOp;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map_res;
@@ -11,7 +11,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_multi_op;
-/// # use pddl::types::domain::{MultiOp};
+/// # use pddl::types::{MultiOp};
 /// assert_eq!(parse_multi_op("*"), Ok(("", MultiOp::Multiplication)));
 /// assert_eq!(parse_multi_op("+"), Ok(("", MultiOp::Addition)));
 ///```

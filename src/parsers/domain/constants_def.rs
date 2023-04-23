@@ -1,7 +1,7 @@
 //! Provides parsers for constant definitions.
 
 use crate::parsers::utility::{parse_name, prefix_expr, typed_list};
-use crate::types::domain::Constants;
+use crate::types::Constants;
 use nom::combinator::map;
 use nom::IResult;
 
@@ -10,8 +10,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_constants_def;
-/// # use pddl::types::domain::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions, Constants};
-/// use pddl::types::utility::{Name, ToTyped, TypedList};
+/// # use pddl::types::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions, Constants};
+/// use pddl::types::{Name, ToTyped, TypedList};
 ///
 /// let input = "(:constants B P D - physob)";
 /// assert_eq!(parse_constants_def(input), Ok(("",

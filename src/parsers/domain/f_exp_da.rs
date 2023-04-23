@@ -2,7 +2,7 @@
 
 use crate::parsers::domain::{parse_binary_op, parse_f_exp, parse_multi_op};
 use crate::parsers::utility::{parens, space_separated_list1};
-use crate::types::domain::FExpDa;
+use crate::types::FExpDa;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::character::complete::{char, multispace0, multispace1};
@@ -15,7 +15,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_f_exp_da;
-/// # use pddl::types::domain::{BinaryOp, FExpDa, FExp, FunctionSymbol, MultiOp};
+/// # use pddl::types::{BinaryOp, FExpDa, FExp, FunctionSymbol, MultiOp};
 /// assert_eq!(parse_f_exp_da("?duration"), Ok(("",
 ///     FExpDa::Duration
 /// )));

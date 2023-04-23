@@ -2,7 +2,7 @@
 
 use crate::parsers::domain::{parse_function_term, parse_variable};
 use crate::parsers::utility::parse_name;
-use crate::types::domain::Term;
+use crate::types::Term;
 use nom::error::ErrorKind;
 use nom::{error_position, IResult};
 
@@ -11,7 +11,7 @@ use nom::{error_position, IResult};
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_term;
-/// # use pddl::types::domain::Term;
+/// # use pddl::types::Term;
 /// assert_eq!(parse_term("abcde"), Ok(("", Term::Name("abcde".into()))));
 /// assert_eq!(parse_term("?abcde"), Ok(("", Term::Variable("abcde".into()))));
 ///```

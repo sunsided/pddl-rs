@@ -2,7 +2,7 @@
 
 use crate::parsers::domain::{parse_binary_op, parse_f_head, parse_multi_op};
 use crate::parsers::utility::{parens, parse_number, space_separated_list1};
-use crate::types::domain::FExp;
+use crate::types::FExp;
 use nom::branch::alt;
 use nom::character::complete::{char, multispace0, multispace1};
 use nom::combinator::map;
@@ -14,7 +14,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_f_exp;
-/// # use pddl::types::domain::{BinaryOp, FExp, FHead, FunctionSymbol, MultiOp};
+/// # use pddl::types::{BinaryOp, FExp, FHead, FunctionSymbol, MultiOp};
 /// assert_eq!(parse_f_exp("1.23"), Ok(("",
 ///     FExp::new_number(1.23)
 /// )));

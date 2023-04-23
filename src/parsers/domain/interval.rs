@@ -1,7 +1,7 @@
 //! Provides parsers for assignment operations.
 
-use crate::types::domain::interval::names;
-use crate::types::domain::Interval;
+use crate::types::interval::names;
+use crate::types::Interval;
 use nom::bytes::complete::tag;
 use nom::combinator::map_res;
 use nom::IResult;
@@ -11,7 +11,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_interval;
-/// # use pddl::types::domain::{Interval};
+/// # use pddl::types::{Interval};
 /// assert_eq!(parse_interval("all"), Ok(("", Interval::All)));
 ///```
 pub fn parse_interval(input: &str) -> IResult<&str, Interval> {

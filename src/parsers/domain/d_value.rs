@@ -2,7 +2,7 @@
 
 use crate::parsers::domain::parse_f_exp;
 use crate::parsers::utility::parse_number;
-use crate::types::domain::DValue;
+use crate::types::DValue;
 use nom::branch::alt;
 use nom::combinator::map;
 use nom::IResult;
@@ -12,7 +12,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_d_value;
-/// # use pddl::types::domain::{BinaryOp, DValue, FExp, FHead, FunctionSymbol, MultiOp};
+/// # use pddl::types::{BinaryOp, DValue, FExp, FHead, FunctionSymbol, MultiOp};
 /// assert_eq!(parse_d_value("1.23"), Ok(("",
 ///     DValue::new_number(1.23)
 /// )));

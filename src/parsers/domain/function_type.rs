@@ -1,7 +1,7 @@
 //! Provides parsers for function types.
 
 use crate::parsers::utility::parse_type;
-use crate::types::domain::FunctionType;
+use crate::types::FunctionType;
 use nom::combinator::map;
 use nom::IResult;
 
@@ -10,8 +10,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_function_type;
-/// # use pddl::types::domain::{FunctionType};
-/// # use pddl::types::utility::Type;
+/// # use pddl::types::{FunctionType};
+/// # use pddl::types::Type;
 /// assert_eq!(parse_function_type("number"), Ok(("", FunctionType::new(Type::Exactly("number".into())))));
 /// assert_eq!(parse_function_type("(either object number)"), Ok(("", FunctionType::new(Type::from_iter(["object", "number"])))));
 ///```

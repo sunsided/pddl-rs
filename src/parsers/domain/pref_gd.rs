@@ -2,7 +2,7 @@
 
 use crate::parsers::domain::{parse_gd, parse_pref_name};
 use crate::parsers::utility::prefix_expr;
-use crate::types::domain::{Preference, PreferenceGD};
+use crate::types::{Preference, PreferenceGD};
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::{map, opt};
@@ -14,7 +14,7 @@ use nom::IResult;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::domain::parse_pref_gd;
-/// # use pddl::types::domain::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Preference, PreferenceName, PreferenceGD, Term, Variable};
+/// # use pddl::types::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Preference, PreferenceName, PreferenceGD, Term, Variable};
 ///
 /// // Simple goal definition.
 /// assert_eq!(parse_pref_gd("(= x y)"), Ok(("",

@@ -1,6 +1,6 @@
 //! Provides parsers for durative operations.
 
-use crate::types::domain::DOp;
+use crate::types::DOp;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map_res;
@@ -11,7 +11,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_d_op;
-/// # use pddl::types::domain::{DOp};
+/// # use pddl::types::{DOp};
 /// assert_eq!(parse_d_op("<="), Ok(("", DOp::LessThanOrEqual)));
 /// assert_eq!(parse_d_op(">="), Ok(("", DOp::GreaterOrEqual)));
 /// assert_eq!(parse_d_op("="), Ok(("", DOp::Equal)));

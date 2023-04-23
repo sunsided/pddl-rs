@@ -1,7 +1,7 @@
 //! Provides the [`typed_list`] parser combinator.
 
 use crate::parsers::utility::{parse_type, space_separated_list0, space_separated_list1, ws};
-use crate::types::utility::{Typed, TypedList};
+use crate::types::{Typed, TypedList};
 use nom::character::complete::char;
 use nom::combinator::map;
 use nom::multi::many0;
@@ -14,7 +14,7 @@ use nom::IResult;
 /// ```
 /// # use nom::character::complete::alpha1;
 /// # use pddl::parsers::utility::{parse_name, typed_list};
-/// # use pddl::types::utility::{Name, PrimitiveType, ToTyped, Type, Typed, TypedList};
+/// # use pddl::types::{Name, PrimitiveType, ToTyped, Type, Typed, TypedList};
 ///
 /// // Single implicitly typed element.
 /// assert_eq!(typed_list(parse_name)("abc"), Ok(("", TypedList::from_iter([

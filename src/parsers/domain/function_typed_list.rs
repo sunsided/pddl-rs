@@ -1,5 +1,5 @@
 use crate::parsers::utility::{parse_type, space_separated_list0, space_separated_list1, ws};
-use crate::types::domain::{FunctionType, FunctionTyped, FunctionTypedList};
+use crate::types::{FunctionType, FunctionTyped, FunctionTypedList};
 use nom::character::complete::char;
 use nom::combinator::map;
 use nom::multi::many0;
@@ -12,8 +12,8 @@ use nom::IResult;
 /// ```
 /// # use nom::character::complete::alpha1;
 /// # use pddl::parsers::domain::{function_typed_list, parse_atomic_function_skeleton};
-/// # use pddl::types::domain::{AtomicFunctionSkeleton, FunctionSymbol, FunctionTyped, FunctionTypedList, Variable};
-/// # use pddl::types::utility::{Type, Typed, TypedList};
+/// # use pddl::types::{AtomicFunctionSkeleton, FunctionSymbol, FunctionTyped, FunctionTypedList, Variable};
+/// # use pddl::types::{Type, Typed, TypedList};
 ///
 /// // Single implicitly typed element.
 /// assert_eq!(function_typed_list(parse_atomic_function_skeleton)("(battery-amount ?r - rover)"), Ok(("",

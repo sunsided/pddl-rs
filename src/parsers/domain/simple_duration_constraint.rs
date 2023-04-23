@@ -2,7 +2,7 @@
 
 use crate::parsers::domain::{parse_d_op, parse_d_value, parse_time_specifier};
 use crate::parsers::utility::{parens, prefix_expr};
-use crate::types::domain::SimpleDurationConstraint;
+use crate::types::SimpleDurationConstraint;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::character::complete::multispace1;
@@ -15,7 +15,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_simple_duration_constraint;
-/// # use pddl::types::domain::{DOp, DValue, FunctionType, SimpleDurationConstraint, TimeSpecifier};
+/// # use pddl::types::{DOp, DValue, FunctionType, SimpleDurationConstraint, TimeSpecifier};
 ///
 /// let input = "(>= ?duration 1.23)";
 /// assert_eq!(parse_simple_duration_constraint(input), Ok(("",

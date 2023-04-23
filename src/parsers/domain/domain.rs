@@ -7,10 +7,10 @@ use crate::parsers::domain::{
 use crate::parsers::utility::{
     parse_name, parse_types_def, prefix_expr, space_separated_list1, ws,
 };
-use crate::types::domain::{
+use crate::types::Types;
+use crate::types::{
     Constants, Domain, Functions, PredicateDefinitions, Requirements, StructureDefs,
 };
-use crate::types::utility::Types;
 use nom::character::complete::multispace1;
 use nom::combinator::{map, opt};
 use nom::sequence::{preceded, tuple};
@@ -21,7 +21,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::{parse_action_def, parse_domain};
-/// # use pddl::types::utility::Name;
+/// # use pddl::types::Name;
 ///
 /// let input = r#"(define (domain briefcase-world)
 ///       (:requirements :strips :equality :typing :conditional-effects)

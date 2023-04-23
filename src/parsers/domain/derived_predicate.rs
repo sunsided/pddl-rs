@@ -2,7 +2,7 @@
 
 use crate::parsers::domain::{parse_atomic_formula_skeleton, parse_gd};
 use crate::parsers::utility::prefix_expr;
-use crate::types::domain::DerivedPredicate;
+use crate::types::DerivedPredicate;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
@@ -13,7 +13,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_derived_predicate;
-/// # use pddl::types::domain::GoalDefinition;
+/// # use pddl::types::GoalDefinition;
 ///
 /// let input = r#"(:derived (train-usable ?t - train)
 ///                     (and

@@ -2,7 +2,7 @@
 
 use crate::parsers::domain::parse_f_exp;
 use crate::parsers::utility::prefix_expr;
-use crate::types::domain::FExpT;
+use crate::types::FExpT;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::character::complete::multispace1;
@@ -15,7 +15,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::{parse_f_exp, parse_f_exp_t};
-/// # use pddl::types::domain::{BinaryOp, FExp, FExpT, FHead, FunctionSymbol, MultiOp, Term, Variable};
+/// # use pddl::types::{BinaryOp, FExp, FExpT, FHead, FunctionSymbol, MultiOp, Term, Variable};
 /// assert_eq!(parse_f_exp_t("#t"), Ok(("", FExpT::Now)));
 ///
 /// assert_eq!(parse_f_exp_t("(* (fuel ?tank) #t)"), Ok(("",

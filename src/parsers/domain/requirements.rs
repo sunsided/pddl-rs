@@ -1,8 +1,8 @@
 //! Provides parsers for requirements.
 
 use crate::parsers::utility::{prefix_expr, space_separated_list1};
-use crate::types::domain::requirement::{names, Requirement};
-use crate::types::domain::Requirements;
+use crate::types::requirement::{names, Requirement};
+use crate::types::Requirements;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::error::ErrorKind;
@@ -13,7 +13,7 @@ use nom::{error_position, IResult};
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_require_def;
-/// # use pddl::types::domain::{Requirement, Requirements};
+/// # use pddl::types::{Requirement, Requirements};
 /// assert_eq!(parse_require_def("(:requirements :adl)"), Ok(("", Requirements::new([Requirement::Adl]))));
 /// assert_eq!(parse_require_def("(:requirements :strips :typing)"), Ok(("", Requirements::new([Requirement::Strips, Requirement::Typing]))));
 /// assert_eq!(parse_require_def("(:requirements\n:strips   :typing  )"), Ok(("", Requirements::new([Requirement::Strips, Requirement::Typing]))));

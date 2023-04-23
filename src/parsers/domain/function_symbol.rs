@@ -1,7 +1,7 @@
 //! Provides parsers for function symbols.
 
 use crate::parsers::utility::parse_name;
-use crate::types::domain::FunctionSymbol;
+use crate::types::FunctionSymbol;
 use nom::IResult;
 
 /// Parses a function symbol, i.e. `<name>`.

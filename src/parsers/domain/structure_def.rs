@@ -1,7 +1,7 @@
 //! Provides parsers for domain structure definitions.
 
 use crate::parsers::domain::{parse_action_def, parse_da_def, parse_derived_predicate};
-use crate::types::domain::StructureDef;
+use crate::types::StructureDef;
 use nom::branch::alt;
 use nom::combinator::map;
 use nom::IResult;
@@ -12,8 +12,8 @@ use nom::IResult;
 ///
 /// ```
 /// # use pddl::parsers::domain::{parse_structure_def};
-/// # use pddl::types::domain::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GoalDefinition, Literal, PEffect, Predicate, Preference, PreferenceGD, PreGD, StructureDef, Term, Variable};
-/// # use pddl::types::utility::{Name, ToTyped, TypedList};
+/// # use pddl::types::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GoalDefinition, Literal, PEffect, Predicate, Preference, PreferenceGD, PreGD, StructureDef, Term, Variable};
+/// # use pddl::types::{Name, ToTyped, TypedList};
 ///
 /// let input = r#"(:action take-out
 ///                     :parameters (?x - physob)

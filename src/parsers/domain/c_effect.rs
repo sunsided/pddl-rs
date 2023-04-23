@@ -4,7 +4,7 @@ use crate::parsers::domain::{
     parse_cond_effect, parse_effect, parse_gd, parse_p_effect, parse_variable,
 };
 use crate::parsers::utility::{parens, prefix_expr, typed_list};
-use crate::types::domain::CEffect;
+use crate::types::CEffect;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
@@ -16,8 +16,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_c_effect;
-/// # use pddl::types::domain::{AtomicFormula, CEffect, Effect, EqualityAtomicFormula, PEffect, Term, Variable};
-/// # use pddl::types::utility::{Typed, TypedList};
+/// # use pddl::types::{AtomicFormula, CEffect, Effect, EqualityAtomicFormula, PEffect, Term, Variable};
+/// # use pddl::types::{Typed, TypedList};
 /// assert_eq!(parse_c_effect("(= x y)"), Ok(("",
 ///     CEffect::PEffect(
 ///         PEffect::AtomicFormula(AtomicFormula::Equality(

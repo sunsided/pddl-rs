@@ -1,7 +1,7 @@
 //! Provides parsers for assignment operations.
 
-use crate::types::domain::assign_op_t::names;
-use crate::types::domain::AssignOpT;
+use crate::types::assign_op_t::names;
+use crate::types::AssignOpT;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map_res;
@@ -12,7 +12,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_assign_op_t;
-/// # use pddl::types::domain::{AssignOpT};
+/// # use pddl::types::{AssignOpT};
 /// assert_eq!(parse_assign_op_t("increase"), Ok(("", AssignOpT::Increase)));
 /// assert_eq!(parse_assign_op_t("decrease"), Ok(("", AssignOpT::Decrease)));
 ///```

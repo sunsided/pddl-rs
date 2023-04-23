@@ -1,7 +1,7 @@
 //! Provides parsers for names.
 
 use crate::parsers::utility::number::parse_digit;
-use crate::types::utility::Name;
+use crate::types::Name;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::character::is_alphabetic;

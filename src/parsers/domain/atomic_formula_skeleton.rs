@@ -2,7 +2,7 @@
 
 use crate::parsers::domain::{parse_predicate, parse_variable};
 use crate::parsers::utility::{parens, typed_list, ws};
-use crate::types::domain::AtomicFormulaSkeleton;
+use crate::types::AtomicFormulaSkeleton;
 use nom::combinator::map;
 use nom::sequence::tuple;
 use nom::IResult;
@@ -12,8 +12,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_atomic_formula_skeleton;
-/// # use pddl::types::domain::{Variable, AtomicFormulaSkeleton, Predicate};
-/// # use pddl::types::utility::{ToTyped, TypedList};
+/// # use pddl::types::{Variable, AtomicFormulaSkeleton, Predicate};
+/// # use pddl::types::{ToTyped, TypedList};
 ///
 /// assert_eq!(parse_atomic_formula_skeleton("(at ?x - physob ?y - location)"), Ok(("",
 ///     AtomicFormulaSkeleton::new(

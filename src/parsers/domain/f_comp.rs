@@ -2,7 +2,7 @@
 
 use crate::parsers::domain::{parse_binary_comp, parse_f_exp};
 use crate::parsers::utility::parens;
-use crate::types::domain::FComp;
+use crate::types::FComp;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
@@ -13,7 +13,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_f_comp;
-/// # use pddl::types::domain::{FunctionTerm, Variable, FunctionSymbol, Term, FComp, BinaryComp, FExp, BinaryOp};
+/// # use pddl::types::{FunctionTerm, Variable, FunctionSymbol, Term, FComp, BinaryComp, FExp, BinaryOp};
 /// assert_eq!(parse_f_comp("(= (+ 1.23 2.34) (+ 1.23 2.34))"), Ok(("",
 ///     FComp::new(
 ///         BinaryComp::Equal,

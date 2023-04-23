@@ -1,6 +1,6 @@
 //! Provides parsers for binary-operand operations.
 
-use crate::types::domain::BinaryOp;
+use crate::types::BinaryOp;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map_res;
@@ -11,7 +11,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_binary_op;
-/// # use pddl::types::domain::{BinaryOp};
+/// # use pddl::types::{BinaryOp};
 /// assert_eq!(parse_binary_op("*"), Ok(("", BinaryOp::Multiplication)));
 /// assert_eq!(parse_binary_op("+"), Ok(("", BinaryOp::Addition)));
 /// assert_eq!(parse_binary_op("-"), Ok(("", BinaryOp::Subtraction)));

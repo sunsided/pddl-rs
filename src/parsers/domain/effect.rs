@@ -2,7 +2,7 @@
 
 use crate::parsers::domain::parse_c_effect;
 use crate::parsers::utility::{prefix_expr, space_separated_list0};
-use crate::types::domain::Effect;
+use crate::types::Effect;
 use nom::branch::alt;
 use nom::combinator::map;
 use nom::IResult;
@@ -12,7 +12,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_effect;
-/// # use pddl::types::domain::{AtomicFormula, CEffect, Effect, EqualityAtomicFormula, PEffect, Term};
+/// # use pddl::types::{AtomicFormula, CEffect, Effect, EqualityAtomicFormula, PEffect, Term};
 /// assert_eq!(parse_effect("(= x y)"), Ok(("",
 ///     Effect::Single(
 ///         CEffect::PEffect(

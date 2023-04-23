@@ -1,7 +1,7 @@
 //! Provides parsers for assignment operations.
 
-use crate::types::domain::time_specifier::names;
-use crate::types::domain::TimeSpecifier;
+use crate::types::time_specifier::names;
+use crate::types::TimeSpecifier;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map_res;
@@ -12,7 +12,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_time_specifier;
-/// # use pddl::types::domain::{TimeSpecifier};
+/// # use pddl::types::{TimeSpecifier};
 /// assert_eq!(parse_time_specifier("start"), Ok(("", TimeSpecifier::Start)));
 /// assert_eq!(parse_time_specifier("end"), Ok(("", TimeSpecifier::End)));
 ///```

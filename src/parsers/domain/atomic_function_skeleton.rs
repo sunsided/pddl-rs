@@ -2,7 +2,7 @@
 
 use crate::parsers::domain::{parse_function_symbol, parse_variable};
 use crate::parsers::utility::{parens, typed_list, ws};
-use crate::types::domain::AtomicFunctionSkeleton;
+use crate::types::AtomicFunctionSkeleton;
 use nom::combinator::map;
 use nom::sequence::tuple;
 use nom::IResult;
@@ -12,8 +12,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_atomic_function_skeleton;
-/// # use pddl::types::domain::{Variable, AtomicFunctionSkeleton, Predicate, FunctionSymbol};
-/// # use pddl::types::utility::{ToTyped, TypedList};
+/// # use pddl::types::{Variable, AtomicFunctionSkeleton, Predicate, FunctionSymbol};
+/// # use pddl::types::{ToTyped, TypedList};
 ///
 /// assert_eq!(parse_atomic_function_skeleton("(battery-amount ?r - rover)"), Ok(("",
 ///     AtomicFunctionSkeleton::new(

@@ -4,7 +4,7 @@ use crate::parsers::domain::{
     atomic_formula, parse_assign_op, parse_f_exp, parse_f_head, parse_function_term, parse_term,
 };
 use crate::parsers::utility::{parens, prefix_expr};
-use crate::types::domain::PEffect;
+use crate::types::PEffect;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::character::complete::multispace1;
@@ -17,7 +17,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_p_effect;
-/// # use pddl::types::domain::{AssignOp, AtomicFormula, EqualityAtomicFormula, FExp, FHead, FunctionSymbol, FunctionTerm, PEffect, Term};
+/// # use pddl::types::{AssignOp, AtomicFormula, EqualityAtomicFormula, FExp, FHead, FunctionSymbol, FunctionTerm, PEffect, Term};
 /// assert_eq!(parse_p_effect("(= x y)"), Ok(("",
 ///     PEffect::AtomicFormula(AtomicFormula::Equality(
 ///         EqualityAtomicFormula::new(

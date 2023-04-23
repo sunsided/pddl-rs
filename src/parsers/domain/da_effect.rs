@@ -2,7 +2,7 @@
 
 use crate::parsers::domain::{parse_da_gd, parse_timed_effect, parse_variable};
 use crate::parsers::utility::{parens, prefix_expr, space_separated_list0, typed_list};
-use crate::types::domain::DurativeActionEffect;
+use crate::types::DurativeActionEffect;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
@@ -14,8 +14,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_da_effect;
-/// # use pddl::types::domain::{AtomicFormula, ConditionalEffect, DurativeActionEffect, EqualityAtomicFormula, PEffect, Term, TimedEffect, TimeSpecifier, Variable};
-/// # use pddl::types::utility::{Typed, TypedList};
+/// # use pddl::types::{AtomicFormula, ConditionalEffect, DurativeActionEffect, EqualityAtomicFormula, PEffect, Term, TimedEffect, TimeSpecifier, Variable};
+/// # use pddl::types::{Typed, TypedList};
 /// assert_eq!(parse_da_effect("(at start (= x y))"), Ok(("",
 ///     DurativeActionEffect::Timed(
 ///         TimedEffect::new_conditional(

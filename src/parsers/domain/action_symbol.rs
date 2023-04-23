@@ -1,7 +1,7 @@
 //! Provides parsers for action symbols.
 
 use crate::parsers::utility::parse_name;
-use crate::types::domain::ActionSymbol;
+use crate::types::ActionSymbol;
 use nom::IResult;
 
 /// Parses a function symbol, i.e. `<name>`.

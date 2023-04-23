@@ -2,7 +2,7 @@
 
 use crate::parsers::domain::{parse_gd, parse_interval, parse_time_specifier};
 use crate::parsers::utility::prefix_expr;
-use crate::types::domain::TimedGD;
+use crate::types::TimedGD;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
@@ -14,7 +14,7 @@ use nom::IResult;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::domain::{parse_timed_gd};
-/// # use pddl::types::domain::{AtomicFormula, GoalDefinition, Interval, Term, TimedGD, TimeSpecifier};
+/// # use pddl::types::{AtomicFormula, GoalDefinition, Interval, Term, TimedGD, TimeSpecifier};
 ///
 /// assert_eq!(parse_timed_gd("(at start (= x y))"), Ok(("",
 ///     TimedGD::new_at(

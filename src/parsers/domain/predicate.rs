@@ -1,7 +1,7 @@
 //! Provides parsers for predicates.
 
 use crate::parsers::utility::parse_name;
-use crate::types::domain::Predicate;
+use crate::types::Predicate;
 use nom::combinator::map;
 use nom::IResult;
 

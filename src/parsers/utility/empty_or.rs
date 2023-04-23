@@ -12,7 +12,7 @@ use nom::IResult;
 /// ```
 /// # use pddl::parsers::domain::parse_variable;
 /// # use pddl::parsers::utility::empty_or;
-/// # use pddl::types::domain::Variable;
+/// # use pddl::types::Variable;
 /// let mut parser = empty_or(parse_variable);
 /// assert_eq!(parser("()"), Ok(("", None)));
 /// assert_eq!(parser("?abc"), Ok(("", Some(Variable::from("abc")))));

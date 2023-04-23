@@ -2,7 +2,7 @@
 
 use crate::parsers::domain::parse_simple_duration_constraint;
 use crate::parsers::utility::{prefix_expr, space_separated_list1};
-use crate::types::domain::DurationConstraint;
+use crate::types::DurationConstraint;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
@@ -13,7 +13,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_duration_constraint;
-/// # use pddl::types::domain::{DOp, DurationConstraint, DValue, FunctionType, SimpleDurationConstraint, TimeSpecifier};
+/// # use pddl::types::{DOp, DurationConstraint, DValue, FunctionType, SimpleDurationConstraint, TimeSpecifier};
 ///
 /// let input = "()";
 /// assert_eq!(parse_duration_constraint(input), Ok(("", None)));

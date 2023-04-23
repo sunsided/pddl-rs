@@ -5,7 +5,7 @@ use crate::parsers::domain::{
     parse_time_specifier,
 };
 use crate::parsers::utility::{parens, prefix_expr};
-use crate::types::domain::TimedEffect;
+use crate::types::TimedEffect;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
@@ -17,8 +17,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_timed_effect;
-/// # use pddl::types::domain::{AssignOp, AssignOpT, AtomicFormula, CEffect, ConditionalEffect, EqualityAtomicFormula, FAssignDa, FExpDa, FExpT, FHead, PEffect, Term, TimedEffect, TimeSpecifier};
-/// # use pddl::types::domain::FExpDa::FExp;
+/// # use pddl::types::{AssignOp, AssignOpT, AtomicFormula, CEffect, ConditionalEffect, EqualityAtomicFormula, FAssignDa, FExpDa, FExpT, FHead, PEffect, Term, TimedEffect, TimeSpecifier};
+/// # use pddl::types::FExpDa::FExp;
 /// assert_eq!(parse_timed_effect("(at start (= x y))"), Ok(("",
 ///     TimedEffect::new_conditional(
 ///         TimeSpecifier::Start,

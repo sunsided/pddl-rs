@@ -2,7 +2,7 @@
 
 use crate::parsers::domain::{function_typed_list, parse_atomic_function_skeleton};
 use crate::parsers::utility::prefix_expr;
-use crate::types::domain::Functions;
+use crate::types::Functions;
 use nom::combinator::map;
 use nom::IResult;
 
@@ -11,8 +11,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_functions_def;
-/// # use pddl::types::domain::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions, FunctionTypedList, FunctionTyped, AtomicFunctionSkeleton, FunctionSymbol, Functions};
-/// # use pddl::types::utility::{Type, Typed, TypedList};
+/// # use pddl::types::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions, FunctionTypedList, FunctionTyped, AtomicFunctionSkeleton, FunctionSymbol, Functions};
+/// # use pddl::types::{Type, Typed, TypedList};
 ///
 /// let input = "(:functions (battery-amount ?r - rover))";
 /// assert_eq!(parse_functions_def(input), Ok(("",

@@ -1,7 +1,7 @@
 //! Provides parsers for variables.
 
 use crate::parsers::utility::parse_name;
-use crate::types::domain::Variable;
+use crate::types::Variable;
 use nom::bytes::complete::tag;
 use nom::sequence::preceded;
 use nom::IResult;

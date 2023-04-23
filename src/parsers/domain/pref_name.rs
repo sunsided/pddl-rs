@@ -1,6 +1,6 @@
 //! Provides parsers for preference names.
 use crate::parsers::utility::parse_name;
-use crate::types::domain::PreferenceName;
+use crate::types::PreferenceName;
 use nom::combinator::map;
 use nom::IResult;
 
