@@ -1,4 +1,4 @@
-//! Contains names.
+//! Contains names via the [`Name`] type.
 
 use crate::types::{PrimitiveType, ToTyped, Type, Typed};
 use std::ops::Deref;

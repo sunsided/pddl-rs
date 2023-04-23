@@ -1,4 +1,4 @@
-//! Contains types for derived predicates.
+//! Contains derived predicates via the [`DerivedPredicate`] type.
 
 use crate::types::{AtomicFormulaSkeleton, GoalDefinition};
 

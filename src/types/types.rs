@@ -12,6 +12,7 @@ impl<'a> Types<'a> {
         Self(predicates)
     }
 
+    /// Gets the values.
     pub fn values(&self) -> &TypedNames<'a> {
         &self.0
     }

@@ -2,6 +2,7 @@
 
 use crate::types::{AssignOpT, ConditionalEffect, FAssignDa, FExpT, FHead, TimeSpecifier};
 
+/// A timed effect, either conditional, continuous or derived from a fluent.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TimedEffect<'a> {
     ConditionalEffect(TimeSpecifier, ConditionalEffect<'a>),

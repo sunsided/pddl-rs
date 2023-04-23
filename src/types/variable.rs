@@ -12,6 +12,16 @@ impl<'a> Variable<'a> {
     pub const fn new(name: Name<'a>) -> Self {
         Self(name)
     }
+
+    #[inline(always)]
+    pub const fn from_str(name: &'a str) -> Self {
+        Self(Name::new(name))
+    }
+
+    #[inline(always)]
+    pub const fn from_name(name: Name<'a>) -> Self {
+        Self(name)
+    }
 }
 
 impl<'a> ToTyped<'a, Variable<'a>> for Variable<'a> {
@@ -26,16 +36,12 @@ impl<'a> ToTyped<'a, Variable<'a>> for Variable<'a> {
     }
 }
 
-impl<'a> From<Name<'a>> for Variable<'a> {
+impl<'a, T> From<T> for Variable<'a>
+where
+    T: Into<Name<'a>>,
+{
     #[inline(always)]
-    fn from(value: Name<'a>) -> Self {
-        Variable::new(value)
-    }
-}
-
-impl<'a> From<&'a str> for Variable<'a> {
-    #[inline(always)]
-    fn from(value: &'a str) -> Self {
+    fn from(value: T) -> Self {
         Variable::new(value.into())
     }
 }

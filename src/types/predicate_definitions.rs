@@ -1,4 +1,4 @@
-//! Provides predicate definitions;
+//! Provides predicate definitions.
 
 use crate::types::AtomicFormulaSkeleton;
 use std::ops::Deref;

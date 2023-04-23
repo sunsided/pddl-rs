@@ -1,4 +1,4 @@
-//! Contains atomic formulae.
+//! Contains atomic formulae via the [`AtomicFormula`] type.
 
 use crate::types::Predicate;
 use std::ops::Deref;

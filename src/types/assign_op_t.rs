@@ -1,4 +1,4 @@
-//! Contains the [`AssignOpT`] type.
+//! Contains the timed effect assignment operation type [`AssignOpT`].
 
 use std::fmt::{Display, Formatter};
 

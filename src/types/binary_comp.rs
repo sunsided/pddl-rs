@@ -1,4 +1,4 @@
-//! Contains binary comparison operations.
+//! Contains binary comparison operations via the [`BinaryComp`] type.
 
 use std::fmt::{Display, Formatter};
 

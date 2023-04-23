@@ -1,4 +1,4 @@
-//! Provides constant definitions;
+//! Provides constant definitions via the [`Constants`] type.
 
 use crate::types::{Name, Typed, TypedNames};
 use std::ops::Deref;

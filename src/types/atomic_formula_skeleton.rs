@@ -1,4 +1,4 @@
-//! Contains atomic formula skeletons.
+//! Contains atomic formula skeletons via the [`AtomicFormulaSkeleton`] type.
 
 use crate::types::Predicate;
 use crate::types::{Name, TypedVariables};

@@ -1,10 +1,10 @@
-//! Contains function typed elements.
+//! Contains function typed elements via the [`FunctionTyped`] type.
 
 use crate::types::FunctionType;
 use crate::types::Type;
 use std::ops::Deref;
 
-/// A typed element.
+/// A typed function element.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FunctionTyped<'a, O>(O, FunctionType<'a>);
 

@@ -1,3 +1,5 @@
+//! Contains typed function elements via the [`FunctionTypedList`] type.
+
 use crate::types::function_typed::FunctionTyped;
 use std::ops::Deref;
 

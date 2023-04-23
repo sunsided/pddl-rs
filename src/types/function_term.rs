@@ -1,3 +1,5 @@
+//! Contains function terms via the [`FunctionTerm`] type.
+
 use crate::types::term::Term;
 use crate::types::FunctionSymbol;
 

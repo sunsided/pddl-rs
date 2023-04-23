@@ -25,7 +25,7 @@ pub fn parse_term(input: &str) -> IResult<&str, Term> {
     }
 
     if let Ok((remaining, ft)) = parse_function_term(input) {
-        return Ok((remaining, Term::FunctionTerm(ft)));
+        return Ok((remaining, Term::Function(ft)));
     }
 
     return Err(nom::Err::Error(error_position!(input, ErrorKind::Alt)));

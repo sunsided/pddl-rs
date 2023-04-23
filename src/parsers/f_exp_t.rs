@@ -20,7 +20,7 @@ use nom::IResult;
 ///
 /// assert_eq!(parse_f_exp_t("(* (fuel ?tank) #t)"), Ok(("",
 ///     FExpT::new_scaled(
-///         FExp::new_f_head(
+///         FExp::new_function(
 ///             FHead::new_with_terms(
 ///                 FunctionSymbol::from_str("fuel"),
 ///                 [Term::Variable(Variable::from_str("tank"))]
@@ -31,7 +31,7 @@ use nom::IResult;
 ///
 /// assert_eq!(parse_f_exp_t("(* #t (fuel ?tank))"), Ok(("",
 ///     FExpT::new_scaled(
-///         FExp::new_f_head(
+///         FExp::new_function(
 ///             FHead::new_with_terms(
 ///                 FunctionSymbol::from_str("fuel"),
 ///                 [Term::Variable(Variable::from_str("tank"))]

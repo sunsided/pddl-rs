@@ -1,4 +1,4 @@
-//! Contains c-effects.
+//! Contains the [`CEffect`] type.
 
 use crate::types::TypedVariables;
 use crate::types::{ConditionalEffect, Effect, GoalDefinition, PEffect};

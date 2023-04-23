@@ -1,3 +1,5 @@
+//! Contains the conditional problem/goal definition types [`ConGD`] and [`Con2GD`].
+
 use crate::types::{GoalDefinition, Number, TypedVariables};
 
 #[derive(Debug, Clone, PartialEq)]

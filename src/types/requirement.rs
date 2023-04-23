@@ -1,3 +1,5 @@
+//! Contains domain requirements such as [Strips](Requirement::Strips).
+
 use std::borrow::Borrow;
 use std::fmt::{Display, Formatter};
 

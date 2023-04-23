@@ -19,7 +19,7 @@ use nom::IResult;
 ///
 /// assert_eq!(parse_d_value("fun-sym"), Ok(("",
 ///     DValue::new_f_exp(
-///         FExp::new_f_head(FHead::Simple("fun-sym".into()))
+///         FExp::new_function(FHead::Simple("fun-sym".into()))
 ///     )
 /// )));
 ///```

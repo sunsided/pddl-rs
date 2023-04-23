@@ -1,4 +1,4 @@
-//! Contains atomic function skeletons.
+//! Contains atomic function skeletons via the [`AtomicFunctionSkeleton`] type.
 
 use crate::types::Typed;
 use crate::types::{FunctionSymbol, TypedVariables, Variable};

@@ -1,8 +1,7 @@
-//! Contains the [`DOp`] type..
+//! Contains the [`DOp`] type.
 
 use std::fmt::{Display, Formatter};
 
-/// A binary comparison operation.
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum DOp {
     Equal,

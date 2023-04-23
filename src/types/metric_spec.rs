@@ -2,6 +2,7 @@
 
 use crate::types::{MetricFExp, Optimization};
 
+/// A metric specification.
 /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
 #[derive(Debug, Clone, PartialEq)]
 pub struct MetricSpec<'a> {

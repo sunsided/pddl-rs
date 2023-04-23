@@ -2,10 +2,12 @@
 
 use std::fmt::{Display, Formatter};
 
-/// An optimization goal.
+/// An optimization instruction.
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Optimization {
+    /// The associated metric should be minimized.
     Minimize,
+    /// The associated metric should be maximized.
     Maximize,
 }
 

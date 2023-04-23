@@ -1,4 +1,4 @@
-//! Contains action symbols.
+//! Contains action symbols via the [`ActionSymbol`] type.
 
 use crate::types::Name;
 use std::ops::Deref;
@@ -9,8 +9,8 @@ pub struct ActionSymbol<'a>(Name<'a>);
 
 impl<'a> ActionSymbol<'a> {
     #[inline(always)]
-    pub fn new<N: Into<Name<'a>>>(name: N) -> Self {
-        Self(name.into())
+    pub const fn new(name: Name<'a>) -> Self {
+        Self(name)
     }
 
     #[inline(always)]
@@ -24,17 +24,13 @@ impl<'a> ActionSymbol<'a> {
     }
 }
 
-impl<'a> From<Name<'a>> for ActionSymbol<'a> {
+impl<'a, T> From<T> for ActionSymbol<'a>
+where
+    T: Into<Name<'a>>,
+{
     #[inline(always)]
-    fn from(value: Name<'a>) -> Self {
-        Self(value)
-    }
-}
-
-impl<'a> From<&'a str> for ActionSymbol<'a> {
-    #[inline(always)]
-    fn from(value: &'a str) -> Self {
-        Self(Name::new(value))
+    fn from(value: T) -> Self {
+        ActionSymbol::new(value.into())
     }
 }
 

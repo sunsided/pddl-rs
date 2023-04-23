@@ -1,4 +1,4 @@
-//! Contains conditional effects.
+//! Contains conditional effects via the [`ConditionalEffect`] type.
 
 use crate::types::PEffect;
 

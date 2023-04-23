@@ -1,4 +1,4 @@
-//! Contains the [`FAssignDa`] type.
+//! Contains the durative action assignment expressions via the [`FAssignDa`] type.
 
 use crate::types::{AssignOp, FExpDa, FHead};
 

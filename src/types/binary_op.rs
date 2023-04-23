@@ -1,4 +1,4 @@
-//! Contains the BinaryOp type.
+//! Contains binary operations via the [`BinaryOp`] type.
 
 use crate::types::MultiOp;
 use std::fmt::{Display, Formatter};

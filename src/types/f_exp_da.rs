@@ -1,4 +1,4 @@
-//! Contains the [`FExpDa`] type.
+//! Contains durative function expressions via the [`FExpDa`] type.
 
 use crate::types::{AssignOp, BinaryOp, FExp, FHead, MultiOp};
 

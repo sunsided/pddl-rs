@@ -1,4 +1,4 @@
-//! Contains function symbols.
+//! Contains function symbols via the [`FunctionSymbol`] type..
 
 use crate::types::Name;
 use std::ops::Deref;
@@ -9,8 +9,8 @@ pub struct FunctionSymbol<'a>(Name<'a>);
 
 impl<'a> FunctionSymbol<'a> {
     #[inline(always)]
-    pub fn new<N: Into<Name<'a>>>(name: N) -> Self {
-        Self(name.into())
+    pub fn new(name: Name<'a>) -> Self {
+        Self(name)
     }
 
     #[inline(always)]
@@ -24,17 +24,13 @@ impl<'a> FunctionSymbol<'a> {
     }
 }
 
-impl<'a> From<Name<'a>> for FunctionSymbol<'a> {
+impl<'a, T> From<T> for FunctionSymbol<'a>
+where
+    T: Into<Name<'a>>,
+{
     #[inline(always)]
-    fn from(value: Name<'a>) -> Self {
-        Self(value)
-    }
-}
-
-impl<'a> From<&'a str> for FunctionSymbol<'a> {
-    #[inline(always)]
-    fn from(value: &'a str) -> Self {
-        Self(Name::new(value))
+    fn from(value: T) -> Self {
+        FunctionSymbol::new(value.into())
     }
 }
 

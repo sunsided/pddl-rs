@@ -1,4 +1,4 @@
-//! Contains function types.
+//! Contains function types via the [`FunctionType`] ... type.
 
 use crate::types::{PrimitiveType, Type};
 use std::ops::Deref;

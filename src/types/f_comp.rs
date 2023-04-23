@@ -1,3 +1,5 @@
+//! Contains function expression comparisons via the [`FComp`] type.
+
 use crate::types::{BinaryComp, FExp};
 
 /// An f-comp.

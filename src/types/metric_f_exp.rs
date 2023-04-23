@@ -2,6 +2,7 @@
 
 use crate::types::{BinaryOp, FunctionSymbol, MultiOp, Name, Number, PreferenceName};
 
+/// A metric function expression.
 #[derive(Debug, Clone, PartialEq)]
 pub enum MetricFExp<'a> {
     BinaryOp(BinaryOp, Box<Self>, Box<Self>),

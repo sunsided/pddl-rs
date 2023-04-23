@@ -83,15 +83,13 @@ where
     }
 }
 
-impl<'a> From<&'a str> for PrimitiveType<'a> {
-    fn from(value: &'a str) -> Self {
-        Self(Name::new(value))
-    }
-}
-
-impl<'a> From<Name<'a>> for PrimitiveType<'a> {
-    fn from(value: Name<'a>) -> Self {
-        Self(value)
+impl<'a, T> From<T> for PrimitiveType<'a>
+where
+    T: Into<Name<'a>>,
+{
+    #[inline(always)]
+    fn from(value: T) -> Self {
+        PrimitiveType::new(value.into())
     }
 }
 

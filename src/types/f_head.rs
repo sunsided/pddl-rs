@@ -1,5 +1,8 @@
+//! Contains function declarations via the [`FHead`] type.
+
 use crate::types::{FunctionSymbol, Term};
 
+/// A function declaration.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum FHead<'a> {
     Simple(FunctionSymbol<'a>),

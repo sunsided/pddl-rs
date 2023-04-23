@@ -1,4 +1,4 @@
-//! Contains the [`DurationConstraint`] type.
+//! Contains duration constraints via the [`DurationConstraint`] type.
 
 use crate::types::SimpleDurationConstraint;
 

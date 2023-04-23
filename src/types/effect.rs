@@ -1,4 +1,4 @@
-//! Contains effects.
+//! Contains effects via the [`Effect`] type.
 
 use crate::types::CEffect;
 

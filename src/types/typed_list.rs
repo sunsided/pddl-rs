@@ -22,6 +22,11 @@ impl<'a, T> TypedList<'a, T> {
     pub const fn new(list: Vec<Typed<'a, T>>) -> Self {
         Self(list)
     }
+
+    /// Gets the values.
+    pub fn value(&self) -> &[Typed<'a, T>] {
+        self.0.as_slice()
+    }
 }
 
 impl<'a, T> From<Vec<Typed<'a, T>>> for TypedList<'a, T> {

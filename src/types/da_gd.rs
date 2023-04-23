@@ -1,4 +1,4 @@
-//! Contains the [`DurativeActionGoalDefinition`] type.
+//! Contains durative action goal definitions via the [`DurativeActionGoalDefinition`] type.
 
 use crate::types::PrefTimedGD;
 use crate::types::TypedVariables;

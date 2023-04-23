@@ -25,7 +25,7 @@ use nom::IResult;
 /// let x = Term::Name("x".into());
 /// let y = Term::Variable("y".into());
 /// let a = Term::Name("a".into());
-/// let ft = Term::FunctionTerm(FunctionTerm::new(FunctionSymbol::from("fn"), vec![a]));
+/// let ft = Term::Function(FunctionTerm::new(FunctionSymbol::from("fn"), vec![a]));
 /// assert_eq!(parse_function_term("(fun-sym ?y x (fn a))"), Ok(("", FunctionTerm::new("fun-sym".into(), vec![y, x, ft]))));
 ///```
 pub fn parse_function_term(input: &str) -> IResult<&str, FunctionTerm> {

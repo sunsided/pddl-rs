@@ -1,4 +1,4 @@
-//! Provides function definitions.
+//! Provides function definitions via the [`Functions`] type.
 
 use crate::types::{AtomicFunctionSkeleton, FunctionTyped, FunctionTypedList};
 use std::ops::Deref;
