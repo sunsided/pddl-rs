@@ -23,7 +23,7 @@ use nom::IResult;
 ///     Some(DurationConstraint::new_simple(
 ///         SimpleDurationConstraint::Op(
 ///             DOp::Equal,
-///             DValue::Number(5.)
+///             DValue::Number(5.into())
 ///         )
 ///     ))
 /// )));
@@ -35,7 +35,7 @@ use nom::IResult;
 ///             TimeSpecifier::End,
 ///             SimpleDurationConstraint::Op(
 ///                 DOp::LessThanOrEqual,
-///                 DValue::Number(1.23)
+///                 DValue::Number(1.23.into())
 ///             )
 ///         )
 ///     ))
@@ -48,12 +48,12 @@ use nom::IResult;
 ///             TimeSpecifier::End,
 ///             SimpleDurationConstraint::Op(
 ///                 DOp::LessThanOrEqual,
-///                 DValue::Number(1.23)
+///                 DValue::Number(1.23.into())
 ///             )
 ///         ),
 ///         SimpleDurationConstraint::new_op(
 ///             DOp::GreaterOrEqual,
-///             DValue::Number(1.0)
+///             DValue::Number(1.0.into())
 ///         )
 ///     ]))
 /// )));
