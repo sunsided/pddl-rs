@@ -89,7 +89,7 @@ listed in the paper:
 - [ ] `<basic-function-term>`
 - [ ] `<goal>`
 - [ ] `<constraints>`
-- [ ] `<pref-con-GD>`
+- [x] [`<pref-con-GD>`](src/parsers/pref_con_gd.rs)
 - [x] [~~`<con-GD>`~~](src/parsers/con_gd.rs) (uses embedded modal operators below)
 - [x] [`<metric-spec>`](src/parsers/metric_spec.rs)
 - [x] [`<optimization>`](src/parsers/optimization.rs)
