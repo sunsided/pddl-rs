@@ -61,3 +61,12 @@ where
         self.0.eq(other)
     }
 }
+
+impl<'a, T> IntoIterator for TypedList<'a, T> {
+    type Item = Typed<'a, T>;
+    type IntoIter = std::vec::IntoIter<Typed<'a, T>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}

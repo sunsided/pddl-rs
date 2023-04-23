@@ -83,7 +83,7 @@ listed in the paper:
 ### Problem Description
 
 - [ ] `<problem>`
-- [ ] `<object declaration>`
+- [x] [`<object declaration>`](src/parsers/objects_def.rs)
 - [x] [`<init>`](src/parsers/init_def.rs)
 - [x] [`<init-el>`](src/parsers/init_el.rs)
 - [x] [`<basic-function-term>`](src/parsers/basic_function_term.rs)
