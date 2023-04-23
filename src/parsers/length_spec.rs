@@ -11,14 +11,14 @@ use nom::IResult;
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::parse_length_spec;
+/// # use pddl::parsers::parse_problem_length_spec;
 /// # use pddl::types::LengthSpec;
-/// assert_eq!(parse_length_spec("(:length)"), Ok(("", LengthSpec::default())));
-/// assert_eq!(parse_length_spec("(:length (:serial 123))"), Ok(("", LengthSpec::new_serial(123))));
-/// assert_eq!(parse_length_spec("(:length (:parallel 42))"), Ok(("", LengthSpec::new_parallel(42))));
-/// assert_eq!(parse_length_spec("(:length (:serial 123) (:parallel 42))"), Ok(("", LengthSpec::new(Some(123), Some(42)))));
+/// assert_eq!(parse_problem_length_spec("(:length)"), Ok(("", LengthSpec::default())));
+/// assert_eq!(parse_problem_length_spec("(:length (:serial 123))"), Ok(("", LengthSpec::new_serial(123))));
+/// assert_eq!(parse_problem_length_spec("(:length (:parallel 42))"), Ok(("", LengthSpec::new_parallel(42))));
+/// assert_eq!(parse_problem_length_spec("(:length (:serial 123) (:parallel 42))"), Ok(("", LengthSpec::new(Some(123), Some(42)))));
 ///```
-pub fn parse_length_spec(input: &str) -> IResult<&str, LengthSpec> {
+pub fn parse_problem_length_spec(input: &str) -> IResult<&str, LengthSpec> {
     let serial = prefix_expr(":serial", map_res(recognize(digit1), str::parse));
     let parallel = prefix_expr(":parallel", map_res(recognize(digit1), str::parse));
     let length = prefix_expr(

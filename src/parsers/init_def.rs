@@ -9,11 +9,11 @@ use nom::IResult;
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::{parse_goal_init_def};
+/// # use pddl::parsers::{parse_problem_init_def};
 /// # use pddl::types::{AtomicFormula, InitElement, InitElements, NameLiteral, Number};
 ///
 /// let input = "(:init (train-not-in-use train1) (at 10 (train-not-in-use train2)))";
-/// assert_eq!(parse_goal_init_def(input), Ok(("",
+/// assert_eq!(parse_problem_init_def(input), Ok(("",
 ///     InitElements::new([
 ///         InitElement::new_literal(
 ///             NameLiteral::new(
@@ -35,7 +35,7 @@ use nom::IResult;
 ///     ])
 /// )));
 /// ```
-pub fn parse_goal_init_def(input: &str) -> IResult<&str, InitElements> {
+pub fn parse_problem_init_def(input: &str) -> IResult<&str, InitElements> {
     map(
         prefix_expr(":init", space_separated_list0(parse_init_el)),
         InitElements::new,

@@ -11,16 +11,16 @@ use nom::IResult;
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::parse_metric_spec;
+/// # use pddl::parsers::parse_problem_metric_spec;
 /// # use pddl::types::{MetricFExp, MetricSpec, Optimization};
-/// assert_eq!(parse_metric_spec("(:metric minimize total-time)"), Ok(("",
+/// assert_eq!(parse_problem_metric_spec("(:metric minimize total-time)"), Ok(("",
 ///     MetricSpec::new(
 ///         Optimization::Minimize,
 ///         MetricFExp::TotalTime
 ///     )
 /// )));
 ///```
-pub fn parse_metric_spec(input: &str) -> IResult<&str, MetricSpec> {
+pub fn parse_problem_metric_spec(input: &str) -> IResult<&str, MetricSpec> {
     // :numeric-fluents
     map(
         prefix_expr(

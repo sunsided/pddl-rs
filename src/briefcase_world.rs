@@ -42,7 +42,8 @@ pub const BRIEFCASE_WORLD_PROBLEM: &'static str = r#"
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parsers::parse_domain;
+    use crate::parsers::{parse_domain, parse_problem};
+    use crate::types::PreGD;
 
     #[test]
     fn parse_domain_works() {
@@ -52,10 +53,26 @@ mod tests {
         assert_eq!(remainder, "");
 
         // All elements were parsed.
+        assert_eq!(domain.name(), &"briefcase-world".into());
         assert_eq!(domain.requirements().len(), 4);
         assert_eq!(domain.types().len(), 2);
         assert_eq!(domain.constants().len(), 3);
         assert_eq!(domain.predicates().len(), 2);
         assert_eq!(domain.structure().len(), 3);
+    }
+
+    #[test]
+    fn parse_problem_works() {
+        let (remainder, problem) = parse_problem(BRIEFCASE_WORLD_PROBLEM).unwrap();
+
+        // The input was parsed completely, nothing followed the problem definition.
+        assert_eq!(remainder, "");
+
+        // All elements were parsed.
+        assert_eq!(problem.name(), &"get-paid".into());
+        assert_eq!(problem.domain(), &"briefcase-world".into());
+        assert!(problem.requirements().is_empty());
+        assert_eq!(problem.init().len(), 9);
+        assert!(matches! { problem.goal(), PreGD::And(_) });
     }
 }

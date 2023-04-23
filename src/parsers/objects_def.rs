@@ -9,18 +9,18 @@ use nom::IResult;
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::{parse_goal_objects_declaration};
+/// # use pddl::parsers::{parse_problem_objects_declaration};
 /// # use pddl::types::{Name, Objects, ToTyped, Type};
 ///
 /// let input = "(:objects train1 train2)";
-/// assert_eq!(parse_goal_objects_declaration(input), Ok(("",
+/// assert_eq!(parse_problem_objects_declaration(input), Ok(("",
 ///     Objects::new([
 ///         Name::new("train1").to_typed(Type::OBJECT),
 ///         Name::new("train2").to_typed(Type::OBJECT),
 ///     ])
 /// )));
 /// ```
-pub fn parse_goal_objects_declaration(input: &str) -> IResult<&str, Objects> {
+pub fn parse_problem_objects_declaration(input: &str) -> IResult<&str, Objects> {
     map(
         prefix_expr(":objects", typed_list(parse_name)),
         Objects::new,
