@@ -80,7 +80,7 @@ impl<'a> ConGD<'a> {
 
     pub fn is_empty(&self) -> bool {
         match self {
-            ConGD::And(x) => x.is_empty(),
+            ConGD::And(x) => x.iter().all(|y| y.is_empty()),
             ConGD::Forall(_, x) => x.is_empty(),
             ConGD::AtEnd(x) => x.is_empty(),
             ConGD::Always(x) => x.is_empty(),

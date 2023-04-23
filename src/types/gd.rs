@@ -89,8 +89,8 @@ impl<'a> GoalDefinition<'a> {
         match self {
             GoalDefinition::AtomicFormula(_) => false,
             GoalDefinition::Literal(_) => false,
-            GoalDefinition::And(x) => x.is_empty(),
-            GoalDefinition::Or(x) => x.is_empty(),
+            GoalDefinition::And(x) => x.iter().all(|y| y.is_empty()),
+            GoalDefinition::Or(x) => x.iter().all(|y| y.is_empty()),
             GoalDefinition::Not(x) => x.is_empty(),
             GoalDefinition::Imply(x, y) => x.is_empty() && y.is_empty(),
             GoalDefinition::Exists(_, x) => x.is_empty(),
