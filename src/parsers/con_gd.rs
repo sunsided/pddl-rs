@@ -36,6 +36,9 @@ use nom::IResult;
 ///         )
 ///     );
 ///
+/// assert_eq!(parse_con_gd("(and)"), Ok(("",
+///     ConGD::new_and([])
+/// )));
 ///
 /// assert_eq!(parse_con_gd("(and (at end (= x y)) (at end (not (= x z))))"), Ok(("",
 ///     ConGD::new_and([

@@ -1,17 +1,20 @@
-use crate::types::{Constants, Functions, PredicateDefinitions, Requirements, StructureDefs};
+use crate::types::{
+    ConGD, Constants, Functions, PredicateDefinitions, Requirements, StructureDefs,
+};
 use crate::types::{Name, Types};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Domain<'a> {
     name: Name<'a>,
     requirements: Requirements,
-    /// Requires [Typing](Requirement::Typing).
+    /// Requires [Typing](crate::types::Requirement::Typing).
     types: Types<'a>,
     constants: Constants<'a>,
     predicates: PredicateDefinitions<'a>,
-    /// Requires [Fluents](Requirement::Fluents).
+    /// Requires [Fluents](crate::types::Requirement::Fluents).
     functions: Functions<'a>,
-    // TODO: add constraints (:constraints requirement)
+    /// Requires [Constraints](crate::types::Requirement::Constraints).
+    constraints: ConGD<'a>,
     structure: StructureDefs<'a>,
 }
 
@@ -23,6 +26,7 @@ impl<'a> Domain<'a> {
         constants: Constants<'a>,
         predicates: PredicateDefinitions<'a>,
         functions: Functions<'a>,
+        constraints: ConGD<'a>,
         structure: StructureDefs<'a>,
     ) -> Self {
         Self {
@@ -32,6 +36,7 @@ impl<'a> Domain<'a> {
             constants,
             predicates,
             functions,
+            constraints,
             structure,
         }
     }
@@ -58,6 +63,10 @@ impl<'a> Domain<'a> {
 
     pub const fn functions(&self) -> &Functions<'a> {
         &self.functions
+    }
+
+    pub const fn constraints(&self) -> &ConGD<'a> {
+        &self.constraints
     }
 
     pub const fn structure(&self) -> &StructureDefs<'a> {

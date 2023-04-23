@@ -84,4 +84,18 @@ impl<'a> GoalDefinition<'a> {
     pub const fn new_f_comp(f_comp: FComp<'a>) -> Self {
         Self::FComp(f_comp)
     }
+
+    pub fn is_empty(&self) -> bool {
+        match self {
+            GoalDefinition::AtomicFormula(_) => false,
+            GoalDefinition::Literal(_) => false,
+            GoalDefinition::And(x) => x.is_empty(),
+            GoalDefinition::Or(x) => x.is_empty(),
+            GoalDefinition::Not(x) => x.is_empty(),
+            GoalDefinition::Imply(x, y) => x.is_empty() && y.is_empty(),
+            GoalDefinition::Exists(_, x) => x.is_empty(),
+            GoalDefinition::ForAll(_, x) => x.is_empty(),
+            GoalDefinition::FComp(_) => false,
+        }
+    }
 }
