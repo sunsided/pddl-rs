@@ -2,6 +2,7 @@
 
 use crate::types::iterators::FlatteningIntoIterator;
 use crate::types::Name;
+use std::fmt::{Display, Formatter};
 use std::ops::Deref;
 
 /// The `object` type.
@@ -43,6 +44,14 @@ impl Type {
 
     /// The predefined type `number`.
     pub const NUMBER: Type = Type::Exactly(TYPE_NUMBER);
+
+    pub fn new_exactly<S: Into<PrimitiveType>>(t: S) -> Self {
+        Self::Exactly(t.into())
+    }
+
+    pub fn new_either<T: IntoIterator<Item = P>, P: Into<PrimitiveType>>(iter: T) -> Self {
+        Self::EitherOf(iter.into_iter().map(|x| x.into()).collect())
+    }
 
     pub fn len(&self) -> usize {
         match self {
@@ -133,11 +142,35 @@ impl IntoIterator for Type {
     }
 }
 
+impl<'a> Display for PrimitiveType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl<'a> Display for Type {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Type::Exactly(x) => write!(f, "{}", x),
+            Type::EitherOf(xs) => {
+                let xs: Vec<_> = xs.iter().map(|p| p.to_string()).collect();
+                write!(f, "(either {})", xs.join(" "))
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::parsers::Span;
     use crate::Parser;
+
+    #[test]
+    fn simple_works() {
+        let t = Type::new_exactly("location");
+        assert_eq!(format!("{t}"), "location");
+    }
 
     #[test]
     fn flatten_with_single_element_works() {
@@ -156,5 +189,11 @@ mod tests {
         assert!(iter.next().is_some());
         assert!(iter.next().is_some());
         assert!(iter.next().is_none());
+    }
+
+    #[test]
+    fn either_works() {
+        let t = Type::new_either(["location", "memory"]);
+        assert_eq!(format!("{t}"), "(either location memory)");
     }
 }

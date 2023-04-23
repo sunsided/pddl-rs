@@ -183,6 +183,12 @@ impl PartialEq<String> for Name {
     }
 }
 
+impl<'a> Display for Name {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 impl ToTyped<Name> for Name {
     fn to_typed<I: Into<Type>>(self, r#type: I) -> Typed<Name> {
         Typed::new(self, r#type.into())
@@ -259,6 +265,12 @@ impl Display for NameVariant {
 mod tests {
     use super::*;
     use nom_greedyerror::AsStr;
+
+    #[test]
+    fn test_display() {
+        let name = Name::new("x");
+        assert_eq!(format!("{name}"), "x");
+    }
 
     #[test]
     fn map_to_static_works() {
