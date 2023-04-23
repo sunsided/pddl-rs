@@ -1,6 +1,8 @@
 //! Provides parsers for conditional goal definitions.
 
-use crate::parsers::{parse_gd, parse_number, prefix_expr};
+use crate::parsers::{
+    parens, parse_gd, parse_number, parse_variable, prefix_expr, space_separated_list0, typed_list,
+};
 use crate::types::{Con2GD, ConGD};
 use nom::branch::alt;
 use nom::character::complete::multispace1;
@@ -13,8 +15,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_con_gd;
-/// # use pddl::types::{AtomicFormula, Con2GD, ConGD, GoalDefinition, Number, Term};
-///
+/// # use pddl::types::{AtomicFormula, Con2GD, ConGD, GoalDefinition, Number, Term, ToTyped, Type, TypedList, Variable};
 /// // (= x y)
 /// let gd_a =
 ///     GoalDefinition::new_atomic_formula(
@@ -34,6 +35,38 @@ use nom::IResult;
 ///             )
 ///         )
 ///     );
+///
+///
+/// assert_eq!(parse_con_gd("(and (at end (= x y)) (at end (not (= x z))))"), Ok(("",
+///     ConGD::new_and([
+///         ConGD::new_at_end(gd_a.clone()),
+///         ConGD::new_at_end(gd_b.clone()),
+///     ])
+/// )));
+///
+/// assert_eq!(parse_con_gd("(forall (?x ?z) (sometime (= ?x ?z)))"), Ok(("",
+///     ConGD::new_for_all(
+///         TypedList::from_iter([
+///             Variable::from("x").to_typed(Type::OBJECT),
+///             Variable::from("z").to_typed(Type::OBJECT),
+///         ]),
+///         ConGD::new_sometime(
+///             Con2GD::Goal(
+///                 // gd ...
+///                 # GoalDefinition::new_atomic_formula(
+///                 #    AtomicFormula::new_equality(
+///                 #        Term::Variable("x".into()),
+///                 #        Term::Variable("z".into())
+///                 #    )
+///                 # )
+///             )
+///         )
+///     )
+/// )));
+///
+/// assert_eq!(parse_con_gd("(at end (= x y))"), Ok(("",
+///     ConGD::AtEnd(gd_a.clone())
+/// )));
 ///
 /// assert_eq!(parse_con_gd("(always (= x y))"), Ok(("",
 ///     ConGD::Always(Con2GD::new_goal(gd_a.clone()))
@@ -122,6 +155,24 @@ use nom::IResult;
 /// )));
 /// ```
 pub fn parse_con_gd(input: &str) -> IResult<&str, ConGD> {
+    let and = map(
+        prefix_expr("and", space_separated_list0(parse_con_gd)),
+        ConGD::new_and,
+    );
+
+    let forall = map(
+        prefix_expr(
+            "forall",
+            tuple((
+                parens(typed_list(parse_variable)),
+                preceded(multispace1, parse_con_gd),
+            )),
+        ),
+        |(vars, gd)| ConGD::new_for_all(vars, gd),
+    );
+
+    let at_end = map(prefix_expr("at end", parse_gd), ConGD::new_at_end);
+
     let always = map(prefix_expr("always", parse_con2_gd), ConGD::new_always);
 
     let sometime = map(prefix_expr("sometime", parse_con2_gd), ConGD::new_sometime);
@@ -188,6 +239,9 @@ pub fn parse_con_gd(input: &str) -> IResult<&str, ConGD> {
     );
 
     alt((
+        and,
+        forall,
+        at_end,
         always,
         sometime,
         within,
