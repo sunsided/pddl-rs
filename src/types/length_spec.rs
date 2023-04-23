@@ -1,3 +1,5 @@
+//! Contains the [`LengthSpec`] type.
+
 /// Deprecated since PDDL 2.1.
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
 pub struct LengthSpec {
