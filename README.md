@@ -11,13 +11,13 @@ See [`src/briefcase_world.rs`](tests/briefcase_world.rs) for an example.
 Parser and domain/problem types can be used separately and will be completely 
 decoupled through crate features in the future.
 
-### ⚠️ Caveat Emptor
+### Caveat Emptor
 
 At this point the parser supports all domain and problem definition
 elements required to fully describe a PDDL 3.1 (and earlier) environment.
 
-However, some enum variants are currently inaccessible to external users of the crate.
-This is where some work is still required.
+However, since types and enum variants are named closely to the underlying
+BNF descriptions (see below), they may be a bit unwieldy to use still.
 
 ## Supported Elements
 
