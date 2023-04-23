@@ -86,7 +86,7 @@ listed in the paper:
 - [ ] `<object declaration>`
 - [ ] `<init>`
 - [ ] `<init-el>`
-- [ ] `<basic-function-term>`
+- [x] [`<basic-function-term>`](src/parsers/basic_function_term.rs)
 - [x] [`<goal>`](src/parsers/goal_def.rs)
 - [x] [`<constraints>`](src/parsers/problem_constraints_def.rs)
 - [x] [`<pref-con-GD>`](src/parsers/pref_con_gd.rs)
