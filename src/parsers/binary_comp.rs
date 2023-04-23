@@ -1,6 +1,6 @@
 //! Provides parsers for binary comparison operations.
 
-use crate::types::BinaryComp;
+use crate::types::{binary_comp::names, BinaryComp};
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map_res;
@@ -20,7 +20,13 @@ use nom::IResult;
 ///```
 pub fn parse_binary_comp(input: &str) -> IResult<&str, BinaryComp> {
     map_res(
-        alt((tag("<="), tag(">="), tag("="), tag(">"), tag("<"))),
+        alt((
+            tag(names::GREATER_THAN_OR_EQUAL),
+            tag(names::LESS_THAN_OR_EQUAL),
+            tag(names::EQUAL),
+            tag(names::GREATER_THAN),
+            tag(names::LESS_THAN),
+        )),
         BinaryComp::try_from,
     )(input)
 }

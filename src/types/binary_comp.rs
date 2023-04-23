@@ -12,14 +12,22 @@ pub enum BinaryComp {
     LessThanOrEqual,
 }
 
+pub mod names {
+    pub const GREATER_THAN: &'static str = ">";
+    pub const LESS_THAN: &'static str = "<";
+    pub const EQUAL: &'static str = "=";
+    pub const GREATER_THAN_OR_EQUAL: &'static str = ">=";
+    pub const LESS_THAN_OR_EQUAL: &'static str = "<=";
+}
+
 impl Display for BinaryComp {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            BinaryComp::GreaterThan => write!(f, ">"),
-            BinaryComp::LessThan => write!(f, "<"),
-            BinaryComp::Equal => write!(f, "="),
-            BinaryComp::GreaterOrEqual => write!(f, ">="),
-            BinaryComp::LessThanOrEqual => write!(f, "<="),
+            BinaryComp::GreaterThan => write!(f, "{}", names::GREATER_THAN),
+            BinaryComp::LessThan => write!(f, "{}", names::LESS_THAN),
+            BinaryComp::Equal => write!(f, "{}", names::EQUAL),
+            BinaryComp::GreaterOrEqual => write!(f, "{}", names::GREATER_THAN_OR_EQUAL),
+            BinaryComp::LessThanOrEqual => write!(f, "{}", names::LESS_THAN_OR_EQUAL),
         }
     }
 }
@@ -29,11 +37,11 @@ impl TryFrom<&str> for BinaryComp {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
-            ">" => Ok(Self::GreaterThan),
-            "<" => Ok(Self::LessThan),
-            "=" => Ok(Self::Equal),
-            ">=" => Ok(Self::GreaterOrEqual),
-            "<=" => Ok(Self::LessThanOrEqual),
+            names::GREATER_THAN => Ok(Self::GreaterThan),
+            names::LESS_THAN => Ok(Self::LessThan),
+            names::EQUAL => Ok(Self::Equal),
+            names::GREATER_THAN_OR_EQUAL => Ok(Self::GreaterOrEqual),
+            names::LESS_THAN_OR_EQUAL => Ok(Self::LessThanOrEqual),
             _ => Err(ParseError::InvalidOperation),
         }
     }
