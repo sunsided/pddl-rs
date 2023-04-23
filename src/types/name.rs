@@ -1,6 +1,7 @@
 //! Contains names via the [`Name`] type.
 
 use crate::types::{PrimitiveType, ToTyped, Type, Typed};
+use std::fmt::{Display, Formatter};
 use std::ops::Deref;
 
 /// A name.
@@ -54,5 +55,22 @@ impl<'a> Deref for Name<'a> {
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl<'a> Display for Name<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        let name = Name::new("x");
+        assert_eq!(format!("{name}"), "x");
     }
 }
