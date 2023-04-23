@@ -12,13 +12,20 @@ pub enum BinaryOp {
     Division,
 }
 
+pub mod names {
+    pub const MULTIPLICATION: &'static str = "*";
+    pub const ADDITION: &'static str = "+";
+    pub const SUBTRACTION: &'static str = "-";
+    pub const DIVISION: &'static str = "/";
+}
+
 impl Display for BinaryOp {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            BinaryOp::Multiplication => write!(f, "*"),
-            BinaryOp::Addition => write!(f, "+"),
-            BinaryOp::Subtraction => write!(f, "-"),
-            BinaryOp::Division => write!(f, "/"),
+            BinaryOp::Multiplication => write!(f, "{}", names::MULTIPLICATION),
+            BinaryOp::Addition => write!(f, "{}", names::ADDITION),
+            BinaryOp::Subtraction => write!(f, "{}", names::SUBTRACTION),
+            BinaryOp::Division => write!(f, "{}", names::DIVISION),
         }
     }
 }
@@ -28,10 +35,10 @@ impl TryFrom<&str> for BinaryOp {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
-            "*" => Ok(Self::Multiplication),
-            "+" => Ok(Self::Addition),
-            "-" => Ok(Self::Subtraction),
-            "/" => Ok(Self::Division),
+            names::MULTIPLICATION => Ok(Self::Multiplication),
+            names::ADDITION => Ok(Self::Addition),
+            names::SUBTRACTION => Ok(Self::Subtraction),
+            names::DIVISION => Ok(Self::Division),
             _ => Err(ParseError::InvalidOperation),
         }
     }

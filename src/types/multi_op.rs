@@ -1,4 +1,4 @@
-//! Contains the MultiOp type.
+//! Contains the [`MultiOp`] type.
 
 use std::fmt::{Display, Formatter};
 
@@ -9,11 +9,16 @@ pub enum MultiOp {
     Addition,
 }
 
+pub mod names {
+    pub const MULTIPLICATION: &'static str = "*";
+    pub const ADDITION: &'static str = "+";
+}
+
 impl Display for MultiOp {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            MultiOp::Multiplication => write!(f, "*"),
-            MultiOp::Addition => write!(f, "+"),
+            MultiOp::Multiplication => write!(f, "{}", names::MULTIPLICATION),
+            MultiOp::Addition => write!(f, "{}", names::ADDITION),
         }
     }
 }
@@ -23,8 +28,8 @@ impl TryFrom<&str> for MultiOp {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
-            "*" => Ok(Self::Multiplication),
-            "+" => Ok(Self::Addition),
+            names::MULTIPLICATION => Ok(Self::Multiplication),
+            names::ADDITION => Ok(Self::Addition),
             _ => Err(ParseError::InvalidOperation),
         }
     }

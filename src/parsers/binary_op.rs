@@ -1,6 +1,6 @@
 //! Provides parsers for binary-operand operations.
 
-use crate::types::BinaryOp;
+use crate::types::{binary_op::names, BinaryOp};
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map_res;
@@ -19,7 +19,12 @@ use nom::IResult;
 ///```
 pub fn parse_binary_op(input: &str) -> IResult<&str, BinaryOp> {
     map_res(
-        alt((tag("*"), tag("+"), tag("-"), tag("/"))),
+        alt((
+            tag(names::MULTIPLICATION),
+            tag(names::ADDITION),
+            tag(names::SUBTRACTION),
+            tag(names::DIVISION),
+        )),
         BinaryOp::try_from,
     )(input)
 }

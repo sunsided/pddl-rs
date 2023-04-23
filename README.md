@@ -92,7 +92,7 @@ listed in the paper:
 - [ ] `<pref-con-GD>`
 - [ ] ~~`<con-GD>`~~ see "Lifting Restrictions" below
 - [ ] `<metric-spec>`
-- [ ] `<optimization>`
+- [x] [`<optimization>`](src/parsers/optimization.rs)
 - [ ] `<metric-f-exp>`
 - [x] [`<length-spec>`](src/parsers/length_spec.rs)
 

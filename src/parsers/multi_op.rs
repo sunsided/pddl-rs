@@ -1,6 +1,6 @@
 //! Provides parsers for multi-operand operations.
 
-use crate::types::MultiOp;
+use crate::types::{multi_op::names, MultiOp};
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map_res;
@@ -16,5 +16,8 @@ use nom::IResult;
 /// assert_eq!(parse_multi_op("+"), Ok(("", MultiOp::Addition)));
 ///```
 pub fn parse_multi_op(input: &str) -> IResult<&str, MultiOp> {
-    map_res(alt((tag("*"), tag("+"))), MultiOp::try_from)(input)
+    map_res(
+        alt((tag(names::MULTIPLICATION), tag(names::ADDITION))),
+        MultiOp::try_from,
+    )(input)
 }
