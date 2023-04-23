@@ -1,11 +1,21 @@
 # PDDL parser (work in progress)
 
-A PDDL 3.1 parser implementation in Rust.
+A PDDL 3.1 parser implementation in Rust based on [nom](https://crates.io/crates/nom). See [`src/briefcase_world.rs`](src/briefcase_world.rs) for an example.
 
-## Implemented BNF Elements
+Parser and domain/problem types can be used separately and will be completely 
+decoupled through crate features in the future.
 
-Parsers were implemented for the following elements
-listed in the paper:
+### ⚠️ Caveat Emptor
+
+At this point the parser supports all domain and problem definition
+elements required to fully describe a PDDL 3.1 (and earlier) environment.
+
+However, some enum variants are currently inaccessible to external users of the crate.
+This is where some work is still required.
+
+## Supported Elements
+
+Parsers were implemented based on the BNF elements listed in the paper:
 
 > "Complete BNF description of PDDL 3.1 (completely corrected)",
 > _Daniel L. Kovacs_
