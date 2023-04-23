@@ -38,7 +38,6 @@ mod gd;
 pub(crate) mod interval;
 mod literal;
 mod multi_op;
-mod name;
 mod p_effect;
 mod pre_gd;
 mod predicate;
@@ -56,10 +55,6 @@ mod term;
 pub(crate) mod time_specifier;
 mod timed_effect;
 mod timed_gd;
-mod r#type;
-mod typed;
-mod typed_list;
-mod types;
 mod variable;
 
 pub use action_definition::ActionDefinition;
@@ -100,7 +95,6 @@ pub use gd::GoalDefinition;
 pub use interval::Interval;
 pub use literal::Literal;
 pub use multi_op::MultiOp;
-pub use name::Name;
 pub use p_effect::PEffect;
 pub use pre_gd::PreGD;
 pub use predicate::Predicate;
@@ -109,7 +103,6 @@ pub use pref_gd::PreferenceGD;
 pub use pref_name::PreferenceName;
 pub use pref_timed_gd::PrefTimedGD;
 pub use preference::Preference;
-pub use r#type::{PrimitiveType, Type};
 pub use requirement::Requirement;
 pub use requirements::Requirements;
 pub use simple_duration_constraint::SimpleDurationConstraint;
@@ -119,11 +112,4 @@ pub use term::Term;
 pub use time_specifier::TimeSpecifier;
 pub use timed_effect::TimedEffect;
 pub use timed_gd::TimedGD;
-pub use typed::{ToTyped, Typed};
-pub use typed_list::TypedList;
-pub use types::Types;
 pub use variable::Variable;
-
-// Internal re-exports.
-#[allow(unused_imports)]
-pub(crate) use r#type::{TYPE_NUMBER, TYPE_OBJECT};

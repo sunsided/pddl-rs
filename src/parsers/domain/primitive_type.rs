@@ -1,7 +1,7 @@
 //! Provides parsers for primitive types.
 
 use crate::parsers::utility::parse_name;
-use crate::types::domain::{Name, PrimitiveType};
+use crate::types::utility::{Name, PrimitiveType};
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::recognize;

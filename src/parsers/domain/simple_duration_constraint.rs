@@ -15,14 +15,13 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_simple_duration_constraint;
-/// # use pddl::types::domain::{DOp, FunctionType, SimpleDurationConstraint, TimeSpecifier, Type};
-/// use pddl::types::domain::DValue::Number;
+/// # use pddl::types::domain::{DOp, DValue, FunctionType, SimpleDurationConstraint, TimeSpecifier};
 ///
 /// let input = "(>= ?duration 1.23)";
 /// assert_eq!(parse_simple_duration_constraint(input), Ok(("",
 ///     SimpleDurationConstraint::new_op(
 ///         DOp::GreaterOrEqual,
-///         Number(1.23)
+///         DValue::Number(1.23)
 ///     )
 /// )));
 ///
@@ -32,7 +31,7 @@ use nom::IResult;
 ///         TimeSpecifier::End,
 ///         SimpleDurationConstraint::Op(
 ///             DOp::LessThanOrEqual,
-///             Number(1.23)
+///             DValue::Number(1.23)
 ///         )
 ///     )
 /// )));

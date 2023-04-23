@@ -14,7 +14,8 @@ use nom::IResult;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::domain::parse_gd;
-/// # use pddl::types::domain::{AtomicFormula, BinaryComp, BinaryOp, EqualityAtomicFormula, FComp, FExp, GoalDefinition, Literal, Term, TypedList, Variable};
+/// # use pddl::types::domain::{AtomicFormula, BinaryComp, BinaryOp, EqualityAtomicFormula, FComp, FExp, GoalDefinition, Literal, Term, Variable};
+/// # use pddl::types::utility::TypedList;
 ///
 /// // Atomic formula
 /// assert_eq!(parse_gd("(= x y)"), Ok(("",

@@ -1,6 +1,7 @@
 //! Contains action definitions.
 
-use crate::types::domain::{ActionSymbol, Effect, PreGD, TypedList, Variable};
+use crate::types::domain::{ActionSymbol, Effect, PreGD, Variable};
+use crate::types::utility::TypedList;
 
 /// An action definition.
 #[derive(Debug, Clone, PartialEq)]

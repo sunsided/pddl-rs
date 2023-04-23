@@ -1,6 +1,6 @@
 //! Contains predicates.
 
-use crate::types::domain::Name;
+use crate::types::utility::Name;
 use std::ops::Deref;
 
 /// A predicate name.

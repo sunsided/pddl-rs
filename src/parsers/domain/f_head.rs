@@ -14,7 +14,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_f_head;
-/// # use pddl::types::domain::{Name, FunctionTerm, Variable, FunctionSymbol, Term, FHead};
+/// # use pddl::types::domain::{FunctionTerm, Variable, FunctionSymbol, Term, FHead};
 /// assert_eq!(parse_f_head("fun-sym"), Ok(("",
 ///     FHead::new(FunctionSymbol::from_str("fun-sym"))
 /// )));

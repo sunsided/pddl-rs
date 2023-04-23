@@ -1,8 +1,7 @@
 //! Contains c-effects.
 
-use crate::types::domain::{
-    ConditionalEffect, Effect, GoalDefinition, PEffect, TypedList, Variable,
-};
+use crate::types::domain::{ConditionalEffect, Effect, GoalDefinition, PEffect, Variable};
+use crate::types::utility::TypedList;
 
 /// A c-effect.
 #[derive(Debug, Clone, PartialEq)]

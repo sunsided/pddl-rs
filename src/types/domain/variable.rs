@@ -1,7 +1,6 @@
 //! Contains variables.
 
-use crate::types::domain::typed::ToTyped;
-use crate::types::domain::{Name, PrimitiveType, Type, Typed};
+use crate::types::utility::{Name, PrimitiveType, ToTyped, Type, Typed};
 use std::ops::Deref;
 
 /// A variable name.

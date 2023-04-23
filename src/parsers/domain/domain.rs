@@ -2,12 +2,15 @@
 
 use crate::parsers::domain::{
     parse_constants_def, parse_functions_def, parse_predicates_def, parse_require_def,
-    parse_structure_def, parse_types_def,
+    parse_structure_def,
 };
-use crate::parsers::utility::{parse_name, prefix_expr, space_separated_list1, ws};
+use crate::parsers::utility::{
+    parse_name, parse_types_def, prefix_expr, space_separated_list1, ws,
+};
 use crate::types::domain::{
-    Constants, Domain, Functions, PredicateDefinitions, Requirements, StructureDefs, Types,
+    Constants, Domain, Functions, PredicateDefinitions, Requirements, StructureDefs,
 };
+use crate::types::utility::Types;
 use nom::character::complete::multispace1;
 use nom::combinator::{map, opt};
 use nom::sequence::{preceded, tuple};
@@ -18,7 +21,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::{parse_action_def, parse_domain};
-/// # use pddl::types::domain::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GoalDefinition, Literal, Name, PEffect, Predicate, Preference, PreferenceGD, PreGD, Term, Type, Typed, TypedList, Variable};
+/// # use pddl::types::utility::Name;
 ///
 /// let input = r#"(define (domain briefcase-world)
 ///       (:requirements :strips :equality :typing :conditional-effects)

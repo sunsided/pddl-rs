@@ -10,7 +10,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_constants_def;
-/// # use pddl::types::domain::{Variable, AtomicFormulaSkeleton, Predicate, Typed, Type, PredicateDefinitions, Constants, Name, TypedList, ToTyped};
+/// # use pddl::types::domain::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions, Constants};
+/// use pddl::types::utility::{Name, ToTyped, TypedList};
 ///
 /// let input = "(:constants B P D - physob)";
 /// assert_eq!(parse_constants_def(input), Ok(("",

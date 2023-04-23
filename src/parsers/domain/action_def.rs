@@ -14,7 +14,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_action_def;
-/// # use pddl::types::domain::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GoalDefinition, Literal, Name, PEffect, Predicate, Preference, PreferenceGD, PreGD, Term, ToTyped, Type, Typed, TypedList, Variable};
+/// use pddl::types::domain::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GoalDefinition, PEffect, Predicate, PreferenceGD, PreGD, Term, Variable};
+/// # use pddl::types::utility::{Name, ToTyped, TypedList};
 ///
 /// let input = r#"(:action take-out
 ///                     :parameters (?x - physob)

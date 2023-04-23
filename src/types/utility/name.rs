@@ -1,6 +1,6 @@
 //! Contains names.
 
-use crate::types::domain::{PrimitiveType, ToTyped, Type, Typed};
+use crate::types::utility::{PrimitiveType, ToTyped, Type, Typed};
 use std::ops::Deref;
 
 /// A name.

@@ -13,8 +13,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_duration_constraint;
-/// # use pddl::types::domain::{DOp, DurationConstraint, FunctionType, SimpleDurationConstraint, TimeSpecifier, Type};
-/// use pddl::types::domain::DValue::Number;
+/// # use pddl::types::domain::{DOp, DurationConstraint, DValue, FunctionType, SimpleDurationConstraint, TimeSpecifier};
 ///
 /// let input = "()";
 /// assert_eq!(parse_duration_constraint(input), Ok(("", None)));
@@ -24,7 +23,7 @@ use nom::IResult;
 ///     Some(DurationConstraint::new_simple(
 ///         SimpleDurationConstraint::Op(
 ///             DOp::Equal,
-///             Number(5.)
+///             DValue::Number(5.)
 ///         )
 ///     ))
 /// )));
@@ -36,7 +35,7 @@ use nom::IResult;
 ///             TimeSpecifier::End,
 ///             SimpleDurationConstraint::Op(
 ///                 DOp::LessThanOrEqual,
-///                 Number(1.23)
+///                 DValue::Number(1.23)
 ///             )
 ///         )
 ///     ))
@@ -49,12 +48,12 @@ use nom::IResult;
 ///             TimeSpecifier::End,
 ///             SimpleDurationConstraint::Op(
 ///                 DOp::LessThanOrEqual,
-///                 Number(1.23)
+///                 DValue::Number(1.23)
 ///             )
 ///         ),
 ///         SimpleDurationConstraint::new_op(
 ///             DOp::GreaterOrEqual,
-///             Number(1.0)
+///             DValue::Number(1.0)
 ///         )
 ///     ]))
 /// )));

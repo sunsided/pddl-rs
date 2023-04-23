@@ -1,6 +1,6 @@
 //! Provides names for preferences.
 
-use crate::types::domain::Name;
+use crate::types::utility::Name;
 use std::ops::Deref;
 
 /// A name of a preference.

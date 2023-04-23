@@ -1,5 +1,6 @@
 use crate::types::domain::function_term::FunctionTerm;
-use crate::types::domain::{Name, Variable};
+use crate::types::domain::Variable;
+use crate::types::utility::Name;
 
 /// A term.
 #[derive(Debug, Clone, Eq, PartialEq)]

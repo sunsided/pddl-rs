@@ -1,6 +1,6 @@
 //! Contains function types.
 
-use crate::types::domain::{PrimitiveType, Type};
+use crate::types::utility::{PrimitiveType, Type};
 use std::ops::Deref;
 
 /// A function type.

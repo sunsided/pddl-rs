@@ -1,6 +1,6 @@
 //! Provides type definitions;
 
-use crate::types::domain::{Name, TypedList};
+use crate::types::utility::{Name, TypedList};
 use std::ops::Deref;
 
 /// A set of types.

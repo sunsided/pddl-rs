@@ -2,8 +2,9 @@
 
 use crate::types::domain::{
     DurationConstraint, DurativeActionEffect, DurativeActionGoalDefinition, DurativeActionSymbol,
-    TypedList, Variable,
+    Variable,
 };
+use crate::types::utility::TypedList;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DurativeActionDefinition<'a> {

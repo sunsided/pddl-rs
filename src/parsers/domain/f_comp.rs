@@ -13,7 +13,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_f_comp;
-/// # use pddl::types::domain::{Name, FunctionTerm, Variable, FunctionSymbol, Term, FComp, BinaryComp, FExp, BinaryOp};
+/// # use pddl::types::domain::{FunctionTerm, Variable, FunctionSymbol, Term, FComp, BinaryComp, FExp, BinaryOp};
 /// assert_eq!(parse_f_comp("(= (+ 1.23 2.34) (+ 1.23 2.34))"), Ok(("",
 ///     FComp::new(
 ///         BinaryComp::Equal,

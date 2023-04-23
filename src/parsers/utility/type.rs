@@ -2,7 +2,7 @@
 
 use crate::parsers::domain::parse_primitive_type;
 use crate::parsers::utility::{prefix_expr, space_separated_list1};
-use crate::types::domain::{PrimitiveType, Type};
+use crate::types::utility::{PrimitiveType, Type};
 use nom::error::ErrorKind;
 use nom::{error_position, IResult};
 
@@ -10,8 +10,8 @@ use nom::{error_position, IResult};
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::domain::parse_type;
-/// # use pddl::types::domain::Type;
+/// # use pddl::parsers::utility::parse_type;
+/// # use pddl::types::utility::Type;
 /// assert_eq!(parse_type("object"), Ok(("", Type::Exactly("object".into()))));
 /// assert_eq!(parse_type("(either object number)"), Ok(("", Type::from_iter(["object", "number"]))));
 ///```

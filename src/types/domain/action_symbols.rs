@@ -1,6 +1,6 @@
 //! Contains action symbols.
 
-use crate::types::domain::Name;
+use crate::types::utility::Name;
 use std::ops::Deref;
 
 /// An action symbol name.

@@ -1,6 +1,6 @@
 //! Contains types.
 
-use crate::types::domain::Name;
+use crate::types::utility::Name;
 use std::ops::Deref;
 
 /// The `object` type.

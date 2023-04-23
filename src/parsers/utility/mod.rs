@@ -3,12 +3,16 @@
 mod empty_or;
 mod name;
 pub(crate) mod number;
+mod r#type;
 mod typed_list;
+mod types_def;
 mod utilities;
 
 // Parsers
 pub use name::parse_name;
 pub use number::parse_number;
+pub use r#type::parse_type;
+pub use types_def::parse_types_def;
 
 // Parser combinators.
 pub use empty_or::empty_or;

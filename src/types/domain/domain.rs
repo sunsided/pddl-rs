@@ -1,6 +1,7 @@
 use crate::types::domain::{
-    Constants, Functions, Name, PredicateDefinitions, Requirements, StructureDefs, Types,
+    Constants, Functions, PredicateDefinitions, Requirements, StructureDefs,
 };
+use crate::types::utility::{Name, Types};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Domain<'a> {
