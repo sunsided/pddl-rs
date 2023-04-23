@@ -202,6 +202,8 @@ pub fn parse_con_gd(input: &str) -> IResult<&str, ConGD> {
 
 fn parse_con2_gd(input: &str) -> IResult<&str, Con2GD> {
     let gd = map(parse_gd, Con2GD::new_goal);
+
+    // TODO: Add crate feature to allow this to be forbidden if unsupported by the application.
     let con_gd = map(parse_con_gd, Con2GD::new_nested);
     alt((gd, con_gd))(input)
 }
