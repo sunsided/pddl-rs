@@ -21,7 +21,7 @@ use nom::IResult;
 /// assert_eq!(parse_simple_duration_constraint(input), Ok(("",
 ///     SimpleDurationConstraint::new_op(
 ///         DOp::GreaterOrEqual,
-///         DValue::Number(1.23)
+///         DValue::new_number(1.23)
 ///     )
 /// )));
 ///
@@ -31,7 +31,7 @@ use nom::IResult;
 ///         TimeSpecifier::End,
 ///         SimpleDurationConstraint::Op(
 ///             DOp::LessThanOrEqual,
-///             DValue::Number(1.23)
+///             DValue::new_number(1.23)
 ///         )
 ///     )
 /// )));

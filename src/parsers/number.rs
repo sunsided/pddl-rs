@@ -1,5 +1,6 @@
 //! Provides parsers for numbers, decimals and digits.
 
+use crate::types::Number;
 use nom::character::complete::{char, digit1};
 use nom::character::is_digit;
 use nom::combinator::{map_res, recognize};
@@ -14,19 +15,19 @@ use std::str::FromStr;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_number;
-/// assert_eq!(parse_number("0"), Ok(("", 0.0)));
-/// assert_eq!(parse_number("1000a"), Ok(("a", 1000.0)));
-/// assert_eq!(parse_number("012"), Ok(("", 12.0)));
-/// assert_eq!(parse_number("1.234"), Ok(("", 1.234)));
+/// assert_eq!(parse_number("0"), Ok(("", 0.0.into())));
+/// assert_eq!(parse_number("1000a"), Ok(("a", 1000.0.into())));
+/// assert_eq!(parse_number("012"), Ok(("", 12.0.into())));
+/// assert_eq!(parse_number("1.234"), Ok(("", 1.234.into())));
 ///
 /// assert!(parse_number(".0").is_err());
 /// assert!(parse_number(".").is_err());
 /// assert!(parse_number("-1").is_err());
 ///```
-pub fn parse_number(input: &str) -> IResult<&str, f32> {
+pub fn parse_number(input: &str) -> IResult<&str, Number> {
     map_res(
         recognize(tuple((digit1, many_m_n(0, 1, parse_decimal)))),
-        f32::from_str,
+        Number::from_str,
     )(input)
 }
 

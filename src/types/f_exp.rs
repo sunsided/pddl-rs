@@ -1,13 +1,13 @@
 //! Contains the f-exp type.
 
-use crate::types::{BinaryOp, FHead, MultiOp};
+use crate::types::{BinaryOp, FHead, MultiOp, Number};
 
 /// An f-exp.
 ///
 /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
 #[derive(Debug, Clone, PartialEq)]
 pub enum FExp<'a> {
-    Number(f32),
+    Number(Number),
     BinaryOp(BinaryOp, Box<FExp<'a>>, Box<FExp<'a>>),
     MultiOp(MultiOp, Box<FExp<'a>>, Vec<FExp<'a>>),
     Negative(Box<FExp<'a>>),
@@ -15,8 +15,9 @@ pub enum FExp<'a> {
 }
 
 impl<'a> FExp<'a> {
-    pub const fn new_number(number: f32) -> Self {
-        Self::Number(number)
+    #[inline(always)]
+    pub fn new_number<N: Into<Number>>(number: N) -> Self {
+        Self::Number(number.into())
     }
 
     pub fn new_binary_op(op: BinaryOp, lhs: FExp<'a>, rhs: FExp<'a>) -> Self {

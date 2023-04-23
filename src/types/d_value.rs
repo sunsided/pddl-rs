@@ -1,18 +1,18 @@
 //! Contains the [`DValue`] type.
 
-use crate::types::FExp;
+use crate::types::{FExp, Number};
 
 /// A d-value.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DValue<'a> {
-    Number(f32),
+    Number(Number),
     /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
     FExp(FExp<'a>),
 }
 
 impl<'a> DValue<'a> {
-    pub const fn new_number(number: f32) -> Self {
-        Self::Number(number)
+    pub fn new_number<I: Into<Number>>(number: I) -> Self {
+        Self::Number(number.into())
     }
 
     pub fn new_f_exp(exp: FExp<'a>) -> Self {
@@ -20,8 +20,8 @@ impl<'a> DValue<'a> {
     }
 }
 
-impl<'a> From<f32> for DValue<'a> {
-    fn from(value: f32) -> Self {
+impl<'a> From<Number> for DValue<'a> {
+    fn from(value: Number) -> Self {
         Self::Number(value)
     }
 }
