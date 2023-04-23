@@ -102,7 +102,7 @@ Additional elements:
 
 - [x] [`<extension-def>`](src/parsers/domain.rs)
 - [ ] `<domain-vars-def>`
-- [ ] `<timeless-def>`
+- [x] [`<timeless-def>`](src/parsers/timeless_def.rs)
 
 ### Problem Description
 
