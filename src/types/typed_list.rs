@@ -12,8 +12,8 @@ use std::ops::Deref;
 /// ]);
 ///
 /// assert_eq!(tl.len(), 2);
-/// assert_eq!(tl[0].value_ref(), &Name::from("location"));
-/// assert_eq!(tl[1].value_ref(), &Name::from("physob"));
+/// assert_eq!(tl[0].value(), &Name::from("location"));
+/// assert_eq!(tl[1].value(), &Name::from("physob"));
 /// ```
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
 pub struct TypedList<'a, T>(Vec<Typed<'a, T>>);

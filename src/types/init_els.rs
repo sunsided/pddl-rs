@@ -11,6 +11,11 @@ impl<'a> InitElements<'a> {
     pub fn new<E: IntoIterator<Item = InitElement<'a>>>(iter: E) -> Self {
         Self(iter.into_iter().collect())
     }
+
+    /// Gets the values.
+    pub fn values(&self) -> &[InitElement<'a>] {
+        self.0.as_slice()
+    }
 }
 
 impl<'a> Deref for InitElements<'a> {

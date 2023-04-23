@@ -15,13 +15,13 @@ impl<'a> AtomicFunctionSkeleton<'a> {
         Self { symbol, variables }
     }
 
-    /// Gets a reference to the predicate.
-    pub const fn symbol_ref(&self) -> &FunctionSymbol<'a> {
+    /// Gets a reference to the function symbol.
+    pub const fn symbol(&self) -> &FunctionSymbol<'a> {
         &self.symbol
     }
 
     /// Gets a reference to the variables.
-    pub fn variables_ref(&self) -> &TypedVariables<'a> {
+    pub fn variables(&self) -> &TypedVariables<'a> {
         &self.variables
     }
 }

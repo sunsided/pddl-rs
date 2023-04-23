@@ -29,6 +29,11 @@ impl<'a, T> FunctionTypedList<'a, T> {
     pub const fn new(list: Vec<FunctionTyped<'a, T>>) -> Self {
         Self(list)
     }
+
+    /// Gets the values.
+    pub fn values(&self) -> &[FunctionTyped<'a, T>] {
+        self.0.as_slice()
+    }
 }
 
 impl<'a, T> From<Vec<FunctionTyped<'a, T>>> for FunctionTypedList<'a, T> {

@@ -14,7 +14,7 @@ mod c_effect;
 mod con_gd;
 mod conditional_effect;
 mod constants;
-mod d_op;
+pub(crate) mod d_op;
 mod d_value;
 mod da_def;
 mod da_effect;

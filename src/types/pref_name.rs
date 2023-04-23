@@ -8,7 +8,18 @@ use std::ops::Deref;
 pub struct PreferenceName<'a>(Name<'a>);
 
 impl<'a> PreferenceName<'a> {
-    pub const fn new(name: Name<'a>) -> Self {
+    #[inline(always)]
+    pub fn new<N: Into<Name<'a>>>(name: N) -> Self {
+        Self(name.into())
+    }
+
+    #[inline(always)]
+    pub const fn from_str(name: &'a str) -> Self {
+        Self(Name::new(name))
+    }
+
+    #[inline(always)]
+    pub const fn from_name(name: Name<'a>) -> Self {
         Self(name)
     }
 }

@@ -5,7 +5,8 @@
 ![Crates.io](https://img.shields.io/crates/v/pddl)
 ![Crates.io](https://img.shields.io/crates/l/pddl)
 
-A PDDL 3.1 parser implementation in Rust based on [nom](https://crates.io/crates/nom). See [`src/briefcase_world.rs`](src/briefcase_world.rs) for an example.
+A PDDL 3.1 parser implementation in Rust based on [nom](https://crates.io/crates/nom). 
+See [`src/briefcase_world.rs`](tests/briefcase_world.rs) for an example.
 
 Parser and domain/problem types can be used separately and will be completely 
 decoupled through crate features in the future.

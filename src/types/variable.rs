@@ -9,12 +9,7 @@ pub struct Variable<'a>(Name<'a>);
 
 impl<'a> Variable<'a> {
     #[inline(always)]
-    pub const fn from_str(name: &'a str) -> Self {
-        Self(Name::new(name))
-    }
-
-    #[inline(always)]
-    pub const fn from_name(name: Name<'a>) -> Self {
+    pub const fn new(name: Name<'a>) -> Self {
         Self(name)
     }
 }
@@ -34,14 +29,14 @@ impl<'a> ToTyped<'a, Variable<'a>> for Variable<'a> {
 impl<'a> From<Name<'a>> for Variable<'a> {
     #[inline(always)]
     fn from(value: Name<'a>) -> Self {
-        Variable::from_name(value)
+        Variable::new(value)
     }
 }
 
 impl<'a> From<&'a str> for Variable<'a> {
     #[inline(always)]
     fn from(value: &'a str) -> Self {
-        Variable::from_str(value)
+        Variable::new(value.into())
     }
 }
 

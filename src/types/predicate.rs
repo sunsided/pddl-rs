@@ -9,6 +9,11 @@ pub struct Predicate<'a>(Name<'a>);
 
 impl<'a> Predicate<'a> {
     #[inline(always)]
+    pub fn new<N: Into<Name<'a>>>(name: N) -> Self {
+        Self(name.into())
+    }
+
+    #[inline(always)]
     pub const fn from_str(name: &'a str) -> Self {
         Self(Name::new(name))
     }

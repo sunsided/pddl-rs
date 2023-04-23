@@ -10,6 +10,16 @@ impl<'a> Preference<'a> {
     pub const fn new(name: Option<PreferenceName<'a>>, gd: GoalDefinition<'a>) -> Self {
         Self(name, gd)
     }
+
+    /// Gets the optional preference name.
+    pub fn name(&self) -> &Option<PreferenceName<'a>> {
+        &self.0
+    }
+
+    /// Gets the goal definition.
+    pub fn goal(&self) -> &GoalDefinition<'a> {
+        &self.1
+    }
 }
 
 impl<'a> From<(Option<PreferenceName<'a>>, GoalDefinition<'a>)> for Preference<'a> {

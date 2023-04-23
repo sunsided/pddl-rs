@@ -41,12 +41,12 @@ impl<T> EqualityAtomicFormula<T> {
     }
 
     /// Gets a reference to the first element.
-    pub const fn first_ref(&self) -> &T {
+    pub const fn first(&self) -> &T {
         &self.first
     }
 
     /// Gets a reference to the second element.
-    pub const fn second_ref(&self) -> &T {
+    pub const fn second(&self) -> &T {
         &self.second
     }
 }
@@ -56,8 +56,13 @@ impl<'a, T> PredicateAtomicFormula<'a, T> {
         Self { predicate, values }
     }
 
+    /// Returns the predicate.
+    pub const fn predicate(&self) -> &Predicate<'a> {
+        &self.predicate
+    }
+
     /// Gets a reference to the values.
-    pub fn as_slice(&self) -> &[T] {
+    pub fn values(&self) -> &[T] {
         self.values.as_slice()
     }
 }
@@ -90,6 +95,6 @@ impl<'a, T> Deref for PredicateAtomicFormula<'a, T> {
     type Target = [T];
 
     fn deref(&self) -> &Self::Target {
-        self.as_slice()
+        self.values()
     }
 }

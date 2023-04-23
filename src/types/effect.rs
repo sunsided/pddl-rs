@@ -15,8 +15,8 @@ impl<'a> Effect<'a> {
     pub const fn new(effect: CEffect<'a>) -> Self {
         Self::Single(effect)
     }
-    pub const fn new_and(effect: Vec<CEffect<'a>>) -> Self {
-        Self::All(effect)
+    pub fn new_and<I: IntoIterator<Item = CEffect<'a>>>(effect: I) -> Self {
+        Self::All(effect.into_iter().collect())
     }
 }
 
@@ -34,6 +34,6 @@ impl<'a> From<Vec<CEffect<'a>>> for Effect<'a> {
 
 impl<'a> FromIterator<CEffect<'a>> for Effect<'a> {
     fn from_iter<T: IntoIterator<Item = CEffect<'a>>>(iter: T) -> Self {
-        Effect::new_and(iter.into_iter().collect())
+        Effect::new_and(iter)
     }
 }

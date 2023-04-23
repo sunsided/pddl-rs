@@ -1,6 +1,6 @@
 //! Provides constant definitions;
 
-use crate::types::TypedNames;
+use crate::types::{Name, Typed, TypedNames};
 use std::ops::Deref;
 
 /// A set of constants.
@@ -24,5 +24,11 @@ impl<'a> Deref for Constants<'a> {
 impl<'a> From<TypedNames<'a>> for Constants<'a> {
     fn from(value: TypedNames<'a>) -> Self {
         Constants::new(value)
+    }
+}
+
+impl<'a> FromIterator<Typed<'a, Name<'a>>> for Constants<'a> {
+    fn from_iter<T: IntoIterator<Item = Typed<'a, Name<'a>>>>(iter: T) -> Self {
+        Constants::new(TypedNames::from_iter(iter))
     }
 }

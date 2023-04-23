@@ -11,6 +11,11 @@ impl<'a> Functions<'a> {
     pub const fn new(functions: FunctionTypedList<'a, AtomicFunctionSkeleton<'a>>) -> Self {
         Self(functions)
     }
+
+    /// Gets the values.
+    pub fn values(&self) -> &FunctionTypedList<'a, AtomicFunctionSkeleton<'a>> {
+        &self.0
+    }
 }
 
 impl<'a> Deref for Functions<'a> {

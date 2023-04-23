@@ -12,12 +12,18 @@ pub enum DOp {
     LessThanOrEqual,
 }
 
+pub mod names {
+    pub const EQUAL: &'static str = "=";
+    pub const GREATER_OR_EQUAL: &'static str = ">=";
+    pub const LESS_THAN_OR_EQUAL: &'static str = "<=";
+}
+
 impl Display for DOp {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            DOp::Equal => write!(f, "="),
-            DOp::GreaterOrEqual => write!(f, ">="),
-            DOp::LessThanOrEqual => write!(f, "<="),
+            DOp::Equal => write!(f, "{}", names::EQUAL),
+            DOp::GreaterOrEqual => write!(f, "{}", names::GREATER_OR_EQUAL),
+            DOp::LessThanOrEqual => write!(f, "{}", names::LESS_THAN_OR_EQUAL),
         }
     }
 }
@@ -27,9 +33,9 @@ impl TryFrom<&str> for DOp {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
-            "=" => Ok(Self::Equal),
-            ">=" => Ok(Self::GreaterOrEqual),
-            "<=" => Ok(Self::LessThanOrEqual),
+            names::EQUAL => Ok(Self::Equal),
+            names::GREATER_OR_EQUAL => Ok(Self::GreaterOrEqual),
+            names::LESS_THAN_OR_EQUAL => Ok(Self::LessThanOrEqual),
             _ => Err(ParseError::InvalidOperation),
         }
     }

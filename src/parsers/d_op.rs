@@ -1,6 +1,6 @@
 //! Provides parsers for durative operations.
 
-use crate::types::DOp;
+use crate::types::{d_op::names, DOp};
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map_res;
@@ -18,5 +18,12 @@ use nom::IResult;
 ///```
 pub fn parse_d_op(input: &str) -> IResult<&str, DOp> {
     // :duration-inequalities
-    map_res(alt((tag("<="), tag(">="), tag("="))), DOp::try_from)(input)
+    map_res(
+        alt((
+            tag(names::LESS_THAN_OR_EQUAL),
+            tag(names::GREATER_OR_EQUAL),
+            tag(names::EQUAL),
+        )),
+        DOp::try_from,
+    )(input)
 }

@@ -19,6 +19,20 @@ impl<'a> DurationConstraint<'a> {
         debug_assert!(!vec.is_empty());
         Self::And(vec)
     }
+
+    pub fn len(&self) -> usize {
+        match self {
+            DurationConstraint::Simple(_) => 1,
+            DurationConstraint::And(cs) => cs.len(),
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        match self {
+            DurationConstraint::Simple(_) => false,
+            DurationConstraint::And(xs) => xs.is_empty(),
+        }
+    }
 }
 
 impl<'a> From<SimpleDurationConstraint<'a>> for DurationConstraint<'a> {

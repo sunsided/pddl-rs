@@ -18,7 +18,7 @@ impl<'a, O> FunctionTyped<'a, O> {
     }
 
     pub const fn from_type(value: O, r#type: Type<'a>) -> Self {
-        Self::new(value, FunctionType::new(r#type))
+        Self::new(value, FunctionType::from(r#type))
     }
 
     pub const fn value_ref(&self) -> &O {

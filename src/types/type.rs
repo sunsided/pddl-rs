@@ -38,6 +38,12 @@ impl<'a> Type<'a> {
     }
 }
 
+impl<'a> PrimitiveType<'a> {
+    pub fn new(name: Name<'a>) -> Self {
+        Self(name)
+    }
+}
+
 impl<'a> Default for Type<'a> {
     fn default() -> Self {
         Self::Exactly(TYPE_OBJECT)

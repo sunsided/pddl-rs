@@ -8,6 +8,21 @@ impl<'a> FComp<'a> {
     pub const fn new(comp: BinaryComp, lhs: FExp<'a>, rhs: FExp<'a>) -> Self {
         Self(comp, lhs, rhs)
     }
+
+    /// Returns the comparison operator.
+    pub const fn comparison(&self) -> &BinaryComp {
+        &self.0
+    }
+
+    /// Returns the first operand.
+    pub const fn first(&self) -> &FExp<'a> {
+        &self.1
+    }
+
+    /// Returns the second operand.
+    pub const fn second(&self) -> &FExp<'a> {
+        &self.2
+    }
 }
 
 impl<'a> From<(BinaryComp, FExp<'a>, FExp<'a>)> for FComp<'a> {
