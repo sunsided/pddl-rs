@@ -94,7 +94,7 @@ listed in the paper:
 - [ ] `<metric-spec>`
 - [ ] `<optimization>`
 - [ ] `<metric-f-exp>`
-- [ ] `<length-spec>`
+- [x] [`<length-spec>`](src/parsers/problem/length_spec.rs)
 
 ### Lifting Restrictions
 
