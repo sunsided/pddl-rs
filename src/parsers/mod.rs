@@ -100,7 +100,6 @@ pub use functions_def::parse_functions_def;
 pub use gd::parse_gd;
 pub use interval::parse_interval;
 pub use length_spec::parse_length_spec;
-pub use literal::literal;
 pub use multi_op::parse_multi_op;
 pub use name::parse_name;
 pub use number::parse_number;
@@ -126,6 +125,7 @@ pub use variable::parse_variable;
 
 // Parser combinators.
 pub use empty_or::empty_or;
+pub use literal::literal;
 pub use typed_list::typed_list;
 
 // Utility parser combinators.
