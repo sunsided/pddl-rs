@@ -1,6 +1,7 @@
 //! Contains goal definitions.
 
-use crate::types::domain::{AtomicFormula, FComp, Literal, Term, TypedList, Variable};
+use crate::types::domain::{AtomicFormula, FComp, Literal, Term, Variable};
+use crate::types::utility::TypedList;
 
 /// A goal definition.
 #[derive(Debug, Clone, PartialEq)]

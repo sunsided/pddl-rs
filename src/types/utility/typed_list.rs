@@ -1,11 +1,11 @@
-use crate::types::domain::Typed;
+use crate::types::utility::Typed;
 use std::ops::Deref;
 
 /// A list of typed elements.
 ///
 /// ## Example
 /// ```
-/// # use pddl::types::domain::{TypedList, Name, Typed, Type};
+/// # use pddl::types::utility::{Name, TypedList, Typed, Type};
 /// let tl = TypedList::from_iter([
 ///     Typed::new(Name::from("location"), Type::OBJECT),
 ///     Typed::new(Name::from("physob"), Type::OBJECT),

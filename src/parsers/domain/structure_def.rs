@@ -12,7 +12,8 @@ use nom::IResult;
 ///
 /// ```
 /// # use pddl::parsers::domain::{parse_structure_def};
-/// # use pddl::types::domain::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GoalDefinition, Literal, Name, PEffect, Predicate, Preference, PreferenceGD, PreGD, StructureDef, Term, ToTyped, Type, Typed, TypedList, Variable};
+/// # use pddl::types::domain::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GoalDefinition, Literal, PEffect, Predicate, Preference, PreferenceGD, PreGD, StructureDef, Term, Variable};
+/// # use pddl::types::utility::{Name, ToTyped, TypedList};
 ///
 /// let input = r#"(:action take-out
 ///                     :parameters (?x - physob)

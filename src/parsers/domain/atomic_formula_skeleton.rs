@@ -12,7 +12,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_atomic_formula_skeleton;
-/// # use pddl::types::domain::{Variable, AtomicFormulaSkeleton, Predicate, Typed, Type, TypedList, ToTyped};
+/// # use pddl::types::domain::{Variable, AtomicFormulaSkeleton, Predicate};
+/// # use pddl::types::utility::{ToTyped, TypedList};
 ///
 /// assert_eq!(parse_atomic_formula_skeleton("(at ?x - physob ?y - location)"), Ok(("",
 ///     AtomicFormulaSkeleton::new(

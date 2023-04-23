@@ -5,7 +5,8 @@ use std::ops::Deref;
 ///
 /// ## Example
 /// ```
-/// # use pddl::types::domain::{TypedList, Name, FunctionTypedList, FunctionTyped, FunctionType};
+/// # use pddl::types::domain::{FunctionTypedList, FunctionTyped, FunctionType};
+/// # use pddl::types::utility::{TypedList, Name};
 /// let tl = FunctionTypedList::from_iter([
 ///     FunctionTyped::new(Name::from("location"), FunctionType::NUMBER),
 ///     FunctionTyped::new(Name::from("physob"), FunctionType::NUMBER),

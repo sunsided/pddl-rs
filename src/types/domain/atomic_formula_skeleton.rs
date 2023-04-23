@@ -1,6 +1,7 @@
 //! Contains atomic formula skeletons.
 
-use crate::types::domain::{Name, Predicate, TypedList, Variable};
+use crate::types::domain::{Predicate, Variable};
+use crate::types::utility::{Name, TypedList};
 
 /// An atomic formula skeleton.
 #[derive(Debug, Clone, Eq, PartialEq)]

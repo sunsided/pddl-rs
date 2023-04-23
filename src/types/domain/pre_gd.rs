@@ -1,6 +1,7 @@
 //! Contains precondition goal definitions.
 
-use crate::types::domain::{Preference, PreferenceGD, TypedList, Variable};
+use crate::types::domain::{Preference, PreferenceGD, Variable};
+use crate::types::utility::TypedList;
 
 /// A precondition goal definition.
 #[derive(Debug, Clone, PartialEq)]

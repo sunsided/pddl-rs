@@ -52,8 +52,6 @@ mod term;
 mod time_specifier;
 mod timed_effect;
 mod timed_gd;
-mod r#type;
-mod types_def;
 mod variable;
 
 // Parsers.
@@ -102,7 +100,6 @@ pub use pref_gd::parse_pref_gd;
 pub use pref_name::parse_pref_name;
 pub use pref_timed_gd::parse_pref_timed_gd;
 pub use primitive_type::parse_primitive_type;
-pub use r#type::parse_type;
 pub use requirements::{parse_require_def, parse_require_key};
 pub use simple_duration_constraint::parse_simple_duration_constraint;
 pub use structure_def::parse_structure_def;
@@ -110,5 +107,4 @@ pub use term::parse_term;
 pub use time_specifier::parse_time_specifier;
 pub use timed_effect::parse_timed_effect;
 pub use timed_gd::parse_timed_gd;
-pub use types_def::parse_types_def;
 pub use variable::parse_variable;

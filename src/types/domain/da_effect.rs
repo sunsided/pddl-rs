@@ -1,6 +1,7 @@
 //! Contains the [`DurativeActionEffect`] type.
 
-use crate::types::domain::{DurativeActionGoalDefinition, TimedEffect, TypedList, Variable};
+use crate::types::domain::{DurativeActionGoalDefinition, TimedEffect, Variable};
+use crate::types::utility::TypedList;
 
 /// A durative action effect.
 #[derive(Debug, Clone, PartialEq)]

@@ -14,7 +14,8 @@ use nom::IResult;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::domain::{parse_pre_gd};
-/// # use pddl::types::domain::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Name, Preference, PreferenceName, PreferenceGD, PreGD, Term, Type, Typed, TypedList, Variable};
+/// # use pddl::types::domain::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Preference, PreferenceName, PreferenceGD, PreGD, Term, Variable};
+/// use pddl::types::utility::{Type, Typed, TypedList};
 ///
 /// assert_eq!(parse_pre_gd("(= x y)"), Ok(("",
 ///     PreGD::Preference(

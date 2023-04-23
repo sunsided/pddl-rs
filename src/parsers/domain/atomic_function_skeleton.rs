@@ -12,7 +12,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_atomic_function_skeleton;
-/// # use pddl::types::domain::{Variable, AtomicFunctionSkeleton, Predicate, Typed, Type, FunctionSymbol, TypedList, ToTyped};
+/// # use pddl::types::domain::{Variable, AtomicFunctionSkeleton, Predicate, FunctionSymbol};
+/// # use pddl::types::utility::{ToTyped, TypedList};
 ///
 /// assert_eq!(parse_atomic_function_skeleton("(battery-amount ?r - rover)"), Ok(("",
 ///     AtomicFunctionSkeleton::new(

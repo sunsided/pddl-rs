@@ -1,6 +1,7 @@
 //! Contains the [`DurativeActionGoalDefinition`] type.
 
-use crate::types::domain::{PrefTimedGD, TypedList, Variable};
+use crate::types::domain::{PrefTimedGD, Variable};
+use crate::types::utility::TypedList;
 
 /// A durative action goal definition.
 #[derive(Debug, Clone, PartialEq)]

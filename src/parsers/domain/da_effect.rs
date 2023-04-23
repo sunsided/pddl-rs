@@ -14,7 +14,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::domain::parse_da_effect;
-/// # use pddl::types::domain::{AtomicFormula, ConditionalEffect, DurativeActionEffect, EqualityAtomicFormula, PEffect, Term, TimedEffect, TimeSpecifier, Typed, TypedList, Variable};
+/// # use pddl::types::domain::{AtomicFormula, ConditionalEffect, DurativeActionEffect, EqualityAtomicFormula, PEffect, Term, TimedEffect, TimeSpecifier, Variable};
+/// # use pddl::types::utility::{Typed, TypedList};
 /// assert_eq!(parse_da_effect("(at start (= x y))"), Ok(("",
 ///     DurativeActionEffect::Timed(
 ///         TimedEffect::new_conditional(

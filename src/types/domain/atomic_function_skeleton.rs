@@ -1,6 +1,7 @@
 //! Contains atomic function skeletons.
 
-use crate::types::domain::{FunctionSymbol, Typed, TypedList, Variable};
+use crate::types::domain::{FunctionSymbol, Variable};
+use crate::types::utility::{Typed, TypedList};
 
 /// An atomic function skeleton.
 #[derive(Debug, Clone, Eq, PartialEq)]

@@ -1,6 +1,7 @@
 //! Contains function typed elements.
 
-use crate::types::domain::{FunctionType, Type};
+use crate::types::domain::FunctionType;
+use crate::types::utility::Type;
 use std::ops::Deref;
 
 /// A typed element.
