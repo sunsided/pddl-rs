@@ -118,6 +118,7 @@ pub fn parse_metric_f_exp(input: &str) -> IResult<&str, MetricFExp> {
 
     let total_time = map(tag("total-time"), |_| MetricFExp::new_total_time());
 
+    // :preferences
     let is_violated = map(
         prefix_expr("is-violated", parse_pref_name),
         MetricFExp::new_is_violated,
