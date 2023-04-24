@@ -7,8 +7,7 @@ A PDDL 3.1 parser implementation in Rust based on [nom](https://crates.io/crates
 ![Crates.io](https://img.shields.io/crates/v/pddl)
 ![Crates.io](https://img.shields.io/crates/l/pddl)
 
-Crate documentation is available on [docs.rs/pddl](https://docs.rs/pddl);
-see [`src/briefcase_world.rs`](tests/briefcase_world.rs) for a usage example.
+Crate documentation is available on [docs.rs/pddl](https://docs.rs/pddl).
 
 ```toml
 [dependencies]
@@ -25,6 +24,34 @@ pddl = { version = "*", default-features = false }
 ```
 
 Documentation comments are assembled from the PDDL papers and [nergmada/planning-wiki](https://github.com/nergmada/planning-wiki).
+
+## Usage Example
+
+See [`tests/briefcase_world.rs`](tests/briefcase_world.rs) for the full example.
+
+```rust
+use pddl::{Problem, Parser};
+
+pub const BRIEFCASE_WORLD_PROBLEM: &'static str = r#"
+    (define (problem get-paid)
+        (:domain briefcase-world)
+        (:init (place home) (place office)
+               (object p) (object d) (object b)
+               (at B home) (at P home) (at D home) (in P))
+        (:goal (and (at B office) (at D office) (at P home)))
+    )
+    "#;
+
+fn main() {
+    let (_, problem) = Problem::parse(BRIEFCASE_WORLD_PROBLEM).unwrap();
+
+    assert_eq!(problem.name(), &"get-paid".into());
+    assert_eq!(problem.domain(), &"briefcase-world".into());
+    assert!(problem.requirements().is_empty());
+    assert_eq!(problem.init().len(), 9);
+    assert!(matches! { problem.goal(), pddl::PreGD::And(_) });
+}
+```
 
 ### Caveat Emptor
 
