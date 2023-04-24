@@ -16,7 +16,7 @@ pddl = "*"
 ```
 
 The domain/problem types can be used independently of the parser; the parser
-is however enabled by default via the default `parser` crate feature.
+is however enabled by default via the `parser` crate feature.
 To disable the parser and its dependencies, use
 
 ```toml
