@@ -40,3 +40,11 @@ pub fn parse_f_comp(input: &str) -> IResult<&str, FComp> {
         FComp::from,
     )(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for FComp<'a> {
+    type Item = FComp<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_f_comp(input)
+    }
+}

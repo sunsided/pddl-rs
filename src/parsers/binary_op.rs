@@ -28,3 +28,11 @@ pub fn parse_binary_op(input: &str) -> IResult<&str, BinaryOp> {
         BinaryOp::try_from,
     )(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for BinaryOp {
+    type Item = BinaryOp;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_binary_op(input)
+    }
+}

@@ -108,6 +108,14 @@ pub fn parse_da_gd(input: &str) -> IResult<&str, DurativeActionGoalDefinition> {
     alt((forall, and, pref_timed_gd))(input)
 }
 
+impl<'a> crate::parsers::Parser<'a> for DurativeActionGoalDefinition<'a> {
+    type Item = DurativeActionGoalDefinition<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_da_gd(input)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

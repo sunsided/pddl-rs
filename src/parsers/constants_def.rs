@@ -27,3 +27,11 @@ pub fn parse_constants_def(input: &str) -> IResult<&str, Constants> {
         Constants::new(vec)
     })(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for Constants<'a> {
+    type Item = Constants<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_constants_def(input)
+    }
+}

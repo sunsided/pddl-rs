@@ -21,3 +21,11 @@ pub fn parse_optimization(input: &str) -> IResult<&str, Optimization> {
         Optimization::try_from,
     )(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for Optimization {
+    type Item = Optimization;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_optimization(input)
+    }
+}

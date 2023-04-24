@@ -67,3 +67,11 @@ pub fn parse_f_exp_da(input: &str) -> IResult<&str, FExpDa> {
 
     alt((duration, binary_op, multi_op, negated, f_exp))(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for FExpDa<'a> {
+    type Item = FExpDa<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_f_exp_da(input)
+    }
+}

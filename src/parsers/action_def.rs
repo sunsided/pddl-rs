@@ -79,3 +79,11 @@ pub fn parse_action_def(input: &str) -> IResult<&str, ActionDefinition> {
         ActionDefinition::new(symbol, params, preconditions.flatten(), effects.flatten())
     })(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for ActionDefinition<'a> {
+    type Item = ActionDefinition<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_action_def(input)
+    }
+}

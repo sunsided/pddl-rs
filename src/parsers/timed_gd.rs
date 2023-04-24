@@ -60,6 +60,16 @@ pub fn parse_timed_gd(input: &str) -> IResult<&str, TimedGD> {
     alt((at, over))(input)
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "parser")))]
+#[cfg(feature = "parser")]
+impl<'a> crate::parsers::Parser<'a> for TimedGD<'a> {
+    type Item = TimedGD<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_timed_gd(input)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

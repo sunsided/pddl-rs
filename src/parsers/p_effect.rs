@@ -101,6 +101,14 @@ pub fn parse_p_effect(input: &str) -> IResult<&str, PEffect> {
     alt((object_undefined, object, numeric, is_not, is))(input)
 }
 
+impl<'a> crate::parsers::Parser<'a> for PEffect<'a> {
+    type Item = PEffect<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_p_effect(input)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

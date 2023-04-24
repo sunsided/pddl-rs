@@ -42,3 +42,11 @@ pub fn parse_f_head(input: &str) -> IResult<&str, FHead> {
 
     alt((simple, simple_parens, with_terms))(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for FHead<'a> {
+    type Item = FHead<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_f_head(input)
+    }
+}

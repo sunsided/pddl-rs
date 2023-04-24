@@ -32,6 +32,14 @@ fn parse_either_type(input: &str) -> IResult<&str, Vec<PrimitiveType>> {
     prefix_expr("either", space_separated_list1(parse_primitive_type))(input)
 }
 
+impl<'a> crate::parsers::Parser<'a> for Type<'a> {
+    type Item = Type<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_type(input)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -50,6 +50,14 @@ pub fn parse_alpha(input: &str) -> IResult<&str, &str> {
     Ok((&input[1..], &input[..1]))
 }
 
+impl<'a> crate::parsers::Parser<'a> for Name<'a> {
+    type Item = Name<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_name(input)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;

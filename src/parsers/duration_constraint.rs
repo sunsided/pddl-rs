@@ -75,3 +75,11 @@ pub fn parse_duration_constraint(input: &str) -> IResult<&str, Option<DurationCo
 
     alt((none, simple, and))(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for DurationConstraint<'a> {
+    type Item = Option<DurationConstraint<'a>>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_duration_constraint(input)
+    }
+}

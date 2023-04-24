@@ -86,3 +86,11 @@ pub fn parse_init_el(input: &str) -> IResult<&str, InitElement> {
 
     alt((literal_, at, is_numeric, is_object))(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for InitElement<'a> {
+    type Item = InitElement<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_init_el(input)
+    }
+}

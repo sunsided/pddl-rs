@@ -31,3 +31,11 @@ pub fn parse_d_value(input: &str) -> IResult<&str, DurationValue> {
 
     alt((number, f_exp))(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for DurationValue<'a> {
+    type Item = DurationValue<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_d_value(input)
+    }
+}

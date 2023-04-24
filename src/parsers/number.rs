@@ -49,6 +49,14 @@ pub fn parse_digit(input: &str) -> IResult<&str, &str> {
     Ok((&input[1..], &input[..1]))
 }
 
+impl<'a> crate::parsers::Parser<'a> for Number {
+    type Item = Number;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_number(input)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -33,3 +33,11 @@ pub fn parse_problem_metric_spec(input: &str) -> IResult<&str, MetricSpec> {
         |(optimization, exp)| MetricSpec::new(optimization, exp),
     )(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for MetricSpec<'a> {
+    type Item = MetricSpec<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_problem_metric_spec(input)
+    }
+}

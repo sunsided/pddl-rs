@@ -135,3 +135,11 @@ pub fn parse_metric_f_exp(input: &str) -> IResult<&str, MetricFExp> {
         simple_function,
     ))(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for MetricFExp<'a> {
+    type Item = MetricFExp<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_metric_f_exp(input)
+    }
+}

@@ -58,3 +58,11 @@ pub fn parse_structure_def(input: &str) -> IResult<&str, StructureDef> {
     let derived = map(parse_derived_predicate, StructureDef::new_derived);
     alt((derived, action, durative))(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for StructureDef<'a> {
+    type Item = StructureDef<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_structure_def(input)
+    }
+}

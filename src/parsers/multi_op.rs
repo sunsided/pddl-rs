@@ -21,3 +21,11 @@ pub fn parse_multi_op(input: &str) -> IResult<&str, MultiOp> {
         MultiOp::try_from,
     )(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for MultiOp {
+    type Item = MultiOp;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_multi_op(input)
+    }
+}

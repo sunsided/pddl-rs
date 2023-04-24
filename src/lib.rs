@@ -2,8 +2,9 @@
 //!
 //! ## Example
 //! ```
-//! # use pddl::parsers::{parse_domain, parse_problem};
-//! # use pddl::types::PreGD;
+//! use pddl::parsers::Parser;
+//! use pddl::types::{Domain, Problem};
+//!
 //! const BRIEFCASE_WORLD: &'static str = r#"
 //!     (define (domain briefcase-world)
 //!       (:requirements :strips :equality :typing :conditional-effects)
@@ -43,8 +44,8 @@
 //!     )
 //!     "#;
 //!
-//! let (_, domain) = parse_domain(BRIEFCASE_WORLD).unwrap();
-//! let (_, problem) = parse_problem(BRIEFCASE_WORLD_PROBLEM).unwrap();
+//! let (_, domain) = Domain::parse(BRIEFCASE_WORLD).unwrap();
+//! let (_, problem) = Problem::parse(BRIEFCASE_WORLD_PROBLEM).unwrap();
 //!
 //! // All elements were parsed.
 //! assert_eq!(domain.name(), &"briefcase-world".into());
@@ -59,11 +60,15 @@
 //! assert_eq!(problem.domain(), &"briefcase-world".into());
 //! assert!(problem.requirements().is_empty());
 //! assert_eq!(problem.init().len(), 9);
-//! assert!(matches! { problem.goal(), PreGD::And(_) });
+//! assert!(matches! { problem.goal(), pddl::types::PreGD::And(_) });
 //! ```
 
-extern crate core;
+// only enables the `doc_cfg` feature when
+// the `docsrs` configuration attribute is defined
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
+#[cfg_attr(docsrs, doc(cfg(feature = "parser")))]
+#[cfg(feature = "parser")]
 pub mod parsers;
 pub mod types;
 pub(crate) mod visitor;

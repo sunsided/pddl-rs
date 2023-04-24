@@ -30,3 +30,11 @@ pub fn parse_atomic_formula_skeleton(input: &str) -> IResult<&str, AtomicFormula
         |tuple| AtomicFormulaSkeleton::from(tuple),
     )(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for AtomicFormulaSkeleton<'a> {
+    type Item = AtomicFormulaSkeleton<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_atomic_formula_skeleton(input)
+    }
+}

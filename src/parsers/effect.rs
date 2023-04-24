@@ -55,3 +55,11 @@ pub fn parse_effect(input: &str) -> IResult<&str, Effect> {
 
     alt((exactly, all))(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for Effect<'a> {
+    type Item = Effect<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_effect(input)
+    }
+}

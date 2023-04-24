@@ -38,3 +38,11 @@ pub fn parse_derived_predicate(input: &str) -> IResult<&str, DerivedPredicate> {
         DerivedPredicate::from,
     )(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for DerivedPredicate<'a> {
+    type Item = DerivedPredicate<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_derived_predicate(input)
+    }
+}

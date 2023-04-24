@@ -76,12 +76,19 @@ mod types_def;
 mod utilities;
 mod variable;
 
+/// Provides the `parse` method.
+pub trait Parser<'a> {
+    type Item;
+
+    /// Parses the `input` into the specified [`Item`](Self::Item) type.
+    fn parse(input: &'a str) -> nom::IResult<&str, Self::Item>;
+}
+
 // Parsers.
 pub use action_def::parse_action_def;
 pub use action_symbol::parse_action_symbol;
 pub use assign_op::parse_assign_op;
 pub use assign_op_t::parse_assign_op_t;
-pub use atomic_formula::atomic_formula;
 pub use atomic_formula_skeleton::parse_atomic_formula_skeleton;
 pub use atomic_function_skeleton::parse_atomic_function_skeleton;
 pub use basic_function_term::parse_basic_function_term;
@@ -111,7 +118,6 @@ pub use f_head::parse_f_head;
 pub use function_symbol::parse_function_symbol;
 pub use function_term::parse_function_term;
 pub use function_type::parse_function_type;
-pub use function_typed_list::function_typed_list;
 pub use functions_def::parse_functions_def;
 pub use gd::parse_gd;
 pub use goal_def::parse_problem_goal_def;
@@ -150,7 +156,9 @@ pub use types_def::parse_types_def;
 pub use variable::parse_variable;
 
 // Parser combinators.
+pub use atomic_formula::atomic_formula;
 pub use empty_or::empty_or;
+pub use function_typed_list::function_typed_list;
 pub use literal::literal;
 pub use typed_list::typed_list;
 

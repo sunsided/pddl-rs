@@ -24,3 +24,11 @@ use nom::IResult;
 pub fn parse_predicate(input: &str) -> IResult<&str, Predicate> {
     map(parse_name, Predicate::from)(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for Predicate<'a> {
+    type Item = Predicate<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_predicate(input)
+    }
+}

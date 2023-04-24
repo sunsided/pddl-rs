@@ -24,3 +24,11 @@ pub fn parse_variable(input: &str) -> IResult<&str, Variable> {
     let (remaining, name) = preceded(tag("?"), parse_name)(input)?;
     Ok((remaining, Variable::from(name)))
 }
+
+impl<'a> crate::parsers::Parser<'a> for Variable<'a> {
+    type Item = Variable<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_variable(input)
+    }
+}

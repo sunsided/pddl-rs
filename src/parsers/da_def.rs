@@ -93,6 +93,14 @@ pub fn parse_da_def(input: &str) -> IResult<&str, DurativeActionDefinition> {
     )(input)
 }
 
+impl<'a> crate::parsers::Parser<'a> for DurativeActionDefinition<'a> {
+    type Item = DurativeActionDefinition<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_da_def(input)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
