@@ -28,6 +28,8 @@ Parsers were implemented based on the BNF elements listed in the paper:
 > "Complete BNF description of PDDL 3.1 (completely corrected)",
 > _Daniel L. Kovacs_
 
+See [ELEMENTS.md](ELEMENTS.md) for a graph of BNF elements.
+
 Additional elements were added based on the individual specification papers.
 
 ### Domain Description
