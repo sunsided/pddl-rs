@@ -35,6 +35,7 @@ fn parse_either_type(input: &str) -> IResult<&str, Vec<PrimitiveType>> {
 impl<'a> crate::parsers::Parser<'a> for Type<'a> {
     type Item = Type<'a>;
 
+    /// See [`parse_type`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_type(input)
     }

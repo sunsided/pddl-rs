@@ -71,6 +71,7 @@ pub fn parse_f_exp_da(input: &str) -> IResult<&str, FExpDa> {
 impl<'a> crate::parsers::Parser<'a> for FExpDa<'a> {
     type Item = FExpDa<'a>;
 
+    /// See [`parse_f_exp_da`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_f_exp_da(input)
     }

@@ -31,6 +31,7 @@ pub fn parse_d_op(input: &str) -> IResult<&str, DOp> {
 impl<'a> crate::parsers::Parser<'a> for DOp {
     type Item = DOp;
 
+    /// See [`parse_d_op`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_d_op(input)
     }

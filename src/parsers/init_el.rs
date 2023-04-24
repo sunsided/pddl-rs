@@ -90,6 +90,7 @@ pub fn parse_init_el(input: &str) -> IResult<&str, InitElement> {
 impl<'a> crate::parsers::Parser<'a> for InitElement<'a> {
     type Item = InitElement<'a>;
 
+    /// See [`parse_init_el`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_init_el(input)
     }

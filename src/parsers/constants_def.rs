@@ -29,6 +29,7 @@ pub fn parse_constants_def(input: &str) -> IResult<&str, Constants> {
 impl<'a> crate::parsers::Parser<'a> for Constants<'a> {
     type Item = Constants<'a>;
 
+    /// See [`parse_constants_def`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_constants_def(input)
     }

@@ -28,6 +28,7 @@ pub fn parse_action_symbol(input: &str) -> IResult<&str, ActionSymbol> {
 impl<'a> crate::parsers::Parser<'a> for ActionSymbol<'a> {
     type Item = ActionSymbol<'a>;
 
+    /// See [`parse_action_symbol`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_action_symbol(input)
     }

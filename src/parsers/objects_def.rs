@@ -29,6 +29,7 @@ pub fn parse_problem_objects_declaration(input: &str) -> IResult<&str, Objects> 
 impl<'a> crate::parsers::Parser<'a> for Objects<'a> {
     type Item = Objects<'a>;
 
+    /// See [`parse_problem_objects_declaration`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_problem_objects_declaration(input)
     }

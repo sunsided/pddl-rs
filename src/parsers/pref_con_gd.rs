@@ -121,6 +121,7 @@ pub fn parse_pref_con_gd(input: &str) -> IResult<&str, PrefConGD> {
 impl<'a> crate::parsers::Parser<'a> for PrefConGD<'a> {
     type Item = PrefConGD<'a>;
 
+    /// See [`parse_pref_con_gd`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_pref_con_gd(input)
     }

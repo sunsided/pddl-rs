@@ -34,6 +34,7 @@ pub fn parse_binary_comp(input: &str) -> IResult<&str, BinaryComp> {
 impl<'a> crate::parsers::Parser<'a> for BinaryComp {
     type Item = BinaryComp;
 
+    /// See [`parse_binary_comp`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_binary_comp(input)
     }

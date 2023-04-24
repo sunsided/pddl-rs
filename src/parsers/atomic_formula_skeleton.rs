@@ -33,6 +33,7 @@ pub fn parse_atomic_formula_skeleton(input: &str) -> IResult<&str, AtomicFormula
 impl<'a> crate::parsers::Parser<'a> for AtomicFormulaSkeleton<'a> {
     type Item = AtomicFormulaSkeleton<'a>;
 
+    /// See [`parse_atomic_formula_skeleton`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_atomic_formula_skeleton(input)
     }

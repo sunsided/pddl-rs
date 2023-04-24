@@ -28,6 +28,7 @@ pub fn parse_variable(input: &str) -> IResult<&str, Variable> {
 impl<'a> crate::parsers::Parser<'a> for Variable<'a> {
     type Item = Variable<'a>;
 
+    /// See [`parse_variable`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_variable(input)
     }

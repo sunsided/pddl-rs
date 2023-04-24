@@ -34,6 +34,7 @@ pub fn parse_problem_length_spec(input: &str) -> IResult<&str, LengthSpec> {
 impl<'a> crate::parsers::Parser<'a> for LengthSpec {
     type Item = LengthSpec;
 
+    /// See [`parse_problem_length_spec`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_problem_length_spec(input)
     }

@@ -21,6 +21,7 @@ pub fn parse_interval(input: &str) -> IResult<&str, Interval> {
 impl<'a> crate::parsers::Parser<'a> for Interval {
     type Item = Interval;
 
+    /// See [`parse_interval`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_interval(input)
     }

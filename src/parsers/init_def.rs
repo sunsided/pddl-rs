@@ -43,6 +43,7 @@ pub fn parse_problem_init_def(input: &str) -> IResult<&str, InitElements> {
 impl<'a> crate::parsers::Parser<'a> for InitElements<'a> {
     type Item = InitElements<'a>;
 
+    /// See [`parse_problem_init_def`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_problem_init_def(input)
     }

@@ -30,6 +30,7 @@ fn parse_object(input: &str) -> IResult<&str, Name> {
 impl<'a> crate::parsers::Parser<'a> for PrimitiveType<'a> {
     type Item = PrimitiveType<'a>;
 
+    /// See [`parse_primitive_type`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_primitive_type(input)
     }

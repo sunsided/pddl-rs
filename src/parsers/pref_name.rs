@@ -18,6 +18,7 @@ pub fn parse_pref_name(input: &str) -> IResult<&str, PreferenceName> {
 impl<'a> crate::parsers::Parser<'a> for PreferenceName<'a> {
     type Item = PreferenceName<'a>;
 
+    /// See [`parse_pref_name`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_pref_name(input)
     }

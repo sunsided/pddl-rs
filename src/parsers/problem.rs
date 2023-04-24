@@ -74,6 +74,7 @@ pub fn parse_problem(input: &str) -> IResult<&str, Problem> {
 impl<'a> crate::parsers::Parser<'a> for Problem<'a> {
     type Item = Problem<'a>;
 
+    /// See [`parse_problem`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_problem(input)
     }

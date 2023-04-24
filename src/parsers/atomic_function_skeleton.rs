@@ -35,6 +35,7 @@ pub fn parse_atomic_function_skeleton(input: &str) -> IResult<&str, AtomicFuncti
 impl<'a> crate::parsers::Parser<'a> for AtomicFunctionSkeleton<'a> {
     type Item = AtomicFunctionSkeleton<'a>;
 
+    /// See [`parse_atomic_function_skeleton`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_atomic_function_skeleton(input)
     }

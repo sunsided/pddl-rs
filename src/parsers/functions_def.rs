@@ -40,6 +40,7 @@ pub fn parse_functions_def(input: &str) -> IResult<&str, Functions> {
 impl<'a> crate::parsers::Parser<'a> for Functions<'a> {
     type Item = Functions<'a>;
 
+    /// See [`parse_functions_def`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_functions_def(input)
     }

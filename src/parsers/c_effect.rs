@@ -80,6 +80,7 @@ pub fn parse_c_effect(input: &str) -> IResult<&str, CEffect> {
 impl<'a> crate::parsers::Parser<'a> for CEffect<'a> {
     type Item = CEffect<'a>;
 
+    /// See [`parse_c_effect`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_c_effect(input)
     }

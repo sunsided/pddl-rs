@@ -48,6 +48,7 @@ pub fn parse_predicates_def(input: &str) -> IResult<&str, PredicateDefinitions> 
 impl<'a> crate::parsers::Parser<'a> for PredicateDefinitions<'a> {
     type Item = PredicateDefinitions<'a>;
 
+    /// See [`parse_predicates_def`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_predicates_def(input)
     }

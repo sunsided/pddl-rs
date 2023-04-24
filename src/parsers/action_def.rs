@@ -81,6 +81,7 @@ pub fn parse_action_def(input: &str) -> IResult<&str, ActionDefinition> {
 impl<'a> crate::parsers::Parser<'a> for ActionDefinition<'a> {
     type Item = ActionDefinition<'a>;
 
+    /// See [`parse_action_def`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_action_def(input)
     }

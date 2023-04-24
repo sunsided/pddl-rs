@@ -112,6 +112,7 @@ pub fn parse_da_effect(input: &str) -> IResult<&str, DurativeActionEffect> {
 impl<'a> crate::parsers::Parser<'a> for DurativeActionEffect<'a> {
     type Item = DurativeActionEffect<'a>;
 
+    /// See [`parse_da_effect`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_da_effect(input)
     }

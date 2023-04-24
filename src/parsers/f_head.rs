@@ -46,6 +46,7 @@ pub fn parse_f_head(input: &str) -> IResult<&str, FHead> {
 impl<'a> crate::parsers::Parser<'a> for FHead<'a> {
     type Item = FHead<'a>;
 
+    /// See [`parse_f_head`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_f_head(input)
     }

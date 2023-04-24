@@ -28,6 +28,7 @@ pub fn parse_domain_constraints_def(input: &str) -> IResult<&str, DomainConstrai
 impl<'a> crate::parsers::Parser<'a> for DomainConstraintsDef<'a> {
     type Item = DomainConstraintsDef<'a>;
 
+    /// See [`parse_domain_constraints_def`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_domain_constraints_def(input)
     }

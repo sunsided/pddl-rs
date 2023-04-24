@@ -95,6 +95,7 @@ pub fn parse_da_def(input: &str) -> IResult<&str, DurativeActionDefinition> {
 impl<'a> crate::parsers::Parser<'a> for DurativeActionDefinition<'a> {
     type Item = DurativeActionDefinition<'a>;
 
+    /// See [`parse_da_def`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_da_def(input)
     }

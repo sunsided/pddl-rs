@@ -32,6 +32,7 @@ pub fn parse_assign_op(input: &str) -> IResult<&str, AssignOp> {
 impl<'a> crate::parsers::Parser<'a> for AssignOp {
     type Item = AssignOp;
 
+    /// See [`parse_assign_op`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_assign_op(input)
     }

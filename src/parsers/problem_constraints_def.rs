@@ -29,6 +29,7 @@ pub fn parse_problem_constraints_def(input: &str) -> IResult<&str, ProblemConstr
 impl<'a> crate::parsers::Parser<'a> for ProblemConstraintsDef<'a> {
     type Item = ProblemConstraintsDef<'a>;
 
+    /// See [`parse_problem_constraints_def`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_problem_constraints_def(input)
     }

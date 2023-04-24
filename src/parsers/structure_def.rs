@@ -61,6 +61,7 @@ pub fn parse_structure_def(input: &str) -> IResult<&str, StructureDef> {
 impl<'a> crate::parsers::Parser<'a> for StructureDef<'a> {
     type Item = StructureDef<'a>;
 
+    /// See [`parse_structure_def`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_structure_def(input)
     }

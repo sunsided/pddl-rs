@@ -110,6 +110,7 @@ pub fn parse_da_gd(input: &str) -> IResult<&str, DurativeActionGoalDefinition> {
 impl<'a> crate::parsers::Parser<'a> for DurativeActionGoalDefinition<'a> {
     type Item = DurativeActionGoalDefinition<'a>;
 
+    /// See [`parse_da_gd`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_da_gd(input)
     }

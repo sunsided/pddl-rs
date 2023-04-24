@@ -95,6 +95,7 @@ impl<'a> crate::parsers::Parser<'a> for Requirements {
 impl<'a> crate::parsers::Parser<'a> for Requirement {
     type Item = Requirement;
 
+    /// See [`parse_require_key`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_require_key(input)
     }

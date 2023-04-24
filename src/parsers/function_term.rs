@@ -40,6 +40,7 @@ pub fn parse_function_term(input: &str) -> IResult<&str, FunctionTerm> {
 impl<'a> crate::parsers::Parser<'a> for FunctionTerm<'a> {
     type Item = FunctionTerm<'a>;
 
+    /// See [`parse_function_term`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_function_term(input)
     }

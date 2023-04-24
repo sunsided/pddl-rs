@@ -32,6 +32,7 @@ pub fn parse_binary_op(input: &str) -> IResult<&str, BinaryOp> {
 impl<'a> crate::parsers::Parser<'a> for BinaryOp {
     type Item = BinaryOp;
 
+    /// See [`parse_binary_op`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_binary_op(input)
     }

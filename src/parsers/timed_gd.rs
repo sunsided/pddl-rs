@@ -64,6 +64,7 @@ pub fn parse_timed_gd(input: &str) -> IResult<&str, TimedGD> {
 impl<'a> crate::parsers::Parser<'a> for TimedGD<'a> {
     type Item = TimedGD<'a>;
 
+    /// See [`parse_timed_gd`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_timed_gd(input)
     }

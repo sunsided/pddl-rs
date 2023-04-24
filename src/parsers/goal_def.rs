@@ -34,6 +34,7 @@ pub fn parse_problem_goal_def(input: &str) -> IResult<&str, GoalDef> {
 impl<'a> crate::parsers::Parser<'a> for GoalDef<'a> {
     type Item = GoalDef<'a>;
 
+    /// See [`parse_problem_goal_def`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_problem_goal_def(input)
     }

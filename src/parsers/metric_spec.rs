@@ -37,6 +37,7 @@ pub fn parse_problem_metric_spec(input: &str) -> IResult<&str, MetricSpec> {
 impl<'a> crate::parsers::Parser<'a> for MetricSpec<'a> {
     type Item = MetricSpec<'a>;
 
+    /// See [`parse_problem_metric_spec`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_problem_metric_spec(input)
     }

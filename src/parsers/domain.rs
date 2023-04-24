@@ -114,6 +114,7 @@ pub fn parse_domain(input: &str) -> IResult<&str, Domain> {
 impl<'a> crate::parsers::Parser<'a> for Domain<'a> {
     type Item = Domain<'a>;
 
+    /// See [`parse_domain`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_domain(input)
     }

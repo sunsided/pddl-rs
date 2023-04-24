@@ -34,6 +34,7 @@ pub fn parse_term(input: &str) -> IResult<&str, Term> {
 impl<'a> crate::parsers::Parser<'a> for Term<'a> {
     type Item = Term<'a>;
 
+    /// See [`parse_term`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_term(input)
     }

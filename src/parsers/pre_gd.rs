@@ -91,6 +91,7 @@ pub fn parse_pre_gd(input: &str) -> IResult<&str, PreGD> {
 impl<'a> crate::parsers::Parser<'a> for PreGD<'a> {
     type Item = PreGD<'a>;
 
+    /// See [`parse_pre_gd`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_pre_gd(input)
     }
