@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file.
 This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.0.2] - 2023-04-24
 
 ### Added
 
@@ -25,5 +25,6 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - 🎉 Initial release.
 
+[0.0.2]: https://github.com/sunsided/pddl-rs/releases/tag/0.0.2
 [0.0.1]: https://github.com/sunsided/pddl-rs/releases/tag/0.0.1
 [0.0.0]: https://github.com/sunsided/pddl-rs/releases/tag/0.0.0
