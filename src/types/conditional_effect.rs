@@ -2,7 +2,7 @@
 
 use crate::types::PEffect;
 
-/// A conditional effect.
+/// A conditional effect as used by [`CEffect::When`](crate::types::CEffect::When) and [`TimedEffect::Conditional`](crate::types::TimedEffect::Conditional).
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConditionalEffect<'a> {
     /// Exactly the specified effect applies.

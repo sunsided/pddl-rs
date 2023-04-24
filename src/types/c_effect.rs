@@ -6,7 +6,7 @@ use crate::types::{ConditionalEffect, Effect, GoalDefinition, PEffect};
 /// A c-effect. Occurs as part of [`Effect`].
 #[derive(Debug, Clone, PartialEq)]
 pub enum CEffect<'a> {
-    PEffect(PEffect<'a>),
+    Effect(PEffect<'a>),
     /// Requires [ConditionalEffects](crate::types::Requirement::ConditionalEffects).
     Forall(TypedVariables<'a>, Box<Effect<'a>>),
     /// Requires [ConditionalEffects](crate::types::Requirement::ConditionalEffects).
@@ -15,7 +15,7 @@ pub enum CEffect<'a> {
 
 impl<'a> CEffect<'a> {
     pub const fn new_p_effect(effect: PEffect<'a>) -> Self {
-        Self::PEffect(effect)
+        Self::Effect(effect)
     }
 
     pub fn new_forall(variables: TypedVariables<'a>, effect: Effect<'a>) -> Self {

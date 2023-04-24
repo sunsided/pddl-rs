@@ -10,7 +10,7 @@ use nom::combinator::map;
 use nom::sequence::{delimited, preceded, tuple};
 use nom::IResult;
 
-/// Parser combinator that parses an atomic formula, i.e. `(<predicate> t*) | (= t t)`.
+/// Parses an atomic formula, i.e. `(<predicate> t*) | (= t t)`.
 ///
 /// ## Example
 /// ```

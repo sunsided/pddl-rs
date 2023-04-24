@@ -9,7 +9,7 @@ use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
 use nom::IResult;
 
-/// Parser combinator that parses effects.
+/// Parses effects.
 ///
 /// ## Example
 /// ```

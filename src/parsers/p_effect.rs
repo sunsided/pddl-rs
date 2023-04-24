@@ -12,7 +12,7 @@ use nom::combinator::map;
 use nom::sequence::{preceded, terminated, tuple};
 use nom::IResult;
 
-/// Parser combinator that parses p-effects.
+/// Parses p-effects.
 ///
 /// ## Example
 /// ```
