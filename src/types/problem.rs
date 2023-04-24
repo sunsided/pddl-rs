@@ -1,7 +1,8 @@
 //! Contains the [`Problem`] type.
 
 use crate::types::{
-    InitElements, LengthSpec, MetricSpec, Name, Objects, PreGD, PrefConGD, Requirements,
+    GoalDef, InitElements, LengthSpec, MetricSpec, Name, Objects, PreGD, PrefConGD,
+    ProblemConstraintsDef, Requirements,
 };
 
 /// A domain-specific problem declaration.
@@ -12,9 +13,9 @@ pub struct Problem<'a> {
     requires: Requirements,
     objects: Objects<'a>,
     init: InitElements<'a>,
-    goal: PreGD<'a>,
+    goal: GoalDef<'a>,
     /// Requires [Constraints](crate::types::Requirement::Constraints).
-    constraints: PrefConGD<'a>,
+    constraints: ProblemConstraintsDef<'a>,
     /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
     metric_spec: Option<MetricSpec<'a>>,
     /// Deprecated since PDDL 2.1.
@@ -28,8 +29,8 @@ impl<'a> Problem<'a> {
         requires: Requirements,
         objects: Objects<'a>,
         init: InitElements<'a>,
-        goal: PreGD<'a>,
-        constraints: PrefConGD<'a>,
+        goal: GoalDef<'a>,
+        constraints: ProblemConstraintsDef<'a>,
         metric_spec: Option<MetricSpec<'a>>,
         length_spec: Option<LengthSpec>,
     ) -> Self {
@@ -51,7 +52,7 @@ impl<'a> Problem<'a> {
         problem_name: P,
         domain_name: D,
         init: InitElements<'a>,
-        goal: PreGD<'a>,
+        goal: GoalDef<'a>,
     ) -> Self {
         Self {
             name: problem_name.into(),
@@ -60,7 +61,7 @@ impl<'a> Problem<'a> {
             objects: Objects::default(),
             init,
             goal,
-            constraints: PrefConGD::default(),
+            constraints: ProblemConstraintsDef::default(),
             metric_spec: None,
             length_spec: None,
         }
@@ -79,7 +80,7 @@ impl<'a> Problem<'a> {
     }
 
     /// Adds a list of constraints to the problem.
-    pub fn with_constraints<C: Into<PrefConGD<'a>>>(mut self, constraints: C) -> Self {
+    pub fn with_constraints<C: Into<ProblemConstraintsDef<'a>>>(mut self, constraints: C) -> Self {
         self.constraints = constraints.into();
         self
     }
@@ -123,13 +124,13 @@ impl<'a> Problem<'a> {
 
     /// Returns the goal statement of the problem.
     pub const fn goal(&self) -> &PreGD<'a> {
-        &self.goal
+        &self.goal.value()
     }
 
     /// Returns the optional constraints of the problem.
     /// Requires [Constraints](crate::types::Requirement::Constraints).
     pub const fn constraints(&self) -> &PrefConGD<'a> {
-        &self.constraints
+        &self.constraints.value()
     }
 
     /// Returns the optional metric specification of the problem.

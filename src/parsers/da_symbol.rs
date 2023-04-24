@@ -15,3 +15,11 @@ use nom::IResult;
 pub fn parse_da_symbol(input: &str) -> IResult<&str, DurativeActionSymbol> {
     map(parse_name, DurativeActionSymbol::from)(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for DurativeActionSymbol<'a> {
+    type Item = DurativeActionSymbol<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_da_symbol(input)
+    }
+}

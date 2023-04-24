@@ -37,3 +37,11 @@ pub fn parse_functions_def(input: &str) -> IResult<&str, Functions> {
         |vec| Functions::new(vec),
     )(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for Functions<'a> {
+    type Item = Functions<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_functions_def(input)
+    }
+}

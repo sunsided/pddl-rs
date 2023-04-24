@@ -1,7 +1,8 @@
 //! Contains the [`Domain`] type.
 
 use crate::types::{
-    ConGD, Constants, Functions, PredicateDefinitions, Requirements, StructureDefs, Timeless,
+    ConGD, Constants, DomainConstraintsDef, Functions, PredicateDefinitions, Requirements,
+    StructureDefs, Timeless,
 };
 use crate::types::{Name, Types};
 
@@ -19,7 +20,7 @@ pub struct Domain<'a> {
     /// Requires [Fluents](crate::types::Requirement::Fluents).
     functions: Functions<'a>,
     /// Requires [Constraints](crate::types::Requirement::Constraints).
-    constraints: ConGD<'a>,
+    constraints: DomainConstraintsDef<'a>,
     // TODO: PDDL 1.2 - deprecated?
     timeless: Timeless<'a>,
     structure: StructureDefs<'a>,
@@ -36,7 +37,7 @@ impl<'a> Domain<'a> {
             constants: Constants::default(),
             predicates: PredicateDefinitions::default(),
             functions: Functions::default(),
-            constraints: ConGD::default(),
+            constraints: DomainConstraintsDef::default(),
             timeless: Timeless::default(),
             structure,
         }
@@ -80,7 +81,7 @@ impl<'a> Domain<'a> {
     }
 
     /// Adds a list of optional constraints.
-    pub fn with_constraints(mut self, constraints: ConGD<'a>) -> Self {
+    pub fn with_constraints(mut self, constraints: DomainConstraintsDef<'a>) -> Self {
         self.constraints = constraints;
         self
     }
@@ -132,7 +133,7 @@ impl<'a> Domain<'a> {
 
     /// Returns the optional constraint declaration.
     pub const fn constraints(&self) -> &ConGD<'a> {
-        &self.constraints
+        &self.constraints.value()
     }
 
     /// Returns the domain structure definitions.

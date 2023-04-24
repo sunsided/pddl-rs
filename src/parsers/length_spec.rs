@@ -30,3 +30,11 @@ pub fn parse_problem_length_spec(input: &str) -> IResult<&str, LengthSpec> {
         LengthSpec::new(serial, parallel)
     })(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for LengthSpec {
+    type Item = LengthSpec;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_problem_length_spec(input)
+    }
+}

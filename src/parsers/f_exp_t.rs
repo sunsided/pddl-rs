@@ -55,3 +55,11 @@ pub fn parse_f_exp_t(input: &str) -> IResult<&str, FExpT> {
 
     alt((scaled, now))(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for FExpT<'a> {
+    type Item = FExpT<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_f_exp_t(input)
+    }
+}

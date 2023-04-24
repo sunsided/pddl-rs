@@ -30,3 +30,11 @@ pub fn parse_term(input: &str) -> IResult<&str, Term> {
 
     return Err(nom::Err::Error(error_position!(input, ErrorKind::Alt)));
 }
+
+impl<'a> crate::parsers::Parser<'a> for Term<'a> {
+    type Item = Term<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_term(input)
+    }
+}

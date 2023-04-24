@@ -189,3 +189,11 @@ pub fn parse_gd(input: &str) -> IResult<&str, GoalDefinition> {
 
     alt((and, or, not, imply, exists, forall, af, literal, f_comp))(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for GoalDefinition<'a> {
+    type Item = GoalDefinition<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_gd(input)
+    }
+}

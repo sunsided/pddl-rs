@@ -14,3 +14,11 @@ use nom::IResult;
 pub fn parse_pref_name(input: &str) -> IResult<&str, PreferenceName> {
     map(parse_name, PreferenceName::new)(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for PreferenceName<'a> {
+    type Item = PreferenceName<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_pref_name(input)
+    }
+}

@@ -36,3 +36,11 @@ pub fn parse_basic_function_term(input: &str) -> IResult<&str, BasicFunctionTerm
     );
     alt((direct, named))(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for BasicFunctionTerm<'a> {
+    type Item = BasicFunctionTerm<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_basic_function_term(input)
+    }
+}

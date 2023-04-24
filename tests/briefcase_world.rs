@@ -1,5 +1,7 @@
-use pddl::parsers::{parse_domain, parse_problem};
-use pddl::types::{AtomicFormula, GoalDefinition, PreGD, PreferenceGD, TermLiteral};
+use pddl::parsers::Parser;
+use pddl::types::{
+    AtomicFormula, Domain, GoalDefinition, PreGD, PreferenceGD, Problem, TermLiteral,
+};
 
 pub const BRIEFCASE_WORLD: &'static str = r#"
     (define (domain briefcase-world)
@@ -42,7 +44,7 @@ pub const BRIEFCASE_WORLD_PROBLEM: &'static str = r#"
 
 #[test]
 fn parse_domain_works() {
-    let (remainder, domain) = parse_domain(BRIEFCASE_WORLD).unwrap();
+    let (remainder, domain) = Domain::parse(BRIEFCASE_WORLD).unwrap();
 
     // The input was parsed completely, nothing followed the domain definition.
     assert_eq!(remainder, "");
@@ -58,7 +60,7 @@ fn parse_domain_works() {
 
 #[test]
 fn parse_problem_works() {
-    let (remainder, problem) = parse_problem(BRIEFCASE_WORLD_PROBLEM).unwrap();
+    let (remainder, problem) = Problem::parse(BRIEFCASE_WORLD_PROBLEM).unwrap();
 
     // The input was parsed completely, nothing followed the problem definition.
     assert_eq!(remainder, "");

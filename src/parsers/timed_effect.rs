@@ -89,6 +89,14 @@ pub fn parse_timed_effect(input: &str) -> IResult<&str, TimedEffect> {
     alt((fluent, cond, continuous))(input)
 }
 
+impl<'a> crate::parsers::Parser<'a> for TimedEffect<'a> {
+    type Item = TimedEffect<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_timed_effect(input)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

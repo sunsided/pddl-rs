@@ -264,3 +264,19 @@ fn parse_con2_gd(input: &str) -> IResult<&str, Con2GD> {
     let con_gd = map(parse_con_gd, Con2GD::new_nested);
     alt((gd, con_gd))(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for ConGD<'a> {
+    type Item = ConGD<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_con_gd(input)
+    }
+}
+
+impl<'a> crate::parsers::Parser<'a> for Con2GD<'a> {
+    type Item = Con2GD<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_con2_gd(input)
+    }
+}

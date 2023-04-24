@@ -45,3 +45,11 @@ pub fn parse_predicates_def(input: &str) -> IResult<&str, PredicateDefinitions> 
         |vec| PredicateDefinitions::new(vec),
     )(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for PredicateDefinitions<'a> {
+    type Item = PredicateDefinitions<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_predicates_def(input)
+    }
+}

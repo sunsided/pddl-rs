@@ -26,3 +26,11 @@ pub fn parse_types_def(input: &str) -> IResult<&str, Types> {
         Types::new(vec)
     })(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for Types<'a> {
+    type Item = Types<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_types_def(input)
+    }
+}

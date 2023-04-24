@@ -109,6 +109,14 @@ pub fn parse_da_effect(input: &str) -> IResult<&str, DurativeActionEffect> {
     alt((all, forall, when, exactly))(input)
 }
 
+impl<'a> crate::parsers::Parser<'a> for DurativeActionEffect<'a> {
+    type Item = DurativeActionEffect<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_da_effect(input)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

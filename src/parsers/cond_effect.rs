@@ -50,3 +50,11 @@ pub fn parse_cond_effect(input: &str) -> IResult<&str, ConditionalEffect> {
 
     alt((exactly, all))(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for ConditionalEffect<'a> {
+    type Item = ConditionalEffect<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_cond_effect(input)
+    }
+}

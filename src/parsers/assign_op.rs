@@ -28,3 +28,11 @@ pub fn parse_assign_op(input: &str) -> IResult<&str, AssignOp> {
         AssignOp::try_from,
     )(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for AssignOp {
+    type Item = AssignOp;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_assign_op(input)
+    }
+}

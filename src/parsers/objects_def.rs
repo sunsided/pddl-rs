@@ -26,3 +26,11 @@ pub fn parse_problem_objects_declaration(input: &str) -> IResult<&str, Objects> 
         Objects::new,
     )(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for Objects<'a> {
+    type Item = Objects<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_problem_objects_declaration(input)
+    }
+}

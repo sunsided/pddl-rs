@@ -6,8 +6,8 @@ use crate::parsers::{
     parse_problem_length_spec, parse_problem_metric_spec, parse_problem_objects_declaration,
     parse_require_def,
 };
-use crate::types::Requirements;
-use crate::types::{Objects, PrefConGD, Problem};
+use crate::types::{Objects, Problem};
+use crate::types::{ProblemConstraintsDef, Requirements};
 use nom::character::complete::multispace1;
 use nom::combinator::{map, opt};
 use nom::sequence::{preceded, tuple};
@@ -64,10 +64,18 @@ pub fn parse_problem(input: &str) -> IResult<&str, Problem> {
                 objects.unwrap_or(Objects::default()),
                 init,
                 goal,
-                constraints.unwrap_or(PrefConGD::default()),
+                constraints.unwrap_or(ProblemConstraintsDef::default()),
                 metric,
                 length,
             )
         },
     )(input)
+}
+
+impl<'a> crate::parsers::Parser<'a> for Problem<'a> {
+    type Item = Problem<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_problem(input)
+    }
 }

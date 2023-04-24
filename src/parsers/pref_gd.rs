@@ -76,3 +76,11 @@ pub fn parse_pref_gd(input: &str) -> IResult<&str, PreferenceGD> {
 
     alt((pref_named, pref_unnamed, gd))(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for PreferenceGD<'a> {
+    type Item = PreferenceGD<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_pref_gd(input)
+    }
+}

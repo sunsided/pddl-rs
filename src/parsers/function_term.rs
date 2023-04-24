@@ -36,3 +36,11 @@ pub fn parse_function_term(input: &str) -> IResult<&str, FunctionTerm> {
     )(input)?;
     Ok((remaining, FunctionTerm::new(symbol, terms)))
 }
+
+impl<'a> crate::parsers::Parser<'a> for FunctionTerm<'a> {
+    type Item = FunctionTerm<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_function_term(input)
+    }
+}

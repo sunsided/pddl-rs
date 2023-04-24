@@ -18,3 +18,11 @@ use nom::IResult;
 pub fn parse_function_type(input: &str) -> IResult<&str, FunctionType> {
     map(parse_type, FunctionType::from)(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for FunctionType<'a> {
+    type Item = FunctionType<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_function_type(input)
+    }
+}

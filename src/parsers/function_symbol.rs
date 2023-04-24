@@ -24,3 +24,11 @@ pub fn parse_function_symbol(input: &str) -> IResult<&str, FunctionSymbol> {
     let (remaining, name) = parse_name(input)?;
     Ok((remaining, name.into()))
 }
+
+impl<'a> crate::parsers::Parser<'a> for FunctionSymbol<'a> {
+    type Item = FunctionSymbol<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_function_symbol(input)
+    }
+}

@@ -26,3 +26,11 @@ fn parse_object(input: &str) -> IResult<&str, Name> {
     let (remaining, name) = tag("object")(input)?;
     Ok((remaining, Name::from(name)))
 }
+
+impl<'a> crate::parsers::Parser<'a> for PrimitiveType<'a> {
+    type Item = PrimitiveType<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_primitive_type(input)
+    }
+}

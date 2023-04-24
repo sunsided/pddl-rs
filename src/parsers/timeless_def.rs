@@ -41,3 +41,11 @@ pub fn parse_timeless_def(input: &str) -> IResult<&str, Timeless> {
         Timeless::from_iter,
     )(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for Timeless<'a> {
+    type Item = Timeless<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_timeless_def(input)
+    }
+}

@@ -76,3 +76,11 @@ pub fn parse_c_effect(input: &str) -> IResult<&str, CEffect> {
 
     alt((forall, when, p_effect))(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for CEffect<'a> {
+    type Item = CEffect<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_c_effect(input)
+    }
+}

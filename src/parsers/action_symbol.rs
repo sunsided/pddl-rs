@@ -24,3 +24,11 @@ pub fn parse_action_symbol(input: &str) -> IResult<&str, ActionSymbol> {
     let (remaining, name) = parse_name(input)?;
     Ok((remaining, name.into()))
 }
+
+impl<'a> crate::parsers::Parser<'a> for ActionSymbol<'a> {
+    type Item = ActionSymbol<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_action_symbol(input)
+    }
+}

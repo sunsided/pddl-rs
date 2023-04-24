@@ -61,3 +61,11 @@ pub fn parse_simple_duration_constraint(input: &str) -> IResult<&str, SimpleDura
 
     alt((op, at))(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for SimpleDurationConstraint<'a> {
+    type Item = SimpleDurationConstraint<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_simple_duration_constraint(input)
+    }
+}

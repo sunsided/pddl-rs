@@ -117,3 +117,11 @@ pub fn parse_pref_con_gd(input: &str) -> IResult<&str, PrefConGD> {
 
     alt((and, forall, named_preference, unnamed_preference, goal))(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for PrefConGD<'a> {
+    type Item = PrefConGD<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_pref_con_gd(input)
+    }
+}

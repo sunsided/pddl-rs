@@ -17,3 +17,11 @@ use nom::IResult;
 pub fn parse_interval(input: &str) -> IResult<&str, Interval> {
     map_res(tag(names::ALL), Interval::try_from)(input)
 }
+
+impl<'a> crate::parsers::Parser<'a> for Interval {
+    type Item = Interval;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_interval(input)
+    }
+}

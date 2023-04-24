@@ -5,10 +5,10 @@ use crate::parsers::{
     parse_require_def, parse_structure_def,
 };
 use crate::parsers::{parse_name, parse_types_def, prefix_expr, space_separated_list1, ws};
-use crate::types::{ConGD, Types};
 use crate::types::{
     Constants, Domain, Functions, PredicateDefinitions, Requirements, StructureDefs,
 };
+use crate::types::{DomainConstraintsDef, Types};
 use nom::character::complete::multispace1;
 use nom::combinator::{map, opt};
 use nom::sequence::{preceded, tuple};
@@ -106,7 +106,15 @@ pub fn parse_domain(input: &str) -> IResult<&str, Domain> {
                 .with_constants(constants.unwrap_or(Constants::default()))
                 .with_predicates(predicates.unwrap_or(PredicateDefinitions::default()))
                 .with_functions(functions.unwrap_or(Functions::default()))
-                .with_constraints(constraints.unwrap_or(ConGD::default()))
+                .with_constraints(constraints.unwrap_or(DomainConstraintsDef::default()))
         },
     )(input)
+}
+
+impl<'a> crate::parsers::Parser<'a> for Domain<'a> {
+    type Item = Domain<'a>;
+
+    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+        parse_domain(input)
+    }
 }
