@@ -11,7 +11,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_timeless_def;
-/// # use pddl::types::{AtomicFormula, EqualityAtomicFormula, Literal, Name, Objects, Timeless, ToTyped, Type};
+/// # use pddl::{AtomicFormula, EqualityAtomicFormula, Literal, Name, Objects, Timeless, ToTyped, Type};
 /// let input = "(:timeless (= x y) (= a b))";
 /// assert_eq!(parse_timeless_def(input), Ok(("",
 ///     Timeless::from_iter([

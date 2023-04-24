@@ -32,7 +32,7 @@ pub trait ToTyped<'a, T> {
     ///
     /// ## Example
     /// ```
-    /// use pddl::types::{Name, PrimitiveType, ToTyped, Type, Typed};
+    /// # use pddl::{Name, PrimitiveType, ToTyped, Type, Typed};
     /// assert_eq!(
     ///     Name::from("kitchen").to_typed("room"),
     ///     Typed::new(Name::from("kitchen"), Type::Exactly(PrimitiveType::from("room")))
@@ -44,7 +44,7 @@ pub trait ToTyped<'a, T> {
     ///
     /// ## Example
     /// ```
-    /// use pddl::types::{Name, PrimitiveType, ToTyped, Type, Typed};
+    /// # use pddl::{Name, PrimitiveType, ToTyped, Type, Typed};
     /// assert_eq!(
     ///     Name::from("georgia").to_typed_either(["country", "state"]),
     ///     Typed::new(Name::from("georgia"), Type::EitherOf(

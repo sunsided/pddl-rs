@@ -14,9 +14,8 @@ use nom::IResult;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::{parse_da_gd};
-/// # use pddl::types::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Preference, PreferenceName, PreferenceGD, PreGD, Term, Variable, DurativeActionGoalDefinition, PrefTimedGD, TimedGD, TimeSpecifier, Interval};
-/// # use pddl::types::{Typed, TypedList};
-///
+/// # use pddl::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Preference, PreferenceName, PreferenceGD, PreGD, Term, Variable, DurativeActionGoalDefinition, PrefTimedGD, TimedGD, TimeSpecifier, Interval};
+/// # use pddl::{Typed, TypedList};
 /// assert_eq!(parse_da_gd("(at start (= x y))"), Ok(("",
 ///     DurativeActionGoalDefinition::Timed(
 ///         PrefTimedGD::Required(

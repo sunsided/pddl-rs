@@ -12,7 +12,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_assign_op;
-/// # use pddl::types::{AssignOp};
+/// # use pddl::{AssignOp};
 /// assert_eq!(parse_assign_op("assign"), Ok(("", AssignOp::Assign)));
 /// assert_eq!(parse_assign_op("scale-up"), Ok(("", AssignOp::ScaleUp)));
 ///```

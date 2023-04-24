@@ -10,8 +10,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_problem_init_def};
-/// # use pddl::types::{AtomicFormula, InitElement, InitElements, NameLiteral, Number};
-///
+/// # use pddl::{AtomicFormula, InitElement, InitElements, NameLiteral, Number};
 /// let input = "(:init (train-not-in-use train1) (at 10 (train-not-in-use train2)))";
 /// assert_eq!(parse_problem_init_def(input), Ok(("",
 ///     InitElements::from_iter([

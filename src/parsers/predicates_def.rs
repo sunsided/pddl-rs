@@ -11,9 +11,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_predicates_def;
-/// # use pddl::types::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions};
-/// # use pddl::types::{ToTyped, TypedList};
-///
+/// # use pddl::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions};
+/// # use pddl::{ToTyped, TypedList};
 /// let input = r#"(:predicates
 ///                     (at ?x - physob ?y - location)
 ///                     (in ?x ?y - physob)

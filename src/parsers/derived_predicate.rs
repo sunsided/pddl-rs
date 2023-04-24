@@ -13,8 +13,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_derived_predicate;
-/// # use pddl::types::GoalDefinition;
-///
+/// # use pddl::GoalDefinition;
 /// let input = r#"(:derived (train-usable ?t - train)
 ///                     (and
 ///                         (train-has-guard ?t)

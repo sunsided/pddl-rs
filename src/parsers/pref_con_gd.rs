@@ -16,7 +16,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_pref_con_gd;
-/// # use pddl::types::{AtomicFormula, Con2GD, ConGD, GoalDefinition, Number, PrefConGD, Term, ToTyped, Type, TypedList, Variable};
+/// # use pddl::{AtomicFormula, Con2GD, ConGD, GoalDefinition, Number, PrefConGD, Term, ToTyped, Type, TypedList, Variable};
 /// // (= x y)
 /// let gd_a =
 ///     GoalDefinition::new_atomic_formula(

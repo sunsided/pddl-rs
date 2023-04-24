@@ -14,8 +14,7 @@ use nom::IResult;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::{parse_pref_timed_gd};
-/// # use pddl::types::{AtomicFormula, GoalDefinition, Interval, PrefTimedGD, Term, TimedGD, TimeSpecifier};
-///
+/// # use pddl::{AtomicFormula, GoalDefinition, Interval, PrefTimedGD, Term, TimedGD, TimeSpecifier};
 /// assert_eq!(parse_pref_timed_gd("(at start (= x y))"), Ok(("",
 ///     PrefTimedGD::Required(
 ///         TimedGD::new_at(

@@ -10,8 +10,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_function_type;
-/// # use pddl::types::{FunctionType};
-/// # use pddl::types::Type;
+/// # use pddl::{FunctionType};
+/// # use pddl::Type;
 /// assert_eq!(parse_function_type("number"), Ok(("", FunctionType::new(Type::Exactly("number".into())))));
 /// assert_eq!(parse_function_type("(either object number)"), Ok(("", FunctionType::new(Type::from_iter(["object", "number"])))));
 ///```

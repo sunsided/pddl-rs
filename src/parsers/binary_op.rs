@@ -11,7 +11,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_binary_op;
-/// # use pddl::types::{BinaryOp};
+/// # use pddl::{BinaryOp};
 /// assert_eq!(parse_binary_op("*"), Ok(("", BinaryOp::Multiplication)));
 /// assert_eq!(parse_binary_op("+"), Ok(("", BinaryOp::Addition)));
 /// assert_eq!(parse_binary_op("-"), Ok(("", BinaryOp::Subtraction)));

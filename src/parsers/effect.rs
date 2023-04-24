@@ -12,7 +12,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_effect;
-/// # use pddl::types::{AtomicFormula, CEffect, Effect, EqualityAtomicFormula, PEffect, Term};
+/// # use pddl::{AtomicFormula, CEffect, Effect, EqualityAtomicFormula, PEffect, Term};
 /// assert_eq!(parse_effect("(= x y)"), Ok(("",
 ///     Effect::Single(
 ///         CEffect::Effect(

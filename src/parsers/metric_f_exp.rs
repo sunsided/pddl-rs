@@ -18,7 +18,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_metric_f_exp;
-/// # use pddl::types::{BinaryOp, MetricFExp, FunctionSymbol, MultiOp, Name, PreferenceName};
+/// # use pddl::{BinaryOp, MetricFExp, FunctionSymbol, MultiOp, Name, PreferenceName};
 /// assert_eq!(parse_metric_f_exp("1.23"), Ok(("",
 ///     MetricFExp::new_number(1.23)
 /// )));

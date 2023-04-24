@@ -15,7 +15,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_f_exp, parse_f_exp_t};
-/// # use pddl::types::{BinaryOp, FExp, FExpT, FHead, FunctionSymbol, MultiOp, Term, Variable};
+/// # use pddl::{BinaryOp, FExp, FExpT, FHead, FunctionSymbol, MultiOp, Term, Variable};
 /// assert_eq!(parse_f_exp_t("#t"), Ok(("", FExpT::Now)));
 ///
 /// assert_eq!(parse_f_exp_t("(* (fuel ?tank) #t)"), Ok(("",

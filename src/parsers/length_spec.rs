@@ -12,7 +12,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_problem_length_spec;
-/// # use pddl::types::LengthSpec;
+/// # use pddl::LengthSpec;
 /// assert_eq!(parse_problem_length_spec("(:length)"), Ok(("", LengthSpec::default())));
 /// assert_eq!(parse_problem_length_spec("(:length (:serial 123))"), Ok(("", LengthSpec::new_serial(123))));
 /// assert_eq!(parse_problem_length_spec("(:length (:parallel 42))"), Ok(("", LengthSpec::new_parallel(42))));

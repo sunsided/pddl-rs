@@ -15,7 +15,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_f_exp_da;
-/// # use pddl::types::{BinaryOp, FExpDa, FExp, FunctionSymbol, MultiOp};
+/// # use pddl::{BinaryOp, FExpDa, FExp, FunctionSymbol, MultiOp};
 /// assert_eq!(parse_f_exp_da("?duration"), Ok(("",
 ///     FExpDa::Duration
 /// )));

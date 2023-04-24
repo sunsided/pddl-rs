@@ -11,7 +11,7 @@ use nom::{error_position, IResult};
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_type;
-/// # use pddl::types::Type;
+/// # use pddl::Type;
 /// assert_eq!(parse_type("object"), Ok(("", Type::Exactly("object".into()))));
 /// assert_eq!(parse_type("(either object number)"), Ok(("", Type::from_iter(["object", "number"]))));
 ///```

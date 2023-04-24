@@ -19,7 +19,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_action_def, parse_domain};
-/// # use pddl::types::Name;
+/// # use pddl::Name;
 ///
 /// let input = r#"(define (domain briefcase-world)
 ///       (:requirements :strips :equality :typing :conditional-effects)

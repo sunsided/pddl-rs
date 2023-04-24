@@ -12,7 +12,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_function_term;
-/// # use pddl::types::{FunctionTerm, Variable, FunctionSymbol, Term};
+/// # use pddl::{FunctionTerm, Variable, FunctionSymbol, Term};
 /// assert_eq!(parse_function_term("(fun-sym)"), Ok(("", FunctionTerm::new("fun-sym".into(), vec![]))));
 ///
 /// let x = Term::Name("x".into());

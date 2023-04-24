@@ -12,7 +12,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_problem_metric_spec;
-/// # use pddl::types::{MetricFExp, MetricSpec, Optimization};
+/// # use pddl::{MetricFExp, MetricSpec, Optimization};
 /// assert_eq!(parse_problem_metric_spec("(:metric minimize total-time)"), Ok(("",
 ///     MetricSpec::new(
 ///         Optimization::Minimize,

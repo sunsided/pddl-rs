@@ -12,7 +12,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_time_specifier;
-/// # use pddl::types::{TimeSpecifier};
+/// # use pddl::{TimeSpecifier};
 /// assert_eq!(parse_time_specifier("start"), Ok(("", TimeSpecifier::Start)));
 /// assert_eq!(parse_time_specifier("end"), Ok(("", TimeSpecifier::End)));
 ///```

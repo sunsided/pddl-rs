@@ -12,7 +12,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_assign_op_t;
-/// # use pddl::types::{AssignOpT};
+/// # use pddl::{AssignOpT};
 /// assert_eq!(parse_assign_op_t("increase"), Ok(("", AssignOpT::Increase)));
 /// assert_eq!(parse_assign_op_t("decrease"), Ok(("", AssignOpT::Decrease)));
 ///```

@@ -12,7 +12,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_basic_function_term;
-/// # use pddl::types::{BasicFunctionTerm, Term};
+/// # use pddl::{BasicFunctionTerm, Term};
 /// assert_eq!(parse_basic_function_term("abcde"), Ok(("",
 ///     BasicFunctionTerm::new("abcde".into(), [])
 /// )));

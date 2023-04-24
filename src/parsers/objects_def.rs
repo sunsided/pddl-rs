@@ -10,8 +10,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_problem_objects_declaration};
-/// # use pddl::types::{Name, Objects, ToTyped, Type};
-///
+/// # use pddl::{Name, Objects, ToTyped, Type};
 /// let input = "(:objects train1 train2)";
 /// assert_eq!(parse_problem_objects_declaration(input), Ok(("",
 ///     Objects::new([

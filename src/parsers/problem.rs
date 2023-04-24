@@ -18,8 +18,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_action_def, parse_problem};
-/// # use pddl::types::{Name, PreGD};
-///
+/// # use pddl::{Name, PreGD};
 /// let input = r#"(define (problem get-paid)
 ///         (:domain briefcase-world)
 ///         (:init (place home) (place office)

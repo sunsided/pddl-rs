@@ -11,7 +11,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_binary_comp;
-/// # use pddl::types::{AssignOp, BinaryComp};
+/// # use pddl::{AssignOp, BinaryComp};
 /// assert_eq!(parse_binary_comp(">"), Ok(("", BinaryComp::GreaterThan)));
 /// assert_eq!(parse_binary_comp("<"), Ok(("", BinaryComp::LessThan)));
 /// assert_eq!(parse_binary_comp("="), Ok(("", BinaryComp::Equal)));

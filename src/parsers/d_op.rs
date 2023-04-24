@@ -11,7 +11,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_d_op;
-/// # use pddl::types::{DOp};
+/// # use pddl::{DOp};
 /// assert_eq!(parse_d_op("<="), Ok(("", DOp::LessThanOrEqual)));
 /// assert_eq!(parse_d_op(">="), Ok(("", DOp::GreaterOrEqual)));
 /// assert_eq!(parse_d_op("="), Ok(("", DOp::Equal)));

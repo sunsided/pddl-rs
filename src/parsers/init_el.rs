@@ -13,7 +13,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_init_el;
-/// # use pddl::types::{AtomicFormula, BasicFunctionTerm, InitElement, Name, NameLiteral, Number, Predicate};
+/// # use pddl::{AtomicFormula, BasicFunctionTerm, InitElement, Name, NameLiteral, Number, Predicate};
 /// assert_eq!(parse_init_el("(train-not-in-use train1)"), Ok(("",
 ///     InitElement::new_literal(
 ///         NameLiteral::new(

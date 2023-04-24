@@ -14,8 +14,7 @@ use nom::IResult;
 /// ```
 /// # use nom::character::complete::alpha1;
 /// # use pddl::parsers::{parse_name, typed_list};
-/// # use pddl::types::{Name, PrimitiveType, ToTyped, Type, Typed, TypedList};
-///
+/// # use pddl::{Name, PrimitiveType, ToTyped, Type, Typed, TypedList};
 /// // Single implicitly typed element.
 /// assert_eq!(typed_list(parse_name)("abc"), Ok(("", TypedList::from_iter([
 ///     Name::new("abc").to_typed(Type::OBJECT)

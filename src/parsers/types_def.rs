@@ -10,9 +10,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_types_def;
-/// # use pddl::types::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions};
-/// # use pddl::types::{Name, Type, Typed, TypedList, Types};
-///
+/// # use pddl::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions};
+/// # use pddl::{Name, Type, Typed, TypedList, Types};
 /// let input = "(:types location physob)";
 /// assert_eq!(parse_types_def(input), Ok(("",
 ///     Types::new(TypedList::from_iter([

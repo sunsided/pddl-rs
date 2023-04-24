@@ -15,7 +15,7 @@ type UnderlyingType = f32;
 /// ## Examples
 /// ```
 /// # use std::panic;
-/// # use pddl::types::Number;
+/// # use pddl::Number;
 /// let number = Number::from(42);
 /// assert_eq!(number, 42);
 /// assert_eq!(number, 42.0);

@@ -11,7 +11,7 @@ use nom::{error_position, IResult};
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_term;
-/// # use pddl::types::Term;
+/// # use pddl::Term;
 /// assert_eq!(parse_term("abcde"), Ok(("", Term::Name("abcde".into()))));
 /// assert_eq!(parse_term("?abcde"), Ok(("", Term::Variable("abcde".into()))));
 ///```

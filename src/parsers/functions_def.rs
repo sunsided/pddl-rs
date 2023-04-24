@@ -11,9 +11,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_functions_def;
-/// # use pddl::types::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions, FunctionTypedList, FunctionTyped, AtomicFunctionSkeleton, FunctionSymbol, Functions};
-/// # use pddl::types::{Type, Typed, TypedList};
-///
+/// # use pddl::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions, FunctionTypedList, FunctionTyped, AtomicFunctionSkeleton, FunctionSymbol, Functions};
+/// # use pddl::{Type, Typed, TypedList};
 /// let input = "(:functions (battery-amount ?r - rover))";
 /// assert_eq!(parse_functions_def(input), Ok(("",
 ///     Functions::from_iter([

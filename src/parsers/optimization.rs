@@ -11,7 +11,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_optimization;
-/// # use pddl::types::{Optimization};
+/// # use pddl::{Optimization};
 /// assert_eq!(parse_optimization("minimize"), Ok(("", Optimization::Minimize)));
 /// assert_eq!(parse_optimization("maximize"), Ok(("", Optimization::Maximize)));
 ///```

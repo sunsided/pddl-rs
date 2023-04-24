@@ -1,6 +1,5 @@
-use pddl::parsers::Parser;
-use pddl::types::{
-    AtomicFormula, Domain, GoalDefinition, PreGD, PreferenceGD, Problem, TermLiteral,
+use pddl::{
+    AtomicFormula, Domain, GoalDefinition, Parser, PreGD, PreferenceGD, Problem, TermLiteral,
 };
 
 pub const BRIEFCASE_WORLD: &'static str = r#"

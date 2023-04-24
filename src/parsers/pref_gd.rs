@@ -14,8 +14,7 @@ use nom::IResult;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::parse_pref_gd;
-/// # use pddl::types::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Preference, PreferenceName, PreferenceGD, Term, Variable};
-///
+/// # use pddl::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Preference, PreferenceName, PreferenceGD, Term, Variable};
 /// // Simple goal definition.
 /// assert_eq!(parse_pref_gd("(= x y)"), Ok(("",
 ///     PreferenceGD::Goal(

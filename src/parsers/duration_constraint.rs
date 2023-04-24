@@ -13,8 +13,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_duration_constraint;
-/// # use pddl::types::{DOp, DurationConstraint, DurationValue, FunctionType, SimpleDurationConstraint, TimeSpecifier};
-///
+/// # use pddl::{DOp, DurationConstraint, DurationValue, FunctionType, SimpleDurationConstraint, TimeSpecifier};
 /// let input = "()";
 /// assert_eq!(parse_duration_constraint(input), Ok(("", None)));
 ///

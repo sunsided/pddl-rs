@@ -11,7 +11,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_multi_op;
-/// # use pddl::types::{MultiOp};
+/// # use pddl::{MultiOp};
 /// assert_eq!(parse_multi_op("*"), Ok(("", MultiOp::Multiplication)));
 /// assert_eq!(parse_multi_op("+"), Ok(("", MultiOp::Addition)));
 ///```
