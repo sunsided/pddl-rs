@@ -1,4 +1,6 @@
-//! # PDDL 3.1 Parser
+//! # A PDDL 3.1 parser, strongly typed
+//!
+//! This crates provides a PDDL 3.1 parser implementation based on [nom](https://crates.io/crates/nom).
 //!
 //! ## Example
 //! ```
