@@ -2,16 +2,21 @@
 
 use crate::types::{BinaryOp, FHead, MultiOp, Number};
 
-/// An f-exp.
+/// A function/fluent expression used e.g. in a [`DurationValue`](crate::types::DurationValue).
 ///
 /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
 #[derive(Debug, Clone, PartialEq)]
 pub enum FExp<'a> {
+    /// A numerical expression.
     Number(Number),
-    BinaryOp(BinaryOp, Box<FExp<'a>>, Box<FExp<'a>>),
-    MultiOp(MultiOp, Box<FExp<'a>>, Vec<FExp<'a>>),
-    Negative(Box<FExp<'a>>),
+    /// A function that derives a value.
     Function(FHead<'a>),
+    /// The negative value of a function expression.
+    Negative(Box<FExp<'a>>),
+    /// An operation applied to two function expressions.
+    BinaryOp(BinaryOp, Box<FExp<'a>>, Box<FExp<'a>>),
+    /// An operation applied to two or more function expressions.
+    MultiOp(MultiOp, Box<FExp<'a>>, Vec<FExp<'a>>),
 }
 
 impl<'a> FExp<'a> {

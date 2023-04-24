@@ -2,7 +2,20 @@
 
 use crate::types::{AssignOpT, ConditionalEffect, FAssignDa, FExpT, FHead, TimeSpecifier};
 
-/// A timed effect, either conditional, continuous or derived from a fluent.
+/// A timed effect, either conditional, continuous or derived from a fluent, e.g. [DurativeActionEffect](crate::types::DurativeActionEffect).
+///
+/// An effect is a condition which is made true when an action is applied.
+/// Note that the effect is always more restrictive than an action and typically only
+/// allows `and` and `not` as logical expressions.
+///
+/// ## Notes
+///
+/// Temporal expressions, such as `at start` and `at end` are available, however, `over all`
+/// is typically not used because it’s not common to express a boolean effect which is true
+/// over the duration of the action.
+///
+/// Instead you would set it to true at the start, using an `at start` and set it to false at
+/// the end using `at end`.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TimedEffect<'a> {
     ConditionalEffect(TimeSpecifier, ConditionalEffect<'a>),

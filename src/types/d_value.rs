@@ -1,16 +1,18 @@
-//! Contains the [`DValue`] type.
+//! Contains the [`DurationValue`] type.
 
 use crate::types::{FExp, Number};
 
-/// A d-value.
+/// A duration value, either a [Number] or an [FExp](FExp).
 #[derive(Debug, Clone, PartialEq)]
-pub enum DValue<'a> {
+pub enum DurationValue<'a> {
+    /// A numerical value.
     Number(Number),
+    /// A function expression that produces the duration value.
     /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
     FExp(FExp<'a>),
 }
 
-impl<'a> DValue<'a> {
+impl<'a> DurationValue<'a> {
     pub fn new_number<I: Into<Number>>(number: I) -> Self {
         Self::Number(number.into())
     }
@@ -20,13 +22,13 @@ impl<'a> DValue<'a> {
     }
 }
 
-impl<'a> From<Number> for DValue<'a> {
+impl<'a> From<Number> for DurationValue<'a> {
     fn from(value: Number) -> Self {
         Self::Number(value)
     }
 }
 
-impl<'a> From<FExp<'a>> for DValue<'a> {
+impl<'a> From<FExp<'a>> for DurationValue<'a> {
     fn from(value: FExp<'a>) -> Self {
         Self::FExp(value)
     }

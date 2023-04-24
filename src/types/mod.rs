@@ -90,7 +90,7 @@ pub use con_gd::{Con2GD, ConGD};
 pub use conditional_effect::ConditionalEffect;
 pub use constants::Constants;
 pub use d_op::DOp;
-pub use d_value::DValue;
+pub use d_value::DurationValue;
 pub use da_def::DurativeActionDefinition;
 pub use da_effect::DurativeActionEffect;
 pub use da_gd::DurativeActionGoalDefinition;

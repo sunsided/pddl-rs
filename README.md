@@ -11,6 +11,8 @@ See [`src/briefcase_world.rs`](tests/briefcase_world.rs) for an example.
 Parser and domain/problem types can be used separately and will be completely 
 decoupled through crate features in the future.
 
+Documentation comments are assembled from the PDDL papers and [nergmada/planning-wiki](https://github.com/nergmada/planning-wiki).
+
 ### Caveat Emptor
 
 At this point the parser supports all domain and problem definition

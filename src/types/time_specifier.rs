@@ -2,10 +2,12 @@
 
 use std::fmt::{Display, Formatter};
 
-/// A time specifier.
+/// A time specifier used in e.g. [TimedGD::At](crate::types::TimedGD::At) and [TimedEffect](crate::types::TimedEffect).
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum TimeSpecifier {
+    /// The condition or effect holds or applies at the beginning of a plan.
     Start,
+    /// The condition or effect must hold or apply at the end of a plan.
     End,
 }
 

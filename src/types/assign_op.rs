@@ -6,10 +6,55 @@ use std::fmt::{Display, Formatter};
 /// An assignment operation.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum AssignOp {
+    /// An assign effect assigns the value of a numeric variable to the given amount.
+    /// ```pddl
+    /// (assign (battery-level ?r) 10)
+    /// ```
+    ///
+    /// It is possible to use another numeric variable as the assign value, for example:
+    /// ```pddl
+    /// (assign (battery-level ?r) (max-charge ?r))
+    /// ```
     Assign,
+    /// A scale up effect increases the value of the numeric variable by the given scale factor.
+    /// ```pddl
+    /// (scale-up (battery-level ?r) 2)
+    /// ```
+    ///
+    /// The scale factor can be another numeric variable.
+    /// ```pddl
+    /// (scale-up (battery-level ?r) (charge-rate ?r))
+    /// ```
     ScaleUp,
+    /// A scale down effect decreases the value of the numeric variable by the given scale factor.
+    /// ```pddl
+    /// (scale-down (battery-level ?r) 2)
+    /// ```
+    ///
+    /// The scale factor can be another numeric variable.
+    /// ```pddl
+    /// (scale-down (battery-level ?r) (consumption-rate ?r))
+    /// ```
     ScaleDown,
+    /// An increase effect increases the value of a numeric variable by the given amount.
+    /// ```pddl
+    /// (increase (battery-level ?r) 10)
+    /// ```
+    ///
+    /// It is possible to use another numeric variable as the increase value for example.
+    /// ```pddl
+    /// (increase (battery-level ?r) (charge-available - ?solarpanel))
+    /// ```
     Increase,
+    /// A decrease effect decreases the value of a numeric variable by the given amount.
+    /// ```pddl
+    /// (decrease (battery-level ?r) 10)
+    /// ```
+    ///
+    /// It is possible to use another numeric variable as the decrease value for example.
+    /// ```pddl
+    /// (decrease (battery-level ?r) (power-needed-for-work - ?task))
+    /// ```
     Decrease,
 }
 

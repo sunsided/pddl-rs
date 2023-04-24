@@ -2,7 +2,7 @@
 
 use crate::parsers::parse_f_exp;
 use crate::parsers::parse_number;
-use crate::types::DValue;
+use crate::types::DurationValue;
 use nom::branch::alt;
 use nom::combinator::map;
 use nom::IResult;
@@ -12,22 +12,22 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_d_value;
-/// # use pddl::types::{BinaryOp, DValue, FExp, FHead, FunctionSymbol, MultiOp};
+/// # use pddl::types::{BinaryOp, DurationValue, FExp, FHead, FunctionSymbol, MultiOp};
 /// assert_eq!(parse_d_value("1.23"), Ok(("",
-///     DValue::new_number(1.23)
+///     DurationValue::new_number(1.23)
 /// )));
 ///
 /// assert_eq!(parse_d_value("fun-sym"), Ok(("",
-///     DValue::new_f_exp(
+///     DurationValue::new_f_exp(
 ///         FExp::new_function(FHead::Simple("fun-sym".into()))
 ///     )
 /// )));
 ///```
-pub fn parse_d_value(input: &str) -> IResult<&str, DValue> {
-    let number = map(parse_number, DValue::new_number);
+pub fn parse_d_value(input: &str) -> IResult<&str, DurationValue> {
+    let number = map(parse_number, DurationValue::new_number);
 
     // :numeric-fluents
-    let f_exp = map(parse_f_exp, DValue::new_f_exp);
+    let f_exp = map(parse_f_exp, DurationValue::new_f_exp);
 
     alt((number, f_exp))(input)
 }

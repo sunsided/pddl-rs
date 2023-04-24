@@ -2,9 +2,10 @@
 
 use std::fmt::{Display, Formatter};
 
-/// An interval.
+/// An interval used in [TimedGD::Over](crate::types::TimedGD::Over).
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Interval {
+    /// The condition must be true during the entire plan.
     All,
 }
 
