@@ -1,4 +1,4 @@
-# PDDL parser (work in progress)
+# A PDDL 3.1 parser, strongly typed
 
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/sunsided/pddl-rs/rust.yml)
 ![docs.rs](https://img.shields.io/docsrs/pddl)
