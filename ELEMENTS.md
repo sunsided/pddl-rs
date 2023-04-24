@@ -32,13 +32,13 @@ flowchart TD
     atomic-formula-skeleton --> predicate
     atomic-formula-skeleton --> typed-list-variable
     
-    predicate --> name
-    variable --> name
+    predicate -.-> name
+    variable -.-> name
     
     atomic-function-skeleton --> function-symbol
     atomic-function-skeleton --> typed-list-variable
     
-    function-symbol --> name
+    function-symbol -.-> name
     
     functions-def --> function-typed-list-atomic-function-skeleton
 
@@ -65,10 +65,10 @@ flowchart TD
     typed-list-name --> typed-list
     typed-list-name --> name
 
-    primitive-type --> name
+    primitive-type -.-> name
     
     type --> primitive-type
-    
+
     action-def --> typed-list-variable
     action-def --> action-def-body
     
@@ -82,7 +82,7 @@ flowchart TD
     pref-GD --> pref-name
     pref-GD --> GD
     
-    pref-name --> name
+    pref-name -.-> name
 
     literal-term --> literal
     literal-term --> term
@@ -142,7 +142,7 @@ flowchart TD
     durative-action-def --> typed-list-variable
     durative-action-def --> da-def-body
     
-    da-symbol --> name
+    da-symbol -.-> name
     
     da-def-body --> duration-constraint
     da-def-body --> da-GD
@@ -212,6 +212,9 @@ flowchart TD
     init-el --> literal-name
     init-el --> number
     init-el --> basic-function-term
+
+    literal-name --> literal
+    literal-name --> name
     
     basic-function-term --> function-symbol
     basic-function-term --> name
