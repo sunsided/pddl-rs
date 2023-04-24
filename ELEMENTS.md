@@ -1,20 +1,25 @@
 # BNF Elements
 
 ```mermaid
-graph TD
+---
+title: PDDL 3.1 BNF Element Graph
+---
+flowchart TD
 
-    PDDL --> domain
-    PDDL --> problem
+    PDDL([PDDL])
+
+    PDDL ==> domain([Domain])
+    PDDL ==> problem([Problem])
 
 %% Domain specification
     domain --> name
-    domain --> require-def
-    domain --> types-def
-    domain --> constants-def
-    domain --> predicates-def
-    domain --> functions-def
-    domain --> domain-constraints
-    domain --> structure-def
+    domain ==> require-def[[require-def]]
+    domain ==> types-def[[types-def]]
+    domain ==> constants-def[[constants-def]]
+    domain ==> predicates-def[[predicates-def]]
+    domain ==> functions-def[[functions-def]]
+    domain ==> domain-constraints[[constraints-def]]
+    domain ==> structure-def[[structure-def]]
     
     require-def --> require-key
     
@@ -47,9 +52,9 @@ graph TD
     
     domain-constraints --> con-GD
     
-    structure-def --> action-def
-    structure-def --> durative-action-def
-    structure-def --> derived-def
+    structure-def ==> action-def[[action-def]]
+    structure-def ==> durative-action-def[[durative-action-def]]
+    structure-def ==> derived-def[[derived-def]]
     
     typed-list --> typed-list
     typed-list --> type
@@ -192,17 +197,17 @@ graph TD
 
 %% Problem specification
     problem --> name
-    problem --> require-def
-    problem --> object-declaration
-    problem --> init
-    problem --> goal
-    problem --> problem-constraints
-    problem --> metric-spec
-    problem --> length-spec
+    problem ==> require-def[[require-def]]
+    problem ==> object-declaration[[object-declaration]]
+    problem ==> init[[init]]
+    problem ==> goal[[goal]]
+    problem ==> problem-constraints[[constraints]]
+    problem ==> metric-spec[[metric-spec]]
+    problem ==> length-spec[[length-spec]]
         
     object-declaration --> typed-list-name
     
-    init --> init-el
+    init ==> init-el
 
     init-el --> literal-name
     init-el --> number
@@ -211,7 +216,7 @@ graph TD
     basic-function-term --> function-symbol
     basic-function-term --> name
     
-    goal --> pre-GD
+    goal ==> pre-GD
     
     problem-constraints --> pref-con-GD
     
