@@ -53,6 +53,7 @@ pub fn parse_alpha(input: &str) -> IResult<&str, &str> {
 impl<'a> crate::parsers::Parser<'a> for Name<'a> {
     type Item = Name<'a>;
 
+    /// See [`parse_name`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_name(input)
     }

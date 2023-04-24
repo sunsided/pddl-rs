@@ -18,7 +18,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_metric_f_exp;
-/// # use pddl::types::{BinaryOp, MetricFExp, FunctionSymbol, MultiOp, Name, PreferenceName};
+/// # use pddl::{BinaryOp, MetricFExp, FunctionSymbol, MultiOp, Name, PreferenceName};
 /// assert_eq!(parse_metric_f_exp("1.23"), Ok(("",
 ///     MetricFExp::new_number(1.23)
 /// )));
@@ -139,6 +139,7 @@ pub fn parse_metric_f_exp(input: &str) -> IResult<&str, MetricFExp> {
 impl<'a> crate::parsers::Parser<'a> for MetricFExp<'a> {
     type Item = MetricFExp<'a>;
 
+    /// See [`parse_metric_f_exp`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_metric_f_exp(input)
     }

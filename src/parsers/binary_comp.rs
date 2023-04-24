@@ -11,7 +11,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_binary_comp;
-/// # use pddl::types::{AssignOp, BinaryComp};
+/// # use pddl::{AssignOp, BinaryComp};
 /// assert_eq!(parse_binary_comp(">"), Ok(("", BinaryComp::GreaterThan)));
 /// assert_eq!(parse_binary_comp("<"), Ok(("", BinaryComp::LessThan)));
 /// assert_eq!(parse_binary_comp("="), Ok(("", BinaryComp::Equal)));
@@ -34,6 +34,7 @@ pub fn parse_binary_comp(input: &str) -> IResult<&str, BinaryComp> {
 impl<'a> crate::parsers::Parser<'a> for BinaryComp {
     type Item = BinaryComp;
 
+    /// See [`parse_binary_comp`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_binary_comp(input)
     }

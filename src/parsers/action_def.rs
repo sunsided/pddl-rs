@@ -13,10 +13,8 @@ use nom::IResult;
 ///
 /// ## Example
 /// ```
+/// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GoalDefinition, Name, PEffect, Predicate, PreferenceGD, PreGD, Term, ToTyped, TypedList, Variable};
 /// # use pddl::parsers::parse_action_def;
-/// # use pddl::types::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GoalDefinition, PEffect, Predicate, PreferenceGD, PreGD, Term, Variable};
-/// # use pddl::types::{Name, ToTyped, TypedList};
-///
 /// let input = r#"(:action take-out
 ///                     :parameters (?x - physob)
 ///                     :precondition (not (= ?x B))
@@ -83,6 +81,7 @@ pub fn parse_action_def(input: &str) -> IResult<&str, ActionDefinition> {
 impl<'a> crate::parsers::Parser<'a> for ActionDefinition<'a> {
     type Item = ActionDefinition<'a>;
 
+    /// See [`parse_action_def`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_action_def(input)
     }

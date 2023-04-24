@@ -12,7 +12,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_assign_op_t;
-/// # use pddl::types::{AssignOpT};
+/// # use pddl::{AssignOpT};
 /// assert_eq!(parse_assign_op_t("increase"), Ok(("", AssignOpT::Increase)));
 /// assert_eq!(parse_assign_op_t("decrease"), Ok(("", AssignOpT::Decrease)));
 ///```
@@ -26,6 +26,7 @@ pub fn parse_assign_op_t(input: &str) -> IResult<&str, AssignOpT> {
 impl<'a> crate::parsers::Parser<'a> for AssignOpT {
     type Item = AssignOpT;
 
+    /// See [`parse_assign_op_t`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_assign_op_t(input)
     }

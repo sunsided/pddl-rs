@@ -29,6 +29,7 @@ pub fn parse_f_assign_da(input: &str) -> IResult<&str, FAssignDa> {
 impl<'a> crate::parsers::Parser<'a> for FAssignDa<'a> {
     type Item = FAssignDa<'a>;
 
+    /// See [`parse_f_assign_da`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_f_assign_da(input)
     }

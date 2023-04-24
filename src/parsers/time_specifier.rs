@@ -12,7 +12,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_time_specifier;
-/// # use pddl::types::{TimeSpecifier};
+/// # use pddl::{TimeSpecifier};
 /// assert_eq!(parse_time_specifier("start"), Ok(("", TimeSpecifier::Start)));
 /// assert_eq!(parse_time_specifier("end"), Ok(("", TimeSpecifier::End)));
 ///```
@@ -26,6 +26,7 @@ pub fn parse_time_specifier(input: &str) -> IResult<&str, TimeSpecifier> {
 impl<'a> crate::parsers::Parser<'a> for TimeSpecifier {
     type Item = TimeSpecifier;
 
+    /// See [`parse_time_specifier`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_time_specifier(input)
     }

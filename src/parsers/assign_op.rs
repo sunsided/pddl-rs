@@ -12,7 +12,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_assign_op;
-/// # use pddl::types::{AssignOp};
+/// # use pddl::{AssignOp};
 /// assert_eq!(parse_assign_op("assign"), Ok(("", AssignOp::Assign)));
 /// assert_eq!(parse_assign_op("scale-up"), Ok(("", AssignOp::ScaleUp)));
 ///```
@@ -32,6 +32,7 @@ pub fn parse_assign_op(input: &str) -> IResult<&str, AssignOp> {
 impl<'a> crate::parsers::Parser<'a> for AssignOp {
     type Item = AssignOp;
 
+    /// See [`parse_assign_op`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_assign_op(input)
     }

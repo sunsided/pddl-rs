@@ -10,9 +10,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_constants_def;
-/// # use pddl::types::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions, Constants};
-/// use pddl::types::{Name, ToTyped, TypedList};
-///
+/// # use pddl::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions, Constants, Name, ToTyped, TypedList};
 /// let input = "(:constants B P D - physob)";
 /// assert_eq!(parse_constants_def(input), Ok(("",
 ///     Constants::new(TypedList::from_iter([
@@ -31,6 +29,7 @@ pub fn parse_constants_def(input: &str) -> IResult<&str, Constants> {
 impl<'a> crate::parsers::Parser<'a> for Constants<'a> {
     type Item = Constants<'a>;
 
+    /// See [`parse_constants_def`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_constants_def(input)
     }

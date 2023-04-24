@@ -13,8 +13,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_duration_constraint;
-/// # use pddl::types::{DOp, DurationConstraint, DurationValue, FunctionType, SimpleDurationConstraint, TimeSpecifier};
-///
+/// # use pddl::{DOp, DurationConstraint, DurationValue, FunctionType, SimpleDurationConstraint, TimeSpecifier};
 /// let input = "()";
 /// assert_eq!(parse_duration_constraint(input), Ok(("", None)));
 ///
@@ -79,6 +78,7 @@ pub fn parse_duration_constraint(input: &str) -> IResult<&str, Option<DurationCo
 impl<'a> crate::parsers::Parser<'a> for DurationConstraint<'a> {
     type Item = Option<DurationConstraint<'a>>;
 
+    /// See [`parse_duration_constraint`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_duration_constraint(input)
     }

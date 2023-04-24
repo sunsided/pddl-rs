@@ -10,8 +10,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_domain_constraints_def, parse_functions_def};
-/// # use pddl::types::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions, FunctionTypedList, FunctionTyped, AtomicFunctionSkeleton, FunctionSymbol, Functions, ConGD, DomainConstraintsDef};
-/// # use pddl::types::{Type, Typed, TypedList};
+/// # use pddl::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions, FunctionTypedList, FunctionTyped, AtomicFunctionSkeleton, FunctionSymbol, Functions, ConGD, DomainConstraintsDef};
+/// # use pddl::{Type, Typed, TypedList};
 ///
 /// let input = "(:constraints (and))";
 /// assert_eq!(parse_domain_constraints_def(input), Ok(("",
@@ -28,6 +28,7 @@ pub fn parse_domain_constraints_def(input: &str) -> IResult<&str, DomainConstrai
 impl<'a> crate::parsers::Parser<'a> for DomainConstraintsDef<'a> {
     type Item = DomainConstraintsDef<'a>;
 
+    /// See [`parse_domain_constraints_def`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_domain_constraints_def(input)
     }

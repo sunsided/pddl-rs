@@ -11,7 +11,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_timeless_def;
-/// # use pddl::types::{AtomicFormula, EqualityAtomicFormula, Literal, Name, Objects, Timeless, ToTyped, Type};
+/// # use pddl::{AtomicFormula, EqualityAtomicFormula, Literal, Name, Objects, Timeless, ToTyped, Type};
 /// let input = "(:timeless (= x y) (= a b))";
 /// assert_eq!(parse_timeless_def(input), Ok(("",
 ///     Timeless::from_iter([
@@ -45,6 +45,7 @@ pub fn parse_timeless_def(input: &str) -> IResult<&str, Timeless> {
 impl<'a> crate::parsers::Parser<'a> for Timeless<'a> {
     type Item = Timeless<'a>;
 
+    /// See [`parse_timeless_def`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_timeless_def(input)
     }

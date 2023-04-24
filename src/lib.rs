@@ -2,8 +2,7 @@
 //!
 //! ## Example
 //! ```
-//! use pddl::parsers::Parser;
-//! use pddl::types::{Domain, Problem};
+//! use pddl::{Parser, Domain, Problem};
 //!
 //! const BRIEFCASE_WORLD: &'static str = r#"
 //!     (define (domain briefcase-world)
@@ -60,7 +59,7 @@
 //! assert_eq!(problem.domain(), &"briefcase-world".into());
 //! assert!(problem.requirements().is_empty());
 //! assert_eq!(problem.init().len(), 9);
-//! assert!(matches! { problem.goal(), pddl::types::PreGD::And(_) });
+//! assert!(matches! { problem.goal(), pddl::PreGD::And(_) });
 //! ```
 
 // only enables the `doc_cfg` feature when
@@ -70,5 +69,13 @@
 #[cfg_attr(docsrs, doc(cfg(feature = "parser")))]
 #[cfg(feature = "parser")]
 pub mod parsers;
-pub mod types;
+mod types;
 pub(crate) mod visitor;
+
+// re-export Parser trait.
+#[cfg_attr(docsrs, doc(cfg(feature = "parser")))]
+#[cfg(feature = "parser")]
+pub use parsers::Parser;
+
+// re-export types
+pub use types::*;

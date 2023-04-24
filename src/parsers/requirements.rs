@@ -13,7 +13,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_require_def;
-/// # use pddl::types::{Requirement, Requirements};
+/// # use pddl::{Requirement, Requirements};
 /// assert_eq!(parse_require_def("(:requirements :adl)"), Ok(("", Requirements::new([Requirement::Adl]))));
 /// assert_eq!(parse_require_def("(:requirements :strips :typing)"), Ok(("", Requirements::new([Requirement::Strips, Requirement::Typing]))));
 /// assert_eq!(parse_require_def("(:requirements\n:strips   :typing  )"), Ok(("", Requirements::new([Requirement::Strips, Requirement::Typing]))));
@@ -30,7 +30,7 @@ pub fn parse_require_def(input: &str) -> IResult<&str, Requirements> {
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_require_key;
-/// use pddl::types::Requirement;
+/// # use pddl::Requirement;
 /// assert_eq!(parse_require_key(":strips"), Ok(("", Requirement::Strips)));
 /// assert_eq!(parse_require_key(":typing"), Ok(("", Requirement::Typing)));
 /// assert_eq!(parse_require_key(":negative-preconditions"), Ok(("", Requirement::NegativePreconditions)));
@@ -95,6 +95,7 @@ impl<'a> crate::parsers::Parser<'a> for Requirements {
 impl<'a> crate::parsers::Parser<'a> for Requirement {
     type Item = Requirement;
 
+    /// See [`parse_require_key`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_require_key(input)
     }

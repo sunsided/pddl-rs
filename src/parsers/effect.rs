@@ -12,7 +12,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_effect;
-/// # use pddl::types::{AtomicFormula, CEffect, Effect, EqualityAtomicFormula, PEffect, Term};
+/// # use pddl::{AtomicFormula, CEffect, Effect, EqualityAtomicFormula, PEffect, Term};
 /// assert_eq!(parse_effect("(= x y)"), Ok(("",
 ///     Effect::Single(
 ///         CEffect::Effect(
@@ -59,6 +59,7 @@ pub fn parse_effect(input: &str) -> IResult<&str, Effect> {
 impl<'a> crate::parsers::Parser<'a> for Effect<'a> {
     type Item = Effect<'a>;
 
+    /// See [`parse_effect`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_effect(input)
     }

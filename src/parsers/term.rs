@@ -11,7 +11,7 @@ use nom::{error_position, IResult};
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_term;
-/// # use pddl::types::Term;
+/// # use pddl::Term;
 /// assert_eq!(parse_term("abcde"), Ok(("", Term::Name("abcde".into()))));
 /// assert_eq!(parse_term("?abcde"), Ok(("", Term::Variable("abcde".into()))));
 ///```
@@ -34,6 +34,7 @@ pub fn parse_term(input: &str) -> IResult<&str, Term> {
 impl<'a> crate::parsers::Parser<'a> for Term<'a> {
     type Item = Term<'a>;
 
+    /// See [`parse_term`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_term(input)
     }

@@ -10,8 +10,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_problem_objects_declaration};
-/// # use pddl::types::{Name, Objects, ToTyped, Type};
-///
+/// # use pddl::{Name, Objects, ToTyped, Type};
 /// let input = "(:objects train1 train2)";
 /// assert_eq!(parse_problem_objects_declaration(input), Ok(("",
 ///     Objects::new([
@@ -30,6 +29,7 @@ pub fn parse_problem_objects_declaration(input: &str) -> IResult<&str, Objects> 
 impl<'a> crate::parsers::Parser<'a> for Objects<'a> {
     type Item = Objects<'a>;
 
+    /// See [`parse_problem_objects_declaration`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_problem_objects_declaration(input)
     }

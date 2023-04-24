@@ -16,8 +16,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_action_def, parse_da_def};
-/// # use pddl::types::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GoalDefinition, Literal, PEffect, Predicate, Preference, PreferenceGD, PreGD, Term, Variable};
-///
+/// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GoalDefinition, Literal, PEffect, Predicate, Preference, PreferenceGD, PreGD, Term, Variable};
 /// let input = r#"(:durative-action move
 ///         :parameters
 ///             (?r - rover
@@ -96,6 +95,7 @@ pub fn parse_da_def(input: &str) -> IResult<&str, DurativeActionDefinition> {
 impl<'a> crate::parsers::Parser<'a> for DurativeActionDefinition<'a> {
     type Item = DurativeActionDefinition<'a>;
 
+    /// See [`parse_da_def`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_da_def(input)
     }

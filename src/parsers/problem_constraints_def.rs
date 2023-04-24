@@ -10,8 +10,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_problem_constraints_def};
-/// # use pddl::types::{ConGD, ProblemConstraintsDef, PrefConGD};
-///
+/// # use pddl::{ConGD, ProblemConstraintsDef, PrefConGD};
 /// let input = "(:constraints (preference test (and)))";
 /// assert_eq!(parse_problem_constraints_def(input), Ok(("",
 ///     ProblemConstraintsDef::new(
@@ -30,6 +29,7 @@ pub fn parse_problem_constraints_def(input: &str) -> IResult<&str, ProblemConstr
 impl<'a> crate::parsers::Parser<'a> for ProblemConstraintsDef<'a> {
     type Item = ProblemConstraintsDef<'a>;
 
+    /// See [`parse_problem_constraints_def`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_problem_constraints_def(input)
     }

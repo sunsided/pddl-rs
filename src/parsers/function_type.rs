@@ -10,8 +10,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_function_type;
-/// # use pddl::types::{FunctionType};
-/// # use pddl::types::Type;
+/// # use pddl::{FunctionType};
+/// # use pddl::Type;
 /// assert_eq!(parse_function_type("number"), Ok(("", FunctionType::new(Type::Exactly("number".into())))));
 /// assert_eq!(parse_function_type("(either object number)"), Ok(("", FunctionType::new(Type::from_iter(["object", "number"])))));
 ///```
@@ -22,6 +22,7 @@ pub fn parse_function_type(input: &str) -> IResult<&str, FunctionType> {
 impl<'a> crate::parsers::Parser<'a> for FunctionType<'a> {
     type Item = FunctionType<'a>;
 
+    /// See [`parse_function_type`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_function_type(input)
     }

@@ -52,6 +52,7 @@ pub fn parse_digit(input: &str) -> IResult<&str, &str> {
 impl<'a> crate::parsers::Parser<'a> for Number {
     type Item = Number;
 
+    /// See [`parse_number`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_number(input)
     }

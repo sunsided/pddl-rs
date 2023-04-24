@@ -19,6 +19,7 @@ pub fn parse_da_symbol(input: &str) -> IResult<&str, DurativeActionSymbol> {
 impl<'a> crate::parsers::Parser<'a> for DurativeActionSymbol<'a> {
     type Item = DurativeActionSymbol<'a>;
 
+    /// See [`parse_da_symbol`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_da_symbol(input)
     }

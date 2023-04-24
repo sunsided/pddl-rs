@@ -12,7 +12,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_cond_effect;
-/// # use pddl::types::{AtomicFormula, CEffect, ConditionalEffect, EqualityAtomicFormula, PEffect, Term};
+/// # use pddl::{AtomicFormula, CEffect, ConditionalEffect, EqualityAtomicFormula, PEffect, Term};
 /// assert_eq!(parse_cond_effect("(= x y)"), Ok(("",
 ///     ConditionalEffect::Single(
 ///         PEffect::AtomicFormula(AtomicFormula::Equality(
@@ -54,6 +54,7 @@ pub fn parse_cond_effect(input: &str) -> IResult<&str, ConditionalEffect> {
 impl<'a> crate::parsers::Parser<'a> for ConditionalEffect<'a> {
     type Item = ConditionalEffect<'a>;
 
+    /// See [`parse_cond_effect`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_cond_effect(input)
     }

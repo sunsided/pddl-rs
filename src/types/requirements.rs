@@ -8,7 +8,7 @@ use std::ops::Deref;
 ///
 /// ## Example
 /// ```
-/// # use pddl::types::{Requirement, Requirements};
+/// # use pddl::{Requirement, Requirements};
 /// let requirements = Requirements::new([
 ///     Requirement::Adl,
 ///     Requirement::Strips,
@@ -37,7 +37,7 @@ use std::ops::Deref;
 ///
 /// If no requirements are specified, [`Requirements::to_effective`] implicitly adds `:strips`:
 /// ```
-/// # use pddl::types::{Requirement, Requirements};
+/// # use pddl::{Requirement, Requirements};
 /// let requirements = Requirements::default();
 /// assert_eq!(requirements.len(), 0);
 ///

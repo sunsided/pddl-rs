@@ -14,8 +14,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_da_effect;
-/// # use pddl::types::{AtomicFormula, ConditionalEffect, DurativeActionEffect, EqualityAtomicFormula, PEffect, Term, TimedEffect, TimeSpecifier, Variable};
-/// # use pddl::types::{Typed, TypedList};
+/// # use pddl::{AtomicFormula, ConditionalEffect, DurativeActionEffect, EqualityAtomicFormula, PEffect, Term, TimedEffect, TimeSpecifier, Variable};
+/// # use pddl::{Typed, TypedList};
 /// assert_eq!(parse_da_effect("(at start (= x y))"), Ok(("",
 ///     DurativeActionEffect::Timed(
 ///         TimedEffect::new_conditional(
@@ -112,6 +112,7 @@ pub fn parse_da_effect(input: &str) -> IResult<&str, DurativeActionEffect> {
 impl<'a> crate::parsers::Parser<'a> for DurativeActionEffect<'a> {
     type Item = DurativeActionEffect<'a>;
 
+    /// See [`parse_da_effect`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_da_effect(input)
     }

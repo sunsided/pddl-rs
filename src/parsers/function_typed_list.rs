@@ -12,9 +12,8 @@ use nom::IResult;
 /// ```
 /// # use nom::character::complete::alpha1;
 /// # use pddl::parsers::{function_typed_list, parse_atomic_function_skeleton};
-/// # use pddl::types::{AtomicFunctionSkeleton, FunctionSymbol, FunctionTyped, FunctionTypedList, Variable};
-/// # use pddl::types::{Type, Typed, TypedList};
-///
+/// # use pddl::{AtomicFunctionSkeleton, FunctionSymbol, FunctionTyped, FunctionTypedList, Variable};
+/// # use pddl::{Type, Typed, TypedList};
 /// // Single implicitly typed element.
 /// assert_eq!(function_typed_list(parse_atomic_function_skeleton)("(battery-amount ?r - rover)"), Ok(("",
 ///     FunctionTypedList::from_iter([

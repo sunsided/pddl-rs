@@ -14,7 +14,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_f_head;
-/// # use pddl::types::{FunctionTerm, Variable, FunctionSymbol, Term, FHead};
+/// # use pddl::{FunctionTerm, Variable, FunctionSymbol, Term, FHead};
 /// assert_eq!(parse_f_head("fun-sym"), Ok(("",
 ///     FHead::new(FunctionSymbol::from_str("fun-sym"))
 /// )));
@@ -46,6 +46,7 @@ pub fn parse_f_head(input: &str) -> IResult<&str, FHead> {
 impl<'a> crate::parsers::Parser<'a> for FHead<'a> {
     type Item = FHead<'a>;
 
+    /// See [`parse_f_head`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_f_head(input)
     }

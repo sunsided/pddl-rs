@@ -11,7 +11,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_multi_op;
-/// # use pddl::types::{MultiOp};
+/// # use pddl::{MultiOp};
 /// assert_eq!(parse_multi_op("*"), Ok(("", MultiOp::Multiplication)));
 /// assert_eq!(parse_multi_op("+"), Ok(("", MultiOp::Addition)));
 ///```
@@ -25,6 +25,7 @@ pub fn parse_multi_op(input: &str) -> IResult<&str, MultiOp> {
 impl<'a> crate::parsers::Parser<'a> for MultiOp {
     type Item = MultiOp;
 
+    /// See [`parse_multi_op`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_multi_op(input)
     }

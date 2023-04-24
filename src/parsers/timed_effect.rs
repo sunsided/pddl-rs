@@ -17,8 +17,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_timed_effect;
-/// # use pddl::types::{AssignOp, AssignOpT, AtomicFormula, CEffect, ConditionalEffect, EqualityAtomicFormula, FAssignDa, FExpDa, FExpT, FHead, PEffect, Term, TimedEffect, TimeSpecifier};
-/// # use pddl::types::FExpDa::FExp;
+/// # use pddl::{AssignOp, AssignOpT, AtomicFormula, CEffect, ConditionalEffect, EqualityAtomicFormula, FAssignDa, FExpDa, FExpT, FHead, PEffect, Term, TimedEffect, TimeSpecifier};
+/// # use pddl::FExpDa::FExp;
 /// assert_eq!(parse_timed_effect("(at start (= x y))"), Ok(("",
 ///     TimedEffect::new_conditional(
 ///         TimeSpecifier::Start,
@@ -92,6 +92,7 @@ pub fn parse_timed_effect(input: &str) -> IResult<&str, TimedEffect> {
 impl<'a> crate::parsers::Parser<'a> for TimedEffect<'a> {
     type Item = TimedEffect<'a>;
 
+    /// See [`parse_timed_effect`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_timed_effect(input)
     }

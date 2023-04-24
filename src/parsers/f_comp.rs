@@ -13,7 +13,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_f_comp;
-/// # use pddl::types::{FunctionTerm, Variable, FunctionSymbol, Term, FComp, BinaryComp, FExp, BinaryOp};
+/// # use pddl::{FunctionTerm, Variable, FunctionSymbol, Term, FComp, BinaryComp, FExp, BinaryOp};
 /// assert_eq!(parse_f_comp("(= (+ 1.23 2.34) (+ 1.23 2.34))"), Ok(("",
 ///     FComp::new(
 ///         BinaryComp::Equal,
@@ -44,6 +44,7 @@ pub fn parse_f_comp(input: &str) -> IResult<&str, FComp> {
 impl<'a> crate::parsers::Parser<'a> for FComp<'a> {
     type Item = FComp<'a>;
 
+    /// See [`parse_f_comp`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_f_comp(input)
     }

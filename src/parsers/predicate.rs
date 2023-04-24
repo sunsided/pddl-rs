@@ -28,6 +28,7 @@ pub fn parse_predicate(input: &str) -> IResult<&str, Predicate> {
 impl<'a> crate::parsers::Parser<'a> for Predicate<'a> {
     type Item = Predicate<'a>;
 
+    /// See [`parse_predicate`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_predicate(input)
     }

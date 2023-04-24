@@ -12,9 +12,8 @@ use nom::IResult;
 ///
 /// ```
 /// # use pddl::parsers::{parse_structure_def};
-/// # use pddl::types::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GoalDefinition, Literal, PEffect, Predicate, Preference, PreferenceGD, PreGD, StructureDef, Term, Variable};
-/// # use pddl::types::{Name, ToTyped, TypedList};
-///
+/// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GoalDefinition, Literal, PEffect, Predicate, Preference, PreferenceGD, PreGD, StructureDef, Term, Variable};
+/// # use pddl::{Name, ToTyped, TypedList};
 /// let input = r#"(:action take-out
 ///                     :parameters (?x - physob)
 ///                     :precondition (not (= ?x B))
@@ -62,6 +61,7 @@ pub fn parse_structure_def(input: &str) -> IResult<&str, StructureDef> {
 impl<'a> crate::parsers::Parser<'a> for StructureDef<'a> {
     type Item = StructureDef<'a>;
 
+    /// See [`parse_structure_def`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_structure_def(input)
     }

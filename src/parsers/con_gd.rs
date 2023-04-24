@@ -15,7 +15,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_con_gd;
-/// # use pddl::types::{AtomicFormula, Con2GD, ConGD, GoalDefinition, Number, Term, ToTyped, Type, TypedList, Variable};
+/// # use pddl::{AtomicFormula, Con2GD, ConGD, GoalDefinition, Number, Term, ToTyped, Type, TypedList, Variable};
 /// // (= x y)
 /// let gd_a =
 ///     GoalDefinition::new_atomic_formula(
@@ -132,7 +132,7 @@ use nom::IResult;
 ///
 /// ```
 /// # use pddl::parsers::parse_con_gd;
-/// # use pddl::types::{AtomicFormula, Con2GD, ConGD, GoalDefinition, Number, Term};
+/// # use pddl::{AtomicFormula, Con2GD, ConGD, GoalDefinition, Number, Term};
 /// # // (= x y)
 /// # let gd =
 /// #    GoalDefinition::new_atomic_formula(
@@ -268,6 +268,7 @@ fn parse_con2_gd(input: &str) -> IResult<&str, Con2GD> {
 impl<'a> crate::parsers::Parser<'a> for ConGD<'a> {
     type Item = ConGD<'a>;
 
+    /// See [`parse_con_gd`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_con_gd(input)
     }
@@ -276,6 +277,7 @@ impl<'a> crate::parsers::Parser<'a> for ConGD<'a> {
 impl<'a> crate::parsers::Parser<'a> for Con2GD<'a> {
     type Item = Con2GD<'a>;
 
+    /// See [`parse_con2_gd`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_con2_gd(input)
     }

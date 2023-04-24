@@ -11,7 +11,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_binary_op;
-/// # use pddl::types::{BinaryOp};
+/// # use pddl::{BinaryOp};
 /// assert_eq!(parse_binary_op("*"), Ok(("", BinaryOp::Multiplication)));
 /// assert_eq!(parse_binary_op("+"), Ok(("", BinaryOp::Addition)));
 /// assert_eq!(parse_binary_op("-"), Ok(("", BinaryOp::Subtraction)));
@@ -32,6 +32,7 @@ pub fn parse_binary_op(input: &str) -> IResult<&str, BinaryOp> {
 impl<'a> crate::parsers::Parser<'a> for BinaryOp {
     type Item = BinaryOp;
 
+    /// See [`parse_binary_op`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_binary_op(input)
     }

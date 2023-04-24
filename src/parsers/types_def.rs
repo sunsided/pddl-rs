@@ -10,9 +10,8 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_types_def;
-/// # use pddl::types::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions};
-/// # use pddl::types::{Name, Type, Typed, TypedList, Types};
-///
+/// # use pddl::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions};
+/// # use pddl::{Name, Type, Typed, TypedList, Types};
 /// let input = "(:types location physob)";
 /// assert_eq!(parse_types_def(input), Ok(("",
 ///     Types::new(TypedList::from_iter([
@@ -30,6 +29,7 @@ pub fn parse_types_def(input: &str) -> IResult<&str, Types> {
 impl<'a> crate::parsers::Parser<'a> for Types<'a> {
     type Item = Types<'a>;
 
+    /// See [`parse_types_def`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_types_def(input)
     }

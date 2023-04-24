@@ -18,8 +18,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_action_def, parse_problem};
-/// # use pddl::types::{Name, PreGD};
-///
+/// # use pddl::{Name, PreGD};
 /// let input = r#"(define (problem get-paid)
 ///         (:domain briefcase-world)
 ///         (:init (place home) (place office)
@@ -75,6 +74,7 @@ pub fn parse_problem(input: &str) -> IResult<&str, Problem> {
 impl<'a> crate::parsers::Parser<'a> for Problem<'a> {
     type Item = Problem<'a>;
 
+    /// See [`parse_problem`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_problem(input)
     }

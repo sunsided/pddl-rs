@@ -11,7 +11,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_d_op;
-/// # use pddl::types::{DOp};
+/// # use pddl::{DOp};
 /// assert_eq!(parse_d_op("<="), Ok(("", DOp::LessThanOrEqual)));
 /// assert_eq!(parse_d_op(">="), Ok(("", DOp::GreaterOrEqual)));
 /// assert_eq!(parse_d_op("="), Ok(("", DOp::Equal)));
@@ -31,6 +31,7 @@ pub fn parse_d_op(input: &str) -> IResult<&str, DOp> {
 impl<'a> crate::parsers::Parser<'a> for DOp {
     type Item = DOp;
 
+    /// See [`parse_d_op`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_d_op(input)
     }

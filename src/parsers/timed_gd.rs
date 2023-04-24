@@ -14,8 +14,7 @@ use nom::IResult;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::{parse_timed_gd};
-/// # use pddl::types::{AtomicFormula, GoalDefinition, Interval, Term, TimedGD, TimeSpecifier};
-///
+/// # use pddl::{AtomicFormula, GoalDefinition, Interval, Term, TimedGD, TimeSpecifier};
 /// assert_eq!(parse_timed_gd("(at start (= x y))"), Ok(("",
 ///     TimedGD::new_at(
 ///         TimeSpecifier::Start,
@@ -65,6 +64,7 @@ pub fn parse_timed_gd(input: &str) -> IResult<&str, TimedGD> {
 impl<'a> crate::parsers::Parser<'a> for TimedGD<'a> {
     type Item = TimedGD<'a>;
 
+    /// See [`parse_timed_gd`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_timed_gd(input)
     }

@@ -12,7 +12,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_basic_function_term;
-/// # use pddl::types::{BasicFunctionTerm, Term};
+/// # use pddl::{BasicFunctionTerm, Term};
 /// assert_eq!(parse_basic_function_term("abcde"), Ok(("",
 ///     BasicFunctionTerm::new("abcde".into(), [])
 /// )));
@@ -40,6 +40,7 @@ pub fn parse_basic_function_term(input: &str) -> IResult<&str, BasicFunctionTerm
 impl<'a> crate::parsers::Parser<'a> for BasicFunctionTerm<'a> {
     type Item = BasicFunctionTerm<'a>;
 
+    /// See [`parse_basic_function_term`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_basic_function_term(input)
     }

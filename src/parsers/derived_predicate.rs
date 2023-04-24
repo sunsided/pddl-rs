@@ -13,8 +13,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_derived_predicate;
-/// # use pddl::types::GoalDefinition;
-///
+/// # use pddl::GoalDefinition;
 /// let input = r#"(:derived (train-usable ?t - train)
 ///                     (and
 ///                         (train-has-guard ?t)
@@ -42,6 +41,7 @@ pub fn parse_derived_predicate(input: &str) -> IResult<&str, DerivedPredicate> {
 impl<'a> crate::parsers::Parser<'a> for DerivedPredicate<'a> {
     type Item = DerivedPredicate<'a>;
 
+    /// See [`parse_derived_predicate`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_derived_predicate(input)
     }

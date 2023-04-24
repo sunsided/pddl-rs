@@ -14,9 +14,7 @@ use nom::IResult;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::{parse_pre_gd};
-/// # use pddl::types::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Preference, PreferenceName, PreferenceGD, PreGD, Term, Variable};
-/// use pddl::types::{Type, Typed, TypedList};
-///
+/// # use pddl::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Preference, PreferenceName, PreferenceGD, PreGD, Term, Variable, Type, Typed, TypedList};
 /// assert_eq!(parse_pre_gd("(= x y)"), Ok(("",
 ///     PreGD::Preference(
 ///         PreferenceGD::Goal(
@@ -93,6 +91,7 @@ pub fn parse_pre_gd(input: &str) -> IResult<&str, PreGD> {
 impl<'a> crate::parsers::Parser<'a> for PreGD<'a> {
     type Item = PreGD<'a>;
 
+    /// See [`parse_pre_gd`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {
         parse_pre_gd(input)
     }
