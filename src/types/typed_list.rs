@@ -93,7 +93,7 @@ where
         for item in self.iter().rev() {
             // The `object` type is the default (for non-fluents) but can only
             // be omitted if it is the last type displayed.
-            if !type_required && item.type_name().eq(&Type::OBJECT) {
+            if !type_required && item.type_().eq(&Type::OBJECT) {
                 stack.push(format!("{}", item.value()));
                 continue;
             }
@@ -104,11 +104,11 @@ where
             // If the type is identical to the one of the previous iteration,
             // it was already stated (since we are iterating backwards).
             // Therefore, we can skip it.
-            if last_type.eq(item.type_name()) {
+            if last_type.eq(item.type_()) {
                 stack.push(format!("{}", item.value()))
             } else {
-                stack.push(format!("{} - {}", item.value(), item.type_name()));
-                last_type = item.type_name();
+                stack.push(format!("{} - {}", item.value(), item.type_()));
+                last_type = item.type_();
             }
         }
 
@@ -187,9 +187,9 @@ mod tests {
     #[test]
     fn object_at_start() {
         let name = TypedList::from_iter([
-            Variable::new("x").to_typed(Type::OBJECT),
-            Variable::new("y").to_typed(Type::OBJECT),
-            Variable::new("z").to_typed(Type::new_exactly("letter")),
+            Variable::from("x").to_typed(Type::OBJECT),
+            Variable::from("y").to_typed(Type::OBJECT),
+            Variable::from("z").to_typed(Type::new_exactly("letter")),
         ]);
         assert_eq!(format!("{name}"), "?x ?y - object ?z - letter");
     }

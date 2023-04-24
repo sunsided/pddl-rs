@@ -35,13 +35,13 @@ mod tests {
 
     #[test]
     fn variable_works() {
-        let x = Variable::new("var");
+        let x = Variable::from("var");
         assert_eq!(prettify!(x, 10), "?var");
     }
 
     #[test]
     fn function_symbol_works() {
-        let x = FunctionSymbol::new("fun-sym");
+        let x = FunctionSymbol::from("fun-sym");
         assert_eq!(prettify!(x, 10), "fun-sym");
     }
 }

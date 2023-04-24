@@ -36,7 +36,7 @@ mod tests {
 
     #[test]
     fn primitive_type_works() {
-        let x = PrimitiveType::new("pt");
+        let x = PrimitiveType::from("pt");
         assert_eq!(prettify!(x, 10), "pt");
     }
 
