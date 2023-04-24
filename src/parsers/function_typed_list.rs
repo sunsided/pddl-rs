@@ -6,7 +6,7 @@ use nom::multi::many0;
 use nom::sequence::{preceded, tuple};
 use nom::IResult;
 
-/// Parser combinator that parses a typed list, i.e. `x* | x⁺ - <type> <typed-list (x)>.
+/// Parses a typed list, i.e. `x* | x⁺ - <type> <typed-list (x)>.
 ///
 /// ## Example
 /// ```

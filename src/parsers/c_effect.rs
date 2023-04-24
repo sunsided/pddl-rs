@@ -17,7 +17,7 @@ use nom::IResult;
 /// # use pddl::types::{AtomicFormula, CEffect, Effect, EqualityAtomicFormula, PEffect, Term, Variable};
 /// # use pddl::types::{Typed, TypedList};
 /// assert_eq!(parse_c_effect("(= x y)"), Ok(("",
-///     CEffect::PEffect(
+///     CEffect::Effect(
 ///         PEffect::AtomicFormula(AtomicFormula::Equality(
 ///             EqualityAtomicFormula::new(
 ///                 Term::Name("x".into()),
@@ -27,7 +27,7 @@ use nom::IResult;
 ///     )
 /// )));
 /// assert_eq!(parse_c_effect("(not (= ?a B))"), Ok(("",
-///     CEffect::PEffect(
+///     CEffect::Effect(
 ///         PEffect::NotAtomicFormula(AtomicFormula::Equality(
 ///             EqualityAtomicFormula::new(
 ///                 Term::Variable("a".into()),
@@ -43,7 +43,7 @@ use nom::IResult;
 ///             Typed::new_object(Variable::from_str("a")),
 ///             Typed::new_object(Variable::from_str("b")),
 ///         ]),
-///         Effect::new(CEffect::PEffect(
+///         Effect::new(CEffect::Effect(
 ///             PEffect::AtomicFormula(AtomicFormula::Equality(
 ///                 EqualityAtomicFormula::new(
 ///                     Term::Variable("a".into()),

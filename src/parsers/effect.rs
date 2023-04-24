@@ -7,7 +7,7 @@ use nom::branch::alt;
 use nom::combinator::map;
 use nom::IResult;
 
-/// Parser combinator that parses effects.
+/// Parser for effects.
 ///
 /// ## Example
 /// ```
@@ -15,7 +15,7 @@ use nom::IResult;
 /// # use pddl::types::{AtomicFormula, CEffect, Effect, EqualityAtomicFormula, PEffect, Term};
 /// assert_eq!(parse_effect("(= x y)"), Ok(("",
 ///     Effect::Single(
-///         CEffect::PEffect(
+///         CEffect::Effect(
 ///             PEffect::AtomicFormula(AtomicFormula::Equality(
 ///                 EqualityAtomicFormula::new(
 ///                     Term::Name("x".into()),
@@ -27,7 +27,7 @@ use nom::IResult;
 /// )));
 /// assert_eq!(parse_effect("(and (= x y) (not (= ?a B)))"), Ok(("",
 ///     Effect::All(vec![
-///         CEffect::PEffect(
+///         CEffect::Effect(
 ///             PEffect::AtomicFormula(AtomicFormula::Equality(
 ///                 EqualityAtomicFormula::new(
 ///                     Term::Name("x".into()),
@@ -35,7 +35,7 @@ use nom::IResult;
 ///                 )
 ///             )
 ///         ),
-///         CEffect::PEffect(
+///         CEffect::Effect(
 ///             PEffect::NotAtomicFormula(AtomicFormula::Equality(
 ///                 EqualityAtomicFormula::new(
 ///                     Term::Variable("a".into()),

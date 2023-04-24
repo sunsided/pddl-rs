@@ -7,7 +7,7 @@ use nom::branch::alt;
 use nom::combinator::map;
 use nom::IResult;
 
-/// Parser combinator that parses conditional effects.
+/// Parses conditional effects.
 ///
 /// ## Example
 /// ```

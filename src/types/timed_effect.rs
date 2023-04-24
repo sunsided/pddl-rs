@@ -18,7 +18,7 @@ use crate::types::{AssignOpT, ConditionalEffect, FAssignDa, FExpT, FHead, TimeSp
 /// the end using `at end`.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TimedEffect<'a> {
-    ConditionalEffect(TimeSpecifier, ConditionalEffect<'a>),
+    Conditional(TimeSpecifier, ConditionalEffect<'a>),
     /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
     NumericFluent(TimeSpecifier, FAssignDa<'a>),
     /// Requires [ContinuousEffects](crate::types::Requirement::ContinuousEffects) and
@@ -28,7 +28,7 @@ pub enum TimedEffect<'a> {
 
 impl<'a> TimedEffect<'a> {
     pub const fn new_conditional(at: TimeSpecifier, effect: ConditionalEffect<'a>) -> Self {
-        Self::ConditionalEffect(at, effect)
+        Self::Conditional(at, effect)
     }
 
     pub const fn new_fluent(at: TimeSpecifier, action: FAssignDa<'a>) -> Self {
@@ -46,7 +46,7 @@ impl<'a> TimedEffect<'a> {
 
 impl<'a> From<(TimeSpecifier, ConditionalEffect<'a>)> for TimedEffect<'a> {
     fn from(value: (TimeSpecifier, ConditionalEffect<'a>)) -> Self {
-        TimedEffect::ConditionalEffect(value.0, value.1)
+        TimedEffect::Conditional(value.0, value.1)
     }
 }
 
