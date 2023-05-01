@@ -1,6 +1,7 @@
 //! Contains variables.
 
 use crate::types::{Name, PrimitiveType, ToTyped, Type, Typed};
+use std::fmt::{Display, Formatter};
 use std::ops::Deref;
 
 /// A variable name.
@@ -66,5 +67,22 @@ impl<'a> Deref for Variable<'a> {
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl<'a> Display for Variable<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "?{}", self.0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        let var = Variable::from_str("x");
+        assert_eq!(format!("{var}"), "?x");
     }
 }
