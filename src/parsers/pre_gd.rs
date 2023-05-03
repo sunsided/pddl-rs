@@ -2,7 +2,7 @@
 
 use crate::parsers::{parens, prefix_expr, space_separated_list0, typed_list};
 use crate::parsers::{parse_pref_gd, parse_variable};
-use crate::types::PreGD;
+use crate::types::PreconditionGoalDefinition;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
@@ -14,9 +14,9 @@ use nom::IResult;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::{parse_pre_gd};
-/// # use pddl::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Preference, PreferenceName, PreferenceGD, PreGD, Term, Variable, Type, Typed, TypedList};
+/// # use pddl::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Preference, PreferenceName, PreferenceGD, PreconditionGoalDefinition, Term, Variable, Type, Typed, TypedList};
 /// assert_eq!(parse_pre_gd("(= x y)"), Ok(("",
-///     PreGD::Preference(
+///     PreconditionGoalDefinition::Preference(
 ///         PreferenceGD::Goal(
 ///             GoalDefinition::AtomicFormula(
 ///                 AtomicFormula::new_equality(
@@ -29,8 +29,8 @@ use nom::IResult;
 /// )));
 ///
 /// assert_eq!(parse_pre_gd("(and (= x y) (= a b))"), Ok(("",
-///     PreGD::new_and([
-///         PreGD::Preference(PreferenceGD::Goal(
+///     PreconditionGoalDefinition::new_and([
+///         PreconditionGoalDefinition::Preference(PreferenceGD::Goal(
 ///             GoalDefinition::AtomicFormula(
 ///                 AtomicFormula::new_equality(
 ///                     Term::Name("x".into()),
@@ -38,7 +38,7 @@ use nom::IResult;
 ///                 )
 ///             )
 ///         )),
-///         PreGD::Preference(PreferenceGD::Goal(
+///         PreconditionGoalDefinition::Preference(PreferenceGD::Goal(
 ///             GoalDefinition::AtomicFormula(
 ///                 AtomicFormula::new_equality(
 ///                     Term::Name("a".into()),
@@ -50,12 +50,12 @@ use nom::IResult;
 /// )));
 ///
 /// assert_eq!(parse_pre_gd("(forall (?a ?b) (= a b))"), Ok(("",
-///     PreGD::new_forall(
+///     PreconditionGoalDefinition::new_forall(
 ///         TypedList::from_iter([
 ///             Typed::new(Variable::from_str("a"), Type::OBJECT),
 ///             Typed::new(Variable::from_str("b"), Type::OBJECT),
 ///         ]),
-///         PreGD::Preference(PreferenceGD::Goal(
+///         PreconditionGoalDefinition::Preference(PreferenceGD::Goal(
 ///             GoalDefinition::AtomicFormula(
 ///                 AtomicFormula::new_equality(
 ///                     Term::Name("a".into()),
@@ -66,11 +66,11 @@ use nom::IResult;
 ///     )
 /// )));
 /// ```
-pub fn parse_pre_gd(input: &str) -> IResult<&str, PreGD> {
-    let pref_gd = map(parse_pref_gd, PreGD::new_preference);
+pub fn parse_pre_gd(input: &str) -> IResult<&str, PreconditionGoalDefinition> {
+    let pref_gd = map(parse_pref_gd, PreconditionGoalDefinition::new_preference);
     let and = map(
         prefix_expr("and", space_separated_list0(parse_pre_gd)),
-        PreGD::new_and,
+        PreconditionGoalDefinition::new_and,
     );
 
     // :universal-preconditions
@@ -82,14 +82,14 @@ pub fn parse_pre_gd(input: &str) -> IResult<&str, PreGD> {
                 preceded(multispace1, parse_pre_gd),
             )),
         ),
-        |(vars, gd)| PreGD::new_forall(vars, gd),
+        |(vars, gd)| PreconditionGoalDefinition::new_forall(vars, gd),
     );
 
     alt((forall, and, pref_gd))(input)
 }
 
-impl<'a> crate::parsers::Parser<'a> for PreGD<'a> {
-    type Item = PreGD<'a>;
+impl<'a> crate::parsers::Parser<'a> for PreconditionGoalDefinition<'a> {
+    type Item = PreconditionGoalDefinition<'a>;
 
     /// See [`parse_pre_gd`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {

@@ -12,6 +12,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   In all these cases, the `(and ...)` representation allows for a cardinality of
   zero, one or many, which makes `x` and `(and x)` identical.
 
+### Changelog
+
+- The `PreGD` type was renamed to `PreconditionGoalDefinition`.
+
 ## [0.0.3] - 2023-05-03
 
 ### Internal

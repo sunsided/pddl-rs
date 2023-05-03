@@ -18,7 +18,7 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_action_def, parse_problem};
-/// # use pddl::{Name, PreGD};
+/// # use pddl::{Name, PreconditionGoalDefinition};
 /// let input = r#"(define (problem get-paid)
 ///         (:domain briefcase-world)
 ///         (:init (place home) (place office)
@@ -34,7 +34,7 @@ use nom::IResult;
 /// assert_eq!(problem.domain(), &Name::new("briefcase-world"));
 /// assert!(problem.requirements().is_empty());
 /// assert_eq!(problem.init().len(), 9);
-/// assert!(matches! { problem.goal(), PreGD::And(_) });
+/// assert!(matches! { problem.goal(), PreconditionGoalDefinition::And(_) });
 /// ```
 pub fn parse_problem(input: &str) -> IResult<&str, Problem> {
     map(
