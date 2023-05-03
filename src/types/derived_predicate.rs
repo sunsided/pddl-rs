@@ -3,6 +3,9 @@
 use crate::types::{AtomicFormulaSkeleton, GoalDefinition};
 
 /// A derived predicate.
+///
+/// ## Usage
+/// Used by [`StructureDef`](crate::StructureDef).
 #[derive(Debug, Clone, PartialEq)]
 pub struct DerivedPredicate<'a>(AtomicFormulaSkeleton<'a>, GoalDefinition<'a>);
 

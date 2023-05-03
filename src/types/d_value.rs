@@ -3,11 +3,15 @@
 use crate::types::{FExp, Number};
 
 /// A duration value, either a [Number] or an [FExp](FExp).
+///
+/// ## Usage
+/// Used by [`SimpleDurationConstraint`](crate::SimpleDurationConstraint).
 #[derive(Debug, Clone, PartialEq)]
 pub enum DurationValue<'a> {
     /// A numerical value.
     Number(Number),
     /// A function expression that produces the duration value.
+    /// ## Requirements
     /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
     FExp(FExp<'a>),
 }

@@ -4,6 +4,9 @@ use crate::types::PreGD;
 use std::ops::Deref;
 
 /// A problem goal definition; wraps a [`PreGD`].
+///
+/// ## Usage
+/// Used by [`Problem`](crate::Problem).
 #[derive(Debug, Clone, PartialEq)]
 pub struct GoalDef<'a>(PreGD<'a>);
 

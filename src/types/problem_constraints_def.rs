@@ -4,6 +4,8 @@ use crate::types::PrefConGD;
 use std::ops::Deref;
 
 /// A problem constraints definition; wraps a [`PrefConGD`].
+///
+/// ## Requirements
 /// Requires [Constraints](crate::types::Requirement::Constraints).
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct ProblemConstraintsDef<'a>(PrefConGD<'a>);

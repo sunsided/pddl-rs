@@ -4,6 +4,15 @@ use crate::types::{PrimitiveType, Type};
 use std::ops::Deref;
 
 /// A function type.
+///
+/// ## Requirements
+/// Requires [Fluents](crate::Requirement::Fluents), as well as either
+/// [NumericFluents](crate::Requirement::NumericFluents) for the default `number` type, or
+/// [ObjectFluents](crate::Requirement::ObjectFluents) and [Typing](crate::Requirement::Typing)
+/// for an arbitrary type.
+///
+/// ## Usage
+/// Used by [`FunctionTyped`](crate::FunctionTyped) in [`FunctionTypedList`](crate::FunctionTypedList).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FunctionType<'a>(Type<'a>);
 

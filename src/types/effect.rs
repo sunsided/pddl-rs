@@ -3,10 +3,13 @@
 use crate::types::CEffect;
 
 /// An effect. Occurs e.g. in a [`ActionDefinition`](crate::types::ActionDefinition).
+///
+/// ## Usage
+/// Used by [`ActionDefinition`](crate::ActionDefinition) and [`CEffect`].
 #[derive(Debug, Clone, PartialEq)]
 pub enum Effect<'a> {
     /// Exactly the specified effect applies.
-    Single(CEffect<'a>),
+    Single(CEffect<'a>), // TODO: Unify with `All` variant; this is just a single-element vector and according to spec, this vector may be empty.
     /// Conjunction: All effects apply (i.e. a and b and c ..).
     All(Vec<CEffect<'a>>),
 }

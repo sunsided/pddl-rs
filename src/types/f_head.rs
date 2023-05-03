@@ -3,9 +3,16 @@
 use crate::types::{FunctionSymbol, Term};
 
 /// A function declaration.
+///
+/// ## Requirements
+/// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
+///
+/// ## Usage
+/// Used by [`FExp`](crate::FExp), [`PEffect`](crate::PEffect), [`TimedEffect`](crate::TimedEffect)
+/// and [`FAssignDa`](crate::FAssignDa).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum FHead<'a> {
-    Simple(FunctionSymbol<'a>),
+    Simple(FunctionSymbol<'a>), // TODO: Unify with `WithTerms`?
     WithTerms(FunctionSymbol<'a>, Vec<Term<'a>>),
 }
 

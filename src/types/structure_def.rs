@@ -3,11 +3,16 @@
 use crate::types::{ActionDefinition, DerivedPredicate, DurativeActionDefinition};
 
 /// A domain structure definition.
+///
+/// ## Usage
+/// Used by [`StructureDefs`](crate::StructureDefs) in [`Domain`](crate::Domain).
 #[derive(Debug, Clone, PartialEq)]
 pub enum StructureDef<'a> {
     Action(ActionDefinition<'a>),
+    /// ## Requirements
     /// Requires [DurativeActions](crate::types::Requirement::DurativeActions).
     DurativeAction(DurativeActionDefinition<'a>),
+    /// ## Requirements
     /// Requires [DerivedPredicates](crate::types::Requirement::DerivedPredicates).
     Derived(DerivedPredicate<'a>),
 }

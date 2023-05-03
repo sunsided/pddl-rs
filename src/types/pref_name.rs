@@ -4,6 +4,10 @@ use crate::types::Name;
 use std::ops::Deref;
 
 /// A name of a preference.
+///
+/// ## Usage
+/// Used by [`PrefGD`](crate::PreferenceGD), [`PrefTimedGD`](crate::PrefTimedGD),
+/// [`PrefConGD`](crate::PrefConGD) and [`MetricFExp`](crate::MetricFExp).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct PreferenceName<'a>(Name<'a>);
 

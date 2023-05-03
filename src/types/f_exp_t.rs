@@ -4,7 +4,12 @@ use crate::types::FExp;
 
 /// An f-exp-t.
 ///
-/// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
+/// ## Requirements
+/// Requires [ContinuousEffects](crate::types::Requirement::ContinuousEffects) and
+/// [NumericFluents](crate::types::Requirement::NumericFluents).
+///
+/// ## Usage
+/// Used by [`TimedEffect`](crate::TimedEffect).
 #[derive(Debug, Clone, PartialEq)]
 pub enum FExpT<'a> {
     Now,

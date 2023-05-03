@@ -3,6 +3,12 @@
 use crate::types::{BinaryOp, FunctionSymbol, MultiOp, Name, Number, PreferenceName};
 
 /// A metric function expression.
+///
+/// ## Requirements
+/// Requires [NumericFluents](crate::Requirement::NumericFluents).
+///
+/// ## Usage
+/// Used by [`MetricSpec`](crate::MetricSpec).
 #[derive(Debug, Clone, PartialEq)]
 pub enum MetricFExp<'a> {
     BinaryOp(BinaryOp, Box<Self>, Box<Self>),
@@ -11,6 +17,7 @@ pub enum MetricFExp<'a> {
     Number(Number),
     Function(FunctionSymbol<'a>, Vec<Name<'a>>),
     TotalTime,
+    /// ## Requirements
     /// Requires [Preferences](crate::types::Requirement::Preferences).
     IsViolated(PreferenceName<'a>),
 }

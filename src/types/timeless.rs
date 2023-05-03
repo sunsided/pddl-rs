@@ -4,6 +4,16 @@ use crate::types::NameLiteral;
 use std::ops::Deref;
 
 /// A timeless predicate.
+///
+/// A timeless predicate is a predicate which is always true and cannot be changed by any action
+/// in the domain. Under the “closed world” assumption, anything not specified as true
+/// is considered false and timeless predicates are one possibility of addressing this.
+///
+/// ## PDDL Version
+/// This is a PDDL 1.2 construct. It was removed in later versions of PDDL.
+///
+/// ## Usage
+/// Used by [`Domain`](crate::Domain).
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
 pub struct Timeless<'a>(Vec<NameLiteral<'a>>);
 

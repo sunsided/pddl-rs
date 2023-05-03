@@ -3,6 +3,10 @@
 //! This crates provides a PDDL 3.1 parser implementation based on [nom](https://crates.io/crates/nom).
 //!
 //! ## Example
+//!
+//! The two core types of a PDDL are [`Domain`] and [`Problem`]. This example shows how to
+//! parse them:
+//!
 //! ```
 //! use pddl::{Parser, Domain, Problem};
 //!

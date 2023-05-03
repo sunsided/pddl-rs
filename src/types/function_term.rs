@@ -4,6 +4,12 @@ use crate::types::term::Term;
 use crate::types::FunctionSymbol;
 
 /// A function term.
+///
+/// ## Requirements
+/// Requires [ObjectFluents](crate::Requirement::ObjectFluents).
+///
+/// ## Usage
+/// Used by [`Term`], and [`PEffect`](crate::PEffect).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FunctionTerm<'a>(FunctionSymbol<'a>, Vec<Term<'a>>);
 

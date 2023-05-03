@@ -15,6 +15,15 @@ use std::ops::Deref;
 /// assert_eq!(tl[0].value(), &Name::from("location"));
 /// assert_eq!(tl[1].value(), &Name::from("physob"));
 /// ```
+///
+/// ## Usage
+/// Used by [`Types`](crate::Types) and [`Constants`](crate::Constants) in [`Domain`](crate::Domain),
+/// [`AtomicFormulaSkeleton`](crate::AtomicFormulaSkeleton), [`AtomicFunctionSkeleton`](crate::AtomicFunctionSkeleton),
+/// [`ActionDefinition`](crate::ActionDefinition), [`PreGD`](crate::PreGD),
+/// [`GoalDefinition`](crate::GoalDefinition), [`CEffect`](crate::CEffect),
+/// [`DurativeActionDefinition`](crate::DurativeActionDefinition), [`DurativeActionEffect`](crate::DurativeActionEffect),
+/// [`Objects`](crate::Objects) in [`Problem`](crate::Problem), [`PrefConGD`](crate::PrefConGD) and
+/// [`ConGD`](crate::ConGD).
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
 pub struct TypedList<'a, T>(Vec<Typed<'a, T>>);
 

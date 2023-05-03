@@ -4,12 +4,17 @@ use crate::types::{AssignOp, AtomicFormula, FExp, FHead, FunctionTerm, Term};
 
 /// A p-effect. Occurs as part of a [`CEffect`](crate::types::CEffect) (within an [`Effect`](crate::types::Effect))
 /// or a [`ConditionalEffect`](crate::types::ConditionalEffect).
+///
+/// ## Usage
+/// Used by [`CEffect`](crate::CEffect) and [`ConditionalEffect`](crate::ConditionalEffect).
 #[derive(Debug, Clone, PartialEq)]
 pub enum PEffect<'a> {
     AtomicFormula(AtomicFormula<'a, Term<'a>>),
     NotAtomicFormula(AtomicFormula<'a, Term<'a>>),
+    /// ## Requirements
     /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
     AssignNumericFluent(AssignOp, FHead<'a>, FExp<'a>),
+    /// ## Requirements
     /// Requires [ObjectFluents](crate::types::Requirement::ObjectFluents).
     AssignObjectFluent(FunctionTerm<'a>, Option<Term<'a>>),
 }

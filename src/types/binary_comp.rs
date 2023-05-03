@@ -3,6 +3,9 @@
 use std::fmt::{Display, Formatter};
 
 /// A binary comparison operation.
+///
+/// ## Usage
+/// Used by [`FComp`](crate::FComp).
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum BinaryComp {
     GreaterThan,

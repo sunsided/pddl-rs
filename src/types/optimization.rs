@@ -3,6 +3,12 @@
 use std::fmt::{Display, Formatter};
 
 /// An optimization instruction.
+///
+/// ## Requirements
+/// Requires [NumericFluents](crate::Requirement::NumericFluents).
+///
+/// ## Usage
+/// Used by [`MetricSpec`](crate::MetricSpec).
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Optimization {
     /// The associated metric should be minimized.

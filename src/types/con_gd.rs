@@ -2,6 +2,8 @@
 
 use crate::types::{GoalDefinition, Number, TypedVariables};
 
+/// ## Usage
+/// Used by [`ConGD`](ConGD) itself, as well as [`PrefConGD`](crate::types::PrefConGD) and [`Con2GD`](Con2GD).
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConGD<'a> {
     And(Vec<ConGD<'a>>),
@@ -25,6 +27,9 @@ impl<'a> Default for ConGD<'a> {
 }
 
 /// A type that represents either a [`GoalDefinition`] or an embedded [`ConGD`].
+///
+/// ## Usage
+/// Used by [`ConGD`](ConGD).
 #[derive(Debug, Clone, PartialEq)]
 pub enum Con2GD<'a> {
     Goal(GoalDefinition<'a>),

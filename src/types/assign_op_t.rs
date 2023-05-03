@@ -3,6 +3,9 @@
 use std::fmt::{Display, Formatter};
 
 /// An assignment operation.
+///
+/// ## Usage
+/// Used by [`TimedEffect`](crate::TimedEffect).
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum AssignOpT {
     Increase,

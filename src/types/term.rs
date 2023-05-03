@@ -3,6 +3,10 @@ use crate::types::Name;
 use crate::types::Variable;
 
 /// A term, i.e. a [`Name`], [`Variable`] or [`FunctionTerm`].
+///
+/// ## Usage
+/// Used by [`GoalDefinition`](crate::GoalDefinition), [`FunctionTerm`](FunctionTerm),
+/// [`FHead`](crate::FHead), [`PEffect`](crate::PEffect) and [`InitElement`](crate::InitElement).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Term<'a> {
     Name(Name<'a>),

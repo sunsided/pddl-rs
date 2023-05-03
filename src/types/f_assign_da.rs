@@ -2,7 +2,15 @@
 
 use crate::types::{AssignOp, FExpDa, FHead};
 
-/// An f-assign-da.
+/// An timed effect assignment operation. Will perform the
+/// specified assignment `at` [`TimeSpecifier`](crate::TimeSpecifier) when
+/// [`NumericFluents`](crate::Requirement::NumericFluents) is allowed.
+///
+/// ## Requirements
+/// Requires [`NumericFluents`](crate::Requirement::NumericFluents).
+///
+/// ## Usage
+/// Used by [`TimedEffect`](crate::TimedEffect).
 #[derive(Debug, Clone, PartialEq)]
 pub struct FAssignDa<'a>(AssignOp, FHead<'a>, FExpDa<'a>);
 

@@ -5,6 +5,12 @@ use crate::types::Type;
 use std::ops::Deref;
 
 /// A typed function element.
+///
+/// ## Requirements
+/// Requires [Fluents](crate::Requirement::Fluents), as well as the same requirements as [`FunctionType`].
+///
+/// ## Usage
+/// Used by [`FunctionTypedList`](crate::FunctionTypedList).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FunctionTyped<'a, O>(O, FunctionType<'a>);
 

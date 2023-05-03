@@ -24,6 +24,10 @@ type UnderlyingType = f32;
 /// assert!(Number::try_new(f32::NAN).is_err());
 /// assert!(panic::catch_unwind(|| Number::from(f32::NAN)).is_err());
 /// ```
+///
+/// ## Usage
+/// Used by [`InitElement`](crate::InitElement), [`ConGD`](crate::ConGD),
+/// [`MetricFExp`](crate::MetricFExp) and [`DurationValue`](crate::DurationValue).
 #[derive(Debug, Copy, Clone, Default)]
 pub struct Number(UnderlyingType);
 

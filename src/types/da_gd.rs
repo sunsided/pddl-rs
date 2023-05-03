@@ -4,10 +4,15 @@ use crate::types::PrefTimedGD;
 use crate::types::TypedVariables;
 
 /// A durative action goal definition.
+///
+/// ## Usage
+/// Used by [`DurativeActionGoalDefinition`] itself, as well as [`DurativeActionDefinition`](crate::DurativeActionDefinition) and
+/// [`DurativeActionEffect`](crate::DurativeActionEffect).
 #[derive(Debug, Clone, PartialEq)]
 pub enum DurativeActionGoalDefinition<'a> {
     Timed(PrefTimedGD<'a>),
     And(Vec<DurativeActionGoalDefinition<'a>>),
+    /// ## Requirements
     /// Requires [UniversalPreconditions](crate::types::Requirement::UniversalPreconditions).
     Forall(TypedVariables<'a>, Box<DurativeActionGoalDefinition<'a>>),
 }

@@ -5,6 +5,9 @@ use std::fmt::{Display, Formatter};
 
 /// Domain requirements.
 ///
+/// ## Usage
+/// Used by [`Requirements`](crate::Requirements).
+///
 /// ## Notes
 /// Some requirements imply others; some are abbreviations for common sets
 /// of requirements. If a domain stipulates no requirements, it is assumed

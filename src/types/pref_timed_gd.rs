@@ -3,9 +3,13 @@
 use crate::types::{PreferenceName, TimedGD};
 
 /// A (preferred) timed goal definition.
+///
+/// ## Usage
+/// Used by [`DurativeActionGoalDefinition`](crate::DurativeActionGoalDefinition).
 #[derive(Debug, Clone, PartialEq)]
 pub enum PrefTimedGD<'a> {
     Required(TimedGD<'a>),
+    /// ## Requirements
     /// Requires [Preferences](crate::types::Requirement::Preferences).
     Preference(Option<PreferenceName<'a>>, TimedGD<'a>),
 }

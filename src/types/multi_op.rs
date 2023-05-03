@@ -3,6 +3,10 @@
 use std::fmt::{Display, Formatter};
 
 /// An operation with multiple operands.
+///
+/// ## Usage
+/// Used by [`MetricFExp`](crate::MetricFExp) and [`FExpDa`](crate::FExpDa).
+/// Implicitly used by [`BinaryOp`](crate::BinaryOp).
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum MultiOp {
     Multiplication,

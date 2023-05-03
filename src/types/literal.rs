@@ -3,6 +3,9 @@
 use crate::types::AtomicFormula;
 
 /// An [`AtomicFormula`] or its negated value.
+///
+/// ## Usage
+/// Used by [`GoalDefinition`](crate::GoalDefinition) and [`InitElement`](crate::InitElement).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Literal<'a, T> {
     AtomicFormula(AtomicFormula<'a, T>),

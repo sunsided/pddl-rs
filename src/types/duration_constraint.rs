@@ -2,9 +2,12 @@
 
 use crate::types::SimpleDurationConstraint;
 
+/// ## Usage
+/// Used by [`DurativeActionDefinition`](crate::DurativeActionDefinition).
 #[derive(Debug, Clone, PartialEq)]
 pub enum DurationConstraint<'a> {
     Simple(SimpleDurationConstraint<'a>),
+    /// ## Requirements
     /// Requires [DurationInequalities](crate::types::Requirement::DurationInequalities).
     And(Vec<SimpleDurationConstraint<'a>>),
 }

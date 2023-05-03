@@ -4,7 +4,12 @@ use crate::types::ConGD;
 use std::ops::Deref;
 
 /// A domain constraints definition; wraps a [`ConGD`].
+///
+/// ## Requirements
 /// Requires [Constraints](crate::types::Requirement::Constraints).
+///
+/// ## Usage
+/// Used by [`Domain`](crate::Domain).
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct DomainConstraintsDef<'a>(ConGD<'a>);
 

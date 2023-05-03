@@ -3,6 +3,9 @@
 use std::fmt::{Display, Formatter};
 
 /// A time specifier used in e.g. [TimedGD::At](crate::types::TimedGD::At) and [TimedEffect](crate::types::TimedEffect).
+///
+/// ## Usage
+/// Used by [`TimedGD`](crate::TimedGD) and [`TimedEffect`](crate::TimedEffect).
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum TimeSpecifier {
     /// The condition or effect holds or applies at the beginning of a plan.

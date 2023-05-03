@@ -2,6 +2,8 @@
 
 use crate::types::{FunctionSymbol, Name};
 
+/// ## Usage
+/// Used by [`InitElement`](crate::InitElement).
 #[derive(Debug, Clone, PartialEq)]
 pub struct BasicFunctionTerm<'a>(FunctionSymbol<'a>, Vec<Name<'a>>);
 

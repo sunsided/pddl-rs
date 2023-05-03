@@ -4,6 +4,9 @@ use crate::types::TypedNames;
 use std::ops::Deref;
 
 /// A set of types.
+///
+/// ## Usage
+/// Used by [`Domain`](crate::Domain).
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
 pub struct Types<'a>(TypedNames<'a>);
 

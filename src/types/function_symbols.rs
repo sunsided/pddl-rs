@@ -4,6 +4,10 @@ use crate::types::Name;
 use std::ops::Deref;
 
 /// A function symbol name.
+///
+/// ## Usage
+/// Used by [`FunctionTerm`](crate::FunctionTerm), [`FHead`](crate::FHead),
+/// [`BasicFunctionTerm`](crate::BasicFunctionTerm) and [`MetricFExp`](crate::MetricFExp).
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
 pub struct FunctionSymbol<'a>(Name<'a>);
 

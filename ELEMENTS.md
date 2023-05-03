@@ -360,7 +360,7 @@ Using embedded modal operators:
 - [x] [`<con-GD>`](src/parsers/con_gd.rs)
 - [x] [`<con2-GD>`](src/parsers/con_gd.rs)
 
-### Requirements
+## Requirements
 
 The following requirements can be parsed. Note that all
 requirement specific features are parsed unconditionally.

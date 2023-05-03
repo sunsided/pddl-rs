@@ -3,12 +3,17 @@
 use crate::types::TypedVariables;
 use crate::types::{ConditionalEffect, Effect, GoalDefinition, PEffect};
 
-/// A c-effect. Occurs as part of [`Effect`].
+/// A conditional effect. Occurs as part of [`Effect`].
+///
+/// ## Usage
+/// Used by [`Effect`](Effect).
 #[derive(Debug, Clone, PartialEq)]
 pub enum CEffect<'a> {
     Effect(PEffect<'a>),
+    /// ## Requirements
     /// Requires [ConditionalEffects](crate::types::Requirement::ConditionalEffects).
     Forall(TypedVariables<'a>, Box<Effect<'a>>),
+    /// ## Requirements
     /// Requires [ConditionalEffects](crate::types::Requirement::ConditionalEffects).
     When(GoalDefinition<'a>, ConditionalEffect<'a>),
 }

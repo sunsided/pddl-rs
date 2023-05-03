@@ -4,10 +4,14 @@ use crate::types::{Name, Typed, TypedNames};
 use std::ops::Deref;
 
 /// A list of objects.
+///
+/// ## Usage
+/// Used by [`Problem`](crate::Problem).
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
 pub struct Objects<'a>(TypedNames<'a>);
 
 impl<'a> Objects<'a> {
+    // TODO: Convert to const again that takes `TypedNames` directly.
     pub fn new<I: IntoIterator<Item = Typed<'a, Name<'a>>>>(objects: I) -> Self {
         Self(objects.into_iter().collect())
     }

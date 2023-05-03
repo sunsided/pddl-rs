@@ -4,6 +4,9 @@ use crate::types::InitElement;
 use std::ops::Deref;
 
 /// A wrapper around a list of [`InitElement`] values.
+///
+/// ## Usage
+/// Used by [`Problem`](crate::Problem).
 #[derive(Debug, Clone, PartialEq)]
 pub struct InitElements<'a>(Vec<InitElement<'a>>);
 
