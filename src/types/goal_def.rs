@@ -4,7 +4,7 @@ use crate::types::pre_gd::PreconditionGoalDefinitions;
 use crate::PreconditionGoalDefinition;
 use std::ops::Deref;
 
-/// A problem goal definition; wraps a [`PreconditionGoalDefinition`].
+/// A problem goal definition; wraps a [`PreconditionGoalDefinitions`].
 ///
 /// ## Usage
 /// Used by [`Problem`](crate::Problem).

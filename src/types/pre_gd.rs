@@ -72,6 +72,15 @@ impl<'a> From<PreconditionGoalDefinition<'a>> for PreconditionGoalDefinitions<'a
     }
 }
 
+impl<'a> From<Option<PreconditionGoalDefinition<'a>>> for PreconditionGoalDefinitions<'a> {
+    fn from(value: Option<PreconditionGoalDefinition<'a>>) -> Self {
+        match value {
+            None => PreconditionGoalDefinitions::default(),
+            Some(value) => value.into(),
+        }
+    }
+}
+
 impl<'a> From<Option<PreconditionGoalDefinitions<'a>>> for PreconditionGoalDefinitions<'a> {
     fn from(value: Option<PreconditionGoalDefinitions<'a>>) -> Self {
         match value {
