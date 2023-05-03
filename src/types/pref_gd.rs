@@ -5,7 +5,7 @@ use crate::types::{GoalDefinition, Preference};
 /// A preferred goal definition.
 ///
 /// ## Usage
-/// Used by [`PreGD`](crate::PreconditionGoalDefinition).
+/// Used by [`PreconditionGoalDefinition`](crate::PreconditionGoalDefinition).
 #[derive(Debug, Clone, PartialEq)]
 pub enum PreferenceGD<'a> {
     Goal(GoalDefinition<'a>),
