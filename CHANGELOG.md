@@ -15,6 +15,7 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changelog
 
 - The `PreGD` type was renamed to `PreconditionGoalDefinition`.
+- The `PreconditionGoalDefinition::And` variant was removed and replaced with the `PreconditionGoalDefinitions` type.
 
 ## [0.0.3] - 2023-05-03
 

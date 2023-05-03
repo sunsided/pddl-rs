@@ -13,7 +13,7 @@ use nom::IResult;
 ///
 /// ## Example
 /// ```
-/// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GoalDefinition, Name, PEffect, Predicate, PreferenceGD, PreconditionGoalDefinition, Term, ToTyped, TypedList, Variable};
+/// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GoalDefinition, Name, PEffect, Predicate, PreferenceGD, PreconditionGoalDefinitions, PreconditionGoalDefinition, Term, ToTyped, TypedList, Variable};
 /// # use pddl::parsers::parse_action_def;
 /// let input = r#"(:action take-out
 ///                     :parameters (?x - physob)
@@ -29,16 +29,18 @@ use nom::IResult;
 ///         TypedList::from_iter([
 ///             Variable::from_str("x").to_typed("physob")
 ///         ]),
-///         Some(PreconditionGoalDefinition::Preference(PreferenceGD::from_gd(
-///             GoalDefinition::new_not(
-///                 GoalDefinition::AtomicFormula(
-///                     AtomicFormula::new_equality(
-///                         Term::Variable(Variable::from_str("x")),
-///                         Term::Name(Name::new("B"))
+///         PreconditionGoalDefinitions::from(
+///             PreconditionGoalDefinition::Preference(PreferenceGD::from_gd(
+///                 GoalDefinition::new_not(
+///                     GoalDefinition::AtomicFormula(
+///                         AtomicFormula::new_equality(
+///                             Term::Variable(Variable::from_str("x")),
+///                             Term::Name(Name::new("B"))
+///                         )
 ///                     )
 ///                 )
 ///             )
-///         ))),
+///         )),
 ///         Some(Effect::new(CEffect::new_p_effect(
 ///             PEffect::NotAtomicFormula(
 ///                 AtomicFormula::new_predicate(
@@ -74,7 +76,12 @@ pub fn parse_action_def(input: &str) -> IResult<&str, ActionDefinition> {
     );
 
     map(action_def, |(symbol, params, (preconditions, effects))| {
-        ActionDefinition::new(symbol, params, preconditions.flatten(), effects.flatten())
+        ActionDefinition::new(
+            symbol,
+            params,
+            preconditions.flatten().into(),
+            effects.flatten(),
+        )
     })(input)
 }
 

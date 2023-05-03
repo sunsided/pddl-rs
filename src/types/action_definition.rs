@@ -1,7 +1,8 @@
 //! Contains action definitions via the [`ActionDefinition`] type.
 
 use crate::types::TypedVariables;
-use crate::types::{ActionSymbol, Effect, PreconditionGoalDefinition};
+use crate::types::{ActionSymbol, Effect};
+use crate::PreconditionGoalDefinitions;
 
 /// An action definition.
 ///
@@ -11,7 +12,7 @@ use crate::types::{ActionSymbol, Effect, PreconditionGoalDefinition};
 pub struct ActionDefinition<'a> {
     symbol: ActionSymbol<'a>,
     parameters: TypedVariables<'a>,
-    precondition: Option<PreconditionGoalDefinition<'a>>,
+    precondition: PreconditionGoalDefinitions<'a>,
     effect: Option<Effect<'a>>,
 }
 
@@ -19,7 +20,7 @@ impl<'a> ActionDefinition<'a> {
     pub const fn new(
         symbol: ActionSymbol<'a>,
         parameters: TypedVariables<'a>,
-        precondition: Option<PreconditionGoalDefinition<'a>>,
+        precondition: PreconditionGoalDefinitions<'a>,
         effect: Option<Effect<'a>>,
     ) -> Self {
         Self {
@@ -38,7 +39,7 @@ impl<'a> ActionDefinition<'a> {
         &self.parameters
     }
 
-    pub const fn precondition(&self) -> &Option<PreconditionGoalDefinition<'a>> {
+    pub const fn precondition(&self) -> &PreconditionGoalDefinitions<'a> {
         &self.precondition
     }
 

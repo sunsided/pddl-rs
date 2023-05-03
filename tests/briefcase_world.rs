@@ -70,30 +70,31 @@ fn parse_problem_works() {
     assert_eq!(problem.domain(), &"briefcase-world".into());
     assert!(problem.requirements().is_empty());
     assert_eq!(problem.init().len(), 9);
-    assert!(matches! { problem.goal(), PreconditionGoalDefinition::And(_) });
+    assert_eq!(problem.goal().len(), 3);
 
-    match problem.goal() {
-        PreconditionGoalDefinition::Preference(pref) => match pref {
-            PreferenceGD::Goal(goal) => match goal {
-                GoalDefinition::AtomicFormula(af) => match af {
-                    AtomicFormula::Equality(_) => {}
-                    AtomicFormula::Predicate(_) => {}
+    for goal in problem.goal().iter() {
+        match goal {
+            PreconditionGoalDefinition::Preference(pref) => match pref {
+                PreferenceGD::Goal(goal) => match goal {
+                    GoalDefinition::AtomicFormula(af) => match af {
+                        AtomicFormula::Equality(_) => {}
+                        AtomicFormula::Predicate(_) => {}
+                    },
+                    GoalDefinition::Literal(literal) => match literal {
+                        TermLiteral::AtomicFormula(_) => {}
+                        TermLiteral::NotAtomicFormula(_) => {}
+                    },
+                    GoalDefinition::And(_) => {}
+                    GoalDefinition::Or(_) => {}
+                    GoalDefinition::Not(_) => {}
+                    GoalDefinition::Imply(_, _) => {}
+                    GoalDefinition::Exists(_, _) => {}
+                    GoalDefinition::ForAll(_, _) => {}
+                    GoalDefinition::FComp(_) => {}
                 },
-                GoalDefinition::Literal(literal) => match literal {
-                    TermLiteral::AtomicFormula(_) => {}
-                    TermLiteral::NotAtomicFormula(_) => {}
-                },
-                GoalDefinition::And(_) => {}
-                GoalDefinition::Or(_) => {}
-                GoalDefinition::Not(_) => {}
-                GoalDefinition::Imply(_, _) => {}
-                GoalDefinition::Exists(_, _) => {}
-                GoalDefinition::ForAll(_, _) => {}
-                GoalDefinition::FComp(_) => {}
+                PreferenceGD::Preference(_) => {}
             },
-            PreferenceGD::Preference(_) => {}
-        },
-        PreconditionGoalDefinition::And(_) => {}
-        PreconditionGoalDefinition::Forall(_, _) => {}
+            PreconditionGoalDefinition::Forall(_, _) => {}
+        }
     }
 }

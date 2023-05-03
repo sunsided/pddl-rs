@@ -28,7 +28,7 @@ use nom::IResult;
 ///         TypedList::from_iter([
 ///             Variable::from("x").to_typed("physob")
 ///         ]),
-///         Some(PreconditionGoalDefinition::Preference(PreferenceGD::from_gd(
+///         PreconditionGoalDefinition::Preference(PreferenceGD::from_gd(
 ///             GoalDefinition::new_not(
 ///                 GoalDefinition::new_atomic_formula(
 ///                     AtomicFormula::new_equality(
@@ -37,7 +37,7 @@ use nom::IResult;
 ///                     )
 ///                 )
 ///             )
-///         ))),
+///         )).into(),
 ///         Some(Effect::new(CEffect::new_p_effect(
 ///             PEffect::NotAtomicFormula(
 ///                 AtomicFormula::new_predicate(

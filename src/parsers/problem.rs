@@ -34,7 +34,7 @@ use nom::IResult;
 /// assert_eq!(problem.domain(), &Name::new("briefcase-world"));
 /// assert!(problem.requirements().is_empty());
 /// assert_eq!(problem.init().len(), 9);
-/// assert!(matches! { problem.goal(), PreconditionGoalDefinition::And(_) });
+/// assert_eq!(problem.goal().len(), 3);
 /// ```
 pub fn parse_problem(input: &str) -> IResult<&str, Problem> {
     map(
