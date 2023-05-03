@@ -19,7 +19,7 @@ use nom::IResult;
 ///
 /// let input = "(= ?duration 5)";
 /// assert_eq!(parse_duration_constraint(input), Ok(("",
-///     Some(DurationConstraint::new_simple(
+///     Some(DurationConstraint::new(
 ///         SimpleDurationConstraint::Op(
 ///             DOp::Equal,
 ///             DurationValue::Number(5.into())
@@ -29,7 +29,7 @@ use nom::IResult;
 ///
 /// let input = "(at end (<= ?duration 1.23))";
 /// assert_eq!(parse_duration_constraint(input), Ok(("",
-///     Some(DurationConstraint::new_simple(
+///     Some(DurationConstraint::new(
 ///         SimpleDurationConstraint::new_at(
 ///             TimeSpecifier::End,
 ///             SimpleDurationConstraint::Op(

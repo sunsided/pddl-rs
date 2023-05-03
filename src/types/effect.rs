@@ -1,5 +1,6 @@
 //! Contains effects via the [`Effect`] type.
 
+use crate::types::iterators::FlatteningIntoIterator;
 use crate::types::CEffect;
 
 /// An effect. Occurs e.g. in a [`ActionDefinition`](crate::types::ActionDefinition).
@@ -12,6 +13,18 @@ pub enum Effect<'a> {
     Single(CEffect<'a>), // TODO: Unify with `All` variant; this is just a single-element vector and according to spec, this vector may be empty.
     /// Conjunction: All effects apply (i.e. a and b and c ..).
     All(Vec<CEffect<'a>>),
+}
+
+impl<'a> IntoIterator for Effect<'a> {
+    type Item = CEffect<'a>;
+    type IntoIter = FlatteningIntoIterator<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        match self {
+            Effect::Single(item) => FlatteningIntoIterator::new(item),
+            Effect::All(vec) => FlatteningIntoIterator::new_vec(vec),
+        }
+    }
 }
 
 impl<'a> Effect<'a> {
