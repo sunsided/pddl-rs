@@ -13,7 +13,7 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   zero, one or many, which makes `x` and `(and x)` identical.
 - Added `From<AtomicFormula<T>>` for `Literal<T>`.
 
-### Changelog
+### Changes
 
 - The `PreGD` type was renamed to `PreconditionGoalDefinition`.
 - The `PreconditionGoalDefinition::And` variant was removed and replaced with the `PreconditionGoalDefinitions` type.
