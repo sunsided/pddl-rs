@@ -6,7 +6,7 @@ use std::ops::Deref;
 /// A domain constraints definition; wraps a [`ConGD`].
 ///
 /// ## Requirements
-/// Requires [Constraints](crate::types::Requirement::Constraints).
+/// Requires [Constraints](crate::Requirement::Constraints).
 ///
 /// ## Usage
 /// Used by [`Domain`](crate::Domain).

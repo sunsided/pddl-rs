@@ -11,7 +11,7 @@ pub enum FExpDa<'a> {
     MultiOp(MultiOp, Box<FExpDa<'a>>, Vec<FExpDa<'a>>),
     Negative(Box<FExpDa<'a>>),
     /// ## Requirements
-    /// Requires [DurationInequalities](crate::types::Requirement::DurationInequalities).
+    /// Requires [Duration Inequalities](crate::Requirement::DurationInequalities).
     Duration,
     FExp(FExp<'a>),
 }

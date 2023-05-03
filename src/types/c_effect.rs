@@ -11,10 +11,10 @@ use crate::types::{ConditionalEffect, Effect, GoalDefinition, PEffect};
 pub enum CEffect<'a> {
     Effect(PEffect<'a>),
     /// ## Requirements
-    /// Requires [ConditionalEffects](crate::types::Requirement::ConditionalEffects).
+    /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
     Forall(TypedVariables<'a>, Box<Effect<'a>>),
     /// ## Requirements
-    /// Requires [ConditionalEffects](crate::types::Requirement::ConditionalEffects).
+    /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
     When(GoalDefinition<'a>, ConditionalEffect<'a>),
 }
 

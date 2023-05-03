@@ -13,26 +13,26 @@ use crate::types::{AtomicFormula, FComp, Term, TypedVariables};
 pub enum GoalDefinition<'a> {
     AtomicFormula(AtomicFormula<'a, Term<'a>>),
     /// ## Requirements
-    /// Requires [NegativePreconditions](crate::types::Requirement::NegativePreconditions).
+    /// Requires [Negative Preconditions](crate::Requirement::NegativePreconditions).
     Literal(TermLiteral<'a>),
     And(Vec<GoalDefinition<'a>>),
     /// ## Requirements
-    /// Requires [DisjunctivePreconditions](crate::types::Requirement::DisjunctivePreconditions).
+    /// Requires [Disjunctive Preconditions](crate::Requirement::DisjunctivePreconditions).
     Or(Vec<GoalDefinition<'a>>),
     /// ## Requirements
-    /// Requires [DisjunctivePreconditions](crate::types::Requirement::DisjunctivePreconditions).
+    /// Requires [Disjunctive Preconditions](crate::Requirement::DisjunctivePreconditions).
     Not(Box<GoalDefinition<'a>>),
     /// ## Requirements
-    /// Requires [DisjunctivePreconditions](crate::types::Requirement::DisjunctivePreconditions).
+    /// Requires [Disjunctive Preconditions](crate::Requirement::DisjunctivePreconditions).
     Imply(Box<GoalDefinition<'a>>, Box<GoalDefinition<'a>>),
     /// ## Requirements
-    /// Requires [ExistentialPreconditions](crate::types::Requirement::ExistentialPreconditions).
+    /// Requires [Existential Preconditions](crate::Requirement::ExistentialPreconditions).
     Exists(TypedVariables<'a>, Box<GoalDefinition<'a>>),
     /// ## Requirements
-    /// Requires [UniversalPreconditions](crate::types::Requirement::UniversalPreconditions).
+    /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
     ForAll(TypedVariables<'a>, Box<GoalDefinition<'a>>),
     /// ## Requirements
-    /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
+    /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
     FComp(FComp<'a>),
 }
 

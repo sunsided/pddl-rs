@@ -2,7 +2,7 @@
 
 use std::fmt::{Display, Formatter};
 
-/// An interval used in [TimedGD::Over](crate::types::TimedGD::Over).
+/// An interval used in [`TimedGD::Over`](crate::types::TimedGD::Over).
 ///
 /// ## Usage
 /// Used by [`TimedGD`](crate::TimedGD).

@@ -12,10 +12,10 @@ pub enum PEffect<'a> {
     AtomicFormula(AtomicFormula<'a, Term<'a>>),
     NotAtomicFormula(AtomicFormula<'a, Term<'a>>),
     /// ## Requirements
-    /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
+    /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
     AssignNumericFluent(AssignOp, FHead<'a>, FExp<'a>),
     /// ## Requirements
-    /// Requires [ObjectFluents](crate::types::Requirement::ObjectFluents).
+    /// Requires [Object Fluents](crate::Requirement::ObjectFluents).
     AssignObjectFluent(FunctionTerm<'a>, Option<Term<'a>>),
 }
 

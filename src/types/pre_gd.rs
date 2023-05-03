@@ -17,7 +17,7 @@ pub enum PreGD<'a> {
     /// which has no requirements.
     Preference(PreferenceGD<'a>),
     /// ## Requirements
-    /// Requires [UniversalPreconditions](crate::types::Requirement::UniversalPreconditions).
+    /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
     Forall(TypedVariables<'a>, Box<PreGD<'a>>),
 }
 

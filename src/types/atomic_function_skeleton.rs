@@ -26,7 +26,7 @@ use crate::types::{FunctionSymbol, TypedVariables, Variable};
 /// ([DurativeActionDefinition](crate::types::DurativeActionDefinition)).
 ///
 /// There are a number of supported effects for numeric fluents, e.g.
-/// [BinaryOp](crate::types::BinaryOp) and [`AssignOp`](crate::types::AssignOp).
+/// [`BinaryOp`](crate::types::BinaryOp) and [`AssignOp`](crate::types::AssignOp).
 ///
 /// ## Usage
 /// Used by [`Functions`](crate::Functions).

@@ -5,7 +5,7 @@ use crate::types::{BinaryOp, FHead, MultiOp, Number};
 /// A function/fluent expression used e.g. in a [`DurationValue`](crate::types::DurationValue).
 ///
 /// ## Requirements
-/// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
+/// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
 ///
 /// ## Usage
 /// Used by [`FExp`] itself, as well as [`PEffect`](crate::PEffect), [`DurationValue`](crate::DurationValue),

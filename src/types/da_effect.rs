@@ -3,7 +3,7 @@
 use crate::types::TypedVariables;
 use crate::types::{DurativeActionGoalDefinition, TimedEffect};
 
-/// A durative action effect used in [DurativeActionDefinition](crate::types::DurativeActionDefinition).
+/// A durative action effect used in [`DurativeActionDefinition`](crate::types::DurativeActionDefinition).
 ///
 /// ## Usage
 /// Used by [`DurativeActionDefinition`](crate::DurativeActionDefinition).
@@ -13,10 +13,10 @@ pub enum DurativeActionEffect<'a> {
     /// Conjunction: All effects apply (i.e. a and b and c ..).
     All(Vec<DurativeActionEffect<'a>>),
     /// ## Requirements
-    /// Requires [ConditionalEffects](crate::types::Requirement::ConditionalEffects).
+    /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
     Forall(TypedVariables<'a>, Box<DurativeActionEffect<'a>>),
     /// ## Requirements
-    /// Requires [ConditionalEffects](crate::types::Requirement::ConditionalEffects).
+    /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
     When(DurativeActionGoalDefinition<'a>, TimedEffect<'a>),
 }
 

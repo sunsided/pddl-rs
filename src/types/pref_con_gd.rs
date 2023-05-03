@@ -11,10 +11,10 @@ use crate::types::{ConGD, PreferenceName, TypedVariables};
 pub enum PrefConGD<'a> {
     And(Vec<PrefConGD<'a>>), // TODO: Unify with base type. Should always be a vector.
     /// ## Requirements
-    /// Requires [UniversalPreconditions](crate::types::Requirement::UniversalPreconditions).
+    /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
     Forall(TypedVariables<'a>, Box<PrefConGD<'a>>),
     /// ## Requirements
-    /// Requires [Preferences](crate::types::Requirement::Preferences).
+    /// Requires [Preferences](crate::Requirement::Preferences).
     Preference(Option<PreferenceName<'a>>, ConGD<'a>),
     Goal(ConGD<'a>),
 }

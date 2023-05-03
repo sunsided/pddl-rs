@@ -2,7 +2,7 @@
 
 use crate::types::{AssignOpT, ConditionalEffect, FAssignDa, FExpT, FHead, TimeSpecifier};
 
-/// A timed effect, either conditional, continuous or derived from a fluent, e.g. [DurativeActionEffect](crate::types::DurativeActionEffect).
+/// A timed effect, either conditional, continuous or derived from a fluent, e.g. [`DurativeActionEffect`](crate::types::DurativeActionEffect).
 ///
 /// An effect is a condition which is made true when an action is applied.
 /// Note that the effect is always more restrictive than an action and typically only
@@ -23,11 +23,11 @@ use crate::types::{AssignOpT, ConditionalEffect, FAssignDa, FExpT, FHead, TimeSp
 pub enum TimedEffect<'a> {
     Conditional(TimeSpecifier, ConditionalEffect<'a>),
     /// ## Requirements
-    /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
+    /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
     NumericFluent(TimeSpecifier, FAssignDa<'a>),
     /// ## Requirements
-    /// Requires [ContinuousEffects](crate::types::Requirement::ContinuousEffects) and
-    /// [NumericFluents](crate::types::Requirement::NumericFluents).
+    /// Requires [Continuous Effects](crate::Requirement::ContinuousEffects) and
+    /// [Numeric Fluents](crate::Requirement::NumericFluents).
     ContinuousEffect(AssignOpT, FHead<'a>, FExpT<'a>),
 }
 

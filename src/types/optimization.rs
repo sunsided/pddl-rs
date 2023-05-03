@@ -5,7 +5,7 @@ use std::fmt::{Display, Formatter};
 /// An optimization instruction.
 ///
 /// ## Requirements
-/// Requires [NumericFluents](crate::Requirement::NumericFluents).
+/// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
 ///
 /// ## Usage
 /// Used by [`MetricSpec`](crate::MetricSpec).

@@ -18,10 +18,10 @@ pub struct Problem<'a> {
     init: InitElements<'a>,
     goal: GoalDef<'a>,
     /// ## Requirements
-    /// Requires [Constraints](crate::types::Requirement::Constraints).
+    /// Requires [Constraints](crate::Requirement::Constraints).
     constraints: ProblemConstraintsDef<'a>,
     /// ## Requirements
-    /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
+    /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
     metric_spec: Option<MetricSpec<'a>>,
     /// Deprecated since PDDL 2.1.
     length_spec: Option<LengthSpec>,
@@ -134,14 +134,14 @@ impl<'a> Problem<'a> {
 
     /// Returns the optional constraints of the problem.
     /// ## Requirements
-    /// Requires [Constraints](crate::types::Requirement::Constraints).
+    /// Requires [Constraints](crate::Requirement::Constraints).
     pub const fn constraints(&self) -> &PrefConGD<'a> {
         &self.constraints.value()
     }
 
     /// Returns the optional metric specification of the problem.
     /// ## Requirements
-    /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
+    /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
     pub const fn metric_spec(&self) -> &Option<MetricSpec<'a>> {
         &self.metric_spec
     }

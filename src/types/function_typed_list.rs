@@ -21,8 +21,8 @@ use std::ops::Deref;
 ///
 /// ## Requirements
 /// Requires [Fluents](crate::Requirement::Fluents) and either
-/// [NumericFluents](crate::Requirement::NumericFluents) for the default `number` type, or
-/// [ObjectFluents](crate::Requirement::ObjectFluents) and [Typing](crate::Requirement::Typing)
+/// [Numeric Fluents](crate::Requirement::NumericFluents) for the default `number` type, or
+/// [Object Fluents](crate::Requirement::ObjectFluents) and [Typing](crate::Requirement::Typing)
 /// for an arbitrary type.
 ///
 /// ## Usage

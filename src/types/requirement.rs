@@ -11,7 +11,7 @@ use std::fmt::{Display, Formatter};
 /// ## Notes
 /// Some requirements imply others; some are abbreviations for common sets
 /// of requirements. If a domain stipulates no requirements, it is assumed
-/// to declare a requirement for [`Strips`](Self::Strips).
+/// to declare a requirement for [`STRIPS`](Self::Strips).
 ///
 /// ## References
 /// - "Complete BNF description of PDDL 3.1 (completely corrected)", Daniel L. Kovacs (`dkovacs@mit.bme.hu`).

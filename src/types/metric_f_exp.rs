@@ -5,7 +5,7 @@ use crate::types::{BinaryOp, FunctionSymbol, MultiOp, Name, Number, PreferenceNa
 /// A metric function expression.
 ///
 /// ## Requirements
-/// Requires [NumericFluents](crate::Requirement::NumericFluents).
+/// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
 ///
 /// ## Usage
 /// Used by [`MetricSpec`](crate::MetricSpec).
@@ -18,7 +18,7 @@ pub enum MetricFExp<'a> {
     Function(FunctionSymbol<'a>, Vec<Name<'a>>),
     TotalTime,
     /// ## Requirements
-    /// Requires [Preferences](crate::types::Requirement::Preferences).
+    /// Requires [Preferences](crate::Requirement::Preferences).
     IsViolated(PreferenceName<'a>),
 }
 

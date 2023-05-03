@@ -3,8 +3,9 @@
 use crate::types::{MetricFExp, Optimization};
 
 /// A metric specification.
+///
 /// ## Requirements
-/// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
+/// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
 #[derive(Debug, Clone, PartialEq)]
 pub struct MetricSpec<'a> {
     optimization: Optimization,
