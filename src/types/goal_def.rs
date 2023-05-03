@@ -40,6 +40,12 @@ impl<'a> From<PreconditionGoalDefinition<'a>> for GoalDef<'a> {
     }
 }
 
+impl<'a> FromIterator<PreconditionGoalDefinition<'a>> for GoalDef<'a> {
+    fn from_iter<T: IntoIterator<Item = PreconditionGoalDefinition<'a>>>(iter: T) -> Self {
+        GoalDef::new(PreconditionGoalDefinitions::from_iter(iter))
+    }
+}
+
 impl<'a> Deref for GoalDef<'a> {
     type Target = PreconditionGoalDefinitions<'a>;
 
