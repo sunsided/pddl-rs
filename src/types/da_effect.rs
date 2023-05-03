@@ -13,10 +13,10 @@ pub enum DurativeActionEffect<'a> {
     /// Conjunction: All effects apply (i.e. a and b and c ..).
     All(Vec<DurativeActionEffect<'a>>),
     /// ## Requirements
-    /// Requires [ConditionalEffects](crate::types::Requirement::ConditionalEffects).
+    /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
     Forall(TypedVariables<'a>, Box<DurativeActionEffect<'a>>),
     /// ## Requirements
-    /// Requires [ConditionalEffects](crate::types::Requirement::ConditionalEffects).
+    /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
     When(DurativeActionGoalDefinition<'a>, TimedEffect<'a>),
 }
 

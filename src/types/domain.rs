@@ -17,15 +17,15 @@ pub struct Domain<'a> {
     extends: Vec<Name<'a>>,
     requirements: Requirements,
     /// ## Requirements
-    /// Requires [Typing](crate::types::Requirement::Typing).
+    /// Requires [Typing](crate::Requirement::Typing).
     types: Types<'a>,
     constants: Constants<'a>,
     predicates: PredicateDefinitions<'a>,
     /// ## Requirements
-    /// Requires [Fluents](crate::types::Requirement::Fluents).
+    /// Requires [Fluents](crate::Requirement::Fluents).
     functions: Functions<'a>,
     /// ## Requirements
-    /// Requires [Constraints](crate::types::Requirement::Constraints).
+    /// Requires [Constraints](crate::Requirement::Constraints).
     constraints: DomainConstraintsDef<'a>,
     // TODO: PDDL 1.2 - deprecated?
     timeless: Timeless<'a>,
@@ -110,14 +110,14 @@ impl<'a> Domain<'a> {
     }
 
     /// Returns the optional domain requirements.
-    /// If no requirements were specified by the domain, [Strips](crate::types::Requirement::Strips) is implied.
+    /// If no requirements were specified by the domain, [STRIPS](crate::Requirement::Strips) is implied.
     pub const fn requirements(&self) -> &Requirements {
         &self.requirements
     }
 
     /// Returns the optional type declarations.
     /// ## Requirements
-    /// Requires [Typing](crate::types::Requirement::Typing).
+    /// Requires [Typing](crate::Requirement::Typing).
     pub const fn types(&self) -> &Types<'a> {
         &self.types
     }

@@ -8,10 +8,10 @@ use std::fmt::{Display, Formatter};
 pub enum DOp {
     Equal,
     /// ## Requirements
-    /// Requires [DurationInequalities](crate::types::Requirement::DurationInequalities);
+    /// Requires [Duration Inequalities](crate::Requirement::DurationInequalities);
     GreaterOrEqual,
     /// ## Requirements
-    /// Requires [DurationInequalities](crate::types::Requirement::DurationInequalities);
+    /// Requires [Duration Inequalities](crate::Requirement::DurationInequalities);
     LessThanOrEqual,
 }
 

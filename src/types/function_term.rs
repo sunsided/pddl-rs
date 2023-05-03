@@ -6,7 +6,7 @@ use crate::types::FunctionSymbol;
 /// A function term.
 ///
 /// ## Requirements
-/// Requires [ObjectFluents](crate::Requirement::ObjectFluents).
+/// Requires [Object Fluents](crate::Requirement::ObjectFluents).
 ///
 /// ## Usage
 /// Used by [`Term`], and [`PEffect`](crate::PEffect).

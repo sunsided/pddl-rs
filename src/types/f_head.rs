@@ -5,7 +5,7 @@ use crate::types::{FunctionSymbol, Term};
 /// A function declaration.
 ///
 /// ## Requirements
-/// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
+/// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
 ///
 /// ## Usage
 /// Used by [`FExp`](crate::FExp), [`PEffect`](crate::PEffect), [`TimedEffect`](crate::TimedEffect)

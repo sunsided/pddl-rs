@@ -23,11 +23,11 @@ use crate::types::{AssignOpT, ConditionalEffect, FAssignDa, FExpT, FHead, TimeSp
 pub enum TimedEffect<'a> {
     Conditional(TimeSpecifier, ConditionalEffect<'a>),
     /// ## Requirements
-    /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
+    /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
     NumericFluent(TimeSpecifier, FAssignDa<'a>),
     /// ## Requirements
-    /// Requires [ContinuousEffects](crate::types::Requirement::ContinuousEffects) and
-    /// [NumericFluents](crate::types::Requirement::NumericFluents).
+    /// Requires [Continuous Effects](crate::Requirement::ContinuousEffects) and
+    /// [Numeric Fluents](crate::Requirement::NumericFluents).
     ContinuousEffect(AssignOpT, FHead<'a>, FExpT<'a>),
 }
 

@@ -12,7 +12,7 @@ pub enum DurationValue<'a> {
     Number(Number),
     /// A function expression that produces the duration value.
     /// ## Requirements
-    /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
+    /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
     FExp(FExp<'a>),
 }
 

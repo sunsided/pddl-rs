@@ -10,7 +10,7 @@ use crate::types::{PreferenceName, TimedGD};
 pub enum PrefTimedGD<'a> {
     Required(TimedGD<'a>),
     /// ## Requirements
-    /// Requires [Preferences](crate::types::Requirement::Preferences).
+    /// Requires [Preferences](crate::Requirement::Preferences).
     Preference(Option<PreferenceName<'a>>, TimedGD<'a>),
 }
 

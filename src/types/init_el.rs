@@ -8,13 +8,13 @@ use crate::types::{BasicFunctionTerm, Name, NameLiteral, Number};
 pub enum InitElement<'a> {
     Literal(NameLiteral<'a>),
     /// ## Requirements
-    /// Requires [TimedInitialLiterals](crate::types::Requirement::TimedInitialLiterals).
+    /// Requires [Timed Initial Literals](crate::Requirement::TimedInitialLiterals).
     At(Number, NameLiteral<'a>),
     /// ## Requirements
-    /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
+    /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
     IsValue(BasicFunctionTerm<'a>, Number),
     /// ## Requirements
-    /// Requires [ObjectFluents](crate::types::Requirement::ObjectFluents).
+    /// Requires [Object Fluents](crate::Requirement::ObjectFluents).
     IsObject(BasicFunctionTerm<'a>, Name<'a>),
 }
 

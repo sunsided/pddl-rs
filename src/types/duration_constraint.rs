@@ -9,7 +9,7 @@ use crate::types::SimpleDurationConstraint;
 pub enum DurationConstraint<'a> {
     Single(SimpleDurationConstraint<'a>),
     /// ## Requirements
-    /// Requires [DurationInequalities](crate::types::Requirement::DurationInequalities).
+    /// Requires [Duration Inequalities](crate::Requirement::DurationInequalities).
     All(Vec<SimpleDurationConstraint<'a>>),
 }
 

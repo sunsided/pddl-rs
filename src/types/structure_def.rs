@@ -10,10 +10,10 @@ use crate::types::{ActionDefinition, DerivedPredicate, DurativeActionDefinition}
 pub enum StructureDef<'a> {
     Action(ActionDefinition<'a>),
     /// ## Requirements
-    /// Requires [DurativeActions](crate::types::Requirement::DurativeActions).
+    /// Requires [Durative Actions](crate::Requirement::DurativeActions).
     DurativeAction(DurativeActionDefinition<'a>),
     /// ## Requirements
-    /// Requires [DerivedPredicates](crate::types::Requirement::DerivedPredicates).
+    /// Requires [Derived Predicates](crate::Requirement::DerivedPredicates).
     Derived(DerivedPredicate<'a>),
 }
 

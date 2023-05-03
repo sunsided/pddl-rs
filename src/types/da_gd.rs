@@ -13,7 +13,7 @@ pub enum DurativeActionGoalDefinition<'a> {
     Timed(PrefTimedGD<'a>),
     And(Vec<DurativeActionGoalDefinition<'a>>),
     /// ## Requirements
-    /// Requires [UniversalPreconditions](crate::types::Requirement::UniversalPreconditions).
+    /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
     Forall(TypedVariables<'a>, Box<DurativeActionGoalDefinition<'a>>),
 }
 
