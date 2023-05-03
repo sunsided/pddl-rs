@@ -11,6 +11,7 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   and `Effect` that flatten the `Single` and `All` variants into a single iterator.
   In all these cases, the `(and ...)` representation allows for a cardinality of
   zero, one or many, which makes `x` and `(and x)` identical.
+- Added `From<AtomicFormula<T>>` for `Literal<T>`.
 
 ### Changelog
 
