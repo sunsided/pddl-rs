@@ -131,7 +131,7 @@ pub use number::Number;
 pub use objects::Objects;
 pub use optimization::Optimization;
 pub use p_effect::PEffect;
-pub use pre_gd::PreGD;
+pub use pre_gd::PreconditionGoalDefinition;
 pub use predicate::Predicate;
 pub use predicate_definitions::PredicateDefinitions;
 pub use pref_con_gd::PrefConGD;

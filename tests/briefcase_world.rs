@@ -1,5 +1,6 @@
 use pddl::{
-    AtomicFormula, Domain, GoalDefinition, Parser, PreGD, PreferenceGD, Problem, TermLiteral,
+    AtomicFormula, Domain, GoalDefinition, Parser, PreconditionGoalDefinition, PreferenceGD,
+    Problem, TermLiteral,
 };
 
 pub const BRIEFCASE_WORLD: &'static str = r#"
@@ -69,10 +70,10 @@ fn parse_problem_works() {
     assert_eq!(problem.domain(), &"briefcase-world".into());
     assert!(problem.requirements().is_empty());
     assert_eq!(problem.init().len(), 9);
-    assert!(matches! { problem.goal(), PreGD::And(_) });
+    assert!(matches! { problem.goal(), PreconditionGoalDefinition::And(_) });
 
     match problem.goal() {
-        PreGD::Preference(pref) => match pref {
+        PreconditionGoalDefinition::Preference(pref) => match pref {
             PreferenceGD::Goal(goal) => match goal {
                 GoalDefinition::AtomicFormula(af) => match af {
                     AtomicFormula::Equality(_) => {}
@@ -92,7 +93,7 @@ fn parse_problem_works() {
             },
             PreferenceGD::Preference(_) => {}
         },
-        PreGD::And(_) => {}
-        PreGD::Forall(_, _) => {}
+        PreconditionGoalDefinition::And(_) => {}
+        PreconditionGoalDefinition::Forall(_, _) => {}
     }
 }

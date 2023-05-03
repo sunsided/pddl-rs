@@ -49,7 +49,7 @@ fn main() {
     assert_eq!(problem.domain(), &"briefcase-world".into());
     assert!(problem.requirements().is_empty());
     assert_eq!(problem.init().len(), 9);
-    assert!(matches! { problem.goal(), pddl::PreGD::And(_) });
+    assert!(matches! { problem.goal(), pddl::PreconditionGoalDefinition::And(_) });
 }
 ```
 

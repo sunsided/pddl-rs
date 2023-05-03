@@ -8,7 +8,7 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`AtomicFormulaSkeleton`](crate::AtomicFormulaSkeleton),
 /// [`AtomicFunctionSkeleton`](crate::AtomicFunctionSkeleton), [`ActionDefinition`](crate::ActionDefinition),
-/// [`PreGD`](crate::PreGD), [`GoalDefinition`](crate::GoalDefinition),
+/// [`PreconditionGoalDefinition`](crate::PreconditionGoalDefinition), [`GoalDefinition`](crate::GoalDefinition),
 /// [`Term`](crate::Term), [`CEffect`](crate::CEffect), [`DurativeActionDefinition`](crate::DurativeActionDefinition),
 /// [`DurativeActionGoalDefinition`](crate::DurativeActionGoalDefinition), [`DurativeActionEffect`](crate::DurativeActionEffect),
 /// [`PrefConGD`](crate::PrefConGD) and [`ConGD`](crate::ConGD).
