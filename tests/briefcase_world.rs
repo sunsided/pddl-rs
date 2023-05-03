@@ -72,16 +72,21 @@ fn parse_problem_works() {
     assert_eq!(problem.init().len(), 9);
     assert_eq!(problem.goal().len(), 3);
 
+    let mut atomic_formulas = 0;
     for goal in problem.goal().iter() {
         match goal {
             PreconditionGoalDefinition::Preference(pref) => match pref {
                 PreferenceGD::Goal(goal) => match goal {
                     GoalDefinition::AtomicFormula(af) => match af {
+                        AtomicFormula::Predicate(_) => atomic_formulas += 1,
                         AtomicFormula::Equality(_) => {}
-                        AtomicFormula::Predicate(_) => {}
                     },
                     GoalDefinition::Literal(literal) => match literal {
-                        TermLiteral::AtomicFormula(_) => {}
+                        TermLiteral::AtomicFormula(_) => {
+                            // The AtomicFormula variant takes precedence over the Literal variant
+                            // because a Literal in the context of a Goal Description can only
+                            // occur with the :negative−preconditions domain requirement.
+                        }
                         TermLiteral::NotAtomicFormula(_) => {}
                     },
                     GoalDefinition::And(_) => {}
@@ -97,4 +102,5 @@ fn parse_problem_works() {
             PreconditionGoalDefinition::Forall(_, _) => {}
         }
     }
+    assert_eq!(atomic_formulas, 3);
 }
