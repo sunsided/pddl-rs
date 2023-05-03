@@ -42,6 +42,7 @@ mod goal_def;
 mod init_el;
 mod init_els;
 pub(crate) mod interval;
+mod iterators;
 mod length_spec;
 mod literal;
 mod metric_f_exp;

@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- Added `IntoIterator` implementations for `ConditionalEffect`, `DurationConstraint`
+  and `Effect` that flatten the `Single` and `All` variants into a single iterator.
+  In all these cases, the `(and ...)` representation allows for a cardinality of
+  zero, one or many, which makes `x` and `(and x)` identical.
+
 ## [0.0.3] - 2023-05-03
 
 ### Internal

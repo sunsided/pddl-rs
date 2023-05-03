@@ -1,5 +1,6 @@
 //! Contains types.
 
+use crate::types::iterators::FlatteningIntoIterator;
 use crate::types::Name;
 use std::ops::Deref;
 
@@ -117,5 +118,42 @@ impl<'a> Deref for PrimitiveType<'a> {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl<'a> IntoIterator for Type<'a> {
+    type Item = PrimitiveType<'a>;
+    type IntoIter = FlatteningIntoIterator<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        match self {
+            Type::Exactly(item) => FlatteningIntoIterator::new(item),
+            Type::EitherOf(vec) => FlatteningIntoIterator::new_vec(vec),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Parser;
+
+    #[test]
+    fn flatten_with_single_element_works() {
+        let (_, t) = Type::parse("object").unwrap();
+
+        let mut iter = t.into_iter();
+        assert!(iter.next().is_some());
+        assert!(iter.next().is_none());
+    }
+
+    #[test]
+    fn flatten_with_many_elements_works() {
+        let (_, t) = Type::parse("(either object number)").unwrap();
+
+        let mut iter = t.into_iter();
+        assert!(iter.next().is_some());
+        assert!(iter.next().is_some());
+        assert!(iter.next().is_none());
     }
 }
