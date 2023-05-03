@@ -69,8 +69,11 @@ flowchart TD
     
     type --> primitive-type
 
+    action-def --> action-symbol
     action-def --> typed-list-variable
     action-def --> action-def-body
+
+    action-symbol --> name
     
     action-def-body --> pre-GD
     action-def-body --> effect
