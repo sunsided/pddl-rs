@@ -2,7 +2,11 @@
 
 use crate::types::{BinaryComp, FExp};
 
-/// An f-comp.
+/// An fluent comparison used as part of a [`GoalDefinition`](crate::GoalDefinition)
+/// when [`NumericFluents`](crate::Requirement::NumericFluents) is allowed.
+///
+/// ## Usage
+/// Used by [`GoalDefinition`](crate::GoalDefinition).
 #[derive(Debug, Clone, PartialEq)]
 pub struct FComp<'a>(BinaryComp, FExp<'a>, FExp<'a>);
 

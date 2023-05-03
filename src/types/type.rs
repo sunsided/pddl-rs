@@ -11,10 +11,23 @@ pub const TYPE_OBJECT: PrimitiveType<'static> = PrimitiveType(Name::new("object"
 pub const TYPE_NUMBER: PrimitiveType<'static> = PrimitiveType(Name::new("number"));
 
 /// A primitive type.
+///
+/// ## Requirements
+/// Requires [Typing](crate::Requirement::Typing).
+///
+/// ## Usage
+/// Used by [`Type`].
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
 pub struct PrimitiveType<'a>(Name<'a>);
 
 /// A type selection from `<primitive-type> | (either <primitive-type>)`.
+///
+/// ## Requirements
+/// Requires [Typing](crate::Requirement::Typing).
+///
+/// ## Usage
+/// Used by [`Typed`](crate::Typed) in [`TypedList`](crate::TypedList),
+/// [`FunctionType`](crate::FunctionType).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Type<'a> {
     /// The type is exactly this named type.

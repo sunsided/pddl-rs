@@ -3,10 +3,13 @@
 use crate::types::PEffect;
 
 /// A conditional effect as used by [`CEffect::When`](crate::types::CEffect::When) and [`TimedEffect::Conditional`](crate::types::TimedEffect::Conditional).
+///
+/// ## Usage
+/// Used by [`CEffect`](crate::CEffect) and [`TimedEffect`](crate::types::TimedEffect).
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConditionalEffect<'a> {
     /// Exactly the specified effect applies.
-    Single(PEffect<'a>),
+    Single(PEffect<'a>), // TODO: Unify with `All`; vector is allowed to be empty.
     /// Conjunction: All effects apply (i.e. a and b and c ..).
     All(Vec<PEffect<'a>>),
 }

@@ -1,6 +1,9 @@
 use crate::types::{GoalDefinition, Interval, TimeSpecifier};
 
 /// A timed goal definition.
+///
+/// ## Usage
+/// Used by [`PrefTimedGD`](crate::PrefTimedGD).
 #[derive(Debug, Clone, PartialEq)]
 pub enum TimedGD<'a> {
     /// ## `at start`

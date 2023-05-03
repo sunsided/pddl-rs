@@ -7,18 +7,24 @@ use crate::types::{
 use crate::types::{Name, Types};
 
 /// The `Domain` type specifies a problem domain in which to plan.
+///
+/// ## Usage
+/// This is the top-level type of a domain description. See also [`Problem`](crate::Problem).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Domain<'a> {
     name: Name<'a>,
     // TODO: PDDL 1.2 - deprecated?
     extends: Vec<Name<'a>>,
     requirements: Requirements,
+    /// ## Requirements
     /// Requires [Typing](crate::types::Requirement::Typing).
     types: Types<'a>,
     constants: Constants<'a>,
     predicates: PredicateDefinitions<'a>,
+    /// ## Requirements
     /// Requires [Fluents](crate::types::Requirement::Fluents).
     functions: Functions<'a>,
+    /// ## Requirements
     /// Requires [Constraints](crate::types::Requirement::Constraints).
     constraints: DomainConstraintsDef<'a>,
     // TODO: PDDL 1.2 - deprecated?
@@ -110,6 +116,7 @@ impl<'a> Domain<'a> {
     }
 
     /// Returns the optional type declarations.
+    /// ## Requirements
     /// Requires [Typing](crate::types::Requirement::Typing).
     pub const fn types(&self) -> &Types<'a> {
         &self.types
@@ -126,6 +133,7 @@ impl<'a> Domain<'a> {
     }
 
     /// Returns the optional function definitions.
+    /// ## Requirements
     /// Requires [Fluents](Requirement::Fluents).
     pub const fn functions(&self) -> &Functions<'a> {
         &self.functions

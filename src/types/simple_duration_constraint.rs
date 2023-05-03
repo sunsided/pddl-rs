@@ -3,6 +3,9 @@
 use crate::types::{DOp, DurationValue, TimeSpecifier};
 
 /// A simple duration constraint.
+///
+/// ## Usage
+/// Used by [`SimpleDurationConstraint`] itself, as well as [`DurationConstraint`](crate::DurationConstraint).
 #[derive(Debug, Clone, PartialEq)]
 pub enum SimpleDurationConstraint<'a> {
     /// A comparison operation against a duration value.

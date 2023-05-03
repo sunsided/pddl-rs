@@ -20,6 +20,9 @@ use crate::types::{
 /// found in flight planning, where an action fly requires that a runway be free at
 /// the start and end of an action, in order for the plane to take off and land
 /// whilst the runway does not need to be free whilst the plane is flying.
+///
+/// ## Usage
+/// Used by [`StructureDef`](crate::StructureDef).
 #[derive(Debug, Clone, PartialEq)]
 pub struct DurativeActionDefinition<'a> {
     symbol: DurativeActionSymbol<'a>,

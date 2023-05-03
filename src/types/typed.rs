@@ -4,6 +4,9 @@ use crate::types::{PrimitiveType, Type};
 use std::ops::Deref;
 
 /// A typed element.
+///
+/// ## Usage
+/// Used by [`TypedList`](crate::TypedList).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Typed<'a, O>(O, Type<'a>);
 

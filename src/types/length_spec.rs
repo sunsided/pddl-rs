@@ -1,6 +1,9 @@
 //! Contains the [`LengthSpec`] type.
 
 /// Deprecated since PDDL 2.1.
+///
+/// ## Usage
+/// Used by [`Problem`](crate::Problem).
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
 pub struct LengthSpec {
     serial: Option<u64>,

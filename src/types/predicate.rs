@@ -4,6 +4,9 @@ use crate::types::Name;
 use std::ops::Deref;
 
 /// A predicate name.
+///
+/// ## Usage
+/// Used by [`AtomicFormulaSkeleton`](crate::AtomicFormulaSkeleton) and [`AtomicFormula`](crate::AtomicFormula).
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
 pub struct Predicate<'a>(Name<'a>);
 

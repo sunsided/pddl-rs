@@ -4,6 +4,14 @@ use crate::types::{PrimitiveType, ToTyped, Type, Typed};
 use std::ops::Deref;
 
 /// A name.
+///
+/// ## Usage
+/// Used by [`Domain`](crate::Domain), [`InitElement`](crate::InitElement),
+/// [`BasicFunctionTerm`](crate::BasicFunctionTerm), [`MetricFExp`](crate::MetricFExp),
+/// [`PrimitiveType`](PrimitiveType), [`Predicate`](crate::Predicate), [`Variable`](crate::Variable),
+/// [`FunctionSymbol`](crate::FunctionSymbol), [`ActionSymbol`](crate::ActionSymbol),
+/// [`PreferenceName`](crate::PreferenceName), [`Term`](crate::Term),
+/// [`DurativeActionSymbol`](crate::DurativeActionSymbol) and [`Objects`](crate::Objects).
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
 pub struct Name<'a>(&'a str);
 

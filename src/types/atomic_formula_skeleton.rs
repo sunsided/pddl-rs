@@ -4,6 +4,9 @@ use crate::types::Predicate;
 use crate::types::{Name, TypedVariables};
 
 /// An atomic formula skeleton.
+///
+/// ## Usage
+/// Used by [`PredicateDefinitions`](crate::PredicateDefinitions) and [`DerivedPredicate`](crate::DerivedPredicate).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct AtomicFormulaSkeleton<'a> {
     predicate: Predicate<'a>,

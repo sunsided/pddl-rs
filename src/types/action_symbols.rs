@@ -4,6 +4,9 @@ use crate::types::Name;
 use std::ops::Deref;
 
 /// An action symbol name.
+///
+/// ## Usage
+/// Used by [`ActionDefinition`](crate::ActionDefinition).
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
 pub struct ActionSymbol<'a>(Name<'a>);
 

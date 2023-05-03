@@ -4,6 +4,10 @@ use std::borrow::Borrow;
 use std::fmt::{Display, Formatter};
 
 /// An assignment operation.
+///
+/// ## Usage
+/// Used by [`PEffect`](crate::PEffect), [`TimedEffect`](crate::TimedEffect) and
+/// [`FAssignDa`](crate::FAssignDa).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum AssignOp {
     /// An assign effect assigns the value of a numeric variable to the given amount.

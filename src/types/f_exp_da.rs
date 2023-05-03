@@ -2,12 +2,15 @@
 
 use crate::types::{AssignOp, BinaryOp, FExp, FHead, MultiOp};
 
+/// ## Usage
+/// Used by [`FExpDa`] itself, as well as [`FAssignDa`](crate::FAssignDa).
 #[derive(Debug, Clone, PartialEq)]
 pub enum FExpDa<'a> {
     Assign(AssignOp, FHead<'a>, Box<FExpDa<'a>>),
     BinaryOp(BinaryOp, Box<FExpDa<'a>>, Box<FExpDa<'a>>),
     MultiOp(MultiOp, Box<FExpDa<'a>>, Vec<FExpDa<'a>>),
     Negative(Box<FExpDa<'a>>),
+    /// ## Requirements
     /// Requires [DurationInequalities](crate::types::Requirement::DurationInequalities).
     Duration,
     FExp(FExp<'a>),

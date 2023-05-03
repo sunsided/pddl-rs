@@ -4,10 +4,19 @@ use crate::types::TypedVariables;
 use crate::types::{Preference, PreferenceGD};
 
 /// A precondition goal definition.
+///
+/// ## Usage
+/// Used by [`PreGD`] itself, as well as [`ActionDefinition`](crate::ActionDefinition).
 #[derive(Debug, Clone, PartialEq)]
+// TODO: Rename to PreconditionGoalDefinition
 pub enum PreGD<'a> {
-    Preference(PreferenceGD<'a>),
+    // TODO: Unify with base type; should always be a vector; count can be zero.
     And(Vec<PreGD<'a>>),
+    /// ## Requirements
+    /// None per se: this branch may expand into [`PreferenceGD::Goal`](PreferenceGD::Goal),
+    /// which has no requirements.
+    Preference(PreferenceGD<'a>),
+    /// ## Requirements
     /// Requires [UniversalPreconditions](crate::types::Requirement::UniversalPreconditions).
     Forall(TypedVariables<'a>, Box<PreGD<'a>>),
 }

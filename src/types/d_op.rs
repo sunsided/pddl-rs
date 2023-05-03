@@ -2,11 +2,15 @@
 
 use std::fmt::{Display, Formatter};
 
+/// ## Usage
+/// Used by [`SimpleDurationConstraint`](crate::SimpleDurationConstraint).
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum DOp {
     Equal,
+    /// ## Requirements
     /// Requires [DurationInequalities](crate::types::Requirement::DurationInequalities);
     GreaterOrEqual,
+    /// ## Requirements
     /// Requires [DurationInequalities](crate::types::Requirement::DurationInequalities);
     LessThanOrEqual,
 }

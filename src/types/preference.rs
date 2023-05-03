@@ -3,8 +3,14 @@
 use crate::types::{GoalDefinition, PreferenceName};
 
 /// A preference.
+///
+/// ## Requirements
+/// Requires [Preferences](crate::Requirement::Preferences).
+///
+/// ## Usage
+/// Used by [`PreferenceGD`](crate::PreferenceGD).
 #[derive(Debug, Clone, PartialEq)]
-pub struct Preference<'a>(Option<PreferenceName<'a>>, GoalDefinition<'a>);
+pub struct Preference<'a>(Option<PreferenceName<'a>>, GoalDefinition<'a>); // TODO: A similar type is used for PrefConGD
 
 impl<'a> Preference<'a> {
     pub const fn new(name: Option<PreferenceName<'a>>, gd: GoalDefinition<'a>) -> Self {
@@ -19,6 +25,10 @@ impl<'a> Preference<'a> {
     /// Gets the goal definition.
     pub fn goal(&self) -> &GoalDefinition<'a> {
         &self.1
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.1.is_empty()
     }
 }
 

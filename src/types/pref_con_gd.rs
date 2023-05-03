@@ -2,11 +2,18 @@
 
 use crate::types::{ConGD, PreferenceName, TypedVariables};
 
+/// ## Requirements
+/// Requires [Constraints](crate::Requirement::Constraints).
+///
+/// ## Usage
+/// Used by [`PrefConGD`] itself, as well as [`ProblemConstraintsDef`](crate::ProblemConstraintsDef).
 #[derive(Debug, Clone, PartialEq)]
 pub enum PrefConGD<'a> {
-    And(Vec<PrefConGD<'a>>),
+    And(Vec<PrefConGD<'a>>), // TODO: Unify with base type. Should always be a vector.
+    /// ## Requirements
     /// Requires [UniversalPreconditions](crate::types::Requirement::UniversalPreconditions).
     Forall(TypedVariables<'a>, Box<PrefConGD<'a>>),
+    /// ## Requirements
     /// Requires [Preferences](crate::types::Requirement::Preferences).
     Preference(Option<PreferenceName<'a>>, ConGD<'a>),
     Goal(ConGD<'a>),

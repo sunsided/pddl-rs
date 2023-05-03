@@ -4,6 +4,9 @@ use crate::types::StructureDef;
 use std::ops::Deref;
 
 /// A set of structure definitions.
+///
+/// ## Usage
+/// Used by [`Domain`](crate::Domain).
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct StructureDefs<'a>(Vec<StructureDef<'a>>);
 

@@ -4,6 +4,12 @@ use crate::types::{AtomicFunctionSkeleton, FunctionTyped, FunctionTypedList};
 use std::ops::Deref;
 
 /// A set of functions.
+///
+/// ## Requirements
+/// Requires [Fluents](crate::Requirement::Fluents).
+///
+/// ## Usage
+/// Used by [`Domain`](crate::Domain).
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
 pub struct Functions<'a>(FunctionTypedList<'a, AtomicFunctionSkeleton<'a>>);
 

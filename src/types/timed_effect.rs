@@ -16,11 +16,16 @@ use crate::types::{AssignOpT, ConditionalEffect, FAssignDa, FExpT, FHead, TimeSp
 ///
 /// Instead you would set it to true at the start, using an `at start` and set it to false at
 /// the end using `at end`.
+///
+/// ## Usage
+/// Used by [`DurativeActionEffect`](crate::DurativeActionEffect).
 #[derive(Debug, Clone, PartialEq)]
 pub enum TimedEffect<'a> {
     Conditional(TimeSpecifier, ConditionalEffect<'a>),
+    /// ## Requirements
     /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
     NumericFluent(TimeSpecifier, FAssignDa<'a>),
+    /// ## Requirements
     /// Requires [ContinuousEffects](crate::types::Requirement::ContinuousEffects) and
     /// [NumericFluents](crate::types::Requirement::NumericFluents).
     ContinuousEffect(AssignOpT, FHead<'a>, FExpT<'a>),

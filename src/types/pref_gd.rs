@@ -3,9 +3,14 @@
 use crate::types::{GoalDefinition, Preference};
 
 /// A preferred goal definition.
+///
+/// ## Usage
+/// Used by [`PreGD`](crate::PreGD).
 #[derive(Debug, Clone, PartialEq)]
 pub enum PreferenceGD<'a> {
     Goal(GoalDefinition<'a>),
+    /// ## Requirements
+    /// Requires [Preferences](crate::Requirement::Preferences).
     Preference(Preference<'a>),
 }
 

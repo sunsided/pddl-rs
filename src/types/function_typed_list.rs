@@ -18,6 +18,15 @@ use std::ops::Deref;
 /// assert_eq!(tl[0].value_ref(), &Name::from("location"));
 /// assert_eq!(tl[1].value_ref(), &Name::from("physob"));
 /// ```
+///
+/// ## Requirements
+/// Requires [Fluents](crate::Requirement::Fluents) and either
+/// [NumericFluents](crate::Requirement::NumericFluents) for the default `number` type, or
+/// [ObjectFluents](crate::Requirement::ObjectFluents) and [Typing](crate::Requirement::Typing)
+/// for an arbitrary type.
+///
+/// ## Usage
+/// Used by [`Functions`](crate::Functions).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FunctionTypedList<'a, T>(Vec<FunctionTyped<'a, T>>);
 

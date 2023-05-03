@@ -4,6 +4,14 @@ use crate::types::{Name, PrimitiveType, ToTyped, Type, Typed};
 use std::ops::Deref;
 
 /// A variable name.
+///
+/// ## Usage
+/// Used by [`AtomicFormulaSkeleton`](crate::AtomicFormulaSkeleton),
+/// [`AtomicFunctionSkeleton`](crate::AtomicFunctionSkeleton), [`ActionDefinition`](crate::ActionDefinition),
+/// [`PreGD`](crate::PreGD), [`GoalDefinition`](crate::GoalDefinition),
+/// [`Term`](crate::Term), [`CEffect`](crate::CEffect), [`DurativeActionDefinition`](crate::DurativeActionDefinition),
+/// [`DurativeActionGoalDefinition`](crate::DurativeActionGoalDefinition), [`DurativeActionEffect`](crate::DurativeActionEffect),
+/// [`PrefConGD`](crate::PrefConGD) and [`ConGD`](crate::ConGD).
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
 pub struct Variable<'a>(Name<'a>);
 

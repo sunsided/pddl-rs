@@ -4,6 +4,9 @@ use crate::types::{Name, Typed, TypedNames};
 use std::ops::Deref;
 
 /// A set of constants.
+///
+/// ## Usage
+/// Used by [`Domain`](crate::Domain).
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
 pub struct Constants<'a>(TypedNames<'a>);
 

@@ -4,6 +4,9 @@ use crate::types::AtomicFormulaSkeleton;
 use std::ops::Deref;
 
 /// A set of predicate definitions.
+///
+/// ## Usage
+/// Used by [`Domain`](crate::Domain).
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
 pub struct PredicateDefinitions<'a>(Vec<AtomicFormulaSkeleton<'a>>);
 

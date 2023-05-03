@@ -4,6 +4,9 @@ use crate::types::Name;
 use std::ops::Deref;
 
 /// A durative action symbol.
+///
+/// ## Usage
+/// Used by [`DurativeActionDefinition`](crate::DurativeActionDefinition).
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
 pub struct DurativeActionSymbol<'a>(Name<'a>);
 

@@ -4,22 +4,34 @@ use crate::types::TermLiteral;
 use crate::types::{AtomicFormula, FComp, Term, TypedVariables};
 
 /// A goal definition.
+///
+/// ## Usage
+/// Used by [`GD`] itself, as well as [`PreferenceGD`](crate::PreferenceGD), [`CEffect`](crate::CEffect),
+/// [`TimedGD`](crate::TimedGD), [`DerivedPredicate`](crate::DerivedPredicate) and
+/// [`Con2GD`](crate::Con2GD).
 #[derive(Debug, Clone, PartialEq)]
 pub enum GoalDefinition<'a> {
     AtomicFormula(AtomicFormula<'a, Term<'a>>),
+    /// ## Requirements
     /// Requires [NegativePreconditions](crate::types::Requirement::NegativePreconditions).
     Literal(TermLiteral<'a>),
     And(Vec<GoalDefinition<'a>>),
+    /// ## Requirements
     /// Requires [DisjunctivePreconditions](crate::types::Requirement::DisjunctivePreconditions).
     Or(Vec<GoalDefinition<'a>>),
+    /// ## Requirements
     /// Requires [DisjunctivePreconditions](crate::types::Requirement::DisjunctivePreconditions).
     Not(Box<GoalDefinition<'a>>),
+    /// ## Requirements
     /// Requires [DisjunctivePreconditions](crate::types::Requirement::DisjunctivePreconditions).
     Imply(Box<GoalDefinition<'a>>, Box<GoalDefinition<'a>>),
+    /// ## Requirements
     /// Requires [ExistentialPreconditions](crate::types::Requirement::ExistentialPreconditions).
     Exists(TypedVariables<'a>, Box<GoalDefinition<'a>>),
+    /// ## Requirements
     /// Requires [UniversalPreconditions](crate::types::Requirement::UniversalPreconditions).
     ForAll(TypedVariables<'a>, Box<GoalDefinition<'a>>),
+    /// ## Requirements
     /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
     FComp(FComp<'a>),
 }

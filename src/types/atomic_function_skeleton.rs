@@ -27,6 +27,9 @@ use crate::types::{FunctionSymbol, TypedVariables, Variable};
 ///
 /// There are a number of supported effects for numeric fluents, e.g.
 /// [BinaryOp](crate::types::BinaryOp) and [`AssignOp`](crate::types::AssignOp).
+///
+/// ## Usage
+/// Used by [`Functions`](crate::Functions).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct AtomicFunctionSkeleton<'a> {
     /// The name of the fluent, e.g. `battery-level`.

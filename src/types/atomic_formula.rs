@@ -4,6 +4,10 @@ use crate::types::Predicate;
 use std::ops::Deref;
 
 /// An atomic formula.
+///
+/// ## Usage
+/// Used by [`Literal`](crate::Literal), [`GoalDefinition`](crate::GoalDefinition) and
+/// [`PEffect`](crate::PEffect).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum AtomicFormula<'a, T> {
     Equality(EqualityAtomicFormula<T>),

@@ -6,6 +6,9 @@ use std::ops::Deref;
 
 /// A set of domain requirements.
 ///
+/// ## Usage
+/// Used by [`Domain`](crate::Domain) and [`Problem`](crate::Problem).
+///
 /// ## Example
 /// ```
 /// # use pddl::{Requirement, Requirements};

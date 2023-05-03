@@ -6,6 +6,9 @@ use crate::types::{
 };
 
 /// A domain-specific problem declaration.
+///
+/// ## Usages
+/// This is the top-level type of a problem description within a [`Domain`](crate::Domain).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Problem<'a> {
     name: Name<'a>,
@@ -14,8 +17,10 @@ pub struct Problem<'a> {
     objects: Objects<'a>,
     init: InitElements<'a>,
     goal: GoalDef<'a>,
+    /// ## Requirements
     /// Requires [Constraints](crate::types::Requirement::Constraints).
     constraints: ProblemConstraintsDef<'a>,
+    /// ## Requirements
     /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
     metric_spec: Option<MetricSpec<'a>>,
     /// Deprecated since PDDL 2.1.
@@ -128,12 +133,14 @@ impl<'a> Problem<'a> {
     }
 
     /// Returns the optional constraints of the problem.
+    /// ## Requirements
     /// Requires [Constraints](crate::types::Requirement::Constraints).
     pub const fn constraints(&self) -> &PrefConGD<'a> {
         &self.constraints.value()
     }
 
     /// Returns the optional metric specification of the problem.
+    /// ## Requirements
     /// Requires [NumericFluents](crate::types::Requirement::NumericFluents).
     pub const fn metric_spec(&self) -> &Option<MetricSpec<'a>> {
         &self.metric_spec

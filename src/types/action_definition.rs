@@ -4,6 +4,9 @@ use crate::types::TypedVariables;
 use crate::types::{ActionSymbol, Effect, PreGD};
 
 /// An action definition.
+///
+/// ## Usage
+/// Used by [`StructureDef`](crate::StructureDef).
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActionDefinition<'a> {
     symbol: ActionSymbol<'a>,
