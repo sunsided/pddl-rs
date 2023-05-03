@@ -13,7 +13,7 @@ use nom::IResult;
 /// # use pddl::{AtomicFormula, GoalDef, GoalDefinition, PreferenceGD, PreconditionGoalDefinition, Term};
 /// let input = "(:goal (= x y))";
 /// assert_eq!(parse_problem_goal_def(input), Ok(("",
-///     GoalDef::new(
+///     GoalDef::from(
 ///         PreconditionGoalDefinition::Preference(
 ///             PreferenceGD::Goal(
 ///                 GoalDefinition::AtomicFormula(
