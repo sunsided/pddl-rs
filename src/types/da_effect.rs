@@ -3,7 +3,7 @@
 use crate::types::TypedVariables;
 use crate::types::{DurativeActionGoalDefinition, TimedEffect};
 
-/// A durative action effect used in [DurativeActionDefinition](crate::types::DurativeActionDefinition).
+/// A durative action effect used in [`DurativeActionDefinition`](crate::types::DurativeActionDefinition).
 ///
 /// ## Usage
 /// Used by [`DurativeActionDefinition`](crate::DurativeActionDefinition).

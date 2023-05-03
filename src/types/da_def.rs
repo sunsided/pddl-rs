@@ -9,10 +9,10 @@ use crate::types::{
 /// of time to complete. The amount of time is expressible as either a value or as
 /// an inequality (allow for both fixed duration and ranged duration actions).
 ///
-/// Similar to traditional actions ([ActionDefinition](crate::types::ActionDefinition))
+/// Similar to traditional actions ([`ActionDefinition`](crate::types::ActionDefinition))
 /// we have conditions and effects, but it should be noted that the keyword in
-/// durative actions is [condition](DurativeActionDefinition::condition), not
-/// [precondition](crate::types::ActionDefinition::precondition).
+/// durative actions is [`condition`](DurativeActionDefinition::condition), not
+/// [`precondition`](crate::types::ActionDefinition::precondition).
 ///
 /// This semantic change is designed to represent that a durative action may not just
 /// condition when the action starts, but may have conditions which need to be true

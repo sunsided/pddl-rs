@@ -2,7 +2,7 @@
 
 use crate::types::{AssignOpT, ConditionalEffect, FAssignDa, FExpT, FHead, TimeSpecifier};
 
-/// A timed effect, either conditional, continuous or derived from a fluent, e.g. [DurativeActionEffect](crate::types::DurativeActionEffect).
+/// A timed effect, either conditional, continuous or derived from a fluent, e.g. [`DurativeActionEffect`](crate::types::DurativeActionEffect).
 ///
 /// An effect is a condition which is made true when an action is applied.
 /// Note that the effect is always more restrictive than an action and typically only

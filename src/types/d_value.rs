@@ -2,7 +2,7 @@
 
 use crate::types::{FExp, Number};
 
-/// A duration value, either a [Number] or an [FExp](FExp).
+/// A duration value, either a [`Number`] or an [`FExp`](FExp).
 ///
 /// ## Usage
 /// Used by [`SimpleDurationConstraint`](crate::SimpleDurationConstraint).
