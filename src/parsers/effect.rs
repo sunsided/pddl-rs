@@ -14,7 +14,7 @@ use nom::IResult;
 /// # use pddl::parsers::parse_effect;
 /// # use pddl::{AtomicFormula, CEffect, Effect, EqualityAtomicFormula, PEffect, Term};
 /// assert_eq!(parse_effect("(= x y)"), Ok(("",
-///     Effect::Single(
+///     Effect::new(
 ///         CEffect::Effect(
 ///             PEffect::AtomicFormula(AtomicFormula::Equality(
 ///                 EqualityAtomicFormula::new(
@@ -26,7 +26,7 @@ use nom::IResult;
 ///     )
 /// )));
 /// assert_eq!(parse_effect("(and (= x y) (not (= ?a B)))"), Ok(("",
-///     Effect::All(vec![
+///     Effect::from_iter([
 ///         CEffect::Effect(
 ///             PEffect::AtomicFormula(AtomicFormula::Equality(
 ///                 EqualityAtomicFormula::new(

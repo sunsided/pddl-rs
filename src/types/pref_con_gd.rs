@@ -20,19 +20,25 @@ impl<'a> PrefConGDs<'a> {
         Self(gds)
     }
 
+    /// Constructs a list containing a single [`PrefConGD::Goal`] variant.
+    pub fn new_goal(gd: ConGD<'a>) -> Self {
+        Self::new(vec![PrefConGD::new_goal(gd)])
+    }
+
     /// Constructs a list containing a single [`PrefConGD::Preference`] variant.
+    ///
+    /// ## Requirements
+    /// Requires [Preferences](crate::Requirement::Preferences).
     pub fn new_preference(name: Option<PreferenceName<'a>>, gd: ConGD<'a>) -> Self {
         Self::new(vec![PrefConGD::new_preference(name, gd)])
     }
 
     /// Constructs a list containing a single [`PrefConGD::Forall`] variant.
+    ///
+    /// ## Requirements
+    /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
     pub fn new_forall(variables: TypedVariables<'a>, gd: PrefConGDs<'a>) -> Self {
         Self::new(vec![PrefConGD::new_forall(variables, gd)])
-    }
-
-    /// Constructs a list containing a single [`PrefConGD::Goal`] variant.
-    pub fn new_goal(gd: ConGD<'a>) -> Self {
-        Self::new(vec![PrefConGD::new_goal(gd)])
     }
 
     /// Returns `true` if the list contains no elements.
@@ -68,6 +74,12 @@ impl<'a> Deref for PrefConGDs<'a> {
     type Target = [PrefConGD<'a>];
 
     fn deref(&self) -> &Self::Target {
+        self.0.as_slice()
+    }
+}
+
+impl<'a> AsRef<[PrefConGD<'a>]> for PrefConGDs<'a> {
+    fn as_ref(&self) -> &[PrefConGD<'a>] {
         self.0.as_slice()
     }
 }
@@ -144,26 +156,30 @@ impl<'a> TryInto<PrefConGD<'a>> for PrefConGDs<'a> {
 /// Used by [`PrefConGD`] itself, as well as [`ProblemConstraintsDef`](crate::ProblemConstraintsDef).
 #[derive(Debug, Clone, PartialEq)]
 pub enum PrefConGD<'a> {
+    Goal(ConGD<'a>),
     /// ## Requirements
     /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
     Forall(TypedVariables<'a>, PrefConGDs<'a>),
     /// ## Requirements
     /// Requires [Preferences](crate::Requirement::Preferences).
     Preference(Option<PreferenceName<'a>>, ConGD<'a>),
-    Goal(ConGD<'a>),
 }
 
 impl<'a> PrefConGD<'a> {
+    pub const fn new_goal(gd: ConGD<'a>) -> Self {
+        Self::Goal(gd)
+    }
+
+    /// ## Requirements
+    /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
     pub fn new_forall(variables: TypedVariables<'a>, gd: PrefConGDs<'a>) -> Self {
         Self::Forall(variables, gd)
     }
 
+    /// ## Requirements
+    /// Requires [Preferences](crate::Requirement::Preferences).
     pub const fn new_preference(name: Option<PreferenceName<'a>>, gd: ConGD<'a>) -> Self {
         Self::Preference(name, gd)
-    }
-
-    pub const fn new_goal(gd: ConGD<'a>) -> Self {
-        Self::Goal(gd)
     }
 
     pub fn is_empty(&self) -> bool {

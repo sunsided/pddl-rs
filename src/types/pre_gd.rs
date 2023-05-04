@@ -70,6 +70,12 @@ impl<'a> Deref for PreconditionGoalDefinitions<'a> {
     }
 }
 
+impl<'a> AsRef<[PreconditionGoalDefinition<'a>]> for PreconditionGoalDefinitions<'a> {
+    fn as_ref(&self) -> &[PreconditionGoalDefinition<'a>] {
+        self.0.as_slice()
+    }
+}
+
 impl<'a> IntoIterator for PreconditionGoalDefinitions<'a> {
     type Item = PreconditionGoalDefinition<'a>;
     type IntoIter = std::vec::IntoIter<PreconditionGoalDefinition<'a>>;

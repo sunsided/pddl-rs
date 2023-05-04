@@ -3,7 +3,7 @@
 use crate::types::TypedVariables;
 use crate::types::{ConditionalEffect, Effect, GoalDefinition, PEffect};
 
-/// A conditional effect. Occurs as part of [`Effect`].
+/// A (potentially conditional) effect. Occurs as part of [`Effect`].
 ///
 /// ## Usage
 /// Used by [`Effect`](Effect).
