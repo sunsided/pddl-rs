@@ -19,6 +19,7 @@ use nom::IResult;
 pub fn parse_assign_op(input: &str) -> IResult<&str, AssignOp> {
     map_res(
         alt((
+            tag(names::CHANGE), // deprecated
             tag(names::ASSIGN),
             tag(names::SCALE_UP),
             tag(names::SCALE_DOWN),

@@ -21,6 +21,8 @@ pub enum AssignOp {
     /// ```
     Assign,
     /// A scale up effect increases the value of the numeric variable by the given scale factor.
+    /// This resembles the C-style operator `+=`.
+    ///
     /// ```pddl
     /// (scale-up (battery-level ?r) 2)
     /// ```
@@ -31,6 +33,8 @@ pub enum AssignOp {
     /// ```
     ScaleUp,
     /// A scale down effect decreases the value of the numeric variable by the given scale factor.
+    /// This resembles the C-style operator `-=`.
+    ///
     /// ```pddl
     /// (scale-down (battery-level ?r) 2)
     /// ```
@@ -41,6 +45,8 @@ pub enum AssignOp {
     /// ```
     ScaleDown,
     /// An increase effect increases the value of a numeric variable by the given amount.
+    /// This resembles the C-style operator `*=`.
+    ///
     /// ```pddl
     /// (increase (battery-level ?r) 10)
     /// ```
@@ -51,6 +57,8 @@ pub enum AssignOp {
     /// ```
     Increase,
     /// A decrease effect decreases the value of a numeric variable by the given amount.
+    /// This resembles the C-style operator `/=`.
+    ///
     /// ```pddl
     /// (decrease (battery-level ?r) 10)
     /// ```
@@ -63,6 +71,8 @@ pub enum AssignOp {
 }
 
 pub mod names {
+    /// [`CHANGE`] is a deprecated name for [`ASSIGN`].
+    pub const CHANGE: &'static str = "change";
     pub const ASSIGN: &'static str = "assign";
     pub const SCALE_UP: &'static str = "scale-up";
     pub const SCALE_DOWN: &'static str = "scale-down";
@@ -87,6 +97,7 @@ impl TryFrom<&str> for AssignOp {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
+            names::CHANGE => Ok(AssignOp::Assign),
             names::ASSIGN => Ok(AssignOp::Assign),
             names::SCALE_UP => Ok(AssignOp::ScaleUp),
             names::SCALE_DOWN => Ok(AssignOp::ScaleDown),

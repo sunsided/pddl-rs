@@ -9,12 +9,20 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Added `TryInto<PreconditionGoalDefinition>` for `PreconditionGoalDefinitions` to get
   the only element of the list if it is a one-element list, or `None`.
+- `TryInto` implementations were added for `CEffect` to allow deconstruction into
+  `PEffect`, `ForallCEffect` and `WhenCEffect`.
 
 ### Changed
 
 - The `PrefConGD::And` variant was removed and replaced with the `PrefConGDs` type.
 - The `Effect::All` and `Effect::Single` variants were removed and the `Effect` type
   was changed to a struct wrapping a vector `Effects`.
+- The `CEffect` variants were changed to wrap `ForallCEffect` and `WhenCEffect` types.
+
+### Fixed
+
+- Fixed an issue where `(and ...)` conditional effects would be accidentally parsed
+  into an atomic formula with predicate `and`.
 
 ## [0.0.4] - 2023-05-04
 
