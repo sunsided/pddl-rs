@@ -19,6 +19,11 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   was changed to a struct wrapping a vector `Effects`.
 - The `CEffect` variants were changed to wrap `ForallCEffect` and `WhenCEffect` types.
 
+### Fixed
+
+- Fixed an issue where `(and ...)` conditional effects would be accidentally parsed
+  into an atomic formula with predicate `and`.
+
 ## [0.0.4] - 2023-05-04
 
 ### Added

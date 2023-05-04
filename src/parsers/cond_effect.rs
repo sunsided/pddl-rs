@@ -48,7 +48,7 @@ pub fn parse_cond_effect(input: &str) -> IResult<&str, ConditionalEffect> {
         ConditionalEffect::from,
     );
 
-    alt((exactly, all))(input)
+    alt((all, exactly))(input)
 }
 
 impl<'a> crate::parsers::Parser<'a> for ConditionalEffect<'a> {
