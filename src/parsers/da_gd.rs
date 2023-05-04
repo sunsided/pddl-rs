@@ -1,22 +1,21 @@
 //! Provides parsers for durative action goal definitions.
 
-use crate::parsers::{parens, prefix_expr, space_separated_list0, typed_list};
+use crate::parsers::{parens, prefix_expr, space_separated_list0, typed_list, ParseResult, Span};
 use crate::parsers::{parse_pref_timed_gd, parse_variable};
 use crate::types::DurativeActionGoalDefinition;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
-use nom::IResult;
 
 /// Parser for goal definitions.
 ///
 /// ## Examples
 /// ```
-/// # use pddl::parsers::{parse_da_gd};
+/// # use pddl::parsers::{parse_da_gd, preamble::*};
 /// # use pddl::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Preference, PreferenceName, PreferenceGD, Term, Variable, DurativeActionGoalDefinition, PrefTimedGD, TimedGD, TimeSpecifier, Interval};
 /// # use pddl::{Typed, TypedList};
-/// assert_eq!(parse_da_gd("(at start (= x y))"), Ok(("",
+/// assert!(parse_da_gd("(at start (= x y))".into()).is_value(
 ///     DurativeActionGoalDefinition::Timed(
 ///         PrefTimedGD::Required(
 ///             TimedGD::new_at(
@@ -30,13 +29,13 @@ use nom::IResult;
 ///             )
 ///         )
 ///     )
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_da_gd("(and )"), Ok(("",
+/// assert!(parse_da_gd("(and )".into()).is_value(
 ///     DurativeActionGoalDefinition::new_and([])
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_da_gd("(and (at start (= x y)) (over all (= a b)))"), Ok(("",
+/// assert!(parse_da_gd("(and (at start (= x y)) (over all (= a b)))".into()).is_value(
 ///     DurativeActionGoalDefinition::new_and([
 ///         DurativeActionGoalDefinition::Timed(PrefTimedGD::Required(
 ///             TimedGD::new_at(
@@ -61,9 +60,9 @@ use nom::IResult;
 ///             )
 ///         ))
 ///     ])
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_da_gd("(forall (?a ?b) (at start (= a b)))"), Ok(("",
+/// assert!(parse_da_gd("(forall (?a ?b) (at start (= a b)))".into()).is_value(
 ///     DurativeActionGoalDefinition::new_forall(
 ///         TypedList::from_iter([
 ///             Typed::new_object(Variable::from_str("a")),
@@ -83,9 +82,9 @@ use nom::IResult;
 ///             )
 ///         )
 ///     )
-/// )));
+/// ));
 /// ```
-pub fn parse_da_gd(input: &str) -> IResult<&str, DurativeActionGoalDefinition> {
+pub fn parse_da_gd(input: Span) -> ParseResult<DurativeActionGoalDefinition> {
     let pref_timed_gd = map(parse_pref_timed_gd, DurativeActionGoalDefinition::new_timed);
     let and = map(
         prefix_expr("and", space_separated_list0(parse_da_gd)),
@@ -111,7 +110,7 @@ impl<'a> crate::parsers::Parser<'a> for DurativeActionGoalDefinition<'a> {
     type Item = DurativeActionGoalDefinition<'a>;
 
     /// See [`parse_da_gd`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
         parse_da_gd(input)
     }
 }
@@ -129,6 +128,6 @@ mod tests {
                 (over all (can-move ?from-waypoint ?to-waypoint))
                 (at start (at ?rover ?from-waypoint))
                 (at start (> (battery-amount ?rover) 8)))"#;
-        let (_, _gd) = parse_da_gd(input).unwrap();
+        let (_, _gd) = parse_da_gd(Span::new(input)).unwrap();
     }
 }

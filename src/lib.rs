@@ -49,8 +49,8 @@
 //!     )
 //!     "#;
 //!
-//! let (_, domain) = Domain::parse(BRIEFCASE_WORLD).unwrap();
-//! let (_, problem) = Problem::parse(BRIEFCASE_WORLD_PROBLEM).unwrap();
+//! let (_, domain) = Domain::parse(BRIEFCASE_WORLD.into()).unwrap();
+//! let (_, problem) = Problem::parse(BRIEFCASE_WORLD_PROBLEM.into()).unwrap();
 //!
 //! // All elements were parsed.
 //! assert_eq!(domain.name(), &"briefcase-world".into());

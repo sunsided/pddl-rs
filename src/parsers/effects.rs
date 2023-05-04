@@ -1,19 +1,18 @@
 //! Provides parsers for effects.
 
-use crate::parsers::parse_c_effect;
+use crate::parsers::{parse_c_effect, ParseResult, Span};
 use crate::parsers::{prefix_expr, space_separated_list0};
 use crate::types::Effects;
 use nom::branch::alt;
 use nom::combinator::map;
-use nom::IResult;
 
 /// Parser for effects.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::parse_effect;
+/// # use pddl::parsers::{parse_effect, preamble::*};
 /// # use pddl::{AtomicFormula, CEffect, Effects, EqualityAtomicFormula, PEffect, Term};
-/// assert_eq!(parse_effect("(= x y)"), Ok(("",
+/// assert!(parse_effect("(= x y)".into()).is_value(
 ///     Effects::new(
 ///         CEffect::Effect(
 ///             PEffect::AtomicFormula(AtomicFormula::Equality(
@@ -24,8 +23,8 @@ use nom::IResult;
 ///             )
 ///         )
 ///     )
-/// )));
-/// assert_eq!(parse_effect("(and (= x y) (not (= ?a B)))"), Ok(("",
+/// ));
+/// assert!(parse_effect("(and (= x y) (not (= ?a B)))".into()).is_value(
 ///     Effects::from_iter([
 ///         CEffect::Effect(
 ///             PEffect::AtomicFormula(AtomicFormula::Equality(
@@ -44,9 +43,9 @@ use nom::IResult;
 ///             )
 ///         )
 ///     ])
-/// )));
+/// ));
 /// ```
-pub fn parse_effect(input: &str) -> IResult<&str, Effects> {
+pub fn parse_effect<'a>(input: Span<'a>) -> ParseResult<'a, Effects> {
     let exactly = map(parse_c_effect, Effects::from);
     let all = map(
         prefix_expr("and", space_separated_list0(parse_c_effect)),
@@ -60,7 +59,7 @@ impl<'a> crate::parsers::Parser<'a> for Effects<'a> {
     type Item = Effects<'a>;
 
     /// See [`parse_effect`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
         parse_effect(input)
     }
 }

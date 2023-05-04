@@ -57,11 +57,12 @@ impl<'a> FromIterator<PEffect<'a>> for ConditionalEffect<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parsers::Span;
     use crate::Parser;
 
     #[test]
     fn flatten_with_single_element_works() {
-        let (_, effect_a) = PEffect::parse("(= x y)").unwrap();
+        let (_, effect_a) = PEffect::parse(Span::new("(= x y)")).unwrap();
 
         let mut iter = ConditionalEffect::new(effect_a).into_iter();
         assert!(iter.next().is_some());
@@ -70,8 +71,8 @@ mod tests {
 
     #[test]
     fn flatten_with_many_elements_works() {
-        let (_, effect_a) = PEffect::parse("(= x y)").unwrap();
-        let (_, effect_b) = PEffect::parse("(assign fun-sym 1.23)").unwrap();
+        let (_, effect_a) = PEffect::parse(Span::new("(= x y)")).unwrap();
+        let (_, effect_b) = PEffect::parse(Span::new("(assign fun-sym 1.23)")).unwrap();
 
         let mut iter = ConditionalEffect::from_iter([effect_a, effect_b]).into_iter();
         assert!(iter.next().is_some());

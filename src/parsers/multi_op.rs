@@ -1,24 +1,24 @@
 //! Provides parsers for multi-operand operations.
 
+use crate::parsers::{ParseResult, Span};
 use crate::types::{multi_op::names, MultiOp};
 use nom::branch::alt;
 use nom::bytes::complete::tag;
-use nom::combinator::map_res;
-use nom::IResult;
+use nom::combinator::map;
 
 /// Parses a multi-operand operation, i.e. `* | +`.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::parse_multi_op;
+/// # use pddl::parsers::{parse_multi_op, preamble::*};
 /// # use pddl::{MultiOp};
-/// assert_eq!(parse_multi_op("*"), Ok(("", MultiOp::Multiplication)));
-/// assert_eq!(parse_multi_op("+"), Ok(("", MultiOp::Addition)));
+/// assert!(parse_multi_op("*".into()).is_value(MultiOp::Multiplication));
+/// assert!(parse_multi_op("+".into()).is_value(MultiOp::Addition));
 ///```
-pub fn parse_multi_op(input: &str) -> IResult<&str, MultiOp> {
-    map_res(
+pub fn parse_multi_op(input: Span) -> ParseResult<MultiOp> {
+    map(
         alt((tag(names::MULTIPLICATION), tag(names::ADDITION))),
-        MultiOp::try_from,
+        |x: Span| MultiOp::try_from(*x.fragment()).expect("unhandled variant"),
     )(input)
 }
 
@@ -26,7 +26,7 @@ impl<'a> crate::parsers::Parser<'a> for MultiOp {
     type Item = MultiOp;
 
     /// See [`parse_multi_op`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
         parse_multi_op(input)
     }
 }

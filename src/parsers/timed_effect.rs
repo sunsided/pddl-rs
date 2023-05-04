@@ -1,6 +1,6 @@
 //! Provides parsers for timed effects.
 
-use crate::parsers::{parens, prefix_expr};
+use crate::parsers::{parens, prefix_expr, ParseResult, Span};
 use crate::parsers::{
     parse_assign_op_t, parse_cond_effect, parse_f_assign_da, parse_f_exp_t, parse_f_head,
     parse_time_specifier,
@@ -10,16 +10,15 @@ use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
-use nom::IResult;
 
 /// Parser that parses timed effects.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::parse_timed_effect;
+/// # use pddl::parsers::{parse_timed_effect, preamble::*};
 /// # use pddl::{AssignOp, AssignOpT, AtomicFormula, CEffect, ConditionalEffect, EqualityAtomicFormula, FAssignDa, FExpDa, FExpT, FHead, PEffect, Term, TimedEffect, TimeSpecifier};
 /// # use pddl::FExpDa::FExp;
-/// assert_eq!(parse_timed_effect("(at start (= x y))"), Ok(("",
+/// assert!(parse_timed_effect("(at start (= x y))".into()).is_value(
 ///     TimedEffect::new_conditional(
 ///         TimeSpecifier::Start,
 ///         ConditionalEffect::new(
@@ -31,9 +30,9 @@ use nom::IResult;
 ///             )
 ///         )
 ///     )
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_timed_effect("(at end (assign fun-sym ?duration))"), Ok(("",
+/// assert!(parse_timed_effect("(at end (assign fun-sym ?duration))".into()).is_value(
 ///     TimedEffect::new_fluent(
 ///         TimeSpecifier::End,
 ///         FAssignDa::new(
@@ -42,17 +41,17 @@ use nom::IResult;
 ///             FExpDa::Duration
 ///         )
 ///     )
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_timed_effect("(increase fun-sym #t)"), Ok(("",
+/// assert!(parse_timed_effect("(increase fun-sym #t)".into()).is_value(
 ///     TimedEffect::new_continuous(
 ///         AssignOpT::Increase,
 ///         FHead::Simple("fun-sym".into()),
 ///         FExpT::Now
 ///     )
-/// )));
+/// ));
 /// ```
-pub fn parse_timed_effect(input: &str) -> IResult<&str, TimedEffect> {
+pub fn parse_timed_effect(input: Span) -> ParseResult<TimedEffect> {
     let cond = map(
         prefix_expr(
             "at",
@@ -93,7 +92,7 @@ impl<'a> crate::parsers::Parser<'a> for TimedEffect<'a> {
     type Item = TimedEffect<'a>;
 
     /// See [`parse_timed_effect`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
         parse_timed_effect(input)
     }
 }
@@ -105,6 +104,6 @@ mod tests {
     #[test]
     fn it_works() {
         let input = "(at end (increase (distance-travelled) 5))";
-        let (_, _effect) = parse_timed_effect(input).unwrap();
+        let (_, _effect) = parse_timed_effect(Span::new(input)).unwrap();
     }
 }

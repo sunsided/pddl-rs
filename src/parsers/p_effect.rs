@@ -2,6 +2,7 @@
 
 use crate::parsers::{
     atomic_formula, parse_assign_op, parse_f_exp, parse_f_head, parse_function_term, parse_term,
+    ParseResult, Span,
 };
 use crate::parsers::{parens, prefix_expr};
 use crate::types::PEffect;
@@ -10,63 +11,62 @@ use nom::bytes::complete::tag;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, terminated, tuple};
-use nom::IResult;
 
 /// Parses p-effects.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::parse_p_effect;
+/// # use pddl::parsers::{parse_p_effect, preamble::*};
 /// # use pddl::{AssignOp, AtomicFormula, EqualityAtomicFormula, FExp, FHead, FunctionSymbol, FunctionTerm, PEffect, Term};
-/// assert_eq!(parse_p_effect("(= x y)"), Ok(("",
+/// assert!(parse_p_effect("(= x y)".into()).is_value(
 ///     PEffect::AtomicFormula(AtomicFormula::Equality(
 ///         EqualityAtomicFormula::new(
 ///             Term::Name("x".into()),
 ///             Term::Name("y".into()))
 ///         )
 ///     )
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_p_effect("(not (= ?a B))"), Ok(("",
+/// assert!(parse_p_effect("(not (= ?a B))".into()).is_value(
 ///     PEffect::NotAtomicFormula(AtomicFormula::Equality(
 ///         EqualityAtomicFormula::new(
 ///             Term::Variable("a".into()),
 ///             Term::Name("B".into()))
 ///         )
 ///     )
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_p_effect("(assign fun-sym 1.23)"), Ok(("",
+/// assert!(parse_p_effect("(assign fun-sym 1.23)".into()).is_value(
 ///     PEffect::new_numeric_fluent(
 ///         AssignOp::Assign,
 ///         FHead::new(FunctionSymbol::from_str("fun-sym")),
 ///         FExp::new_number(1.23)
 ///     )
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_p_effect("(assign fun-sym 1.23)"), Ok(("",
+/// assert!(parse_p_effect("(assign fun-sym 1.23)".into()).is_value(
 ///     PEffect::new_numeric_fluent(
 ///         AssignOp::Assign,
 ///         FHead::new(FunctionSymbol::from_str("fun-sym")),
 ///         FExp::new_number(1.23)
 ///     )
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_p_effect("(assign (fun-sym) undefined)"), Ok(("",
+/// assert!(parse_p_effect("(assign (fun-sym) undefined)".into()).is_value(
 ///     PEffect::new_object_fluent(
 ///         FunctionTerm::new(FunctionSymbol::from_str("fun-sym"), []),
 ///         None
 ///     )
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_p_effect("(assign (fun-sym) something)"), Ok(("",
+/// assert!(parse_p_effect("(assign (fun-sym) something)".into()).is_value(
 ///     PEffect::new_object_fluent(
 ///         FunctionTerm::new(FunctionSymbol::from_str("fun-sym"), []),
 ///         Some(Term::Name("something".into()))
 ///     )
-/// )));
+/// ));
 /// ```
-pub fn parse_p_effect(input: &str) -> IResult<&str, PEffect> {
+pub fn parse_p_effect(input: Span) -> ParseResult<PEffect> {
     let is = map(atomic_formula(parse_term), |af| PEffect::new(af));
     let is_not = map(prefix_expr("not", atomic_formula(parse_term)), |af| {
         PEffect::new_not(af)
@@ -105,7 +105,7 @@ impl<'a> crate::parsers::Parser<'a> for PEffect<'a> {
     type Item = PEffect<'a>;
 
     /// See [`parse_p_effect`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
         parse_p_effect(input)
     }
 }
@@ -117,6 +117,6 @@ mod tests {
     #[test]
     fn it_works() {
         let input = "(can-move ?from-waypoint ?to-waypoint)";
-        let (_, _effect) = parse_p_effect(input).unwrap();
+        let (_, _effect) = parse_p_effect(Span::new(input)).unwrap();
     }
 }

@@ -1,21 +1,19 @@
 //! Provides parsers for literals.
 
-use crate::parsers::atomic_formula;
 use crate::parsers::prefix_expr;
+use crate::parsers::{atomic_formula, ParseResult, Span};
 use crate::types::Literal;
 use nom::branch::alt;
 use nom::combinator::map;
-use nom::IResult;
 
 /// Parser combinator that parses a literal, i.e. `<atomic formula(t)> | (not <atomic formula(t)>)`.
 ///
 /// ## Example
 /// ```
 /// # use nom::character::complete::alpha1;
-/// # use pddl::parsers::literal;
-/// # use pddl::parsers::parse_name;
+/// # use pddl::parsers::{literal, parse_name, preamble::*};
 /// # use pddl::{AtomicFormula, EqualityAtomicFormula, PredicateAtomicFormula, Predicate, Literal};
-/// assert_eq!(literal(parse_name)("(= x y)"), Ok(("",
+/// assert!(literal(parse_name)(Span::new("(= x y)")).is_value(
 ///     Literal::AtomicFormula(
 ///         AtomicFormula::Equality(
 ///             EqualityAtomicFormula::new(
@@ -24,8 +22,8 @@ use nom::IResult;
 ///             )
 ///         )
 ///     )
-/// )));
-/// assert_eq!(literal(parse_name)("(not (= x y))"), Ok(("",
+/// ));
+/// assert!(literal(parse_name)(Span::new("(not (= x y))")).is_value(
 ///     Literal::NotAtomicFormula(
 ///         AtomicFormula::Equality(
 ///             EqualityAtomicFormula::new(
@@ -34,11 +32,11 @@ use nom::IResult;
 ///             )
 ///         )
 ///     )
-/// )));
+/// ));
 /// ```
-pub fn literal<'a, F, O>(inner: F) -> impl FnMut(&'a str) -> IResult<&'a str, Literal<O>>
+pub fn literal<'a, F, O>(inner: F) -> impl FnMut(Span<'a>) -> ParseResult<'a, Literal<O>>
 where
-    F: Clone + FnMut(&'a str) -> IResult<&'a str, O>,
+    F: Clone + FnMut(Span<'a>) -> ParseResult<'a, O>,
 {
     let is = map(atomic_formula(inner.clone()), |af| Literal::new(af));
     let is_not = map(prefix_expr("not", atomic_formula(inner)), |af| {

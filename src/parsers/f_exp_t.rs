@@ -1,24 +1,23 @@
 //! Provides parsers for f-exps.
 
-use crate::parsers::parse_f_exp;
 use crate::parsers::prefix_expr;
+use crate::parsers::{parse_f_exp, ParseResult, Span};
 use crate::types::FExpT;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, terminated, tuple};
-use nom::IResult;
 
 /// Parses an f-exp-t.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::{parse_f_exp, parse_f_exp_t};
+/// # use pddl::parsers::{parse_f_exp, parse_f_exp_t, preamble::*};
 /// # use pddl::{BinaryOp, FExp, FExpT, FHead, FunctionSymbol, MultiOp, Term, Variable};
-/// assert_eq!(parse_f_exp_t("#t"), Ok(("", FExpT::Now)));
+/// assert!(parse_f_exp_t("#t".into()).is_value(FExpT::Now));
 ///
-/// assert_eq!(parse_f_exp_t("(* (fuel ?tank) #t)"), Ok(("",
+/// assert!(parse_f_exp_t("(* (fuel ?tank) #t)".into()).is_value(
 ///     FExpT::new_scaled(
 ///         FExp::new_function(
 ///             FHead::new_with_terms(
@@ -27,9 +26,9 @@ use nom::IResult;
 ///             )
 ///         )
 ///     )
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_f_exp_t("(* #t (fuel ?tank))"), Ok(("",
+/// assert!(parse_f_exp_t("(* #t (fuel ?tank))".into()).is_value(
 ///     FExpT::new_scaled(
 ///         FExp::new_function(
 ///             FHead::new_with_terms(
@@ -38,9 +37,9 @@ use nom::IResult;
 ///             )
 ///         )
 ///     )
-/// )));
+/// ));
 ///```
-pub fn parse_f_exp_t(input: &str) -> IResult<&str, FExpT> {
+pub fn parse_f_exp_t(input: Span) -> ParseResult<FExpT> {
     let now = map(tag("#t"), |_| FExpT::new());
     let scaled = map(
         prefix_expr(
@@ -60,7 +59,7 @@ impl<'a> crate::parsers::Parser<'a> for FExpT<'a> {
     type Item = FExpT<'a>;
 
     /// See [`parse_f_exp_t`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
         parse_f_exp_t(input)
     }
 }

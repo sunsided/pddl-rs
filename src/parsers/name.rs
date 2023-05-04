@@ -1,60 +1,47 @@
 //! Provides parsers for names.
 
-use crate::parsers::number::parse_digit;
+use crate::parsers::{ParseResult, Span};
 use crate::types::Name;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
-use nom::character::is_alphabetic;
-use nom::combinator::recognize;
-use nom::error::ErrorKind;
+use nom::character::complete::{alpha1, digit1};
+use nom::combinator::{map, recognize};
 use nom::multi::many0;
 use nom::sequence::tuple;
-use nom::{error_position, IResult};
 
 /// Parses a name, i.e. `<letter> <any char>⁺`.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::parse_name;
-/// assert_eq!(parse_name("abcde"), Ok(("", "abcde".into())));
-/// assert_eq!(parse_name("a-1_2"), Ok(("", "a-1_2".into())));
-/// assert_eq!(parse_name("Z01"), Ok(("", "Z01".into())));
-/// assert_eq!(parse_name("x-_-_"), Ok(("", "x-_-_".into())));
+/// # use pddl::parsers::{parse_name, preamble::*};
+/// assert!(parse_name(Span::new("abcde")).is_value("abcde".into()));
+/// assert!(parse_name(Span::new("a-1_2")).is_value("a-1_2".into()));
+/// assert!(parse_name(Span::new("Z01")).is_value("Z01".into()));
+/// assert!(parse_name(Span::new("x-_-_")).is_value("x-_-_".into()));
 ///
-/// assert!(parse_name("").is_err());
-/// assert!(parse_name(".").is_err());
-/// assert!(parse_name("-abc").is_err());
-/// assert!(parse_name("0124").is_err());
-/// assert!(parse_name("-1").is_err());
+/// assert!(parse_name(Span::new("")).is_err());
+/// assert!(parse_name(Span::new(".")).is_err());
+/// assert!(parse_name(Span::new("-abc")).is_err());
+/// assert!(parse_name(Span::new("0124")).is_err());
+/// assert!(parse_name(Span::new("-1")).is_err());
 ///```
-pub fn parse_name(input: &str) -> IResult<&str, Name> {
-    let (remaining, name) = recognize(tuple((parse_alpha, many0(parse_any_char))))(input)?;
-    Ok((remaining, Name::from(name)))
+pub fn parse_name(input: Span) -> ParseResult<Name> {
+    map(
+        recognize(tuple((alpha1, many0(parse_any_char)))),
+        |x: Span| Name::from(*x.fragment()),
+    )(input)
 }
 
-/// Parses a decimal, i.e. `.<digit>⁺`.
-pub fn parse_any_char(input: &str) -> IResult<&str, &str> {
-    recognize(alt((parse_alpha, parse_digit, tag("-"), tag("_"))))(input)
-}
-
-/// Parses a alphabetic character, i.e. `a..z | A..Z`.
-pub fn parse_alpha(input: &str) -> IResult<&str, &str> {
-    if input.is_empty() {
-        return Err(nom::Err::Error(error_position!(input, ErrorKind::Count)));
-    }
-
-    if !is_alphabetic(input.as_bytes()[0]) {
-        return Err(nom::Err::Error(error_position!(input, ErrorKind::Alpha)));
-    }
-
-    Ok((&input[1..], &input[..1]))
+/// Parses any accepted character.
+pub fn parse_any_char(input: Span) -> ParseResult<Span> {
+    recognize(alt((alpha1, digit1, tag("-"), tag("_"))))(input)
 }
 
 impl<'a> crate::parsers::Parser<'a> for Name<'a> {
     type Item = Name<'a>;
 
     /// See [`parse_name`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
         parse_name(input)
     }
 }
@@ -62,29 +49,20 @@ impl<'a> crate::parsers::Parser<'a> for Name<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::parsers::Match;
 
     #[test]
     fn parse_name_works() {
-        assert_eq!(parse_name("abcde"), Ok(("", "abcde".into())));
+        assert!(parse_name(Span::new("abcde")).is_exactly("abcde"));
     }
 
     #[test]
     fn parse_any_char_works() {
-        assert_eq!(parse_any_char("abc"), Ok(("bc", "a")));
-        assert_eq!(parse_any_char("1"), Ok(("", "1")));
-        assert_eq!(parse_any_char("-."), Ok((".", "-")));
-        assert_eq!(parse_any_char("_"), Ok(("", "_")));
-        assert!(parse_any_char(".").is_err());
-        assert!(parse_any_char(".").is_err());
-    }
-
-    #[test]
-    fn parse_alpha_works() {
-        assert_eq!(parse_alpha("a"), Ok(("", "a")));
-        assert_eq!(parse_alpha("ab"), Ok(("b", "a")));
-        assert_eq!(parse_alpha("a1"), Ok(("1", "a")));
-        assert_eq!(parse_alpha("ab1"), Ok(("b1", "a")));
-        assert!(parse_alpha("").is_err());
-        assert!(parse_alpha("1").is_err());
+        assert!(parse_any_char(Span::new("abc")).is_exactly("abc"));
+        assert!(parse_any_char(Span::new("1")).is_exactly("1"));
+        assert!(parse_any_char(Span::new("-.")).is_result(".", "-"));
+        assert!(parse_any_char(Span::new("_")).is_exactly("_"));
+        assert!(parse_any_char(Span::new(".")).is_err());
+        assert!(parse_any_char(Span::new(".")).is_err());
     }
 }

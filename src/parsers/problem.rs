@@ -1,6 +1,6 @@
 //! Provides parsers for problem definitions.
 
-use crate::parsers::{parse_name, prefix_expr, ws};
+use crate::parsers::{parse_name, prefix_expr, ws, ParseResult, Span};
 use crate::parsers::{
     parse_problem_constraints_def, parse_problem_goal_def, parse_problem_init_def,
     parse_problem_length_spec, parse_problem_metric_spec, parse_problem_objects_declaration,
@@ -11,13 +11,12 @@ use crate::types::{ProblemConstraintsDef, Requirements};
 use nom::character::complete::multispace1;
 use nom::combinator::{map, opt};
 use nom::sequence::{preceded, tuple};
-use nom::IResult;
 
 /// Parses a problem definitions.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::{parse_action_def, parse_problem};
+/// # use pddl::parsers::{parse_action_def, parse_problem, preamble::*};
 /// # use pddl::{Name, PreconditionGoalDefinition};
 /// let input = r#"(define (problem get-paid)
 ///         (:domain briefcase-world)
@@ -27,16 +26,16 @@ use nom::IResult;
 ///         (:goal (and (at B office) (at D office) (at P home)))
 ///     )"#;
 ///
-/// let (remainder, problem) = parse_problem(input).unwrap();
+/// let (remainder, problem) = parse_problem(input.into()).unwrap();
 ///
-/// assert_eq!(remainder, "");
+/// assert!(remainder.is_empty());
 /// assert_eq!(problem.name(), &Name::new("get-paid"));
 /// assert_eq!(problem.domain(), &Name::new("briefcase-world"));
 /// assert!(problem.requirements().is_empty());
 /// assert_eq!(problem.init().len(), 9);
 /// assert_eq!(problem.goal().len(), 3);
 /// ```
-pub fn parse_problem(input: &str) -> IResult<&str, Problem> {
+pub fn parse_problem(input: Span) -> ParseResult<Problem> {
     map(
         ws(prefix_expr(
             "define",
@@ -75,7 +74,7 @@ impl<'a> crate::parsers::Parser<'a> for Problem<'a> {
     type Item = Problem<'a>;
 
     /// See [`parse_problem`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
         parse_problem(input)
     }
 }

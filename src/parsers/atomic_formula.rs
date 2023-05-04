@@ -1,35 +1,33 @@
 //! Provides parsers for atomic formulae.
 
-use crate::parsers::parse_predicate;
 use crate::parsers::{parens, space_separated_list0, ws};
+use crate::parsers::{parse_predicate, ParseResult, Span};
 use crate::types::AtomicFormula;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::character::complete::{char, multispace1};
 use nom::combinator::map;
 use nom::sequence::{delimited, preceded, tuple};
-use nom::IResult;
 
 /// Parses an atomic formula, i.e. `(<predicate> t*) | (= t t)`.
 ///
 /// ## Example
 /// ```
 /// # use nom::character::complete::alpha1;
-/// # use pddl::parsers::atomic_formula;
-/// # use pddl::parsers::parse_name;
+/// # use pddl::parsers::{atomic_formula, Span, parse_name, UnwrapValue};
 /// # use pddl::{AtomicFormula, EqualityAtomicFormula, PredicateAtomicFormula, Predicate};
-/// assert_eq!(atomic_formula(parse_name)("(= x y)"), Ok(("",
+/// assert!(atomic_formula(parse_name)(Span::new("(= x y)")).is_value(
 ///     AtomicFormula::Equality(EqualityAtomicFormula::new("x".into(), "y".into()))
-/// )));
-/// assert_eq!(atomic_formula(parse_name)("(move a b)"), Ok(("",
+/// ));
+/// assert!(atomic_formula(parse_name)(Span::new("(move a b)")).is_value(
 ///     AtomicFormula::Predicate(PredicateAtomicFormula::new(Predicate::from("move"), vec!["a".into(), "b".into()]))
-/// )));
+/// ));
 /// ```
 pub fn atomic_formula<'a, F, O>(
     inner: F,
-) -> impl FnMut(&'a str) -> IResult<&'a str, AtomicFormula<O>>
+) -> impl FnMut(Span<'a>) -> ParseResult<'a, AtomicFormula<O>>
 where
-    F: Clone + FnMut(&'a str) -> IResult<&'a str, O>,
+    F: Clone + FnMut(Span<'a>) -> ParseResult<'a, O>,
 {
     let equality = map(
         delimited(
@@ -59,6 +57,6 @@ mod tests {
     #[test]
     fn it_works() {
         let input = "(can-move ?from-waypoint ?to-waypoint)";
-        let (_, _effect) = atomic_formula(parse_term)(input).unwrap();
+        let (_, _effect) = atomic_formula(parse_term)(Span::new(input)).unwrap();
     }
 }

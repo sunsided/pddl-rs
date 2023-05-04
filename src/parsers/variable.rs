@@ -1,35 +1,34 @@
 //! Provides parsers for variables.
 
-use crate::parsers::parse_name;
+use crate::parsers::{parse_name, ParseResult, Span};
 use crate::types::Variable;
 use nom::bytes::complete::tag;
+use nom::combinator::map;
 use nom::sequence::preceded;
-use nom::IResult;
 
 /// Parses a variable, i.e. `?<name>` and returns its name.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::parse_variable;
-/// assert_eq!(parse_variable("?abcde"), Ok(("", "abcde".into())));
-/// assert_eq!(parse_variable("?a-1_2"), Ok(("", "a-1_2".into())));
-/// assert_eq!(parse_variable("?Z01"), Ok(("", "Z01".into())));
-/// assert_eq!(parse_variable("?x-_-_"), Ok(("", "x-_-_".into())));
+/// # use pddl::parsers::{parse_variable, preamble::*};
+/// assert!(parse_variable(Span::new("?abcde")).is_value("abcde".into()));
+/// assert!(parse_variable(Span::new("?a-1_2")).is_value("a-1_2".into()));
+/// assert!(parse_variable(Span::new("?Z01")).is_value("Z01".into()));
+/// assert!(parse_variable(Span::new("?x-_-_")).is_value("x-_-_".into()));
 ///
-/// assert!(parse_variable("abcde").is_err());
-/// assert!(parse_variable("?-").is_err());
-/// assert!(parse_variable("?1").is_err());
+/// assert!(parse_variable(Span::new("abcde")).is_err());
+/// assert!(parse_variable(Span::new("?-")).is_err());
+/// assert!(parse_variable(Span::new("?1")).is_err());
 ///```
-pub fn parse_variable(input: &str) -> IResult<&str, Variable> {
-    let (remaining, name) = preceded(tag("?"), parse_name)(input)?;
-    Ok((remaining, Variable::from(name)))
+pub fn parse_variable<'a>(input: Span<'a>) -> ParseResult<'a, Variable> {
+    map(preceded(tag("?"), parse_name), Variable::from)(input)
 }
 
 impl<'a> crate::parsers::Parser<'a> for Variable<'a> {
     type Item = Variable<'a>;
 
     /// See [`parse_variable`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
         parse_variable(input)
     }
 }

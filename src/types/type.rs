@@ -136,11 +136,12 @@ impl<'a> IntoIterator for Type<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parsers::Span;
     use crate::Parser;
 
     #[test]
     fn flatten_with_single_element_works() {
-        let (_, t) = Type::parse("object").unwrap();
+        let (_, t) = Type::parse(Span::new("object")).unwrap();
 
         let mut iter = t.into_iter();
         assert!(iter.next().is_some());
@@ -149,7 +150,7 @@ mod tests {
 
     #[test]
     fn flatten_with_many_elements_works() {
-        let (_, t) = Type::parse("(either object number)").unwrap();
+        let (_, t) = Type::parse(Span::new("(either object number)")).unwrap();
 
         let mut iter = t.into_iter();
         assert!(iter.next().is_some());

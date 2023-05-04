@@ -35,13 +35,13 @@ impl<'a, T> From<AtomicFormula<'a, T>> for Literal<'a, T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parsers::{atomic_formula, parse_term};
+    use crate::parsers::{atomic_formula, parse_term, Span};
     use crate::Term;
 
     #[test]
     fn from_works() {
         let input = "(= x y)";
-        let (_, effect) = atomic_formula(parse_term)(input).unwrap();
+        let (_, effect) = atomic_formula(parse_term)(Span::new(input)).unwrap();
 
         let literal: Literal<Term> = effect.into();
         assert_eq!(

@@ -66,11 +66,12 @@ impl<'a> FromIterator<SimpleDurationConstraint<'a>> for DurationConstraint<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parsers::Span;
     use crate::Parser;
 
     #[test]
     fn flatten_with_single_element_works() {
-        let (_, dc_a) = SimpleDurationConstraint::parse("(>= ?duration 1.23)").unwrap();
+        let (_, dc_a) = SimpleDurationConstraint::parse(Span::new("(>= ?duration 1.23)")).unwrap();
 
         let mut iter = DurationConstraint::new(dc_a).into_iter();
         assert!(iter.next().is_some());
@@ -79,8 +80,9 @@ mod tests {
 
     #[test]
     fn flatten_with_many_elements_works() {
-        let (_, dc_a) = SimpleDurationConstraint::parse("(>= ?duration 1.23)").unwrap();
-        let (_, dc_b) = SimpleDurationConstraint::parse("(at end (<= ?duration 1.23))").unwrap();
+        let (_, dc_a) = SimpleDurationConstraint::parse(Span::new("(>= ?duration 1.23)")).unwrap();
+        let (_, dc_b) =
+            SimpleDurationConstraint::parse(Span::new("(at end (<= ?duration 1.23))")).unwrap();
 
         let mut iter = DurationConstraint::from_iter([dc_a, dc_b]).into_iter();
         assert!(iter.next().is_some());
