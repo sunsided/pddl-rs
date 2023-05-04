@@ -9,7 +9,7 @@ pub trait UnwrapValue<V> {
     fn unwrap_value(self) -> V;
 
     /// Unwraps the value and compares it with the specified value.
-    fn is_value(self, value: V) -> bool;
+    fn is_value(&self, value: V) -> bool;
 }
 
 impl<'a, V> UnwrapValue<V> for ParseResult<'a, V>
@@ -20,7 +20,7 @@ where
         self.expect("expected a value").1
     }
 
-    fn is_value(self, value: V) -> bool {
+    fn is_value(&self, value: V) -> bool {
         match self {
             Ok((_, lhs)) => lhs.eq(&value),
             Err(_) => false,
