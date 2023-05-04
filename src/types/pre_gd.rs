@@ -38,8 +38,21 @@ impl<'a> PreconditionGoalDefinitions<'a> {
         self.0.len()
     }
 
+    /// Returns an iterator over the list.
+    ///
+    /// The iterator yields all items from start to end.
     pub fn iter(&'a self) -> std::slice::Iter<'a, PreconditionGoalDefinition<'a>> {
         self.0.iter()
+    }
+
+    /// Get the only element of this list if the list has
+    /// exactly one element. Returns [`None`] in all other cases.
+    pub fn try_get_single(self) -> Option<PreconditionGoalDefinition<'a>> {
+        if self.len() == 1 {
+            self.into_iter().next()
+        } else {
+            None
+        }
     }
 }
 
@@ -96,6 +109,14 @@ impl<'a> From<PreconditionGoalDefinitions<'a>> for Vec<PreconditionGoalDefinitio
     }
 }
 
+impl<'a> TryInto<PreconditionGoalDefinition<'a>> for PreconditionGoalDefinitions<'a> {
+    type Error = ();
+
+    fn try_into(self) -> Result<PreconditionGoalDefinition<'a>, Self::Error> {
+        self.try_get_single().ok_or(())
+    }
+}
+
 /// A precondition goal definition.
 ///
 /// ## Usage
@@ -112,6 +133,13 @@ pub enum PreconditionGoalDefinition<'a> {
 }
 
 impl<'a> PreconditionGoalDefinition<'a> {
+    pub fn new_and<I: IntoIterator<Item = PreconditionGoalDefinition<'a>>>(
+        iter: I,
+    ) -> PreconditionGoalDefinitions<'a> {
+        // TODO: Flatten `(and (and a b) (and x y))` into `(and a b c y)`.
+        PreconditionGoalDefinitions::from_iter(iter)
+    }
+
     /// Constructs a new [`Preference`](Self::Preference) variant.
     pub const fn new_preference(pref: PreferenceGD<'a>) -> Self {
         Self::Preference(pref)

@@ -1,10 +1,10 @@
 //! Contains the [`Problem`] type.
 
 use crate::types::{
-    GoalDef, InitElements, LengthSpec, MetricSpec, Name, Objects, PrefConGD, ProblemConstraintsDef,
+    GoalDef, InitElements, LengthSpec, MetricSpec, Name, Objects, ProblemConstraintsDef,
     Requirements,
 };
-use crate::PreconditionGoalDefinitions;
+use crate::{PreconditionGoalDefinitions, PrefConGDs};
 
 /// A domain-specific problem declaration.
 ///
@@ -136,7 +136,7 @@ impl<'a> Problem<'a> {
     /// Returns the optional constraints of the problem.
     /// ## Requirements
     /// Requires [Constraints](crate::Requirement::Constraints).
-    pub const fn constraints(&self) -> &PrefConGD<'a> {
+    pub const fn constraints(&self) -> &PrefConGDs<'a> {
         &self.constraints.value()
     }
 
