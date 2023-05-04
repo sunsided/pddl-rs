@@ -2,7 +2,7 @@
 
 use crate::parsers::parse_c_effect;
 use crate::parsers::{prefix_expr, space_separated_list0};
-use crate::types::Effect;
+use crate::types::Effects;
 use nom::branch::alt;
 use nom::combinator::map;
 use nom::IResult;
@@ -12,9 +12,9 @@ use nom::IResult;
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_effect;
-/// # use pddl::{AtomicFormula, CEffect, Effect, EqualityAtomicFormula, PEffect, Term};
+/// # use pddl::{AtomicFormula, CEffect, Effects, EqualityAtomicFormula, PEffect, Term};
 /// assert_eq!(parse_effect("(= x y)"), Ok(("",
-///     Effect::Single(
+///     Effects::new(
 ///         CEffect::Effect(
 ///             PEffect::AtomicFormula(AtomicFormula::Equality(
 ///                 EqualityAtomicFormula::new(
@@ -26,7 +26,7 @@ use nom::IResult;
 ///     )
 /// )));
 /// assert_eq!(parse_effect("(and (= x y) (not (= ?a B)))"), Ok(("",
-///     Effect::All(vec![
+///     Effects::from_iter([
 ///         CEffect::Effect(
 ///             PEffect::AtomicFormula(AtomicFormula::Equality(
 ///                 EqualityAtomicFormula::new(
@@ -46,18 +46,18 @@ use nom::IResult;
 ///     ])
 /// )));
 /// ```
-pub fn parse_effect(input: &str) -> IResult<&str, Effect> {
-    let exactly = map(parse_c_effect, Effect::from);
+pub fn parse_effect(input: &str) -> IResult<&str, Effects> {
+    let exactly = map(parse_c_effect, Effects::from);
     let all = map(
         prefix_expr("and", space_separated_list0(parse_c_effect)),
-        Effect::from,
+        Effects::from,
     );
 
     alt((exactly, all))(input)
 }
 
-impl<'a> crate::parsers::Parser<'a> for Effect<'a> {
-    type Item = Effect<'a>;
+impl<'a> crate::parsers::Parser<'a> for Effects<'a> {
+    type Item = Effects<'a>;
 
     /// See [`parse_effect`].
     fn parse(input: &'a str) -> IResult<&str, Self::Item> {

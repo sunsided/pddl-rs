@@ -306,7 +306,7 @@ Additional elements were added based on the individual specification papers.
 - [x] [`<number>`](src/parsers/number.rs)
 - [x] [`<digit>`](src/parsers/number.rs)
 - [x] [`<decimal>`](src/parsers/number.rs)
-- [x] [`<effect>`](src/parsers/effect.rs)
+- [x] [`<effect>`](src/parsers/effects)
 - [x] [`<c-effect>`](src/parsers/c_effect.rs)
 - [x] [`<p-effect>`](src/parsers/p_effect.rs)
 - [x] [`<cond-effect>`](src/parsers/cond_effect.rs)

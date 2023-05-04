@@ -2,7 +2,7 @@
 
 use crate::types::{AssignOp, AtomicFormula, FExp, FHead, FunctionTerm, Term};
 
-/// A p-effect. Occurs as part of a [`CEffect`](crate::types::CEffect) (within an [`Effect`](crate::types::Effect))
+/// A p-effect. Occurs as part of a [`CEffect`](crate::types::CEffect) (within an [`Effect`](crate::types::Effects))
 /// or a [`ConditionalEffect`](crate::types::ConditionalEffect).
 ///
 /// ## Usage

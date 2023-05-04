@@ -1,18 +1,18 @@
 //! Contains the [`CEffect`] type.
 
 use crate::types::TypedVariables;
-use crate::types::{ConditionalEffect, Effect, GoalDefinition, PEffect};
+use crate::types::{ConditionalEffect, Effects, GoalDefinition, PEffect};
 
-/// A conditional effect. Occurs as part of [`Effect`].
+/// A (potentially conditional) effect. Occurs as part of [`Effects`].
 ///
 /// ## Usage
-/// Used by [`Effect`](Effect).
+/// Used by [`Effect`](Effects).
 #[derive(Debug, Clone, PartialEq)]
 pub enum CEffect<'a> {
     Effect(PEffect<'a>),
     /// ## Requirements
     /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
-    Forall(TypedVariables<'a>, Box<Effect<'a>>),
+    Forall(TypedVariables<'a>, Box<Effects<'a>>),
     /// ## Requirements
     /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
     When(GoalDefinition<'a>, ConditionalEffect<'a>),
@@ -23,7 +23,7 @@ impl<'a> CEffect<'a> {
         Self::Effect(effect)
     }
 
-    pub fn new_forall(variables: TypedVariables<'a>, effect: Effect<'a>) -> Self {
+    pub fn new_forall(variables: TypedVariables<'a>, effect: Effects<'a>) -> Self {
         Self::Forall(variables, Box::new(effect))
     }
 
@@ -38,8 +38,8 @@ impl<'a> From<PEffect<'a>> for CEffect<'a> {
     }
 }
 
-impl<'a> From<(TypedVariables<'a>, Effect<'a>)> for CEffect<'a> {
-    fn from(value: (TypedVariables<'a>, Effect<'a>)) -> Self {
+impl<'a> From<(TypedVariables<'a>, Effects<'a>)> for CEffect<'a> {
+    fn from(value: (TypedVariables<'a>, Effects<'a>)) -> Self {
         CEffect::new_forall(value.0, value.1)
     }
 }
