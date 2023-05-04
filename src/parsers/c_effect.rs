@@ -195,8 +195,8 @@ impl<'a> crate::parsers::Parser<'a> for CEffect<'a> {
     type Item = CEffect<'a>;
 
     /// See [`parse_c_effect`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_c_effect(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_c_effect(input.into())
     }
 }
 
@@ -204,8 +204,8 @@ impl<'a> crate::parsers::Parser<'a> for ForallCEffect<'a> {
     type Item = ForallCEffect<'a>;
 
     /// See [`parse_forall_c_effect`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_forall_c_effect(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_forall_c_effect(input.into())
     }
 }
 
@@ -213,7 +213,7 @@ impl<'a> crate::parsers::Parser<'a> for WhenCEffect<'a> {
     type Item = WhenCEffect<'a>;
 
     /// See [`parse_when_c_effect`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_when_c_effect(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_when_c_effect(input.into())
     }
 }

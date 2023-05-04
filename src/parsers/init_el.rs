@@ -92,7 +92,7 @@ impl<'a> crate::parsers::Parser<'a> for InitElement<'a> {
     type Item = InitElement<'a>;
 
     /// See [`parse_init_el`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_init_el(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_init_el(input.into())
     }
 }

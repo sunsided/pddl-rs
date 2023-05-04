@@ -27,7 +27,7 @@ impl<'a> crate::parsers::Parser<'a> for AssignOpT {
     type Item = AssignOpT;
 
     /// See [`parse_assign_op_t`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_assign_op_t(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_assign_op_t(input.into())
     }
 }

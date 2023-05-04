@@ -22,7 +22,7 @@ impl<'a> crate::parsers::Parser<'a> for FunctionType<'a> {
     type Item = FunctionType<'a>;
 
     /// See [`parse_function_type`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_function_type(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_function_type(input.into())
     }
 }

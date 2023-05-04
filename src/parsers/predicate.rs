@@ -28,7 +28,7 @@ impl<'a> crate::parsers::Parser<'a> for Predicate<'a> {
     type Item = Predicate<'a>;
 
     /// See [`parse_predicate`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_predicate(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_predicate(input.into())
     }
 }

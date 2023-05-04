@@ -18,6 +18,9 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The `Effect::All` and `Effect::Single` variants were removed and the `Effect` type
   was changed to a struct wrapping a vector `Effects`.
 - The `CEffect` variants were changed to wrap `ForallCEffect` and `WhenCEffect` types.
+- The parser now uses [nom-greedyerror](https://github.com/dalance/nom-greedyerror) and 
+  [nom_locate](https://github.com/fflorent/nom_locate) to improve error handling.
+- The `Parser` trait now takes an `T: Into<Span<'a>>` argument.
 
 ### Fixed
 

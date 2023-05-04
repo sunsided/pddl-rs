@@ -86,12 +86,12 @@ pub trait Parser<'a> {
     type Item;
 
     /// Parses the `input` into the specified [`Item`](Self::Item) type.
-    fn parse_str(input: &'a str) -> ParseResult<Self::Item> {
-        Self::parse(Span::new(input))
-    }
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item>;
 
     /// Parses the `input` into the specified [`Item`](Self::Item) type.
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item>;
+    fn parse_span(input: Span<'a>) -> ParseResult<Self::Item> {
+        Self::parse(input)
+    }
 }
 
 /// Input type for parsers.

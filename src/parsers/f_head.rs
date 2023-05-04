@@ -46,7 +46,7 @@ impl<'a> crate::parsers::Parser<'a> for FHead<'a> {
     type Item = FHead<'a>;
 
     /// See [`parse_f_head`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_f_head(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_f_head(input.into())
     }
 }

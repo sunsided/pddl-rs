@@ -29,7 +29,7 @@ impl<'a> crate::parsers::Parser<'a> for ProblemConstraintsDef<'a> {
     type Item = ProblemConstraintsDef<'a>;
 
     /// See [`parse_problem_constraints_def`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_problem_constraints_def(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_problem_constraints_def(input.into())
     }
 }

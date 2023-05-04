@@ -43,7 +43,7 @@ impl<'a> crate::parsers::Parser<'a> for FunctionTerm<'a> {
     type Item = FunctionTerm<'a>;
 
     /// See [`parse_function_term`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_function_term(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_function_term(input.into())
     }
 }

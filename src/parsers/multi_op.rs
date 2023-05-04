@@ -26,7 +26,7 @@ impl<'a> crate::parsers::Parser<'a> for MultiOp {
     type Item = MultiOp;
 
     /// See [`parse_multi_op`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_multi_op(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_multi_op(input.into())
     }
 }

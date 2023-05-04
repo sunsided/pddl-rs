@@ -114,7 +114,7 @@ impl<'a> crate::parsers::Parser<'a> for Domain<'a> {
     type Item = Domain<'a>;
 
     /// See [`parse_domain`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_domain(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_domain(input.into())
     }
 }

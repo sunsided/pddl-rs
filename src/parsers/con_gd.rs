@@ -269,8 +269,8 @@ impl<'a> crate::parsers::Parser<'a> for ConGD<'a> {
     type Item = ConGD<'a>;
 
     /// See [`parse_con_gd`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_con_gd(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_con_gd(input.into())
     }
 }
 
@@ -278,7 +278,7 @@ impl<'a> crate::parsers::Parser<'a> for Con2GD<'a> {
     type Item = Con2GD<'a>;
 
     /// See [`parse_con2_gd`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_con2_gd(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_con2_gd(input.into())
     }
 }

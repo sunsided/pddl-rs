@@ -110,8 +110,8 @@ impl<'a> crate::parsers::Parser<'a> for DurativeActionGoalDefinition<'a> {
     type Item = DurativeActionGoalDefinition<'a>;
 
     /// See [`parse_da_gd`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_da_gd(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_da_gd(input.into())
     }
 }
 

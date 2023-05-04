@@ -194,7 +194,7 @@ impl<'a> crate::parsers::Parser<'a> for GoalDefinition<'a> {
     type Item = GoalDefinition<'a>;
 
     /// See [`parse_gd`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_gd(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_gd(input.into())
     }
 }

@@ -14,22 +14,22 @@ use nom::sequence::tuple;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_name, preamble::*};
-/// assert!(parse_name(Span::new("abcde")).is_value("abcde".into()));
-/// assert!(parse_name(Span::new("a-1_2")).is_value("a-1_2".into()));
-/// assert!(parse_name(Span::new("Z01")).is_value("Z01".into()));
-/// assert!(parse_name(Span::new("x-_-_")).is_value("x-_-_".into()));
+/// assert!(parse_name("abcde").is_value("abcde".into()));
+/// assert!(parse_name("a-1_2").is_value("a-1_2".into()));
+/// assert!(parse_name("Z01").is_value("Z01".into()));
+/// assert!(parse_name("x-_-_").is_value("x-_-_".into()));
 ///
-/// assert!(parse_name(Span::new("")).is_err());
-/// assert!(parse_name(Span::new(".")).is_err());
-/// assert!(parse_name(Span::new("-abc")).is_err());
-/// assert!(parse_name(Span::new("0124")).is_err());
-/// assert!(parse_name(Span::new("-1")).is_err());
+/// assert!(parse_name("").is_err());
+/// assert!(parse_name(".").is_err());
+/// assert!(parse_name("-abc").is_err());
+/// assert!(parse_name("0124").is_err());
+/// assert!(parse_name("-1").is_err());
 ///```
-pub fn parse_name(input: Span) -> ParseResult<Name> {
+pub fn parse_name<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Name<'a>> {
     map(
         recognize(tuple((alpha1, many0(parse_any_char)))),
         |x: Span| Name::from(*x.fragment()),
-    )(input)
+    )(input.into())
 }
 
 /// Parses any accepted character.
@@ -41,7 +41,7 @@ impl<'a> crate::parsers::Parser<'a> for Name<'a> {
     type Item = Name<'a>;
 
     /// See [`parse_name`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_name(input)
     }
 }

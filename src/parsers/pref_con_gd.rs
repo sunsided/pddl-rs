@@ -121,7 +121,7 @@ impl<'a> crate::parsers::Parser<'a> for PrefConGDs<'a> {
     type Item = PrefConGDs<'a>;
 
     /// See [`parse_pref_con_gd`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_pref_con_gd(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_pref_con_gd(input.into())
     }
 }

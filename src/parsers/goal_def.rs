@@ -34,7 +34,7 @@ impl<'a> crate::parsers::Parser<'a> for GoalDef<'a> {
     type Item = GoalDef<'a>;
 
     /// See [`parse_problem_goal_def`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_problem_goal_def(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_problem_goal_def(input.into())
     }
 }

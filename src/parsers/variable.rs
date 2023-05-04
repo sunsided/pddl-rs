@@ -28,7 +28,7 @@ impl<'a> crate::parsers::Parser<'a> for Variable<'a> {
     type Item = Variable<'a>;
 
     /// See [`parse_variable`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_variable(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_variable(input.into())
     }
 }

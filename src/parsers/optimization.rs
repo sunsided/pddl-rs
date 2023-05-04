@@ -26,7 +26,7 @@ impl<'a> crate::parsers::Parser<'a> for Optimization {
     type Item = Optimization;
 
     /// See [`parse_optimization`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_optimization(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_optimization(input.into())
     }
 }

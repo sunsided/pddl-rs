@@ -74,7 +74,7 @@ impl<'a> crate::parsers::Parser<'a> for Problem<'a> {
     type Item = Problem<'a>;
 
     /// See [`parse_problem`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_problem(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_problem(input.into())
     }
 }

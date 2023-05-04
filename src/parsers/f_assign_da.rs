@@ -29,8 +29,8 @@ impl<'a> crate::parsers::Parser<'a> for FAssignDa<'a> {
     type Item = FAssignDa<'a>;
 
     /// See [`parse_f_assign_da`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_f_assign_da(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_f_assign_da(input.into())
     }
 }
 

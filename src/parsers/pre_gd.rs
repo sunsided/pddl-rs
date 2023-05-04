@@ -96,7 +96,7 @@ impl<'a> crate::parsers::Parser<'a> for PreconditionGoalDefinitions<'a> {
     type Item = PreconditionGoalDefinitions<'a>;
 
     /// See [`parse_pre_gd`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_pre_gd(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_pre_gd(input.into())
     }
 }

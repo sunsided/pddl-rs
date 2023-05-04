@@ -81,7 +81,7 @@ impl<'a> crate::parsers::Parser<'a> for PrefTimedGD<'a> {
     type Item = PrefTimedGD<'a>;
 
     /// See [`parse_pref_timed_gd`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_pref_timed_gd(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_pref_timed_gd(input.into())
     }
 }

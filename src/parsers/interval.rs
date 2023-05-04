@@ -24,7 +24,7 @@ impl<'a> crate::parsers::Parser<'a> for Interval {
     type Item = Interval;
 
     /// See [`parse_interval`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_interval(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_interval(input.into())
     }
 }

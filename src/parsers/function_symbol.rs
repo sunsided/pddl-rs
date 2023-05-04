@@ -28,7 +28,7 @@ impl<'a> crate::parsers::Parser<'a> for FunctionSymbol<'a> {
     type Item = FunctionSymbol<'a>;
 
     /// See [`parse_function_symbol`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_function_symbol(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_function_symbol(input.into())
     }
 }

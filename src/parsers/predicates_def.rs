@@ -48,7 +48,7 @@ impl<'a> crate::parsers::Parser<'a> for PredicateDefinitions<'a> {
     type Item = PredicateDefinitions<'a>;
 
     /// See [`parse_predicates_def`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_predicates_def(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_predicates_def(input.into())
     }
 }

@@ -92,8 +92,8 @@ impl<'a> crate::parsers::Parser<'a> for TimedEffect<'a> {
     type Item = TimedEffect<'a>;
 
     /// See [`parse_timed_effect`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_timed_effect(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_timed_effect(input.into())
     }
 }
 

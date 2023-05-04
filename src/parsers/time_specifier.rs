@@ -26,7 +26,7 @@ impl<'a> crate::parsers::Parser<'a> for TimeSpecifier {
     type Item = TimeSpecifier;
 
     /// See [`parse_time_specifier`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_time_specifier(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_time_specifier(input.into())
     }
 }

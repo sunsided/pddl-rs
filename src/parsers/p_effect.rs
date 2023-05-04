@@ -105,8 +105,8 @@ impl<'a> crate::parsers::Parser<'a> for PEffect<'a> {
     type Item = PEffect<'a>;
 
     /// See [`parse_p_effect`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_p_effect(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_p_effect(input.into())
     }
 }
 

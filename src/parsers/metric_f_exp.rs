@@ -139,7 +139,7 @@ impl<'a> crate::parsers::Parser<'a> for MetricFExp<'a> {
     type Item = MetricFExp<'a>;
 
     /// See [`parse_metric_f_exp`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_metric_f_exp(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_metric_f_exp(input.into())
     }
 }

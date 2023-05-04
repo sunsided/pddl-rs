@@ -59,7 +59,7 @@ impl<'a> crate::parsers::Parser<'a> for Effects<'a> {
     type Item = Effects<'a>;
 
     /// See [`parse_effect`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_effect(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_effect(input.into())
     }
 }

@@ -29,7 +29,7 @@ impl<'a> crate::parsers::Parser<'a> for Types<'a> {
     type Item = Types<'a>;
 
     /// See [`parse_types_def`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_types_def(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_types_def(input.into())
     }
 }

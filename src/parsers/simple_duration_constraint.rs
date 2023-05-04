@@ -64,7 +64,7 @@ impl<'a> crate::parsers::Parser<'a> for SimpleDurationConstraint<'a> {
     type Item = SimpleDurationConstraint<'a>;
 
     /// See [`parse_simple_duration_constraint`].
-    fn parse(input: Span<'a>) -> ParseResult<Self::Item> {
-        parse_simple_duration_constraint(input)
+    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        parse_simple_duration_constraint(input.into())
     }
 }
