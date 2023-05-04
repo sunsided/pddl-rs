@@ -104,15 +104,15 @@ impl<'a> From<WhenCEffect<'a>> for CEffect<'a> {
     }
 }
 
-impl<'a> From<(TypedVariables<'a>, Effects<'a>)> for CEffect<'a> {
+impl<'a> From<(TypedVariables<'a>, Effects<'a>)> for ForallCEffect<'a> {
     fn from(value: (TypedVariables<'a>, Effects<'a>)) -> Self {
-        CEffect::new_forall(value.0, value.1)
+        ForallCEffect::new(value.0, value.1)
     }
 }
 
-impl<'a> From<(GoalDefinition<'a>, ConditionalEffect<'a>)> for CEffect<'a> {
+impl<'a> From<(GoalDefinition<'a>, ConditionalEffect<'a>)> for WhenCEffect<'a> {
     fn from(value: (GoalDefinition<'a>, ConditionalEffect<'a>)) -> Self {
-        CEffect::new_when(value.0, value.1)
+        WhenCEffect::new(value.0, value.1)
     }
 }
 

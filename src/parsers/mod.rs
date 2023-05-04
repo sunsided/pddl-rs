@@ -94,7 +94,7 @@ pub use atomic_function_skeleton::parse_atomic_function_skeleton;
 pub use basic_function_term::parse_basic_function_term;
 pub use binary_comp::parse_binary_comp;
 pub use binary_op::parse_binary_op;
-pub use c_effect::parse_c_effect;
+pub use c_effect::{parse_c_effect, parse_forall_c_effect, parse_when_c_effect};
 pub use con_gd::parse_con_gd;
 pub use cond_effect::parse_cond_effect;
 pub use constants_def::parse_constants_def;

@@ -89,7 +89,7 @@ pub use atomic_function_skeleton::AtomicFunctionSkeleton;
 pub use basic_function_term::BasicFunctionTerm;
 pub use binary_comp::BinaryComp;
 pub use binary_op::BinaryOp;
-pub use c_effect::CEffect;
+pub use c_effect::{CEffect, ForallCEffect, WhenCEffect};
 pub use con_gd::{Con2GD, ConGD};
 pub use conditional_effect::ConditionalEffect;
 pub use constants::Constants;
