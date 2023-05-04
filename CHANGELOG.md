@@ -14,7 +14,7 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - The `PrefConGD::And` variant was removed and replaced with the `PrefConGDs` type.
 - The `Effect::All` and `Effect::Single` variants were removed and the `Effect` type
-  was changed to a struct wrapping a vector.
+  was changed to a struct wrapping a vector `Effects`.
 
 ## [0.0.4] - 2023-05-04
 

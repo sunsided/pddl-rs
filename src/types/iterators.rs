@@ -6,7 +6,7 @@ use std::vec;
 /// An iterator that can represent instances with either
 /// one or many values, such as [`ConditionalEffect`](crate::ConditionalEffect),
 /// [`DurationConstraint`](crate::DurationConstraint),
-/// [`Effect`](crate::Effect) and others.
+/// [`Effect`](crate::Effects) and others.
 pub enum FlatteningIntoIterator<T> {
     /// The iterator is already empty (similar to [`std::iter::Empty`]).
     Never,

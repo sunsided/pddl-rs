@@ -1,4 +1,4 @@
-//! Contains effects via the [`Effect`] type.
+//! Contains effects via the [`Effects`] type.
 
 use crate::types::CEffect;
 use std::ops::Deref;
@@ -9,11 +9,11 @@ use std::ops::Deref;
 /// modeling cases of zero, one or many effects.
 ///
 /// ## Usage
-/// Used by [`ActionDefinition`](crate::ActionDefinition) and [`CEffect`].
+/// Used by [`ActionDefinition`](crate::ActionDefinition).
 #[derive(Debug, Clone, PartialEq, Default)]
-pub struct Effect<'a>(Vec<CEffect<'a>>);
+pub struct Effects<'a>(Vec<CEffect<'a>>);
 
-impl<'a> Effect<'a> {
+impl<'a> Effects<'a> {
     /// Constructs a new instance from the value.
     pub fn new(effect: CEffect<'a>) -> Self {
         Self(vec![effect])
@@ -53,7 +53,7 @@ impl<'a> Effect<'a> {
     }
 }
 
-impl<'a> IntoIterator for Effect<'a> {
+impl<'a> IntoIterator for Effects<'a> {
     type Item = CEffect<'a>;
     type IntoIter = std::vec::IntoIter<Self::Item>;
 
@@ -62,7 +62,7 @@ impl<'a> IntoIterator for Effect<'a> {
     }
 }
 
-impl<'a> Deref for Effect<'a> {
+impl<'a> Deref for Effects<'a> {
     type Target = [CEffect<'a>];
 
     fn deref(&self) -> &Self::Target {
@@ -70,31 +70,31 @@ impl<'a> Deref for Effect<'a> {
     }
 }
 
-impl<'a> AsRef<[CEffect<'a>]> for Effect<'a> {
+impl<'a> AsRef<[CEffect<'a>]> for Effects<'a> {
     fn as_ref(&self) -> &[CEffect<'a>] {
         self.0.as_slice()
     }
 }
 
-impl<'a> From<CEffect<'a>> for Effect<'a> {
+impl<'a> From<CEffect<'a>> for Effects<'a> {
     fn from(value: CEffect<'a>) -> Self {
-        Effect::new(value)
+        Effects::new(value)
     }
 }
 
-impl<'a> From<Vec<CEffect<'a>>> for Effect<'a> {
+impl<'a> From<Vec<CEffect<'a>>> for Effects<'a> {
     fn from(value: Vec<CEffect<'a>>) -> Self {
-        Effect::new_and(value)
+        Effects::new_and(value)
     }
 }
 
-impl<'a> FromIterator<CEffect<'a>> for Effect<'a> {
+impl<'a> FromIterator<CEffect<'a>> for Effects<'a> {
     fn from_iter<T: IntoIterator<Item = CEffect<'a>>>(iter: T) -> Self {
-        Effect::new_and(iter.into_iter().collect())
+        Effects::new_and(iter.into_iter().collect())
     }
 }
 
-impl<'a> TryInto<CEffect<'a>> for Effect<'a> {
+impl<'a> TryInto<CEffect<'a>> for Effects<'a> {
     type Error = ();
 
     fn try_into(self) -> Result<CEffect<'a>, Self::Error> {

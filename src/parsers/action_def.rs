@@ -13,7 +13,7 @@ use nom::IResult;
 ///
 /// ## Example
 /// ```
-/// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effect, GoalDefinition, Name, PEffect, Predicate, PreferenceGD, PreconditionGoalDefinitions, PreconditionGoalDefinition, Term, ToTyped, TypedList, Variable};
+/// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effects, GoalDefinition, Name, PEffect, Predicate, PreferenceGD, PreconditionGoalDefinitions, PreconditionGoalDefinition, Term, ToTyped, TypedList, Variable};
 /// # use pddl::parsers::parse_action_def;
 /// let input = r#"(:action take-out
 ///                     :parameters (?x - physob)
@@ -41,7 +41,7 @@ use nom::IResult;
 ///                 )
 ///             )
 ///         )),
-///         Some(Effect::new(CEffect::new_p_effect(
+///         Some(Effects::new(CEffect::new_p_effect(
 ///             PEffect::NotAtomicFormula(
 ///                 AtomicFormula::new_predicate(
 ///                     Predicate::from_str("in"),
