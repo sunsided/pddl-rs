@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- Added `TryInto<PreconditionGoalDefinition>` for `PreconditionGoalDefinitions` to get
+  the only element of the list if it is a one-element list, or `None`.
+
+### Changed
+
+- The `PrefConGD::And` variant was removed and replaced with the `PrefConGDs` type.
+
 ## [0.0.4] - 2023-05-04
 
 ### Added

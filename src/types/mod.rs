@@ -134,7 +134,7 @@ pub use p_effect::PEffect;
 pub use pre_gd::{PreconditionGoalDefinition, PreconditionGoalDefinitions};
 pub use predicate::Predicate;
 pub use predicate_definitions::PredicateDefinitions;
-pub use pref_con_gd::PrefConGD;
+pub use pref_con_gd::{PrefConGD, PrefConGDs};
 pub use pref_gd::PreferenceGD;
 pub use pref_name::PreferenceName;
 pub use pref_timed_gd::PrefTimedGD;
