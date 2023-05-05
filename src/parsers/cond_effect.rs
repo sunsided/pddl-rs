@@ -57,6 +57,6 @@ impl<'a> crate::parsers::Parser<'a> for ConditionalEffect<'a> {
 
     /// See [`parse_cond_effect`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_cond_effect(input.into())
+        parse_cond_effect(input)
     }
 }

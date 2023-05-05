@@ -15,7 +15,9 @@ use nom::error_position;
 /// assert!(parse_type(Span::new("object")).is_value(Type::Exactly("object".into())));
 /// assert!(parse_type(Span::new("(either object number)")).is_value(Type::from_iter(["object", "number"])));
 ///```
-pub fn parse_type<'a, T: Into<Span<'a>> + Copy>(input: T) -> ParseResult<'a, Type<'a>> {
+pub fn parse_type<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Type<'a>> {
+    let input = input.into();
+
     if let Ok((remaining, r#type)) = parse_primitive_type(input) {
         return Ok((remaining, Type::Exactly(r#type)));
     }
@@ -40,7 +42,7 @@ impl<'a> crate::parsers::Parser<'a> for Type<'a> {
 
     /// See [`parse_type`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_type(input.into())
+        parse_type(input)
     }
 }
 

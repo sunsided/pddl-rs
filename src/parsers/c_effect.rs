@@ -123,7 +123,9 @@ pub fn parse_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, CEffec
 ///     )
 /// ));
 /// ```
-pub fn parse_forall_c_effect<'a>(input: Span<'a>) -> ParseResult<'a, ForallCEffect> {
+pub fn parse_forall_c_effect<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, ForallCEffect<'a>> {
     map(
         prefix_expr(
             "forall",
@@ -133,7 +135,7 @@ pub fn parse_forall_c_effect<'a>(input: Span<'a>) -> ParseResult<'a, ForallCEffe
             )),
         ),
         ForallCEffect::from,
-    )(input)
+    )(input.into())
 }
 
 /// Parser that parses c-effects.
@@ -181,14 +183,14 @@ pub fn parse_forall_c_effect<'a>(input: Span<'a>) -> ParseResult<'a, ForallCEffe
 ///     )
 /// ));
 /// ```
-pub fn parse_when_c_effect<'a>(input: Span<'a>) -> ParseResult<'a, WhenCEffect> {
+pub fn parse_when_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, WhenCEffect<'a>> {
     map(
         prefix_expr(
             "when",
             tuple((parse_gd, preceded(multispace1, parse_cond_effect))),
         ),
         WhenCEffect::from,
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for CEffect<'a> {
@@ -205,7 +207,7 @@ impl<'a> crate::parsers::Parser<'a> for ForallCEffect<'a> {
 
     /// See [`parse_forall_c_effect`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_forall_c_effect(input.into())
+        parse_forall_c_effect(input)
     }
 }
 
@@ -214,6 +216,6 @@ impl<'a> crate::parsers::Parser<'a> for WhenCEffect<'a> {
 
     /// See [`parse_when_c_effect`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_when_c_effect(input.into())
+        parse_when_c_effect(input)
     }
 }

@@ -85,6 +85,6 @@ impl<'a> crate::parsers::Parser<'a> for FExp<'a> {
 
     /// See [`parse_f_exp`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_f_exp(input.into())
+        parse_f_exp(input)
     }
 }

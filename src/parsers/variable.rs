@@ -29,6 +29,6 @@ impl<'a> crate::parsers::Parser<'a> for Variable<'a> {
 
     /// See [`parse_variable`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_variable(input.into())
+        parse_variable(input)
     }
 }

@@ -45,6 +45,6 @@ impl<'a> crate::parsers::Parser<'a> for FComp<'a> {
 
     /// See [`parse_f_comp`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_f_comp(input.into())
+        parse_f_comp(input)
     }
 }

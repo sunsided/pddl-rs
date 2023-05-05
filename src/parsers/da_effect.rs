@@ -115,7 +115,7 @@ impl<'a> crate::parsers::Parser<'a> for DurativeActionEffect<'a> {
 
     /// See [`parse_da_effect`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_da_effect(input.into())
+        parse_da_effect(input)
     }
 }
 

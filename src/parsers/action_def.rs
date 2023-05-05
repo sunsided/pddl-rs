@@ -89,6 +89,6 @@ impl<'a> crate::parsers::Parser<'a> for ActionDefinition<'a> {
 
     /// See [`parse_action_def`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_action_def(input.into())
+        parse_action_def(input)
     }
 }

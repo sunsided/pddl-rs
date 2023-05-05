@@ -15,7 +15,9 @@ use nom::error_position;
 /// assert!(parse_term("abcde").is_value(Term::Name("abcde".into())));
 /// assert!(parse_term("?abcde").is_value(Term::Variable("abcde".into())));
 ///```
-pub fn parse_term<'a, T: Into<Span<'a>> + Copy>(input: T) -> ParseResult<'a, Term<'a>> {
+pub fn parse_term<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Term<'a>> {
+    let input = input.into();
+
     if let Ok((remaining, variable)) = parse_variable(input) {
         return Ok((remaining, Term::Variable(variable)));
     }
@@ -39,6 +41,6 @@ impl<'a> crate::parsers::Parser<'a> for Term<'a> {
 
     /// See [`parse_term`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_term(input.into())
+        parse_term(input)
     }
 }

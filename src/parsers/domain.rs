@@ -115,6 +115,6 @@ impl<'a> crate::parsers::Parser<'a> for Domain<'a> {
 
     /// See [`parse_domain`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_domain(input.into())
+        parse_domain(input)
     }
 }

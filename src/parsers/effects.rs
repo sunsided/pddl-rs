@@ -60,6 +60,6 @@ impl<'a> crate::parsers::Parser<'a> for Effects<'a> {
 
     /// See [`parse_effect`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_effect(input.into())
+        parse_effect(input)
     }
 }

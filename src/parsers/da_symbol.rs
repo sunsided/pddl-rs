@@ -22,6 +22,6 @@ impl<'a> crate::parsers::Parser<'a> for DurativeActionSymbol<'a> {
 
     /// See [`parse_da_symbol`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_da_symbol(input.into())
+        parse_da_symbol(input)
     }
 }

@@ -38,6 +38,6 @@ impl<'a> crate::parsers::Parser<'a> for AtomicFunctionSkeleton<'a> {
 
     /// See [`parse_atomic_function_skeleton`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_atomic_function_skeleton(input.into())
+        parse_atomic_function_skeleton(input)
     }
 }

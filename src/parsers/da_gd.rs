@@ -113,7 +113,7 @@ impl<'a> crate::parsers::Parser<'a> for DurativeActionGoalDefinition<'a> {
 
     /// See [`parse_da_gd`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_da_gd(input.into())
+        parse_da_gd(input)
     }
 }
 

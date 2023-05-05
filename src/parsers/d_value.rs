@@ -36,6 +36,6 @@ impl<'a> crate::parsers::Parser<'a> for DurationValue<'a> {
 
     /// See [`parse_d_value`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_d_value(input.into())
+        parse_d_value(input)
     }
 }

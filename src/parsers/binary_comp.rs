@@ -36,6 +36,6 @@ impl<'a> crate::parsers::Parser<'a> for BinaryComp {
 
     /// See [`parse_binary_comp`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_binary_comp(input.into())
+        parse_binary_comp(input)
     }
 }

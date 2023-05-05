@@ -33,6 +33,6 @@ impl<'a> crate::parsers::Parser<'a> for DOp {
 
     /// See [`parse_d_op`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_d_op(input.into())
+        parse_d_op(input)
     }
 }

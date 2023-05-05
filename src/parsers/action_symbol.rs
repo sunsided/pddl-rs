@@ -29,6 +29,6 @@ impl<'a> crate::parsers::Parser<'a> for ActionSymbol<'a> {
 
     /// See [`parse_action_symbol`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_action_symbol(input.into())
+        parse_action_symbol(input)
     }
 }

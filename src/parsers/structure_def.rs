@@ -62,6 +62,6 @@ impl<'a> crate::parsers::Parser<'a> for StructureDef<'a> {
 
     /// See [`parse_structure_def`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_structure_def(input.into())
+        parse_structure_def(input)
     }
 }

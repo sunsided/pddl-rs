@@ -19,6 +19,6 @@ impl<'a> crate::parsers::Parser<'a> for PreferenceName<'a> {
 
     /// See [`parse_pref_name`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_pref_name(input.into())
+        parse_pref_name(input)
     }
 }

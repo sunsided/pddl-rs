@@ -63,7 +63,7 @@ impl<'a> crate::parsers::Parser<'a> for TimedGD<'a> {
 
     /// See [`parse_timed_gd`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_timed_gd(input.into())
+        parse_timed_gd(input)
     }
 }
 

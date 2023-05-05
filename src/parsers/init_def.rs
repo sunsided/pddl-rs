@@ -46,6 +46,6 @@ impl<'a> crate::parsers::Parser<'a> for InitElements<'a> {
 
     /// See [`parse_problem_init_def`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_problem_init_def(input.into())
+        parse_problem_init_def(input)
     }
 }

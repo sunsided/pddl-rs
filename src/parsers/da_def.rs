@@ -98,7 +98,7 @@ impl<'a> crate::parsers::Parser<'a> for DurativeActionDefinition<'a> {
 
     /// See [`parse_da_def`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_da_def(input.into())
+        parse_da_def(input)
     }
 }
 

@@ -51,6 +51,6 @@ impl<'a> crate::parsers::Parser<'a> for PredicateDefinitions<'a> {
 
     /// See [`parse_predicates_def`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_predicates_def(input.into())
+        parse_predicates_def(input)
     }
 }

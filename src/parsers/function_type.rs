@@ -23,6 +23,6 @@ impl<'a> crate::parsers::Parser<'a> for FunctionType<'a> {
 
     /// See [`parse_function_type`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_function_type(input.into())
+        parse_function_type(input)
     }
 }

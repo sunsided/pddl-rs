@@ -30,6 +30,6 @@ impl<'a> crate::parsers::Parser<'a> for Constants<'a> {
 
     /// See [`parse_constants_def`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_constants_def(input.into())
+        parse_constants_def(input)
     }
 }

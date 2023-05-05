@@ -39,7 +39,7 @@ impl<'a> crate::parsers::Parser<'a> for Number {
 
     /// See [`parse_number`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_number(input.into())
+        parse_number(input)
     }
 }
 

@@ -44,6 +44,6 @@ impl<'a> crate::parsers::Parser<'a> for DerivedPredicate<'a> {
 
     /// See [`parse_derived_predicate`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_derived_predicate(input.into())
+        parse_derived_predicate(input)
     }
 }

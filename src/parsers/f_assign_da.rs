@@ -30,7 +30,7 @@ impl<'a> crate::parsers::Parser<'a> for FAssignDa<'a> {
 
     /// See [`parse_f_assign_da`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_f_assign_da(input.into())
+        parse_f_assign_da(input)
     }
 }
 

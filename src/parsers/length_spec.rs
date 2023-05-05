@@ -35,6 +35,6 @@ impl<'a> crate::parsers::Parser<'a> for LengthSpec {
 
     /// See [`parse_problem_length_spec`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_problem_length_spec(input.into())
+        parse_problem_length_spec(input)
     }
 }

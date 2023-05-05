@@ -40,6 +40,6 @@ impl<'a> crate::parsers::Parser<'a> for MetricSpec<'a> {
 
     /// See [`parse_problem_metric_spec`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_problem_metric_spec(input.into())
+        parse_problem_metric_spec(input)
     }
 }

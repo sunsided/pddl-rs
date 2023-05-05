@@ -47,6 +47,6 @@ impl<'a> crate::parsers::Parser<'a> for FHead<'a> {
 
     /// See [`parse_f_head`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_f_head(input.into())
+        parse_f_head(input)
     }
 }

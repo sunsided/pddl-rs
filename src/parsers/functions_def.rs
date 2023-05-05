@@ -41,6 +41,6 @@ impl<'a> crate::parsers::Parser<'a> for Functions<'a> {
 
     /// See [`parse_functions_def`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_functions_def(input.into())
+        parse_functions_def(input)
     }
 }

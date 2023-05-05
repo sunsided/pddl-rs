@@ -93,7 +93,7 @@ impl<'a> crate::parsers::Parser<'a> for TimedEffect<'a> {
 
     /// See [`parse_timed_effect`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_timed_effect(input.into())
+        parse_timed_effect(input)
     }
 }
 

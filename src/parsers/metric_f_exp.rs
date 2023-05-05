@@ -140,6 +140,6 @@ impl<'a> crate::parsers::Parser<'a> for MetricFExp<'a> {
 
     /// See [`parse_metric_f_exp`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_metric_f_exp(input.into())
+        parse_metric_f_exp(input)
     }
 }

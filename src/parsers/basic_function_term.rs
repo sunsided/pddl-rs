@@ -45,6 +45,6 @@ impl<'a> crate::parsers::Parser<'a> for BasicFunctionTerm<'a> {
 
     /// See [`parse_basic_function_term`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_basic_function_term(input.into())
+        parse_basic_function_term(input)
     }
 }

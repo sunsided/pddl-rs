@@ -54,7 +54,7 @@ pub fn parse_require_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Req
 /// assert!(parse_require_key(":unknown").is_err());
 /// assert!(parse_require_key("invalid").is_err());
 ///```
-pub fn parse_require_key(input: Span) -> ParseResult<Requirement> {
+pub fn parse_require_key<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Requirement> {
     map(
         alt((
             tag(names::STRIPS),
@@ -87,7 +87,7 @@ impl<'a> crate::parsers::Parser<'a> for Requirements {
     type Item = Requirements;
 
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_require_def(input.into())
+        parse_require_def(input)
     }
 }
 
@@ -96,6 +96,6 @@ impl<'a> crate::parsers::Parser<'a> for Requirement {
 
     /// See [`parse_require_key`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_require_key(input.into())
+        parse_require_key(input)
     }
 }

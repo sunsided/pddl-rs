@@ -28,6 +28,6 @@ impl<'a> crate::parsers::Parser<'a> for AssignOpT {
 
     /// See [`parse_assign_op_t`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_assign_op_t(input.into())
+        parse_assign_op_t(input)
     }
 }

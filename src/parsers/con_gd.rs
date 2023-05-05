@@ -257,12 +257,12 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD<'a
     ))(input.into())
 }
 
-fn parse_con2_gd(input: Span) -> ParseResult<Con2GD> {
+fn parse_con2_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Con2GD<'a>> {
     let gd = map(parse_gd, Con2GD::new_goal);
 
     // TODO: Add crate feature to allow this to be forbidden if unsupported by the application.
     let con_gd = map(parse_con_gd, Con2GD::new_nested);
-    alt((gd, con_gd))(input)
+    alt((gd, con_gd))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for ConGD<'a> {
@@ -270,7 +270,7 @@ impl<'a> crate::parsers::Parser<'a> for ConGD<'a> {
 
     /// See [`parse_con_gd`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_con_gd(input.into())
+        parse_con_gd(input)
     }
 }
 
@@ -279,6 +279,6 @@ impl<'a> crate::parsers::Parser<'a> for Con2GD<'a> {
 
     /// See [`parse_con2_gd`].
     fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_con2_gd(input.into())
+        parse_con2_gd(input)
     }
 }
