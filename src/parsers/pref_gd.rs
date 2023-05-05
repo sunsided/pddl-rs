@@ -56,7 +56,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 /// ```
-pub fn parse_pref_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PreferenceGD<'a>> {
+pub fn parse_pref_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PreferenceGD> {
     // :preferences
     let pref_named = map(
         prefix_expr(
@@ -75,11 +75,11 @@ pub fn parse_pref_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Prefere
     alt((pref_named, pref_unnamed, gd))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for PreferenceGD<'a> {
-    type Item = PreferenceGD<'a>;
+impl crate::parsers::Parser for PreferenceGD {
+    type Item = PreferenceGD;
 
     /// See [`parse_pref_gd`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_pref_gd(input)
     }
 }

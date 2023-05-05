@@ -58,7 +58,7 @@ use nom::combinator::map;
 ///```
 pub fn parse_duration_constraint<'a, T: Into<Span<'a>>>(
     input: T,
-) -> ParseResult<'a, Option<DurationConstraint<'a>>> {
+) -> ParseResult<'a, Option<DurationConstraint>> {
     let none = map(tag("()"), |_| None);
     let simple = map(parse_simple_duration_constraint, |c| {
         Some(DurationConstraint::from(c))
@@ -76,11 +76,11 @@ pub fn parse_duration_constraint<'a, T: Into<Span<'a>>>(
     alt((none, simple, and))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for DurationConstraint<'a> {
-    type Item = Option<DurationConstraint<'a>>;
+impl crate::parsers::Parser for DurationConstraint {
+    type Item = Option<DurationConstraint>;
 
     /// See [`parse_duration_constraint`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_duration_constraint(input)
     }
 }

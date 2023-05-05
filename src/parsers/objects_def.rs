@@ -20,18 +20,18 @@ use nom::combinator::map;
 /// ```
 pub fn parse_problem_objects_declaration<'a, T: Into<Span<'a>>>(
     input: T,
-) -> ParseResult<'a, Objects<'a>> {
+) -> ParseResult<'a, Objects> {
     map(
         prefix_expr(":objects", typed_list(parse_name)),
         Objects::new,
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for Objects<'a> {
-    type Item = Objects<'a>;
+impl crate::parsers::Parser for Objects {
+    type Item = Objects;
 
     /// See [`parse_problem_objects_declaration`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_problem_objects_declaration(input)
     }
 }

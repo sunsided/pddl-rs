@@ -19,18 +19,18 @@ use nom::combinator::map;
 /// ```
 pub fn parse_domain_constraints_def<'a, T: Into<Span<'a>>>(
     input: T,
-) -> ParseResult<'a, DomainConstraintsDef<'a>> {
+) -> ParseResult<'a, DomainConstraintsDef> {
     map(
         prefix_expr(":constraints", parse_con_gd),
         DomainConstraintsDef::new,
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for DomainConstraintsDef<'a> {
-    type Item = DomainConstraintsDef<'a>;
+impl crate::parsers::Parser for DomainConstraintsDef {
+    type Item = DomainConstraintsDef;
 
     /// See [`parse_domain_constraints_def`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_domain_constraints_def(input)
     }
 }

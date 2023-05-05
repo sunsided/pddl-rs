@@ -15,7 +15,7 @@ use nom::error_position;
 /// assert!(parse_type(Span::new("object")).is_value(Type::Exactly("object".into())));
 /// assert!(parse_type(Span::new("(either object number)")).is_value(Type::from_iter(["object", "number"])));
 ///```
-pub fn parse_type<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Type<'a>> {
+pub fn parse_type<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Type> {
     let input = input.into();
 
     if let Ok((remaining, r#type)) = parse_primitive_type(input) {
@@ -33,15 +33,15 @@ pub fn parse_type<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Type<'a>> 
 }
 
 /// Parses a either type, i.e. `(either a b c)`.
-fn parse_either_type<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Vec<PrimitiveType<'a>>> {
+fn parse_either_type<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Vec<PrimitiveType>> {
     prefix_expr("either", space_separated_list1(parse_primitive_type))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for Type<'a> {
-    type Item = Type<'a>;
+impl crate::parsers::Parser for Type {
+    type Item = Type;
 
     /// See [`parse_type`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_type(input)
     }
 }

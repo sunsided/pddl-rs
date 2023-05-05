@@ -59,7 +59,7 @@ use nom::sequence::{terminated, tuple};
 ///     )
 /// ));
 /// ```
-pub fn parse_pref_timed_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PrefTimedGD<'a>> {
+pub fn parse_pref_timed_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PrefTimedGD> {
     let required = map(parse_timed_gd, PrefTimedGD::from);
 
     // :preferences
@@ -77,11 +77,11 @@ pub fn parse_pref_timed_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, P
     alt((preference, required))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for PrefTimedGD<'a> {
-    type Item = PrefTimedGD<'a>;
+impl crate::parsers::Parser for PrefTimedGD {
+    type Item = PrefTimedGD;
 
     /// See [`parse_pref_timed_gd`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_pref_timed_gd(input)
     }
 }

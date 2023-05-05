@@ -14,7 +14,7 @@ use nom::sequence::{preceded, tuple};
 /// # use pddl::parsers::parse_f_assign_da;
 /// assert!(parse_f_assign_da("(assign fun-sym ?duration)").is_ok());
 ///```
-pub fn parse_f_assign_da<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FAssignDa<'a>> {
+pub fn parse_f_assign_da<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FAssignDa> {
     map(
         parens(tuple((
             parse_assign_op,
@@ -25,11 +25,11 @@ pub fn parse_f_assign_da<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FAs
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for FAssignDa<'a> {
-    type Item = FAssignDa<'a>;
+impl crate::parsers::Parser for FAssignDa {
+    type Item = FAssignDa;
 
     /// See [`parse_f_assign_da`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_f_assign_da(input)
     }
 }

@@ -15,27 +15,27 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`Domain`](crate::Domain).
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
-pub struct Timeless<'a>(Vec<NameLiteral<'a>>);
+pub struct Timeless(Vec<NameLiteral>);
 
-impl<'a> Timeless<'a> {
-    pub fn new(literal: Vec<NameLiteral<'a>>) -> Self {
+impl Timeless {
+    pub fn new(literal: Vec<NameLiteral>) -> Self {
         Self(literal)
     }
 
     /// Gets the literals.
-    pub fn values(&self) -> &[NameLiteral<'a>] {
+    pub fn values(&self) -> &[NameLiteral] {
         &self.0.as_slice()
     }
 }
 
-impl<'a> FromIterator<NameLiteral<'a>> for Timeless<'a> {
-    fn from_iter<T: IntoIterator<Item = NameLiteral<'a>>>(iter: T) -> Self {
+impl FromIterator<NameLiteral> for Timeless {
+    fn from_iter<T: IntoIterator<Item = NameLiteral>>(iter: T) -> Self {
         Timeless::new(iter.into_iter().collect())
     }
 }
 
-impl<'a> Deref for Timeless<'a> {
-    type Target = [NameLiteral<'a>];
+impl Deref for Timeless {
+    type Target = [NameLiteral];
 
     #[inline(always)]
     fn deref(&self) -> &Self::Target {

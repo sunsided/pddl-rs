@@ -25,60 +25,60 @@ use std::ops::Deref;
 /// [`Objects`](crate::Objects) in [`Problem`](crate::Problem), [`PrefConGD`](crate::PrefConGD) and
 /// [`ConGD`](crate::ConGD).
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
-pub struct TypedList<'a, T>(Vec<Typed<'a, T>>);
+pub struct TypedList<T>(Vec<Typed<T>>);
 
-impl<'a, T> TypedList<'a, T> {
-    pub const fn new(list: Vec<Typed<'a, T>>) -> Self {
+impl<T> TypedList<T> {
+    pub const fn new(list: Vec<Typed<T>>) -> Self {
         Self(list)
     }
 
     /// Gets the values.
-    pub fn value(&self) -> &[Typed<'a, T>] {
+    pub fn value(&self) -> &[Typed<T>] {
         self.0.as_slice()
     }
 }
 
-impl<'a, T> From<Vec<Typed<'a, T>>> for TypedList<'a, T> {
-    fn from(iter: Vec<Typed<'a, T>>) -> Self {
+impl<T> From<Vec<Typed<T>>> for TypedList<T> {
+    fn from(iter: Vec<Typed<T>>) -> Self {
         TypedList::new(iter)
     }
 }
 
-impl<'a, T> FromIterator<Typed<'a, T>> for TypedList<'a, T> {
-    fn from_iter<I: IntoIterator<Item = Typed<'a, T>>>(iter: I) -> Self {
+impl<T> FromIterator<Typed<T>> for TypedList<T> {
+    fn from_iter<I: IntoIterator<Item = Typed<T>>>(iter: I) -> Self {
         TypedList::new(iter.into_iter().collect())
     }
 }
 
-impl<'a, T> Deref for TypedList<'a, T> {
-    type Target = [Typed<'a, T>];
+impl<T> Deref for TypedList<T> {
+    type Target = [Typed<T>];
 
     fn deref(&self) -> &Self::Target {
         self.0.as_slice()
     }
 }
 
-impl<'a, T> PartialEq<Vec<Typed<'_, T>>> for TypedList<'a, T>
+impl<T> PartialEq<Vec<Typed<T>>> for TypedList<T>
 where
     T: PartialEq,
 {
-    fn eq(&self, other: &Vec<Typed<'_, T>>) -> bool {
+    fn eq(&self, other: &Vec<Typed<T>>) -> bool {
         self.0.eq(other)
     }
 }
 
-impl<'a, T> PartialEq<[Typed<'_, T>]> for TypedList<'a, T>
+impl<T> PartialEq<[Typed<T>]> for TypedList<T>
 where
     T: PartialEq,
 {
-    fn eq(&self, other: &[Typed<'_, T>]) -> bool {
+    fn eq(&self, other: &[Typed<T>]) -> bool {
         self.0.eq(other)
     }
 }
 
-impl<'a, T> IntoIterator for TypedList<'a, T> {
-    type Item = Typed<'a, T>;
-    type IntoIter = std::vec::IntoIter<Typed<'a, T>>;
+impl<T> IntoIterator for TypedList<T> {
+    type Item = Typed<T>;
+    type IntoIter = std::vec::IntoIter<Typed<T>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()

@@ -22,7 +22,7 @@ use nom::combinator::map;
 ///     )
 /// ));
 ///```
-pub fn parse_d_value<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DurationValue<'a>> {
+pub fn parse_d_value<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DurationValue> {
     let number = map(parse_number, DurationValue::new_number);
 
     // :numeric-fluents
@@ -31,11 +31,11 @@ pub fn parse_d_value<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Duratio
     alt((number, f_exp))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for DurationValue<'a> {
-    type Item = DurationValue<'a>;
+impl crate::parsers::Parser for DurationValue {
+    type Item = DurationValue;
 
     /// See [`parse_d_value`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_d_value(input)
     }
 }

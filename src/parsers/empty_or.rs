@@ -25,7 +25,7 @@ pub fn empty_or<'a, F, O, E: ParseError<Span<'a>>>(
 where
     F: FnMut(Span<'a>) -> ParseResult<'a, O, E>,
 {
-    let empty_parser = map(tag("()"), |_: Span<'a>| None);
+    let empty_parser = map(tag("()"), |_: Span| None);
     let inner_parser = map(inner, |o: O| Some(o));
 
     alt((empty_parser, inner_parser))

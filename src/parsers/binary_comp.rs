@@ -31,11 +31,11 @@ pub fn parse_binary_comp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Bin
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for BinaryComp {
+impl crate::parsers::Parser for BinaryComp {
     type Item = BinaryComp;
 
     /// See [`parse_binary_comp`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_binary_comp(input)
     }
 }

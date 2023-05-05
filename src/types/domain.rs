@@ -11,30 +11,30 @@ use crate::types::{Name, Types};
 /// ## Usage
 /// This is the top-level type of a domain description. See also [`Problem`](crate::Problem).
 #[derive(Debug, Clone, PartialEq)]
-pub struct Domain<'a> {
-    name: Name<'a>,
+pub struct Domain {
+    name: Name,
     // TODO: PDDL 1.2 - deprecated?
-    extends: Vec<Name<'a>>,
+    extends: Vec<Name>,
     requirements: Requirements,
     /// ## Requirements
     /// Requires [Typing](crate::Requirement::Typing).
-    types: Types<'a>,
-    constants: Constants<'a>,
-    predicates: PredicateDefinitions<'a>,
+    types: Types,
+    constants: Constants,
+    predicates: PredicateDefinitions,
     /// ## Requirements
     /// Requires [Fluents](crate::Requirement::Fluents).
-    functions: Functions<'a>,
+    functions: Functions,
     /// ## Requirements
     /// Requires [Constraints](crate::Requirement::Constraints).
-    constraints: DomainConstraintsDef<'a>,
+    constraints: DomainConstraintsDef,
     // TODO: PDDL 1.2 - deprecated?
-    timeless: Timeless<'a>,
-    structure: StructureDefs<'a>,
+    timeless: Timeless,
+    structure: StructureDefs,
 }
 
-impl<'a> Domain<'a> {
+impl Domain {
     /// Creates a builder to easily construct problems.
-    pub fn builder(name: Name<'a>, structure: StructureDefs<'a>) -> Self {
+    pub fn builder(name: Name, structure: StructureDefs) -> Self {
         Self {
             name,
             extends: Vec::default(),
@@ -51,7 +51,7 @@ impl<'a> Domain<'a> {
 
     /// Adds a list of optional domain names this domain definition extends upon.
     /// This is a PDDL 1.2 construct.
-    pub fn with_extends<N: IntoIterator<Item = Name<'a>>>(mut self, names: N) -> Self {
+    pub fn with_extends<N: IntoIterator<Item = Name>>(mut self, names: N) -> Self {
         self.extends = names.into_iter().collect();
         self
     }
@@ -63,49 +63,49 @@ impl<'a> Domain<'a> {
     }
 
     /// Adds a list of optional type declarations.
-    pub fn with_types<T: Into<Types<'a>>>(mut self, types: T) -> Self {
+    pub fn with_types<T: Into<Types>>(mut self, types: T) -> Self {
         self.types = types.into();
         self
     }
 
     /// Adds a list of optional constant declarations.
-    pub fn with_constants<C: Into<Constants<'a>>>(mut self, constants: C) -> Self {
+    pub fn with_constants<C: Into<Constants>>(mut self, constants: C) -> Self {
         self.constants = constants.into();
         self
     }
 
     /// Adds a list of optional predicate definitions.
-    pub fn with_predicates<P: Into<PredicateDefinitions<'a>>>(mut self, predicates: P) -> Self {
+    pub fn with_predicates<P: Into<PredicateDefinitions>>(mut self, predicates: P) -> Self {
         self.predicates = predicates.into();
         self
     }
 
     /// Adds a list of optional function definitions.
-    pub fn with_functions<F: Into<Functions<'a>>>(mut self, functions: F) -> Self {
+    pub fn with_functions<F: Into<Functions>>(mut self, functions: F) -> Self {
         self.functions = functions.into();
         self
     }
 
     /// Adds a list of optional constraints.
-    pub fn with_constraints(mut self, constraints: DomainConstraintsDef<'a>) -> Self {
+    pub fn with_constraints(mut self, constraints: DomainConstraintsDef) -> Self {
         self.constraints = constraints;
         self
     }
 
     /// Adds a list of timeless predicates.
-    pub fn with_timeless(mut self, timeless: Timeless<'a>) -> Self {
+    pub fn with_timeless(mut self, timeless: Timeless) -> Self {
         self.timeless = timeless;
         self
     }
 
     /// Gets the domain name.
-    pub const fn name(&self) -> &Name<'a> {
+    pub const fn name(&self) -> &Name {
         &self.name
     }
 
     /// Gets the names of the domains this definition extends.
     /// This is a PDDL 1.2 construct.
-    pub fn extends(&self) -> &[Name<'a>] {
+    pub fn extends(&self) -> &[Name] {
         &self.extends.as_slice()
     }
 
@@ -118,64 +118,64 @@ impl<'a> Domain<'a> {
     /// Returns the optional type declarations.
     /// ## Requirements
     /// Requires [Typing](crate::Requirement::Typing).
-    pub const fn types(&self) -> &Types<'a> {
+    pub const fn types(&self) -> &Types {
         &self.types
     }
 
     /// Returns the optional constant definitions.
-    pub const fn constants(&self) -> &Constants<'a> {
+    pub const fn constants(&self) -> &Constants {
         &self.constants
     }
 
     /// Returns the optional predicate definitions.
-    pub const fn predicates(&self) -> &PredicateDefinitions<'a> {
+    pub const fn predicates(&self) -> &PredicateDefinitions {
         &self.predicates
     }
 
     /// Returns the optional function definitions.
     /// ## Requirements
     /// Requires [Fluents](Requirement::Fluents).
-    pub const fn functions(&self) -> &Functions<'a> {
+    pub const fn functions(&self) -> &Functions {
         &self.functions
     }
 
     /// Returns the optional constraint declaration.
-    pub const fn constraints(&self) -> &ConGD<'a> {
+    pub const fn constraints(&self) -> &ConGD {
         &self.constraints.value()
     }
 
     /// Returns the domain structure definitions.
-    pub const fn structure(&self) -> &StructureDefs<'a> {
+    pub const fn structure(&self) -> &StructureDefs {
         &self.structure
     }
 }
 
-impl<'a> AsRef<Requirements> for Domain<'a> {
+impl AsRef<Requirements> for Domain {
     fn as_ref(&self) -> &Requirements {
         &self.requirements
     }
 }
 
-impl<'a> AsRef<Types<'a>> for Domain<'a> {
-    fn as_ref(&self) -> &Types<'a> {
+impl AsRef<Types> for Domain {
+    fn as_ref(&self) -> &Types {
         &self.types
     }
 }
 
-impl<'a> AsRef<PredicateDefinitions<'a>> for Domain<'a> {
-    fn as_ref(&self) -> &PredicateDefinitions<'a> {
+impl AsRef<PredicateDefinitions> for Domain {
+    fn as_ref(&self) -> &PredicateDefinitions {
         &self.predicates
     }
 }
 
-impl<'a> AsRef<Functions<'a>> for Domain<'a> {
-    fn as_ref(&self) -> &Functions<'a> {
+impl AsRef<Functions> for Domain {
+    fn as_ref(&self) -> &Functions {
         &self.functions
     }
 }
 
-impl<'a> AsRef<StructureDefs<'a>> for Domain<'a> {
-    fn as_ref(&self) -> &StructureDefs<'a> {
+impl AsRef<StructureDefs> for Domain {
+    fn as_ref(&self) -> &StructureDefs {
         &self.structure
     }
 }

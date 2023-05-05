@@ -20,11 +20,11 @@ pub fn parse_interval<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Interv
     })(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for Interval {
+impl crate::parsers::Parser for Interval {
     type Item = Interval;
 
     /// See [`parse_interval`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_interval(input)
     }
 }

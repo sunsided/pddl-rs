@@ -28,7 +28,7 @@ use nom::sequence::{delimited, tuple};
 /// let ft = Term::Function(FunctionTerm::new(FunctionSymbol::from("fn"), vec![a]));
 /// assert!(parse_function_term("(fun-sym ?y x (fn a))").is_value(FunctionTerm::new("fun-sym".into(), vec![y, x, ft])));
 ///```
-pub fn parse_function_term<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FunctionTerm<'a>> {
+pub fn parse_function_term<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FunctionTerm> {
     map(
         delimited(
             tag("("),
@@ -39,11 +39,11 @@ pub fn parse_function_term<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, F
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for FunctionTerm<'a> {
-    type Item = FunctionTerm<'a>;
+impl crate::parsers::Parser for FunctionTerm {
+    type Item = FunctionTerm;
 
     /// See [`parse_function_term`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_function_term(input)
     }
 }

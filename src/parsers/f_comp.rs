@@ -29,7 +29,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///```
-pub fn parse_f_comp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FComp<'a>> {
+pub fn parse_f_comp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FComp> {
     map(
         parens(tuple((
             parse_binary_comp,
@@ -40,11 +40,11 @@ pub fn parse_f_comp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FComp<'a
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for FComp<'a> {
-    type Item = FComp<'a>;
+impl crate::parsers::Parser for FComp {
+    type Item = FComp;
 
     /// See [`parse_f_comp`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_f_comp(input)
     }
 }

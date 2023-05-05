@@ -66,7 +66,7 @@ use nom::sequence::{preceded, terminated, tuple};
 ///     )
 /// ));
 /// ```
-pub fn parse_p_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PEffect<'a>> {
+pub fn parse_p_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PEffect> {
     let is = map(atomic_formula(parse_term), |af| PEffect::new(af));
     let is_not = map(prefix_expr("not", atomic_formula(parse_term)), |af| {
         PEffect::new_not(af)
@@ -101,11 +101,11 @@ pub fn parse_p_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PEffec
     alt((object_undefined, object, numeric, is_not, is))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for PEffect<'a> {
-    type Item = PEffect<'a>;
+impl crate::parsers::Parser for PEffect {
+    type Item = PEffect;
 
     /// See [`parse_p_effect`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_p_effect(input)
     }
 }

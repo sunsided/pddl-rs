@@ -11,29 +11,29 @@ use crate::types::FExp;
 /// ## Usage
 /// Used by [`TimedEffect`](crate::TimedEffect).
 #[derive(Debug, Clone, PartialEq)]
-pub enum FExpT<'a> {
+pub enum FExpT {
     Now,
-    Scaled(FExp<'a>),
+    Scaled(FExp),
 }
 
-impl<'a> FExpT<'a> {
+impl FExpT {
     pub const fn new() -> Self {
         Self::Now
     }
 
-    pub fn new_scaled(exp: FExp<'a>) -> Self {
+    pub fn new_scaled(exp: FExp) -> Self {
         Self::Scaled(exp)
     }
 }
 
-impl<'a> Default for FExpT<'a> {
+impl Default for FExpT {
     fn default() -> Self {
         Self::Now
     }
 }
 
-impl<'a> From<FExp<'a>> for FExpT<'a> {
-    fn from(value: FExp<'a>) -> Self {
+impl From<FExp> for FExpT {
+    fn from(value: FExp) -> Self {
         Self::Scaled(value)
     }
 }

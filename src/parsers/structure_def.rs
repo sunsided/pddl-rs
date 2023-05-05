@@ -48,7 +48,7 @@ use nom::combinator::map;
 ///     )
 /// )));
 /// ```
-pub fn parse_structure_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, StructureDef<'a>> {
+pub fn parse_structure_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, StructureDef> {
     let action = map(parse_action_def, StructureDef::new_action);
     // :durative-actions
     let durative = map(parse_da_def, StructureDef::new_durative_action);
@@ -57,11 +57,11 @@ pub fn parse_structure_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, S
     alt((derived, action, durative))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for StructureDef<'a> {
-    type Item = StructureDef<'a>;
+impl crate::parsers::Parser for StructureDef {
+    type Item = StructureDef;
 
     /// See [`parse_structure_def`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_structure_def(input)
     }
 }

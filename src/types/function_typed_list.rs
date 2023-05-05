@@ -28,59 +28,59 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`Functions`](crate::Functions).
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct FunctionTypedList<'a, T>(Vec<FunctionTyped<'a, T>>);
+pub struct FunctionTypedList<T>(Vec<FunctionTyped<T>>);
 
-impl<'a, T> Default for FunctionTypedList<'a, T> {
+impl<'a, T> Default for FunctionTypedList<T> {
     fn default() -> Self {
         Self(Vec::default())
     }
 }
 
-impl<'a, T> FunctionTypedList<'a, T> {
-    pub const fn new(list: Vec<FunctionTyped<'a, T>>) -> Self {
+impl<'a, T> FunctionTypedList<T> {
+    pub const fn new(list: Vec<FunctionTyped<T>>) -> Self {
         Self(list)
     }
 
     /// Gets the values.
-    pub fn values(&self) -> &[FunctionTyped<'a, T>] {
+    pub fn values(&self) -> &[FunctionTyped<T>] {
         self.0.as_slice()
     }
 }
 
-impl<'a, T> From<Vec<FunctionTyped<'a, T>>> for FunctionTypedList<'a, T> {
-    fn from(iter: Vec<FunctionTyped<'a, T>>) -> Self {
+impl<'a, T> From<Vec<FunctionTyped<T>>> for FunctionTypedList<T> {
+    fn from(iter: Vec<FunctionTyped<T>>) -> Self {
         FunctionTypedList::new(iter)
     }
 }
 
-impl<'a, T> FromIterator<FunctionTyped<'a, T>> for FunctionTypedList<'a, T> {
-    fn from_iter<I: IntoIterator<Item = FunctionTyped<'a, T>>>(iter: I) -> Self {
+impl<'a, T> FromIterator<FunctionTyped<T>> for FunctionTypedList<T> {
+    fn from_iter<I: IntoIterator<Item = FunctionTyped<T>>>(iter: I) -> Self {
         FunctionTypedList::new(iter.into_iter().collect())
     }
 }
 
-impl<'a, T> Deref for FunctionTypedList<'a, T> {
-    type Target = [FunctionTyped<'a, T>];
+impl<'a, T> Deref for FunctionTypedList<T> {
+    type Target = [FunctionTyped<T>];
 
     fn deref(&self) -> &Self::Target {
         self.0.as_slice()
     }
 }
 
-impl<'a, T> PartialEq<Vec<FunctionTyped<'_, T>>> for FunctionTypedList<'a, T>
+impl<'a, T> PartialEq<Vec<FunctionTyped<T>>> for FunctionTypedList<T>
 where
     T: PartialEq,
 {
-    fn eq(&self, other: &Vec<FunctionTyped<'_, T>>) -> bool {
+    fn eq(&self, other: &Vec<FunctionTyped<T>>) -> bool {
         self.0.eq(other)
     }
 }
 
-impl<'a, T> PartialEq<[FunctionTyped<'_, T>]> for FunctionTypedList<'a, T>
+impl<'a, T> PartialEq<[FunctionTyped<T>]> for FunctionTypedList<T>
 where
     T: PartialEq,
 {
-    fn eq(&self, other: &[FunctionTyped<'_, T>]) -> bool {
+    fn eq(&self, other: &[FunctionTyped<T>]) -> bool {
         self.0.eq(other)
     }
 }

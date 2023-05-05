@@ -28,7 +28,7 @@ use nom::sequence::{preceded, tuple};
 ///     ])
 /// ));
 ///```
-pub fn parse_f_head<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FHead<'a>> {
+pub fn parse_f_head<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FHead> {
     let simple = map(parse_function_symbol, FHead::new);
     let simple_parens = map(parens(parse_function_symbol), FHead::new);
     let with_terms = map(
@@ -42,11 +42,11 @@ pub fn parse_f_head<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FHead<'a
     alt((simple, simple_parens, with_terms))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for FHead<'a> {
-    type Item = FHead<'a>;
+impl crate::parsers::Parser for FHead {
+    type Item = FHead;
 
     /// See [`parse_f_head`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_f_head(input)
     }
 }

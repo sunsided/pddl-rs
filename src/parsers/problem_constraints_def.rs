@@ -19,7 +19,7 @@ use nom::combinator::map;
 /// ```
 pub fn parse_problem_constraints_def<'a, T: Into<Span<'a>>>(
     input: T,
-) -> ParseResult<'a, ProblemConstraintsDef<'a>> {
+) -> ParseResult<'a, ProblemConstraintsDef> {
     // :constraints
     map(
         prefix_expr(":constraints", parse_pref_con_gd),
@@ -27,11 +27,11 @@ pub fn parse_problem_constraints_def<'a, T: Into<Span<'a>>>(
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for ProblemConstraintsDef<'a> {
-    type Item = ProblemConstraintsDef<'a>;
+impl crate::parsers::Parser for ProblemConstraintsDef {
+    type Item = ProblemConstraintsDef;
 
     /// See [`parse_problem_constraints_def`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_problem_constraints_def(input)
     }
 }

@@ -8,53 +8,53 @@ use crate::types::{DurativeActionGoalDefinition, TimedEffect};
 /// ## Usage
 /// Used by [`DurativeActionDefinition`](crate::DurativeActionDefinition).
 #[derive(Debug, Clone, PartialEq)]
-pub enum DurativeActionEffect<'a> {
-    Timed(TimedEffect<'a>),
+pub enum DurativeActionEffect {
+    Timed(TimedEffect),
     /// Conjunction: All effects apply (i.e. a and b and c ..).
-    All(Vec<DurativeActionEffect<'a>>),
+    All(Vec<DurativeActionEffect>),
     /// ## Requirements
     /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
-    Forall(TypedVariables<'a>, Box<DurativeActionEffect<'a>>),
+    Forall(TypedVariables, Box<DurativeActionEffect>),
     /// ## Requirements
     /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
-    When(DurativeActionGoalDefinition<'a>, TimedEffect<'a>),
+    When(DurativeActionGoalDefinition, TimedEffect),
 }
 
-impl<'a> DurativeActionEffect<'a> {
-    pub const fn new_timed(effect: TimedEffect<'a>) -> Self {
+impl DurativeActionEffect {
+    pub const fn new_timed(effect: TimedEffect) -> Self {
         Self::Timed(effect)
     }
-    pub fn new_and<E: IntoIterator<Item = DurativeActionEffect<'a>>>(effect: E) -> Self {
+    pub fn new_and<E: IntoIterator<Item = DurativeActionEffect>>(effect: E) -> Self {
         Self::All(effect.into_iter().collect())
     }
-    pub fn new_forall(variables: TypedVariables<'a>, effect: DurativeActionEffect<'a>) -> Self {
+    pub fn new_forall(variables: TypedVariables, effect: DurativeActionEffect) -> Self {
         Self::Forall(variables, Box::new(effect))
     }
-    pub const fn new_when(gd: DurativeActionGoalDefinition<'a>, effect: TimedEffect<'a>) -> Self {
+    pub const fn new_when(gd: DurativeActionGoalDefinition, effect: TimedEffect) -> Self {
         Self::When(gd, effect)
     }
 }
 
-impl<'a> From<TimedEffect<'a>> for DurativeActionEffect<'a> {
-    fn from(value: TimedEffect<'a>) -> Self {
+impl From<TimedEffect> for DurativeActionEffect {
+    fn from(value: TimedEffect) -> Self {
         Self::new_timed(value)
     }
 }
 
-impl<'a> FromIterator<DurativeActionEffect<'a>> for DurativeActionEffect<'a> {
-    fn from_iter<T: IntoIterator<Item = DurativeActionEffect<'a>>>(iter: T) -> Self {
+impl FromIterator<DurativeActionEffect> for DurativeActionEffect {
+    fn from_iter<T: IntoIterator<Item = DurativeActionEffect>>(iter: T) -> Self {
         Self::new_and(iter)
     }
 }
 
-impl<'a> From<(TypedVariables<'a>, DurativeActionEffect<'a>)> for DurativeActionEffect<'a> {
-    fn from(value: (TypedVariables<'a>, DurativeActionEffect<'a>)) -> Self {
+impl From<(TypedVariables, DurativeActionEffect)> for DurativeActionEffect {
+    fn from(value: (TypedVariables, DurativeActionEffect)) -> Self {
         Self::new_forall(value.0, value.1)
     }
 }
 
-impl<'a> From<(DurativeActionGoalDefinition<'a>, TimedEffect<'a>)> for DurativeActionEffect<'a> {
-    fn from(value: (DurativeActionGoalDefinition<'a>, TimedEffect<'a>)) -> Self {
+impl From<(DurativeActionGoalDefinition, TimedEffect)> for DurativeActionEffect {
+    fn from(value: (DurativeActionGoalDefinition, TimedEffect)) -> Self {
         Self::new_when(value.0, value.1)
     }
 }

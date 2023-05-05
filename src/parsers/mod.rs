@@ -82,14 +82,14 @@ pub(crate) use test_helpers::Match;
 pub use test_helpers::UnwrapValue;
 
 /// Provides the `parse` method.
-pub trait Parser<'a> {
+pub trait Parser {
     type Item;
 
     /// Parses the `input` into the specified [`Item`](Self::Item) type.
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item>;
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item>;
 
     /// Parses the `input` into the specified [`Item`](Self::Item) type.
-    fn parse_span(input: Span<'a>) -> ParseResult<Self::Item> {
+    fn parse_span(input: Span) -> ParseResult<Self::Item> {
         Self::parse(input)
     }
 }

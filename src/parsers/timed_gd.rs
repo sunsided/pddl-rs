@@ -38,7 +38,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 /// ```
-pub fn parse_timed_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedGD<'a>> {
+pub fn parse_timed_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedGD> {
     let at = map(
         prefix_expr(
             "at",
@@ -58,11 +58,11 @@ pub fn parse_timed_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedG
     alt((at, over))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for TimedGD<'a> {
-    type Item = TimedGD<'a>;
+impl crate::parsers::Parser for TimedGD {
+    type Item = TimedGD;
 
     /// See [`parse_timed_gd`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_timed_gd(input)
     }
 }

@@ -11,17 +11,15 @@ use nom::combinator::map;
 /// # use pddl::parsers::{parse_da_symbol, preamble::*};
 /// assert!(parse_da_symbol("abcde").is_value("abcde".into()));
 ///```
-pub fn parse_da_symbol<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, DurativeActionSymbol<'a>> {
+pub fn parse_da_symbol<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DurativeActionSymbol> {
     map(parse_name, DurativeActionSymbol::from)(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for DurativeActionSymbol<'a> {
-    type Item = DurativeActionSymbol<'a>;
+impl crate::parsers::Parser for DurativeActionSymbol {
+    type Item = DurativeActionSymbol;
 
     /// See [`parse_da_symbol`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_da_symbol(input)
     }
 }

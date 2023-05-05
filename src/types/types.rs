@@ -8,29 +8,29 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`Domain`](crate::Domain).
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
-pub struct Types<'a>(TypedNames<'a>);
+pub struct Types(TypedNames);
 
-impl<'a> Types<'a> {
-    pub const fn new(predicates: TypedNames<'a>) -> Self {
+impl Types {
+    pub const fn new(predicates: TypedNames) -> Self {
         Self(predicates)
     }
 
     /// Gets the values.
-    pub fn values(&self) -> &TypedNames<'a> {
+    pub fn values(&self) -> &TypedNames {
         &self.0
     }
 }
 
-impl<'a> Deref for Types<'a> {
-    type Target = TypedNames<'a>;
+impl Deref for Types {
+    type Target = TypedNames;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl<'a> From<TypedNames<'a>> for Types<'a> {
-    fn from(value: TypedNames<'a>) -> Self {
+impl From<TypedNames> for Types {
+    fn from(value: TypedNames) -> Self {
         Types::new(value)
     }
 }

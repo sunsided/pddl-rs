@@ -44,7 +44,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///```
-pub fn parse_f_exp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExp<'a>> {
+pub fn parse_f_exp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExp> {
     // :numeric-fluents
     let number = map(parse_number, FExp::new_number);
 
@@ -80,11 +80,11 @@ pub fn parse_f_exp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExp<'a>>
     alt((number, binary_op, multi_op, negated, f_head))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for FExp<'a> {
-    type Item = FExp<'a>;
+impl crate::parsers::Parser for FExp {
+    type Item = FExp;
 
     /// See [`parse_f_exp`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_f_exp(input)
     }
 }

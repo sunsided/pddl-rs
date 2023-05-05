@@ -86,7 +86,7 @@ use nom::sequence::{preceded, tuple};
 /// ```
 pub fn parse_da_gd<'a, T: Into<Span<'a>>>(
     input: T,
-) -> ParseResult<'a, DurativeActionGoalDefinition<'a>> {
+) -> ParseResult<'a, DurativeActionGoalDefinition> {
     let pref_timed_gd = map(parse_pref_timed_gd, DurativeActionGoalDefinition::new_timed);
     let and = map(
         prefix_expr("and", space_separated_list0(parse_da_gd)),
@@ -108,11 +108,11 @@ pub fn parse_da_gd<'a, T: Into<Span<'a>>>(
     alt((forall, and, pref_timed_gd))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for DurativeActionGoalDefinition<'a> {
-    type Item = DurativeActionGoalDefinition<'a>;
+impl crate::parsers::Parser for DurativeActionGoalDefinition {
+    type Item = DurativeActionGoalDefinition;
 
     /// See [`parse_da_gd`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_da_gd(input)
     }
 }

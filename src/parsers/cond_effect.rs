@@ -40,9 +40,7 @@ use nom::combinator::map;
 ///     ])
 /// ));
 /// ```
-pub fn parse_cond_effect<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, ConditionalEffect<'a>> {
+pub fn parse_cond_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConditionalEffect> {
     let exactly = map(parse_p_effect, ConditionalEffect::from);
     let all = map(
         prefix_expr("and", space_separated_list0(parse_p_effect)),
@@ -52,11 +50,11 @@ pub fn parse_cond_effect<'a, T: Into<Span<'a>>>(
     alt((all, exactly))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for ConditionalEffect<'a> {
-    type Item = ConditionalEffect<'a>;
+impl crate::parsers::Parser for ConditionalEffect {
+    type Item = ConditionalEffect;
 
     /// See [`parse_cond_effect`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_cond_effect(input)
     }
 }

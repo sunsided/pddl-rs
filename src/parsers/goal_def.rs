@@ -26,15 +26,15 @@ use nom::combinator::map;
 ///     )
 /// ));
 /// ```
-pub fn parse_problem_goal_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, GoalDef<'a>> {
+pub fn parse_problem_goal_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, GoalDef> {
     map(prefix_expr(":goal", parse_pre_gd), GoalDef::new)(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for GoalDef<'a> {
-    type Item = GoalDef<'a>;
+impl crate::parsers::Parser for GoalDef {
+    type Item = GoalDef;
 
     /// See [`parse_problem_goal_def`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_problem_goal_def(input)
     }
 }

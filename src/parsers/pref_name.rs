@@ -10,15 +10,15 @@ use nom::combinator::map;
 /// # use pddl::parsers::{parse_pref_name, preamble::*};
 /// assert!(parse_pref_name("abcde").is_value("abcde".into()));
 ///```
-pub fn parse_pref_name<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PreferenceName<'a>> {
+pub fn parse_pref_name<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PreferenceName> {
     map(parse_name, PreferenceName::new)(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for PreferenceName<'a> {
-    type Item = PreferenceName<'a>;
+impl crate::parsers::Parser for PreferenceName {
+    type Item = PreferenceName;
 
     /// See [`parse_pref_name`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_pref_name(input)
     }
 }

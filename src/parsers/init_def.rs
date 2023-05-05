@@ -33,19 +33,17 @@ use nom::combinator::map;
 ///     ])
 /// ));
 /// ```
-pub fn parse_problem_init_def<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, InitElements<'a>> {
+pub fn parse_problem_init_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, InitElements> {
     map(
         prefix_expr(":init", space_separated_list0(parse_init_el)),
         InitElements::new,
     )(input.into())
 }
-impl<'a> crate::parsers::Parser<'a> for InitElements<'a> {
-    type Item = InitElements<'a>;
+impl crate::parsers::Parser for InitElements {
+    type Item = InitElements;
 
     /// See [`parse_problem_init_def`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_problem_init_def(input)
     }
 }

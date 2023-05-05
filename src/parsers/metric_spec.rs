@@ -19,9 +19,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///```
-pub fn parse_problem_metric_spec<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, MetricSpec<'a>> {
+pub fn parse_problem_metric_spec<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, MetricSpec> {
     // :numeric-fluents
     map(
         prefix_expr(
@@ -35,11 +33,11 @@ pub fn parse_problem_metric_spec<'a, T: Into<Span<'a>>>(
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for MetricSpec<'a> {
-    type Item = MetricSpec<'a>;
+impl crate::parsers::Parser for MetricSpec {
+    type Item = MetricSpec;
 
     /// See [`parse_problem_metric_spec`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_problem_metric_spec(input)
     }
 }

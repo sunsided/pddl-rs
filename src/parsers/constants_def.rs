@@ -19,17 +19,17 @@ use nom::combinator::map;
 ///     ]))
 /// ));
 /// ```
-pub fn parse_constants_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Constants<'a>> {
+pub fn parse_constants_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Constants> {
     map(prefix_expr(":constants", typed_list(parse_name)), |vec| {
         Constants::new(vec)
     })(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for Constants<'a> {
-    type Item = Constants<'a>;
+impl crate::parsers::Parser for Constants {
+    type Item = Constants;
 
     /// See [`parse_constants_def`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_constants_def(input)
     }
 }

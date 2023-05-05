@@ -5,22 +5,22 @@ use crate::types::{GoalDefinition, Number, TypedVariables};
 /// ## Usage
 /// Used by [`ConGD`](ConGD) itself, as well as [`PrefConGD`](crate::types::PrefConGD) and [`Con2GD`](Con2GD).
 #[derive(Debug, Clone, PartialEq)]
-pub enum ConGD<'a> {
-    And(Vec<ConGD<'a>>),
-    Forall(TypedVariables<'a>, Box<ConGD<'a>>),
-    AtEnd(GoalDefinition<'a>),
-    Always(Con2GD<'a>),
-    Sometime(Con2GD<'a>),
-    Within(Number, Con2GD<'a>),
-    AtMostOnce(Con2GD<'a>),
-    SometimeAfter(Con2GD<'a>, Con2GD<'a>),
-    SometimeBefore(Con2GD<'a>, Con2GD<'a>),
-    AlwaysWithin(Number, Con2GD<'a>, Con2GD<'a>),
-    HoldDuring(Number, Number, Con2GD<'a>),
-    HoldAfter(Number, Con2GD<'a>),
+pub enum ConGD {
+    And(Vec<ConGD>),
+    Forall(TypedVariables, Box<ConGD>),
+    AtEnd(GoalDefinition),
+    Always(Con2GD),
+    Sometime(Con2GD),
+    Within(Number, Con2GD),
+    AtMostOnce(Con2GD),
+    SometimeAfter(Con2GD, Con2GD),
+    SometimeBefore(Con2GD, Con2GD),
+    AlwaysWithin(Number, Con2GD, Con2GD),
+    HoldDuring(Number, Number, Con2GD),
+    HoldAfter(Number, Con2GD),
 }
 
-impl<'a> Default for ConGD<'a> {
+impl Default for ConGD {
     fn default() -> Self {
         Self::And(Vec::default())
     }
@@ -31,58 +31,58 @@ impl<'a> Default for ConGD<'a> {
 /// ## Usage
 /// Used by [`ConGD`](ConGD).
 #[derive(Debug, Clone, PartialEq)]
-pub enum Con2GD<'a> {
-    Goal(GoalDefinition<'a>),
-    Nested(Box<ConGD<'a>>),
+pub enum Con2GD {
+    Goal(GoalDefinition),
+    Nested(Box<ConGD>),
 }
 
-impl<'a> ConGD<'a> {
-    pub fn new_and<G: IntoIterator<Item = ConGD<'a>>>(goals: G) -> Self {
+impl ConGD {
+    pub fn new_and<G: IntoIterator<Item = ConGD>>(goals: G) -> Self {
         // TODO: Flatten `(and (and a b) (and x y))` into `(and a b c y)`.
         Self::And(goals.into_iter().collect())
     }
 
-    pub fn new_forall(variables: TypedVariables<'a>, gd: ConGD<'a>) -> Self {
+    pub fn new_forall(variables: TypedVariables, gd: ConGD) -> Self {
         Self::Forall(variables, Box::new(gd))
     }
 
-    pub const fn new_at_end(gd: GoalDefinition<'a>) -> Self {
+    pub const fn new_at_end(gd: GoalDefinition) -> Self {
         Self::AtEnd(gd)
     }
 
-    pub const fn new_always(gd: Con2GD<'a>) -> Self {
+    pub const fn new_always(gd: Con2GD) -> Self {
         Self::Always(gd)
     }
 
-    pub const fn new_sometime(gd: Con2GD<'a>) -> Self {
+    pub const fn new_sometime(gd: Con2GD) -> Self {
         Self::Sometime(gd)
     }
 
-    pub const fn new_within(number: Number, gd: Con2GD<'a>) -> Self {
+    pub const fn new_within(number: Number, gd: Con2GD) -> Self {
         Self::Within(number, gd)
     }
 
-    pub const fn new_at_most_once(gd: Con2GD<'a>) -> Self {
+    pub const fn new_at_most_once(gd: Con2GD) -> Self {
         Self::AtMostOnce(gd)
     }
 
-    pub const fn new_sometime_after(first: Con2GD<'a>, then: Con2GD<'a>) -> Self {
+    pub const fn new_sometime_after(first: Con2GD, then: Con2GD) -> Self {
         Self::SometimeAfter(first, then)
     }
 
-    pub const fn new_sometime_before(later: Con2GD<'a>, earlier: Con2GD<'a>) -> Self {
+    pub const fn new_sometime_before(later: Con2GD, earlier: Con2GD) -> Self {
         Self::SometimeBefore(later, earlier)
     }
 
-    pub const fn new_always_within(number: Number, first: Con2GD<'a>, second: Con2GD<'a>) -> Self {
+    pub const fn new_always_within(number: Number, first: Con2GD, second: Con2GD) -> Self {
         Self::AlwaysWithin(number, first, second)
     }
 
-    pub const fn new_hold_during(begin: Number, end: Number, gd: Con2GD<'a>) -> Self {
+    pub const fn new_hold_during(begin: Number, end: Number, gd: Con2GD) -> Self {
         Self::HoldDuring(begin, end, gd)
     }
 
-    pub const fn new_hold_after(number: Number, gd: Con2GD<'a>) -> Self {
+    pub const fn new_hold_after(number: Number, gd: Con2GD) -> Self {
         Self::HoldAfter(number, gd)
     }
 
@@ -104,12 +104,12 @@ impl<'a> ConGD<'a> {
     }
 }
 
-impl<'a> Con2GD<'a> {
-    pub fn new_nested(gd: ConGD<'a>) -> Self {
+impl Con2GD {
+    pub fn new_nested(gd: ConGD) -> Self {
         Self::Nested(Box::new(gd))
     }
 
-    pub const fn new_goal(gd: GoalDefinition<'a>) -> Self {
+    pub const fn new_goal(gd: GoalDefinition) -> Self {
         Self::Goal(gd)
     }
 
@@ -121,14 +121,14 @@ impl<'a> Con2GD<'a> {
     }
 }
 
-impl<'a> From<ConGD<'a>> for Con2GD<'a> {
-    fn from(value: ConGD<'a>) -> Self {
+impl From<ConGD> for Con2GD {
+    fn from(value: ConGD) -> Self {
         Con2GD::new_nested(value)
     }
 }
 
-impl<'a> From<GoalDefinition<'a>> for Con2GD<'a> {
-    fn from(value: GoalDefinition<'a>) -> Self {
+impl From<GoalDefinition> for Con2GD {
+    fn from(value: GoalDefinition) -> Self {
         Con2GD::new_goal(value)
     }
 }

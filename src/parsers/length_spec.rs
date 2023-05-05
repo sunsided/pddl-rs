@@ -30,11 +30,11 @@ pub fn parse_problem_length_spec<'a, T: Into<Span<'a>>>(input: T) -> ParseResult
     })(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for LengthSpec {
+impl crate::parsers::Parser for LengthSpec {
     type Item = LengthSpec;
 
     /// See [`parse_problem_length_spec`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_problem_length_spec(input)
     }
 }

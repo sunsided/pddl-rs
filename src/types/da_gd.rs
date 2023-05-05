@@ -9,28 +9,28 @@ use crate::types::TypedVariables;
 /// Used by [`DurativeActionGoalDefinition`] itself, as well as [`DurativeActionDefinition`](crate::DurativeActionDefinition) and
 /// [`DurativeActionEffect`](crate::DurativeActionEffect).
 #[derive(Debug, Clone, PartialEq)]
-pub enum DurativeActionGoalDefinition<'a> {
-    Timed(PrefTimedGD<'a>),
-    And(Vec<DurativeActionGoalDefinition<'a>>),
+pub enum DurativeActionGoalDefinition {
+    Timed(PrefTimedGD),
+    And(Vec<DurativeActionGoalDefinition>),
     /// ## Requirements
     /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
-    Forall(TypedVariables<'a>, Box<DurativeActionGoalDefinition<'a>>),
+    Forall(TypedVariables, Box<DurativeActionGoalDefinition>),
 }
 
-impl<'a> DurativeActionGoalDefinition<'a> {
-    pub fn new_timed(pref: PrefTimedGD<'a>) -> Self {
+impl DurativeActionGoalDefinition {
+    pub fn new_timed(pref: PrefTimedGD) -> Self {
         Self::Timed(pref)
     }
-    pub fn new_and<I: IntoIterator<Item = DurativeActionGoalDefinition<'a>>>(prefs: I) -> Self {
+    pub fn new_and<I: IntoIterator<Item = DurativeActionGoalDefinition>>(prefs: I) -> Self {
         Self::And(prefs.into_iter().collect())
     }
-    pub fn new_forall(variables: TypedVariables<'a>, gd: DurativeActionGoalDefinition<'a>) -> Self {
+    pub fn new_forall(variables: TypedVariables, gd: DurativeActionGoalDefinition) -> Self {
         Self::Forall(variables, Box::new(gd))
     }
 }
 
-impl<'a> From<PrefTimedGD<'a>> for DurativeActionGoalDefinition<'a> {
-    fn from(value: PrefTimedGD<'a>) -> Self {
+impl From<PrefTimedGD> for DurativeActionGoalDefinition {
+    fn from(value: PrefTimedGD) -> Self {
         DurativeActionGoalDefinition::new_timed(value)
     }
 }

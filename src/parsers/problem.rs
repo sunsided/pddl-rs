@@ -35,7 +35,7 @@ use nom::sequence::{preceded, tuple};
 /// assert_eq!(problem.init().len(), 9);
 /// assert_eq!(problem.goal().len(), 3);
 /// ```
-pub fn parse_problem<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Problem<'a>> {
+pub fn parse_problem<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Problem> {
     map(
         ws(prefix_expr(
             "define",
@@ -70,11 +70,11 @@ pub fn parse_problem<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Problem
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for Problem<'a> {
-    type Item = Problem<'a>;
+impl crate::parsers::Parser for Problem {
+    type Item = Problem;
 
     /// See [`parse_problem`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_problem(input)
     }
 }

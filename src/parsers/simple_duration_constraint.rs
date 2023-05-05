@@ -36,7 +36,7 @@ use nom::sequence::{preceded, tuple};
 ///```
 pub fn parse_simple_duration_constraint<'a, T: Into<Span<'a>>>(
     input: T,
-) -> ParseResult<'a, SimpleDurationConstraint<'a>> {
+) -> ParseResult<'a, SimpleDurationConstraint> {
     let op = map(
         parens(tuple((
             parse_d_op,
@@ -62,11 +62,11 @@ pub fn parse_simple_duration_constraint<'a, T: Into<Span<'a>>>(
     alt((op, at))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for SimpleDurationConstraint<'a> {
-    type Item = SimpleDurationConstraint<'a>;
+impl crate::parsers::Parser for SimpleDurationConstraint {
+    type Item = SimpleDurationConstraint;
 
     /// See [`parse_simple_duration_constraint`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_simple_duration_constraint(input)
     }
 }

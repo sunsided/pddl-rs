@@ -45,7 +45,7 @@ use nom::combinator::map;
 ///     ])
 /// ));
 /// ```
-pub fn parse_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Effects<'a>> {
+pub fn parse_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Effects> {
     let exactly = map(parse_c_effect, Effects::from);
     let all = map(
         prefix_expr("and", space_separated_list0(parse_c_effect)),
@@ -55,11 +55,11 @@ pub fn parse_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Effects<
     alt((exactly, all))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for Effects<'a> {
-    type Item = Effects<'a>;
+impl crate::parsers::Parser for Effects {
+    type Item = Effects;
 
     /// See [`parse_effect`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_effect(input)
     }
 }

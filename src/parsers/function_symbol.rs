@@ -19,18 +19,16 @@ use crate::types::FunctionSymbol;
 /// assert!(parse_function_symbol("0124").is_err());
 /// assert!(parse_function_symbol("-1").is_err());
 ///```
-pub fn parse_function_symbol<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, FunctionSymbol<'a>> {
+pub fn parse_function_symbol<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FunctionSymbol> {
     let (remaining, name) = parse_name(input)?;
     Ok((remaining, name.into()))
 }
 
-impl<'a> crate::parsers::Parser<'a> for FunctionSymbol<'a> {
-    type Item = FunctionSymbol<'a>;
+impl crate::parsers::Parser for FunctionSymbol {
+    type Item = FunctionSymbol;
 
     /// See [`parse_function_symbol`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_function_symbol(input)
     }
 }

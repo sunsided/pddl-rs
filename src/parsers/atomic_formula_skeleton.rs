@@ -24,18 +24,18 @@ use nom::sequence::tuple;
 /// ```
 pub fn parse_atomic_formula_skeleton<'a, T: Into<Span<'a>>>(
     input: T,
-) -> ParseResult<'a, AtomicFormulaSkeleton<'a>> {
+) -> ParseResult<'a, AtomicFormulaSkeleton> {
     map(
         parens(tuple((parse_predicate, ws(typed_list(parse_variable))))),
         |tuple| AtomicFormulaSkeleton::from(tuple),
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for AtomicFormulaSkeleton<'a> {
-    type Item = AtomicFormulaSkeleton<'a>;
+impl crate::parsers::Parser for AtomicFormulaSkeleton {
+    type Item = AtomicFormulaSkeleton;
 
     /// See [`parse_atomic_formula_skeleton`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_atomic_formula_skeleton(input)
     }
 }

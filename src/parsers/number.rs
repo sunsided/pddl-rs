@@ -34,11 +34,11 @@ pub fn parse_decimal(input: Span) -> ParseResult<Span> {
     recognize(tuple((char('.'), digit1)))(input)
 }
 
-impl<'a> crate::parsers::Parser<'a> for Number {
+impl crate::parsers::Parser for Number {
     type Item = Number;
 
     /// See [`parse_number`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_number(input)
     }
 }

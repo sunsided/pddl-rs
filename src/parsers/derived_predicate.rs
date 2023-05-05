@@ -26,7 +26,7 @@ use nom::sequence::{preceded, tuple};
 ///```
 pub fn parse_derived_predicate<'a, T: Into<Span<'a>>>(
     input: T,
-) -> ParseResult<'a, DerivedPredicate<'a>> {
+) -> ParseResult<'a, DerivedPredicate> {
     map(
         prefix_expr(
             ":derived",
@@ -39,11 +39,11 @@ pub fn parse_derived_predicate<'a, T: Into<Span<'a>>>(
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for DerivedPredicate<'a> {
-    type Item = DerivedPredicate<'a>;
+impl crate::parsers::Parser for DerivedPredicate {
+    type Item = DerivedPredicate;
 
     /// See [`parse_derived_predicate`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_derived_predicate(input)
     }
 }

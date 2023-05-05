@@ -25,7 +25,7 @@ use nom::sequence::tuple;
 /// assert!(parse_name("0124").is_err());
 /// assert!(parse_name("-1").is_err());
 ///```
-pub fn parse_name<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Name<'a>> {
+pub fn parse_name<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Name> {
     map(
         recognize(tuple((alpha1, many0(parse_any_char)))),
         |x: Span| Name::from(*x.fragment()),
@@ -37,11 +37,11 @@ pub fn parse_any_char(input: Span) -> ParseResult<Span> {
     recognize(alt((alpha1, digit1, tag("-"), tag("_"))))(input)
 }
 
-impl<'a> crate::parsers::Parser<'a> for Name<'a> {
-    type Item = Name<'a>;
+impl crate::parsers::Parser for Name {
+    type Item = Name;
 
     /// See [`parse_name`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_name(input)
     }
 }

@@ -80,7 +80,7 @@ use nom::sequence::{preceded, tuple};
 ///     PrefConGDs::new_preference(Some("name".into()), ConGD::AtEnd(gd_a.clone()))
 /// ));
 /// ```
-pub fn parse_pref_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PrefConGDs<'a>> {
+pub fn parse_pref_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PrefConGDs> {
     let and = map(
         prefix_expr("and", space_separated_list0(parse_pref_con_gd)),
         |x| PrefConGDs::from_iter(x.into_iter().flatten()),
@@ -117,11 +117,11 @@ pub fn parse_pref_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Pre
     alt((and, forall, named_preference, unnamed_preference, goal))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for PrefConGDs<'a> {
-    type Item = PrefConGDs<'a>;
+impl crate::parsers::Parser for PrefConGDs {
+    type Item = PrefConGDs;
 
     /// See [`parse_pref_con_gd`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_pref_con_gd(input)
     }
 }

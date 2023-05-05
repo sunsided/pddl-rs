@@ -11,41 +11,41 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`Domain`](crate::Domain).
 #[derive(Debug, Default, Clone, PartialEq)]
-pub struct DomainConstraintsDef<'a>(ConGD<'a>);
+pub struct DomainConstraintsDef(ConGD);
 
-impl<'a> DomainConstraintsDef<'a> {
-    pub const fn new(gd: ConGD<'a>) -> Self {
+impl DomainConstraintsDef {
+    pub const fn new(gd: ConGD) -> Self {
         Self(gd)
     }
 
     /// Gets the value.
-    pub const fn value(&self) -> &ConGD<'a> {
+    pub const fn value(&self) -> &ConGD {
         &self.0
     }
 }
 
-impl<'a> PartialEq<ConGD<'a>> for DomainConstraintsDef<'a> {
-    fn eq(&self, other: &ConGD<'a>) -> bool {
+impl PartialEq<ConGD> for DomainConstraintsDef {
+    fn eq(&self, other: &ConGD) -> bool {
         self.0.eq(other)
     }
 }
 
-impl<'a> From<ConGD<'a>> for DomainConstraintsDef<'a> {
-    fn from(value: ConGD<'a>) -> Self {
+impl From<ConGD> for DomainConstraintsDef {
+    fn from(value: ConGD) -> Self {
         Self::new(value)
     }
 }
 
-impl<'a> Deref for DomainConstraintsDef<'a> {
-    type Target = ConGD<'a>;
+impl Deref for DomainConstraintsDef {
+    type Target = ConGD;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl<'a> Into<ConGD<'a>> for DomainConstraintsDef<'a> {
-    fn into(self) -> ConGD<'a> {
+impl Into<ConGD> for DomainConstraintsDef {
+    fn into(self) -> ConGD {
         self.0
     }
 }

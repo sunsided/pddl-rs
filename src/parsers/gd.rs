@@ -131,7 +131,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 /// ```
-pub fn parse_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, GoalDefinition<'a>> {
+pub fn parse_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, GoalDefinition> {
     let af = map(
         atomic_formula(parse_term),
         GoalDefinition::new_atomic_formula,
@@ -190,11 +190,11 @@ pub fn parse_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, GoalDefiniti
     alt((and, or, not, imply, exists, forall, af, literal, f_comp))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for GoalDefinition<'a> {
-    type Item = GoalDefinition<'a>;
+impl crate::parsers::Parser for GoalDefinition {
+    type Item = GoalDefinition;
 
     /// See [`parse_gd`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_gd(input)
     }
 }

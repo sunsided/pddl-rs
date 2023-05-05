@@ -7,31 +7,31 @@ use crate::types::{GoalDefinition, Preference};
 /// ## Usage
 /// Used by [`PreconditionGoalDefinition`](crate::PreconditionGoalDefinition).
 #[derive(Debug, Clone, PartialEq)]
-pub enum PreferenceGD<'a> {
-    Goal(GoalDefinition<'a>),
+pub enum PreferenceGD {
+    Goal(GoalDefinition),
     /// ## Requirements
     /// Requires [Preferences](crate::Requirement::Preferences).
-    Preference(Preference<'a>),
+    Preference(Preference),
 }
 
-impl<'a> PreferenceGD<'a> {
-    pub const fn from_gd(gd: GoalDefinition<'a>) -> Self {
+impl PreferenceGD {
+    pub const fn from_gd(gd: GoalDefinition) -> Self {
         Self::Goal(gd)
     }
 
-    pub fn from_preference(pref: Preference<'a>) -> Self {
+    pub fn from_preference(pref: Preference) -> Self {
         Self::Preference(pref)
     }
 }
 
-impl<'a> From<GoalDefinition<'a>> for PreferenceGD<'a> {
-    fn from(value: GoalDefinition<'a>) -> Self {
+impl From<GoalDefinition> for PreferenceGD {
+    fn from(value: GoalDefinition) -> Self {
         PreferenceGD::from_gd(value)
     }
 }
 
-impl<'a> From<Preference<'a>> for PreferenceGD<'a> {
-    fn from(value: Preference<'a>) -> Self {
+impl From<Preference> for PreferenceGD {
+    fn from(value: Preference) -> Self {
         PreferenceGD::from_preference(value)
     }
 }

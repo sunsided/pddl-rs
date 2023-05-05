@@ -52,7 +52,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 /// ```
-pub fn parse_init_el<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, InitElement<'a>> {
+pub fn parse_init_el<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, InitElement> {
     let literal_ = map(literal(parse_name), InitElement::new_literal);
 
     // :timed-initial-literals
@@ -88,11 +88,11 @@ pub fn parse_init_el<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, InitEle
     alt((literal_, at, is_numeric, is_object))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for InitElement<'a> {
-    type Item = InitElement<'a>;
+impl crate::parsers::Parser for InitElement {
+    type Item = InitElement;
 
     /// See [`parse_init_el`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_init_el(input)
     }
 }

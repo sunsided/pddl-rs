@@ -75,7 +75,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///```
-pub fn parse_metric_f_exp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, MetricFExp<'a>> {
+pub fn parse_metric_f_exp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, MetricFExp> {
     let binary_op = map(
         parens(tuple((
             parse_binary_op,
@@ -135,11 +135,11 @@ pub fn parse_metric_f_exp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Me
     ))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for MetricFExp<'a> {
-    type Item = MetricFExp<'a>;
+impl crate::parsers::Parser for MetricFExp {
+    type Item = MetricFExp;
 
     /// See [`parse_metric_f_exp`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_metric_f_exp(input)
     }
 }

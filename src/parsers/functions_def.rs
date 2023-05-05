@@ -26,7 +26,7 @@ use nom::combinator::map;
 ///     ])
 /// ));
 /// ```
-pub fn parse_functions_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Functions<'a>> {
+pub fn parse_functions_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Functions> {
     map(
         prefix_expr(
             ":functions",
@@ -36,11 +36,11 @@ pub fn parse_functions_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, F
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for Functions<'a> {
-    type Item = Functions<'a>;
+impl crate::parsers::Parser for Functions {
+    type Item = Functions;
 
     /// See [`parse_functions_def`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_functions_def(input)
     }
 }

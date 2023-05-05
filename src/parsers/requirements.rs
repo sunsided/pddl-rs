@@ -83,19 +83,19 @@ pub fn parse_require_key<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Req
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for Requirements {
+impl crate::parsers::Parser for Requirements {
     type Item = Requirements;
 
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_require_def(input)
     }
 }
 
-impl<'a> crate::parsers::Parser<'a> for Requirement {
+impl crate::parsers::Parser for Requirement {
     type Item = Requirement;
 
     /// See [`parse_require_key`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_require_key(input)
     }
 }

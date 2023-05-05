@@ -8,29 +8,29 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`Problem`](crate::Problem).
 #[derive(Debug, Clone, PartialEq)]
-pub struct InitElements<'a>(Vec<InitElement<'a>>);
+pub struct InitElements(Vec<InitElement>);
 
-impl<'a> InitElements<'a> {
-    pub const fn new(iter: Vec<InitElement<'a>>) -> Self {
+impl InitElements {
+    pub const fn new(iter: Vec<InitElement>) -> Self {
         Self(iter)
     }
 
     /// Gets the values.
-    pub fn values(&self) -> &[InitElement<'a>] {
+    pub fn values(&self) -> &[InitElement] {
         self.0.as_slice()
     }
 }
 
-impl<'a> Deref for InitElements<'a> {
-    type Target = [InitElement<'a>];
+impl Deref for InitElements {
+    type Target = [InitElement];
 
     fn deref(&self) -> &Self::Target {
         self.0.as_slice()
     }
 }
 
-impl<'a> FromIterator<InitElement<'a>> for InitElements<'a> {
-    fn from_iter<T: IntoIterator<Item = InitElement<'a>>>(iter: T) -> Self {
+impl FromIterator<InitElement> for InitElements {
+    fn from_iter<T: IntoIterator<Item = InitElement>>(iter: T) -> Self {
         InitElements::new(iter.into_iter().collect())
     }
 }

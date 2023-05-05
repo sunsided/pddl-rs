@@ -76,9 +76,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 /// ```
-pub fn parse_da_effect<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, DurativeActionEffect<'a>> {
+pub fn parse_da_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DurativeActionEffect> {
     let exactly = map(parse_timed_effect, DurativeActionEffect::from);
 
     let all = map(
@@ -110,11 +108,11 @@ pub fn parse_da_effect<'a, T: Into<Span<'a>>>(
     alt((all, forall, when, exactly))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for DurativeActionEffect<'a> {
-    type Item = DurativeActionEffect<'a>;
+impl crate::parsers::Parser for DurativeActionEffect {
+    type Item = DurativeActionEffect;
 
     /// See [`parse_da_effect`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_da_effect(input)
     }
 }

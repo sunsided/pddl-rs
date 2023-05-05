@@ -9,21 +9,21 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`GoalDef`](crate::GoalDef), as well as [`ActionDefinition`](crate::ActionDefinition).
 #[derive(Debug, Clone, PartialEq, Default)]
-pub struct PreconditionGoalDefinitions<'a>(Vec<PreconditionGoalDefinition<'a>>);
+pub struct PreconditionGoalDefinitions(Vec<PreconditionGoalDefinition>);
 
-impl<'a> PreconditionGoalDefinitions<'a> {
+impl PreconditionGoalDefinitions {
     /// Constructs a new instance from the provided vector of values.
-    pub const fn new(values: Vec<PreconditionGoalDefinition<'a>>) -> Self {
+    pub const fn new(values: Vec<PreconditionGoalDefinition>) -> Self {
         Self(values)
     }
 
     /// Constructs a list containing a single [`PreconditionGoalDefinition::Preference`] variant.
-    pub fn new_preference(pref: PreferenceGD<'a>) -> Self {
+    pub fn new_preference(pref: PreferenceGD) -> Self {
         PreconditionGoalDefinition::new_preference(pref).into()
     }
 
     /// Constructs a list containing a single [`PreconditionGoalDefinition::Forall`] variant.
-    pub fn new_forall(variables: TypedVariables<'a>, gd: PreconditionGoalDefinitions<'a>) -> Self {
+    pub fn new_forall(variables: TypedVariables, gd: PreconditionGoalDefinitions) -> Self {
         PreconditionGoalDefinition::new_forall(variables, gd).into()
     }
 
@@ -41,13 +41,13 @@ impl<'a> PreconditionGoalDefinitions<'a> {
     /// Returns an iterator over the list.
     ///
     /// The iterator yields all items from start to end.
-    pub fn iter(&'a self) -> std::slice::Iter<'a, PreconditionGoalDefinition<'a>> {
+    pub fn iter(&self) -> std::slice::Iter<PreconditionGoalDefinition> {
         self.0.iter()
     }
 
     /// Get the only element of this list if the list has
     /// exactly one element. Returns [`None`] in all other cases.
-    pub fn try_get_single(self) -> Option<PreconditionGoalDefinition<'a>> {
+    pub fn try_get_single(self) -> Option<PreconditionGoalDefinition> {
         if self.len() == 1 {
             self.into_iter().next()
         } else {
@@ -56,43 +56,43 @@ impl<'a> PreconditionGoalDefinitions<'a> {
     }
 }
 
-impl<'a> FromIterator<PreconditionGoalDefinition<'a>> for PreconditionGoalDefinitions<'a> {
-    fn from_iter<T: IntoIterator<Item = PreconditionGoalDefinition<'a>>>(iter: T) -> Self {
+impl FromIterator<PreconditionGoalDefinition> for PreconditionGoalDefinitions {
+    fn from_iter<T: IntoIterator<Item = PreconditionGoalDefinition>>(iter: T) -> Self {
         PreconditionGoalDefinitions::new(iter.into_iter().collect())
     }
 }
 
-impl<'a> Deref for PreconditionGoalDefinitions<'a> {
-    type Target = [PreconditionGoalDefinition<'a>];
+impl Deref for PreconditionGoalDefinitions {
+    type Target = [PreconditionGoalDefinition];
 
     fn deref(&self) -> &Self::Target {
         self.0.as_slice()
     }
 }
 
-impl<'a> AsRef<[PreconditionGoalDefinition<'a>]> for PreconditionGoalDefinitions<'a> {
-    fn as_ref(&self) -> &[PreconditionGoalDefinition<'a>] {
+impl AsRef<[PreconditionGoalDefinition]> for PreconditionGoalDefinitions {
+    fn as_ref(&self) -> &[PreconditionGoalDefinition] {
         self.0.as_slice()
     }
 }
 
-impl<'a> IntoIterator for PreconditionGoalDefinitions<'a> {
-    type Item = PreconditionGoalDefinition<'a>;
-    type IntoIter = std::vec::IntoIter<PreconditionGoalDefinition<'a>>;
+impl IntoIterator for PreconditionGoalDefinitions {
+    type Item = PreconditionGoalDefinition;
+    type IntoIter = std::vec::IntoIter<PreconditionGoalDefinition>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
     }
 }
 
-impl<'a> From<PreconditionGoalDefinition<'a>> for PreconditionGoalDefinitions<'a> {
-    fn from(value: PreconditionGoalDefinition<'a>) -> Self {
+impl From<PreconditionGoalDefinition> for PreconditionGoalDefinitions {
+    fn from(value: PreconditionGoalDefinition) -> Self {
         PreconditionGoalDefinitions::new(vec![value])
     }
 }
 
-impl<'a> From<Option<PreconditionGoalDefinition<'a>>> for PreconditionGoalDefinitions<'a> {
-    fn from(value: Option<PreconditionGoalDefinition<'a>>) -> Self {
+impl From<Option<PreconditionGoalDefinition>> for PreconditionGoalDefinitions {
+    fn from(value: Option<PreconditionGoalDefinition>) -> Self {
         match value {
             None => PreconditionGoalDefinitions::default(),
             Some(value) => value.into(),
@@ -100,8 +100,8 @@ impl<'a> From<Option<PreconditionGoalDefinition<'a>>> for PreconditionGoalDefini
     }
 }
 
-impl<'a> From<Option<PreconditionGoalDefinitions<'a>>> for PreconditionGoalDefinitions<'a> {
-    fn from(value: Option<PreconditionGoalDefinitions<'a>>) -> Self {
+impl From<Option<PreconditionGoalDefinitions>> for PreconditionGoalDefinitions {
+    fn from(value: Option<PreconditionGoalDefinitions>) -> Self {
         match value {
             None => PreconditionGoalDefinitions::default(),
             Some(values) => values,
@@ -109,16 +109,16 @@ impl<'a> From<Option<PreconditionGoalDefinitions<'a>>> for PreconditionGoalDefin
     }
 }
 
-impl<'a> From<PreconditionGoalDefinitions<'a>> for Vec<PreconditionGoalDefinition<'a>> {
-    fn from(value: PreconditionGoalDefinitions<'a>) -> Self {
+impl From<PreconditionGoalDefinitions> for Vec<PreconditionGoalDefinition> {
+    fn from(value: PreconditionGoalDefinitions) -> Self {
         value.0
     }
 }
 
-impl<'a> TryInto<PreconditionGoalDefinition<'a>> for PreconditionGoalDefinitions<'a> {
+impl TryInto<PreconditionGoalDefinition> for PreconditionGoalDefinitions {
     type Error = ();
 
-    fn try_into(self) -> Result<PreconditionGoalDefinition<'a>, Self::Error> {
+    fn try_into(self) -> Result<PreconditionGoalDefinition, Self::Error> {
         self.try_get_single().ok_or(())
     }
 }
@@ -128,46 +128,43 @@ impl<'a> TryInto<PreconditionGoalDefinition<'a>> for PreconditionGoalDefinitions
 /// ## Usage
 /// Used by [`PreconditionGoalDefinitions`].
 #[derive(Debug, Clone, PartialEq)]
-pub enum PreconditionGoalDefinition<'a> {
+pub enum PreconditionGoalDefinition {
     /// ## Requirements
     /// None per se: this branch may expand into [`PreferenceGD::Goal`](PreferenceGD::Goal),
     /// which has no requirements.
-    Preference(PreferenceGD<'a>),
+    Preference(PreferenceGD),
     /// ## Requirements
     /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
-    Forall(TypedVariables<'a>, PreconditionGoalDefinitions<'a>),
+    Forall(TypedVariables, PreconditionGoalDefinitions),
 }
 
-impl<'a> PreconditionGoalDefinition<'a> {
-    pub fn new_and<I: IntoIterator<Item = PreconditionGoalDefinition<'a>>>(
+impl PreconditionGoalDefinition {
+    pub fn new_and<I: IntoIterator<Item = PreconditionGoalDefinition>>(
         iter: I,
-    ) -> PreconditionGoalDefinitions<'a> {
+    ) -> PreconditionGoalDefinitions {
         // TODO: Flatten `(and (and a b) (and x y))` into `(and a b c y)`.
         PreconditionGoalDefinitions::from_iter(iter)
     }
 
     /// Constructs a new [`Preference`](Self::Preference) variant.
-    pub const fn new_preference(pref: PreferenceGD<'a>) -> Self {
+    pub const fn new_preference(pref: PreferenceGD) -> Self {
         Self::Preference(pref)
     }
 
     /// Constructs a new [`Forall`](Self::Forall) variant.
-    pub const fn new_forall(
-        variables: TypedVariables<'a>,
-        gd: PreconditionGoalDefinitions<'a>,
-    ) -> Self {
+    pub const fn new_forall(variables: TypedVariables, gd: PreconditionGoalDefinitions) -> Self {
         Self::Forall(variables, gd)
     }
 }
 
-impl<'a> From<PreferenceGD<'a>> for PreconditionGoalDefinition<'a> {
-    fn from(value: PreferenceGD<'a>) -> Self {
+impl From<PreferenceGD> for PreconditionGoalDefinition {
+    fn from(value: PreferenceGD) -> Self {
         PreconditionGoalDefinition::new_preference(value)
     }
 }
 
-impl<'a> From<Preference<'a>> for PreconditionGoalDefinition<'a> {
-    fn from(value: Preference<'a>) -> Self {
+impl From<Preference> for PreconditionGoalDefinition {
+    fn from(value: Preference) -> Self {
         PreconditionGoalDefinition::new_preference(PreferenceGD::from_preference(value))
     }
 }

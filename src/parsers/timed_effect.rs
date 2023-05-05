@@ -51,7 +51,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 /// ```
-pub fn parse_timed_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedEffect<'a>> {
+pub fn parse_timed_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedEffect> {
     let cond = map(
         prefix_expr(
             "at",
@@ -88,11 +88,11 @@ pub fn parse_timed_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Ti
     alt((fluent, cond, continuous))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for TimedEffect<'a> {
-    type Item = TimedEffect<'a>;
+impl crate::parsers::Parser for TimedEffect {
+    type Item = TimedEffect;
 
     /// See [`parse_timed_effect`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_timed_effect(input)
     }
 }

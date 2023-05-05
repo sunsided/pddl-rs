@@ -8,31 +8,31 @@ use crate::types::{AssignOp, AtomicFormula, FExp, FHead, FunctionTerm, Term};
 /// ## Usage
 /// Used by [`CEffect`](crate::CEffect) and [`ConditionalEffect`](crate::ConditionalEffect).
 #[derive(Debug, Clone, PartialEq)]
-pub enum PEffect<'a> {
-    AtomicFormula(AtomicFormula<'a, Term<'a>>),
-    NotAtomicFormula(AtomicFormula<'a, Term<'a>>),
+pub enum PEffect {
+    AtomicFormula(AtomicFormula<Term>),
+    NotAtomicFormula(AtomicFormula<Term>),
     /// ## Requirements
     /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
-    AssignNumericFluent(AssignOp, FHead<'a>, FExp<'a>),
+    AssignNumericFluent(AssignOp, FHead, FExp),
     /// ## Requirements
     /// Requires [Object Fluents](crate::Requirement::ObjectFluents).
-    AssignObjectFluent(FunctionTerm<'a>, Option<Term<'a>>),
+    AssignObjectFluent(FunctionTerm, Option<Term>),
 }
 
-impl<'a> PEffect<'a> {
-    pub const fn new(atomic_formula: AtomicFormula<'a, Term<'a>>) -> Self {
+impl PEffect {
+    pub const fn new(atomic_formula: AtomicFormula<Term>) -> Self {
         Self::AtomicFormula(atomic_formula)
     }
 
-    pub const fn new_not(atomic_formula: AtomicFormula<'a, Term<'a>>) -> Self {
+    pub const fn new_not(atomic_formula: AtomicFormula<Term>) -> Self {
         Self::NotAtomicFormula(atomic_formula)
     }
 
-    pub const fn new_numeric_fluent(op: AssignOp, head: FHead<'a>, exp: FExp<'a>) -> Self {
+    pub const fn new_numeric_fluent(op: AssignOp, head: FHead, exp: FExp) -> Self {
         Self::AssignNumericFluent(op, head, exp)
     }
 
-    pub const fn new_object_fluent(f_term: FunctionTerm<'a>, term: Option<Term<'a>>) -> Self {
+    pub const fn new_object_fluent(f_term: FunctionTerm, term: Option<Term>) -> Self {
         Self::AssignObjectFluent(f_term, term)
     }
 }

@@ -91,7 +91,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 /// ```
-pub fn parse_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, CEffect<'a>> {
+pub fn parse_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, CEffect> {
     let p_effect = map(parse_p_effect, CEffect::from);
     let forall = map(parse_forall_c_effect, CEffect::from);
     let when = map(parse_when_c_effect, CEffect::from);
@@ -123,9 +123,7 @@ pub fn parse_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, CEffec
 ///     )
 /// ));
 /// ```
-pub fn parse_forall_c_effect<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, ForallCEffect<'a>> {
+pub fn parse_forall_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ForallCEffect> {
     map(
         prefix_expr(
             "forall",
@@ -183,7 +181,7 @@ pub fn parse_forall_c_effect<'a, T: Into<Span<'a>>>(
 ///     )
 /// ));
 /// ```
-pub fn parse_when_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, WhenCEffect<'a>> {
+pub fn parse_when_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, WhenCEffect> {
     map(
         prefix_expr(
             "when",
@@ -193,29 +191,29 @@ pub fn parse_when_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, W
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for CEffect<'a> {
-    type Item = CEffect<'a>;
+impl crate::parsers::Parser for CEffect {
+    type Item = CEffect;
 
     /// See [`parse_c_effect`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_c_effect(input.into())
     }
 }
 
-impl<'a> crate::parsers::Parser<'a> for ForallCEffect<'a> {
-    type Item = ForallCEffect<'a>;
+impl crate::parsers::Parser for ForallCEffect {
+    type Item = ForallCEffect;
 
     /// See [`parse_forall_c_effect`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_forall_c_effect(input)
     }
 }
 
-impl<'a> crate::parsers::Parser<'a> for WhenCEffect<'a> {
-    type Item = WhenCEffect<'a>;
+impl crate::parsers::Parser for WhenCEffect {
+    type Item = WhenCEffect;
 
     /// See [`parse_when_c_effect`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_when_c_effect(input)
     }
 }

@@ -11,42 +11,38 @@ use crate::types::{BinaryOp, FHead, MultiOp, Number};
 /// Used by [`FExp`] itself, as well as [`PEffect`](crate::PEffect), [`DurationValue`](crate::DurationValue),
 /// [`FExpDa`](crate::FExpDa) and [`FExpT`](crate::FExpT).
 #[derive(Debug, Clone, PartialEq)]
-pub enum FExp<'a> {
+pub enum FExp {
     /// A numerical expression.
     Number(Number),
     /// A function that derives a value.
-    Function(FHead<'a>),
+    Function(FHead),
     /// The negative value of a function expression.
-    Negative(Box<FExp<'a>>),
+    Negative(Box<FExp>),
     /// An operation applied to two function expressions.
-    BinaryOp(BinaryOp, Box<FExp<'a>>, Box<FExp<'a>>),
+    BinaryOp(BinaryOp, Box<FExp>, Box<FExp>),
     /// An operation applied to two or more function expressions.
-    MultiOp(MultiOp, Box<FExp<'a>>, Vec<FExp<'a>>),
+    MultiOp(MultiOp, Box<FExp>, Vec<FExp>),
 }
 
-impl<'a> FExp<'a> {
+impl FExp {
     #[inline(always)]
     pub fn new_number<N: Into<Number>>(number: N) -> Self {
         Self::Number(number.into())
     }
 
-    pub fn new_binary_op(op: BinaryOp, lhs: FExp<'a>, rhs: FExp<'a>) -> Self {
+    pub fn new_binary_op(op: BinaryOp, lhs: FExp, rhs: FExp) -> Self {
         Self::BinaryOp(op, Box::new(lhs), Box::new(rhs))
     }
 
-    pub fn new_multi_op<I: IntoIterator<Item = FExp<'a>>>(
-        op: MultiOp,
-        lhs: FExp<'a>,
-        rhs: I,
-    ) -> Self {
+    pub fn new_multi_op<I: IntoIterator<Item = FExp>>(op: MultiOp, lhs: FExp, rhs: I) -> Self {
         Self::MultiOp(op, Box::new(lhs), rhs.into_iter().collect())
     }
 
-    pub fn new_negative(value: FExp<'a>) -> Self {
+    pub fn new_negative(value: FExp) -> Self {
         Self::Negative(Box::new(value))
     }
 
-    pub const fn new_function(f_head: FHead<'a>) -> Self {
+    pub const fn new_function(f_head: FHead) -> Self {
         Self::Function(f_head)
     }
 }

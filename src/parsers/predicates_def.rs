@@ -36,7 +36,7 @@ use nom::combinator::map;
 /// ```
 pub fn parse_predicates_def<'a, T: Into<Span<'a>>>(
     input: T,
-) -> ParseResult<'a, PredicateDefinitions<'a>> {
+) -> ParseResult<'a, PredicateDefinitions> {
     map(
         prefix_expr(
             ":predicates",
@@ -46,11 +46,11 @@ pub fn parse_predicates_def<'a, T: Into<Span<'a>>>(
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for PredicateDefinitions<'a> {
-    type Item = PredicateDefinitions<'a>;
+impl crate::parsers::Parser for PredicateDefinitions {
+    type Item = PredicateDefinitions;
 
     /// See [`parse_predicates_def`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_predicates_def(input)
     }
 }

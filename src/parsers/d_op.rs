@@ -28,11 +28,11 @@ pub fn parse_d_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DOp> {
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for DOp {
+impl crate::parsers::Parser for DOp {
     type Item = DOp;
 
     /// See [`parse_d_op`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_d_op(input)
     }
 }

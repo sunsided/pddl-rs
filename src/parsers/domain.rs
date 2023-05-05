@@ -59,7 +59,7 @@ use nom::sequence::{preceded, tuple};
 /// assert!(domain.constraints().is_empty());
 /// assert_eq!(domain.structure().len(), 3);
 /// ```
-pub fn parse_domain<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Domain<'a>> {
+pub fn parse_domain<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Domain> {
     map(
         ws(prefix_expr(
             "define",
@@ -110,11 +110,11 @@ pub fn parse_domain<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Domain<'
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for Domain<'a> {
-    type Item = Domain<'a>;
+impl crate::parsers::Parser for Domain {
+    type Item = Domain;
 
     /// See [`parse_domain`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_domain(input)
     }
 }

@@ -157,7 +157,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 /// ```
-pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD<'a>> {
+pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD> {
     let and = map(
         prefix_expr("and", space_separated_list0(parse_con_gd)),
         ConGD::new_and,
@@ -257,7 +257,7 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD<'a
     ))(input.into())
 }
 
-fn parse_con2_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Con2GD<'a>> {
+fn parse_con2_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Con2GD> {
     let gd = map(parse_gd, Con2GD::new_goal);
 
     // TODO: Add crate feature to allow this to be forbidden if unsupported by the application.
@@ -265,20 +265,20 @@ fn parse_con2_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Con2GD<'a>>
     alt((gd, con_gd))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for ConGD<'a> {
-    type Item = ConGD<'a>;
+impl crate::parsers::Parser for ConGD {
+    type Item = ConGD;
 
     /// See [`parse_con_gd`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_con_gd(input)
     }
 }
 
-impl<'a> crate::parsers::Parser<'a> for Con2GD<'a> {
-    type Item = Con2GD<'a>;
+impl crate::parsers::Parser for Con2GD {
+    type Item = Con2GD;
 
     /// See [`parse_con2_gd`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_con2_gd(input)
     }
 }

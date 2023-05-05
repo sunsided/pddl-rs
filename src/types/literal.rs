@@ -7,17 +7,17 @@ use crate::types::AtomicFormula;
 /// ## Usage
 /// Used by [`GoalDefinition`](crate::GoalDefinition) and [`InitElement`](crate::InitElement).
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum Literal<'a, T> {
-    AtomicFormula(AtomicFormula<'a, T>),
-    NotAtomicFormula(AtomicFormula<'a, T>),
+pub enum Literal<T> {
+    AtomicFormula(AtomicFormula<T>),
+    NotAtomicFormula(AtomicFormula<T>),
 }
 
-impl<'a, T> Literal<'a, T> {
-    pub const fn new(atomic_formula: AtomicFormula<'a, T>) -> Self {
+impl<'a, T> Literal<T> {
+    pub const fn new(atomic_formula: AtomicFormula<T>) -> Self {
         Self::AtomicFormula(atomic_formula)
     }
 
-    pub const fn new_not(atomic_formula: AtomicFormula<'a, T>) -> Self {
+    pub const fn new_not(atomic_formula: AtomicFormula<T>) -> Self {
         Self::NotAtomicFormula(atomic_formula)
     }
 
@@ -26,8 +26,8 @@ impl<'a, T> Literal<'a, T> {
     }
 }
 
-impl<'a, T> From<AtomicFormula<'a, T>> for Literal<'a, T> {
-    fn from(value: AtomicFormula<'a, T>) -> Self {
+impl<'a, T> From<AtomicFormula<T>> for Literal<T> {
+    fn from(value: AtomicFormula<T>) -> Self {
         Literal::new(value)
     }
 }

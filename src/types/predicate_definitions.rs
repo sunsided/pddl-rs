@@ -8,39 +8,39 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`Domain`](crate::Domain).
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
-pub struct PredicateDefinitions<'a>(Vec<AtomicFormulaSkeleton<'a>>);
+pub struct PredicateDefinitions(Vec<AtomicFormulaSkeleton>);
 
-impl<'a> PredicateDefinitions<'a> {
-    pub fn new<I: IntoIterator<Item = AtomicFormulaSkeleton<'a>>>(predicates: I) -> Self {
+impl PredicateDefinitions {
+    pub fn new<I: IntoIterator<Item = AtomicFormulaSkeleton>>(predicates: I) -> Self {
         Self::from(predicates.into_iter().collect())
     }
 
-    pub const fn from(predicates: Vec<AtomicFormulaSkeleton<'a>>) -> Self {
+    pub const fn from(predicates: Vec<AtomicFormulaSkeleton>) -> Self {
         Self(predicates)
     }
 
     /// Gets the values.
-    pub fn values(&self) -> &[AtomicFormulaSkeleton<'a>] {
+    pub fn values(&self) -> &[AtomicFormulaSkeleton] {
         self.0.as_slice()
     }
 }
 
-impl<'a> Deref for PredicateDefinitions<'a> {
-    type Target = [AtomicFormulaSkeleton<'a>];
+impl Deref for PredicateDefinitions {
+    type Target = [AtomicFormulaSkeleton];
 
     fn deref(&self) -> &Self::Target {
         self.0.as_slice()
     }
 }
 
-impl<'a> From<Vec<AtomicFormulaSkeleton<'a>>> for PredicateDefinitions<'a> {
-    fn from(value: Vec<AtomicFormulaSkeleton<'a>>) -> Self {
+impl From<Vec<AtomicFormulaSkeleton>> for PredicateDefinitions {
+    fn from(value: Vec<AtomicFormulaSkeleton>) -> Self {
         PredicateDefinitions::new(value)
     }
 }
 
-impl<'a> FromIterator<AtomicFormulaSkeleton<'a>> for PredicateDefinitions<'a> {
-    fn from_iter<T: IntoIterator<Item = AtomicFormulaSkeleton<'a>>>(iter: T) -> Self {
+impl FromIterator<AtomicFormulaSkeleton> for PredicateDefinitions {
+    fn from_iter<T: IntoIterator<Item = AtomicFormulaSkeleton>>(iter: T) -> Self {
         PredicateDefinitions::new(iter)
     }
 }

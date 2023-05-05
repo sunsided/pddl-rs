@@ -19,17 +19,17 @@ use nom::combinator::map;
 ///     ]))
 /// ));
 /// ```
-pub fn parse_types_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Types<'a>> {
+pub fn parse_types_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Types> {
     map(prefix_expr(":types", typed_list(parse_name)), |vec| {
         Types::new(vec)
     })(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for Types<'a> {
-    type Item = Types<'a>;
+impl crate::parsers::Parser for Types {
+    type Item = Types;
 
     /// See [`parse_types_def`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_types_def(input)
     }
 }

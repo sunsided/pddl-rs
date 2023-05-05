@@ -13,40 +13,45 @@ use std::ops::Deref;
 /// [`DurativeActionGoalDefinition`](crate::DurativeActionGoalDefinition), [`DurativeActionEffect`](crate::DurativeActionEffect),
 /// [`PrefConGD`](crate::PrefConGD) and [`ConGD`](crate::ConGD).
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
-pub struct Variable<'a>(Name<'a>);
+pub struct Variable(Name);
 
-impl<'a> Variable<'a> {
+impl Variable {
     #[inline(always)]
-    pub const fn new(name: Name<'a>) -> Self {
+    pub const fn new(name: Name) -> Self {
         Self(name)
     }
 
     #[inline(always)]
-    pub const fn from_str(name: &'a str) -> Self {
+    pub fn from_str(name: &str) -> Self {
         Self(Name::new(name))
     }
 
     #[inline(always)]
-    pub const fn from_name(name: Name<'a>) -> Self {
+    pub const fn from_static(name: &'static str) -> Self {
+        Self(Name::new_static(name))
+    }
+
+    #[inline(always)]
+    pub const fn from_name(name: Name) -> Self {
         Self(name)
     }
 }
 
-impl<'a> ToTyped<'a, Variable<'a>> for Variable<'a> {
-    fn to_typed<I: Into<Type<'a>>>(self, r#type: I) -> Typed<'a, Variable<'a>> {
+impl ToTyped<Variable> for Variable {
+    fn to_typed<I: Into<Type>>(self, r#type: I) -> Typed<Variable> {
         Typed::new(self, r#type.into())
     }
-    fn to_typed_either<I: IntoIterator<Item = P>, P: Into<PrimitiveType<'a>>>(
+    fn to_typed_either<I: IntoIterator<Item = P>, P: Into<PrimitiveType>>(
         self,
         types: I,
-    ) -> Typed<'a, Variable<'a>> {
+    ) -> Typed<Variable> {
         Typed::new(self, Type::from_iter(types))
     }
 }
 
-impl<'a, T> From<T> for Variable<'a>
+impl<'a, T> From<T> for Variable
 where
-    T: Into<Name<'a>>,
+    T: Into<Name>,
 {
     #[inline(always)]
     fn from(value: T) -> Self {
@@ -54,22 +59,22 @@ where
     }
 }
 
-impl<'a> AsRef<Name<'a>> for Variable<'a> {
+impl AsRef<Name> for Variable {
     #[inline(always)]
-    fn as_ref(&self) -> &Name<'a> {
+    fn as_ref(&self) -> &Name {
         &self.0
     }
 }
 
-impl<'a> AsRef<str> for Variable<'a> {
+impl AsRef<str> for Variable {
     #[inline(always)]
     fn as_ref(&self) -> &str {
         self.0.as_ref()
     }
 }
 
-impl<'a> Deref for Variable<'a> {
-    type Target = Name<'a>;
+impl Deref for Variable {
+    type Target = Name;
 
     #[inline(always)]
     fn deref(&self) -> &Self::Target {

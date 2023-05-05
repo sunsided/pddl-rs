@@ -20,49 +20,45 @@ use crate::types::{AssignOpT, ConditionalEffect, FAssignDa, FExpT, FHead, TimeSp
 /// ## Usage
 /// Used by [`DurativeActionEffect`](crate::DurativeActionEffect).
 #[derive(Debug, Clone, PartialEq)]
-pub enum TimedEffect<'a> {
-    Conditional(TimeSpecifier, ConditionalEffect<'a>),
+pub enum TimedEffect {
+    Conditional(TimeSpecifier, ConditionalEffect),
     /// ## Requirements
     /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
-    NumericFluent(TimeSpecifier, FAssignDa<'a>),
+    NumericFluent(TimeSpecifier, FAssignDa),
     /// ## Requirements
     /// Requires [Continuous Effects](crate::Requirement::ContinuousEffects) and
     /// [Numeric Fluents](crate::Requirement::NumericFluents).
-    ContinuousEffect(AssignOpT, FHead<'a>, FExpT<'a>),
+    ContinuousEffect(AssignOpT, FHead, FExpT),
 }
 
-impl<'a> TimedEffect<'a> {
-    pub const fn new_conditional(at: TimeSpecifier, effect: ConditionalEffect<'a>) -> Self {
+impl TimedEffect {
+    pub const fn new_conditional(at: TimeSpecifier, effect: ConditionalEffect) -> Self {
         Self::Conditional(at, effect)
     }
 
-    pub const fn new_fluent(at: TimeSpecifier, action: FAssignDa<'a>) -> Self {
+    pub const fn new_fluent(at: TimeSpecifier, action: FAssignDa) -> Self {
         Self::NumericFluent(at, action)
     }
 
-    pub const fn new_continuous(
-        operation: AssignOpT,
-        f_head: FHead<'a>,
-        f_exp_t: FExpT<'a>,
-    ) -> Self {
+    pub const fn new_continuous(operation: AssignOpT, f_head: FHead, f_exp_t: FExpT) -> Self {
         Self::ContinuousEffect(operation, f_head, f_exp_t)
     }
 }
 
-impl<'a> From<(TimeSpecifier, ConditionalEffect<'a>)> for TimedEffect<'a> {
-    fn from(value: (TimeSpecifier, ConditionalEffect<'a>)) -> Self {
+impl From<(TimeSpecifier, ConditionalEffect)> for TimedEffect {
+    fn from(value: (TimeSpecifier, ConditionalEffect)) -> Self {
         TimedEffect::Conditional(value.0, value.1)
     }
 }
 
-impl<'a> From<(TimeSpecifier, FAssignDa<'a>)> for TimedEffect<'a> {
-    fn from(value: (TimeSpecifier, FAssignDa<'a>)) -> Self {
+impl From<(TimeSpecifier, FAssignDa)> for TimedEffect {
+    fn from(value: (TimeSpecifier, FAssignDa)) -> Self {
         TimedEffect::NumericFluent(value.0, value.1)
     }
 }
 
-impl<'a> From<(AssignOpT, FHead<'a>, FExpT<'a>)> for TimedEffect<'a> {
-    fn from(value: (AssignOpT, FHead<'a>, FExpT<'a>)) -> Self {
+impl From<(AssignOpT, FHead, FExpT)> for TimedEffect {
+    fn from(value: (AssignOpT, FHead, FExpT)) -> Self {
         TimedEffect::ContinuousEffect(value.0, value.1, value.2)
     }
 }

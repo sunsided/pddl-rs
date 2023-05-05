@@ -35,7 +35,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///```
-pub fn parse_f_exp_da<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExpDa<'a>> {
+pub fn parse_f_exp_da<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExpDa> {
     // :duration-inequalities
     let duration = map(tag("?duration"), |_| FExpDa::new_duration());
 
@@ -67,11 +67,11 @@ pub fn parse_f_exp_da<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExpDa
     alt((duration, binary_op, multi_op, negated, f_exp))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for FExpDa<'a> {
-    type Item = FExpDa<'a>;
+impl crate::parsers::Parser for FExpDa {
+    type Item = FExpDa;
 
     /// See [`parse_f_exp_da`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_f_exp_da(input)
     }
 }

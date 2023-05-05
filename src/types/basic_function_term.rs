@@ -5,32 +5,32 @@ use crate::types::{FunctionSymbol, Name};
 /// ## Usage
 /// Used by [`InitElement`](crate::InitElement).
 #[derive(Debug, Clone, PartialEq)]
-pub struct BasicFunctionTerm<'a>(FunctionSymbol<'a>, Vec<Name<'a>>);
+pub struct BasicFunctionTerm(FunctionSymbol, Vec<Name>);
 
-impl<'a> BasicFunctionTerm<'a> {
-    pub fn new<N: IntoIterator<Item = Name<'a>>>(symbol: FunctionSymbol<'a>, names: N) -> Self {
+impl BasicFunctionTerm {
+    pub fn new<N: IntoIterator<Item = Name>>(symbol: FunctionSymbol, names: N) -> Self {
         Self(symbol, names.into_iter().collect())
     }
 
     /// Returns the function symbol.
-    pub const fn symbol(&self) -> &FunctionSymbol<'a> {
+    pub const fn symbol(&self) -> &FunctionSymbol {
         &self.0
     }
 
     /// Returns the associated names.
-    pub fn names(&self) -> &[Name<'a>] {
+    pub fn names(&self) -> &[Name] {
         self.1.as_slice()
     }
 }
 
-impl<'a> AsRef<FunctionSymbol<'a>> for BasicFunctionTerm<'a> {
-    fn as_ref(&self) -> &FunctionSymbol<'a> {
+impl AsRef<FunctionSymbol> for BasicFunctionTerm {
+    fn as_ref(&self) -> &FunctionSymbol {
         self.symbol()
     }
 }
 
-impl<'a> AsRef<[Name<'a>]> for BasicFunctionTerm<'a> {
-    fn as_ref(&self) -> &[Name<'a>] {
+impl AsRef<[Name]> for BasicFunctionTerm {
+    fn as_ref(&self) -> &[Name] {
         self.names()
     }
 }

@@ -11,37 +11,35 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`Domain`](crate::Domain).
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
-pub struct Functions<'a>(FunctionTypedList<'a, AtomicFunctionSkeleton<'a>>);
+pub struct Functions(FunctionTypedList<AtomicFunctionSkeleton>);
 
-impl<'a> Functions<'a> {
-    pub const fn new(functions: FunctionTypedList<'a, AtomicFunctionSkeleton<'a>>) -> Self {
+impl Functions {
+    pub const fn new(functions: FunctionTypedList<AtomicFunctionSkeleton>) -> Self {
         Self(functions)
     }
 
     /// Gets the values.
-    pub fn values(&self) -> &FunctionTypedList<'a, AtomicFunctionSkeleton<'a>> {
+    pub fn values(&self) -> &FunctionTypedList<AtomicFunctionSkeleton> {
         &self.0
     }
 }
 
-impl<'a> Deref for Functions<'a> {
-    type Target = FunctionTypedList<'a, AtomicFunctionSkeleton<'a>>;
+impl Deref for Functions {
+    type Target = FunctionTypedList<AtomicFunctionSkeleton>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl<'a> From<FunctionTypedList<'a, AtomicFunctionSkeleton<'a>>> for Functions<'a> {
-    fn from(value: FunctionTypedList<'a, AtomicFunctionSkeleton<'a>>) -> Self {
+impl From<FunctionTypedList<AtomicFunctionSkeleton>> for Functions {
+    fn from(value: FunctionTypedList<AtomicFunctionSkeleton>) -> Self {
         Functions::new(value)
     }
 }
 
-impl<'a> FromIterator<FunctionTyped<'a, AtomicFunctionSkeleton<'a>>> for Functions<'a> {
-    fn from_iter<T: IntoIterator<Item = FunctionTyped<'a, AtomicFunctionSkeleton<'a>>>>(
-        iter: T,
-    ) -> Self {
+impl FromIterator<FunctionTyped<AtomicFunctionSkeleton>> for Functions {
+    fn from_iter<T: IntoIterator<Item = FunctionTyped<AtomicFunctionSkeleton>>>(iter: T) -> Self {
         Functions::new(FunctionTypedList::from_iter(iter))
     }
 }

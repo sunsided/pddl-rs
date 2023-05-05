@@ -39,7 +39,7 @@ use nom::sequence::{preceded, terminated, tuple};
 ///     )
 /// ));
 ///```
-pub fn parse_f_exp_t<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExpT<'a>> {
+pub fn parse_f_exp_t<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExpT> {
     let now = map(tag("#t"), |_| FExpT::new());
     let scaled = map(
         prefix_expr(
@@ -55,11 +55,11 @@ pub fn parse_f_exp_t<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExpT<'
     alt((scaled, now))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for FExpT<'a> {
-    type Item = FExpT<'a>;
+impl crate::parsers::Parser for FExpT {
+    type Item = FExpT;
 
     /// See [`parse_f_exp_t`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_f_exp_t(input)
     }
 }

@@ -29,11 +29,11 @@ pub fn parse_binary_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Binar
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for BinaryOp {
+impl crate::parsers::Parser for BinaryOp {
     type Item = BinaryOp;
 
     /// See [`parse_binary_op`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_binary_op(input)
     }
 }

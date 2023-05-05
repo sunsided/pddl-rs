@@ -8,36 +8,36 @@ use crate::types::{Name, TypedVariables};
 /// ## Usage
 /// Used by [`PredicateDefinitions`](crate::PredicateDefinitions) and [`DerivedPredicate`](crate::DerivedPredicate).
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct AtomicFormulaSkeleton<'a> {
-    predicate: Predicate<'a>,
-    variables: TypedVariables<'a>,
+pub struct AtomicFormulaSkeleton {
+    predicate: Predicate,
+    variables: TypedVariables,
 }
 
-impl<'a> AtomicFormulaSkeleton<'a> {
-    pub const fn new(predicate: Predicate<'a>, formula: TypedVariables<'a>) -> Self {
+impl AtomicFormulaSkeleton {
+    pub const fn new(predicate: Predicate, formula: TypedVariables) -> Self {
         Self {
             predicate,
             variables: formula,
         }
     }
 
-    pub fn name(&self) -> &Name<'a> {
+    pub fn name(&self) -> &Name {
         self.predicate.as_ref()
     }
 
     /// Gets a reference to the predicate.
-    pub const fn predicate(&self) -> &Predicate<'a> {
+    pub const fn predicate(&self) -> &Predicate {
         &self.predicate
     }
 
     /// Gets a reference to the variables.
-    pub fn variables(&self) -> &TypedVariables<'a> {
+    pub fn variables(&self) -> &TypedVariables {
         &self.variables
     }
 }
 
-impl<'a> From<(Predicate<'a>, TypedVariables<'a>)> for AtomicFormulaSkeleton<'a> {
-    fn from(value: (Predicate<'a>, TypedVariables<'a>)) -> Self {
+impl From<(Predicate, TypedVariables)> for AtomicFormulaSkeleton {
+    fn from(value: (Predicate, TypedVariables)) -> Self {
         AtomicFormulaSkeleton::new(value.0, value.1)
     }
 }

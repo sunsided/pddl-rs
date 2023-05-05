@@ -11,32 +11,32 @@ use crate::types::FunctionSymbol;
 /// ## Usage
 /// Used by [`Term`], and [`PEffect`](crate::PEffect).
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct FunctionTerm<'a>(FunctionSymbol<'a>, Vec<Term<'a>>);
+pub struct FunctionTerm(FunctionSymbol, Vec<Term>);
 
-impl<'a> FunctionTerm<'a> {
-    pub fn new<I: IntoIterator<Item = Term<'a>>>(symbol: FunctionSymbol<'a>, terms: I) -> Self {
+impl FunctionTerm {
+    pub fn new<I: IntoIterator<Item = Term>>(symbol: FunctionSymbol, terms: I) -> Self {
         Self(symbol, terms.into_iter().collect())
     }
 
     /// Gets the function symbol.
-    pub const fn symbol(&self) -> &FunctionSymbol<'a> {
+    pub const fn symbol(&self) -> &FunctionSymbol {
         &self.0
     }
 
     /// Gets the function terms.
-    pub fn terms(&self) -> &[Term<'a>] {
+    pub fn terms(&self) -> &[Term] {
         self.1.as_ref()
     }
 }
 
-impl<'a> AsRef<FunctionSymbol<'a>> for FunctionTerm<'a> {
-    fn as_ref(&self) -> &FunctionSymbol<'a> {
+impl AsRef<FunctionSymbol> for FunctionTerm {
+    fn as_ref(&self) -> &FunctionSymbol {
         &self.0
     }
 }
 
-impl<'a> AsRef<Vec<Term<'a>>> for FunctionTerm<'a> {
-    fn as_ref(&self) -> &Vec<Term<'a>> {
+impl AsRef<Vec<Term>> for FunctionTerm {
+    fn as_ref(&self) -> &Vec<Term> {
         &self.1
     }
 }

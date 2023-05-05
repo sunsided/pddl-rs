@@ -8,35 +8,35 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`Domain`](crate::Domain).
 #[derive(Debug, Default, Clone, PartialEq)]
-pub struct StructureDefs<'a>(Vec<StructureDef<'a>>);
+pub struct StructureDefs(Vec<StructureDef>);
 
-impl<'a> StructureDefs<'a> {
-    pub fn new<I: IntoIterator<Item = StructureDef<'a>>>(defs: I) -> Self {
+impl StructureDefs {
+    pub fn new<I: IntoIterator<Item = StructureDef>>(defs: I) -> Self {
         Self(defs.into_iter().collect())
     }
 
     /// Gets the values.
-    pub fn values(&self) -> &[StructureDef<'a>] {
+    pub fn values(&self) -> &[StructureDef] {
         self.0.as_slice()
     }
 }
 
-impl<'a> Deref for StructureDefs<'a> {
-    type Target = [StructureDef<'a>];
+impl Deref for StructureDefs {
+    type Target = [StructureDef];
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl<'a> From<Vec<StructureDef<'a>>> for StructureDefs<'a> {
-    fn from(value: Vec<StructureDef<'a>>) -> Self {
+impl From<Vec<StructureDef>> for StructureDefs {
+    fn from(value: Vec<StructureDef>) -> Self {
         StructureDefs::new(value)
     }
 }
 
-impl<'a> FromIterator<StructureDef<'a>> for StructureDefs<'a> {
-    fn from_iter<T: IntoIterator<Item = StructureDef<'a>>>(iter: T) -> Self {
+impl FromIterator<StructureDef> for StructureDefs {
+    fn from_iter<T: IntoIterator<Item = StructureDef>>(iter: T) -> Self {
         StructureDefs::new(iter)
     }
 }

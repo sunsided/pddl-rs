@@ -23,11 +23,11 @@ pub fn parse_assign_op_t<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Ass
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for AssignOpT {
+impl crate::parsers::Parser for AssignOpT {
     type Item = AssignOpT;
 
     /// See [`parse_assign_op_t`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_assign_op_t(input)
     }
 }

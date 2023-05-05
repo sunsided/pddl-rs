@@ -52,9 +52,7 @@ use nom::sequence::{preceded, tuple};
 /// assert!(da_def.condition().is_some());
 /// assert!(da_def.effect().is_some());
 /// ```
-pub fn parse_da_def<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, DurativeActionDefinition<'a>> {
+pub fn parse_da_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DurativeActionDefinition> {
     let parameters = preceded(
         tag(":parameters"),
         preceded(multispace1, parens(typed_list(parse_variable))),
@@ -93,11 +91,11 @@ pub fn parse_da_def<'a, T: Into<Span<'a>>>(
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for DurativeActionDefinition<'a> {
-    type Item = DurativeActionDefinition<'a>;
+impl crate::parsers::Parser for DurativeActionDefinition {
+    type Item = DurativeActionDefinition;
 
     /// See [`parse_da_def`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_da_def(input)
     }
 }

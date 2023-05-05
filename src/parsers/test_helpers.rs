@@ -37,7 +37,7 @@ pub trait Match<V> {
     }
 
     /// Ensures the remainder value are as specified.
-    fn is_result<'a>(&'a self, remainder: &'a str, value: V) -> bool;
+    fn is_result(&self, remainder: &str, value: V) -> bool;
 }
 
 impl<'a, E> Match<Option<&str>> for ParseResult<'a, Option<Span<'a>>, E> {
@@ -75,8 +75,8 @@ where
     }
 }
 
-impl<'a, E> Match<Type<'a>> for ParseResult<'a, Type<'a>, E> {
-    fn is_result(&self, remainder: &str, value: Type<'a>) -> bool {
+impl<'a, E> Match<Type> for ParseResult<'a, Type, E> {
+    fn is_result(&self, remainder: &str, value: Type) -> bool {
         if let Ok((lhs, rhs)) = self {
             if !remainder.eq(*lhs.fragment()) {
                 false

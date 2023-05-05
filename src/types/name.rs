@@ -1,6 +1,7 @@
 //! Contains names via the [`Name`] type.
 
 use crate::types::{PrimitiveType, ToTyped, Type, Typed};
+use std::fmt::{Debug, Display, Formatter};
 use std::ops::Deref;
 
 /// A name.
@@ -13,50 +14,107 @@ use std::ops::Deref;
 /// [`PreferenceName`](crate::PreferenceName), [`Term`](crate::Term),
 /// [`DurativeActionSymbol`](crate::DurativeActionSymbol) and [`Objects`](crate::Objects).
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
-pub struct Name<'a>(&'a str);
+pub struct Name(NameVariant);
 
-impl<'a> Name<'a> {
+#[derive(Clone, PartialEq, Eq, Hash)]
+enum NameVariant {
+    String(String),
+    Static(&'static str),
+}
+
+impl Name {
     #[inline(always)]
-    pub const fn new(name: &'a str) -> Self {
-        Self(name)
+    pub fn new(name: &str) -> Self {
+        Self::new_string(name.into())
     }
 
-    pub const fn is_empty(&self) -> bool {
+    #[inline(always)]
+    pub const fn new_string(name: String) -> Self {
+        Self(NameVariant::String(name))
+    }
+
+    #[inline(always)]
+    pub const fn new_static(name: &'static str) -> Self {
+        Self(NameVariant::Static(name))
+    }
+
+    pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
-    pub const fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.0.len()
     }
 }
 
-impl<'a> ToTyped<'a, Name<'a>> for Name<'a> {
-    fn to_typed<I: Into<Type<'a>>>(self, r#type: I) -> Typed<'a, Name<'a>> {
+impl Default for NameVariant {
+    fn default() -> Self {
+        Self::Static("")
+    }
+}
+
+impl Deref for NameVariant {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            NameVariant::String(str) => str.as_str(),
+            NameVariant::Static(str) => str,
+        }
+    }
+}
+
+impl PartialEq<str> for NameVariant {
+    fn eq(&self, other: &str) -> bool {
+        match self {
+            NameVariant::String(str) => str.eq(other),
+            NameVariant::Static(str) => (*str).eq(other),
+        }
+    }
+}
+
+impl Debug for NameVariant {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
+impl Display for NameVariant {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            NameVariant::String(str) => write!(f, "{}", str),
+            NameVariant::Static(str) => write!(f, "{}", str),
+        }
+    }
+}
+
+impl ToTyped<Name> for Name {
+    fn to_typed<I: Into<Type>>(self, r#type: I) -> Typed<Name> {
         Typed::new(self, r#type.into())
     }
-    fn to_typed_either<I: IntoIterator<Item = P>, P: Into<PrimitiveType<'a>>>(
+    fn to_typed_either<I: IntoIterator<Item = P>, P: Into<PrimitiveType>>(
         self,
         types: I,
-    ) -> Typed<'a, Name<'a>> {
+    ) -> Typed<Name> {
         Typed::new(self, Type::from_iter(types))
     }
 }
 
-impl<'a> From<&'a str> for Name<'a> {
+impl From<&str> for Name {
     #[inline(always)]
-    fn from(value: &'a str) -> Self {
+    fn from(value: &str) -> Self {
         Self::new(value)
     }
 }
 
-impl<'a> AsRef<str> for Name<'a> {
+impl AsRef<str> for Name {
     #[inline(always)]
     fn as_ref(&self) -> &str {
         &self.0
     }
 }
 
-impl<'a> Deref for Name<'a> {
+impl Deref for Name {
     type Target = str;
 
     #[inline(always)]

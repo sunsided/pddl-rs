@@ -14,15 +14,15 @@ use nom::combinator::map;
 /// assert!(parse_function_type("number").is_value(FunctionType::new(Type::Exactly("number".into()))));
 /// assert!(parse_function_type("(either object number)").is_value(FunctionType::new(Type::from_iter(["object", "number"]))));
 ///```
-pub fn parse_function_type<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FunctionType<'a>> {
+pub fn parse_function_type<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FunctionType> {
     map(parse_type, FunctionType::from)(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for FunctionType<'a> {
-    type Item = FunctionType<'a>;
+impl crate::parsers::Parser for FunctionType {
+    type Item = FunctionType;
 
     /// See [`parse_function_type`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_function_type(input)
     }
 }

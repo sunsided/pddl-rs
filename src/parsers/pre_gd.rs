@@ -68,7 +68,7 @@ use nom::sequence::{preceded, tuple};
 /// ```
 pub fn parse_pre_gd<'a, T: Into<Span<'a>>>(
     input: T,
-) -> ParseResult<'a, PreconditionGoalDefinitions<'a>> {
+) -> ParseResult<'a, PreconditionGoalDefinitions> {
     let pref_gd = map(parse_pref_gd, |x| {
         PreconditionGoalDefinitions::from(PreconditionGoalDefinition::new_preference(x))
     });
@@ -94,11 +94,11 @@ pub fn parse_pre_gd<'a, T: Into<Span<'a>>>(
     alt((forall, and, pref_gd))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for PreconditionGoalDefinitions<'a> {
-    type Item = PreconditionGoalDefinitions<'a>;
+impl crate::parsers::Parser for PreconditionGoalDefinitions {
+    type Item = PreconditionGoalDefinitions;
 
     /// See [`parse_pre_gd`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_pre_gd(input)
     }
 }

@@ -5,7 +5,7 @@ use crate::types::{GoalDefinition, Interval, TimeSpecifier};
 /// ## Usage
 /// Used by [`PrefTimedGD`](crate::PrefTimedGD).
 #[derive(Debug, Clone, PartialEq)]
-pub enum TimedGD<'a> {
+pub enum TimedGD {
     /// ## `at start`
     /// An expression or predicate with `at start` prefixed to it means that the condition
     /// must be true at the start of the action in order for the action to be applied. e.g.
@@ -31,7 +31,7 @@ pub enum TimedGD<'a> {
     /// expresses that whilst this fact doesn't have to be true at the start or during the action,
     /// it must be true at the end. In this case, we're expressing that the battery amount at the
     /// end of the action must be greater than zero.
-    At(TimeSpecifier, GoalDefinition<'a>),
+    At(TimeSpecifier, GoalDefinition),
     /// ## `over all`
     /// An expression or predicate with an overall prefixed to it, means that the condition
     /// must be true throughout the action, including at the start and end. e.g.
@@ -44,27 +44,27 @@ pub enum TimedGD<'a> {
     /// In the case above, we are expressing that it must be possible to move from the from
     /// waypoint to the to waypoint all the way through the action. I.e. we don't want to get
     /// half way through the action to find that after a certain point a path has become blocked.
-    Over(Interval, GoalDefinition<'a>),
+    Over(Interval, GoalDefinition),
 }
 
-impl<'a> TimedGD<'a> {
-    pub const fn new_at(time: TimeSpecifier, gd: GoalDefinition<'a>) -> Self {
+impl TimedGD {
+    pub const fn new_at(time: TimeSpecifier, gd: GoalDefinition) -> Self {
         Self::At(time, gd)
     }
 
-    pub const fn new_over(interval: Interval, gd: GoalDefinition<'a>) -> Self {
+    pub const fn new_over(interval: Interval, gd: GoalDefinition) -> Self {
         Self::Over(interval, gd)
     }
 }
 
-impl<'a> From<(TimeSpecifier, GoalDefinition<'a>)> for TimedGD<'a> {
-    fn from(value: (TimeSpecifier, GoalDefinition<'a>)) -> Self {
+impl From<(TimeSpecifier, GoalDefinition)> for TimedGD {
+    fn from(value: (TimeSpecifier, GoalDefinition)) -> Self {
         TimedGD::At(value.0, value.1)
     }
 }
 
-impl<'a> From<(Interval, GoalDefinition<'a>)> for TimedGD<'a> {
-    fn from(value: (Interval, GoalDefinition<'a>)) -> Self {
+impl From<(Interval, GoalDefinition)> for TimedGD {
+    fn from(value: (Interval, GoalDefinition)) -> Self {
         TimedGD::Over(value.0, value.1)
     }
 }

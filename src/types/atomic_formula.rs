@@ -9,17 +9,17 @@ use std::ops::Deref;
 /// Used by [`Literal`](crate::Literal), [`GoalDefinition`](crate::GoalDefinition) and
 /// [`PEffect`](crate::PEffect).
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum AtomicFormula<'a, T> {
+pub enum AtomicFormula<T> {
     Equality(EqualityAtomicFormula<T>),
-    Predicate(PredicateAtomicFormula<'a, T>),
+    Predicate(PredicateAtomicFormula<T>),
 }
 
-impl<'a, T> AtomicFormula<'a, T> {
+impl<'a, T> AtomicFormula<T> {
     pub const fn new_equality(first: T, second: T) -> Self {
         Self::Equality(EqualityAtomicFormula::new(first, second))
     }
 
-    pub fn new_predicate<V: IntoIterator<Item = T>>(predicate: Predicate<'a>, values: V) -> Self {
+    pub fn new_predicate<V: IntoIterator<Item = T>>(predicate: Predicate, values: V) -> Self {
         Self::Predicate(PredicateAtomicFormula::new(
             predicate,
             values.into_iter().collect(),
@@ -34,8 +34,8 @@ pub struct EqualityAtomicFormula<T> {
 }
 
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
-pub struct PredicateAtomicFormula<'a, T> {
-    predicate: Predicate<'a>,
+pub struct PredicateAtomicFormula<T> {
+    predicate: Predicate,
     values: Vec<T>,
 }
 
@@ -55,13 +55,13 @@ impl<T> EqualityAtomicFormula<T> {
     }
 }
 
-impl<'a, T> PredicateAtomicFormula<'a, T> {
-    pub const fn new(predicate: Predicate<'a>, values: Vec<T>) -> Self {
+impl<T> PredicateAtomicFormula<T> {
+    pub const fn new(predicate: Predicate, values: Vec<T>) -> Self {
         Self { predicate, values }
     }
 
     /// Returns the predicate.
-    pub const fn predicate(&self) -> &Predicate<'a> {
+    pub const fn predicate(&self) -> &Predicate {
         &self.predicate
     }
 
@@ -71,14 +71,14 @@ impl<'a, T> PredicateAtomicFormula<'a, T> {
     }
 }
 
-impl<'a, T> From<EqualityAtomicFormula<T>> for AtomicFormula<'a, T> {
+impl<'a, T> From<EqualityAtomicFormula<T>> for AtomicFormula<T> {
     fn from(value: EqualityAtomicFormula<T>) -> Self {
         AtomicFormula::Equality(value)
     }
 }
 
-impl<'a, T> From<PredicateAtomicFormula<'a, T>> for AtomicFormula<'a, T> {
-    fn from(value: PredicateAtomicFormula<'a, T>) -> Self {
+impl<'a, T> From<PredicateAtomicFormula<T>> for AtomicFormula<T> {
+    fn from(value: PredicateAtomicFormula<T>) -> Self {
         AtomicFormula::Predicate(value)
     }
 }
@@ -89,13 +89,13 @@ impl<T> From<(T, T)> for EqualityAtomicFormula<T> {
     }
 }
 
-impl<'a, T> From<(Predicate<'a>, Vec<T>)> for PredicateAtomicFormula<'a, T> {
-    fn from(value: (Predicate<'a>, Vec<T>)) -> Self {
+impl<'a, T> From<(Predicate, Vec<T>)> for PredicateAtomicFormula<T> {
+    fn from(value: (Predicate, Vec<T>)) -> Self {
         PredicateAtomicFormula::new(value.0, value.1)
     }
 }
 
-impl<'a, T> Deref for PredicateAtomicFormula<'a, T> {
+impl<'a, T> Deref for PredicateAtomicFormula<T> {
     type Target = [T];
 
     fn deref(&self) -> &Self::Target {

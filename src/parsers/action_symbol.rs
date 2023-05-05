@@ -20,15 +20,15 @@ use nom::combinator::map;
 /// assert!(parse_action_symbol(Span::new("0124")).is_err());
 /// assert!(parse_action_symbol(Span::new("-1")).is_err());
 ///```
-pub fn parse_action_symbol<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ActionSymbol<'a>> {
+pub fn parse_action_symbol<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ActionSymbol> {
     map(parse_name, ActionSymbol::new)(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for ActionSymbol<'a> {
-    type Item = ActionSymbol<'a>;
+impl crate::parsers::Parser for ActionSymbol {
+    type Item = ActionSymbol;
 
     /// See [`parse_action_symbol`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_action_symbol(input)
     }
 }

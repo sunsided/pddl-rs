@@ -23,7 +23,7 @@ use nom::sequence::tuple;
 /// ```
 pub fn parse_atomic_function_skeleton<'a, T: Into<Span<'a>>>(
     input: T,
-) -> ParseResult<'a, AtomicFunctionSkeleton<'a>> {
+) -> ParseResult<'a, AtomicFunctionSkeleton> {
     map(
         parens(tuple((
             parse_function_symbol,
@@ -33,11 +33,11 @@ pub fn parse_atomic_function_skeleton<'a, T: Into<Span<'a>>>(
     )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for AtomicFunctionSkeleton<'a> {
-    type Item = AtomicFunctionSkeleton<'a>;
+impl crate::parsers::Parser for AtomicFunctionSkeleton {
+    type Item = AtomicFunctionSkeleton;
 
     /// See [`parse_atomic_function_skeleton`].
-    fn parse<S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_atomic_function_skeleton(input)
     }
 }
