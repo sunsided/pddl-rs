@@ -87,6 +87,33 @@ pub fn parse_action_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Acti
 impl crate::parsers::Parser for ActionDefinition {
     type Item = ActionDefinition;
 
+    /// Parses an action definition.
+    ///
+    /// ## Example
+    /// ```
+    /// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effects, GoalDefinition, Name, PEffect, Predicate, PreferenceGD, PreconditionGoalDefinitions, PreconditionGoalDefinition, Term, ToTyped, TypedList, Variable, Parser};
+    /// # use pddl::parsers::{parse_action_def, Span, UnwrapValue};
+    /// let input = r#"(:action take-out
+    ///                     :parameters (?x - physob)
+    ///                     :precondition (not (= ?x B))
+    ///                     :effect (not (in ?x))
+    ///                 )"#;
+    ///
+    /// let (_, action) = ActionDefinition::parse(input).unwrap();
+    ///
+    /// assert_eq!(action,
+    ///     ActionDefinition::new(
+    ///         ActionSymbol::from_str("take-out"),
+    ///         TypedList::from_iter([
+    ///             Variable::from_str("x").to_typed("physob")
+    ///         ]),
+    ///         PreconditionGoalDefinitions::from_str("(not (= ?x B))").unwrap(),
+    ///         Some(Effects::from_str("(not (in ?x))").unwrap())
+    ///     )
+    /// );
+    /// ```
+    ///
+    /// ## See also
     /// See [`parse_action_def`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_action_def(input)

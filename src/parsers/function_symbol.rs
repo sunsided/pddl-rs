@@ -27,6 +27,16 @@ pub fn parse_function_symbol<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a,
 impl crate::parsers::Parser for FunctionSymbol {
     type Item = FunctionSymbol;
 
+    /// Parses a function symbol.
+    ///
+    /// ## Example
+    /// ```
+    /// # use pddl::{FunctionSymbol, Parser};
+    /// let (_, value) = FunctionSymbol::parse("abcde").unwrap();
+    /// assert_eq!(value, "abcde".into());
+    ///```
+    ///
+    /// ## See also
     /// See [`parse_function_symbol`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_function_symbol(input)

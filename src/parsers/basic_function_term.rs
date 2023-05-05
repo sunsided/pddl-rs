@@ -43,6 +43,24 @@ pub fn parse_basic_function_term<'a, T: Into<Span<'a>>>(
 impl crate::parsers::Parser for BasicFunctionTerm {
     type Item = BasicFunctionTerm;
 
+    /// Parses a basic function term.
+    ///
+    /// ## Example
+    /// ```
+    /// # use pddl::{BasicFunctionTerm, Parser};
+    /// let (_, value) = BasicFunctionTerm::parse("abcde").unwrap();
+    /// assert_eq!(value,  BasicFunctionTerm::new("abcde".into(), []));
+    ///
+    /// let (_, value) = BasicFunctionTerm::parse("(abcde)").unwrap();
+    /// assert_eq!(value,  BasicFunctionTerm::new("abcde".into(), []));
+    ///
+    /// let (_, value) = BasicFunctionTerm::parse("(abcde x y z)").unwrap();
+    /// assert_eq!(value,  BasicFunctionTerm::new("abcde".into(), [
+    ///     "x".into(), "y".into(), "z".into()]
+    /// ));
+    /// ```
+    ///
+    /// ## See also
     /// See [`parse_basic_function_term`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_basic_function_term(input)

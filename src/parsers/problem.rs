@@ -73,6 +73,29 @@ pub fn parse_problem<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Problem
 impl crate::parsers::Parser for Problem {
     type Item = Problem;
 
+    /// Parses a problem definitions.
+    ///
+    /// ## Example
+    /// ```
+    /// # use pddl::{Name, Parser, Problem};
+    /// let input = r#"(define (problem get-paid)
+    ///         (:domain briefcase-world)
+    ///         (:init (place home) (place office)
+    ///                (object p) (object d) (object b)
+    ///                (at B home) (at P home) (at D home) (in P))
+    ///         (:goal (and (at B office) (at D office) (at P home)))
+    ///     )"#;
+    ///
+    /// let (_, problem) = Problem::parse(input).unwrap();
+    ///
+    /// assert_eq!(problem.name(), &Name::new("get-paid"));
+    /// assert_eq!(problem.domain(), &Name::new("briefcase-world"));
+    /// assert!(problem.requirements().is_empty());
+    /// assert_eq!(problem.init().len(), 9);
+    /// assert_eq!(problem.goal().len(), 3);
+    /// ```
+    ///
+    /// ## See also
     /// See [`parse_problem`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_problem(input)

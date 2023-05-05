@@ -6,7 +6,7 @@ use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
 
-/// Parses an assignment operation, i.e. `assign | scale-up | scale-down | increase | decrease`.
+/// Parses a binary comparison operation.
 ///
 /// ## Example
 /// ```
@@ -34,6 +34,16 @@ pub fn parse_binary_comp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Bin
 impl crate::parsers::Parser for BinaryComp {
     type Item = BinaryComp;
 
+    /// Parses a binary comparison operation.
+    ///
+    /// ## Example
+    /// ```
+    /// # use pddl::{BinaryComp, Parser};
+    /// let (_, value) = BinaryComp::parse(">=").unwrap();
+    /// assert_eq!(value, BinaryComp::GreaterOrEqual);
+    ///```
+    ///
+    /// ## See also
     /// See [`parse_binary_comp`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_binary_comp(input)

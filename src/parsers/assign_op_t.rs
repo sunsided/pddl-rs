@@ -26,6 +26,16 @@ pub fn parse_assign_op_t<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Ass
 impl crate::parsers::Parser for AssignOpT {
     type Item = AssignOpT;
 
+    /// Parses an assignment operation.
+    ///
+    /// ## Example
+    /// ```
+    /// # use pddl::{AssignOpT, Parser};
+    /// let (_, value) = AssignOpT::parse("increase").unwrap();
+    /// assert_eq!(value, AssignOpT::Increase);
+    ///```
+    ///
+    /// ## See also
     /// See [`parse_assign_op_t`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_assign_op_t(input)

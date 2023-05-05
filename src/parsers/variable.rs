@@ -27,6 +27,16 @@ pub fn parse_variable<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Variab
 impl crate::parsers::Parser for Variable {
     type Item = Variable;
 
+    /// Parses a variable.
+    ///
+    /// ## Example
+    /// ```
+    /// # use pddl::{Variable, Parser};
+    /// let (_, value) = Variable::parse("?abcde").unwrap();
+    /// assert_eq!(value, "abcde".into());
+    ///```
+    ///
+    /// ## See also
     /// See [`parse_variable`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_variable(input)

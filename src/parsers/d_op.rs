@@ -31,6 +31,19 @@ pub fn parse_d_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DOp> {
 impl crate::parsers::Parser for DOp {
     type Item = DOp;
 
+    /// Parses a durative operation.
+    ///
+    /// ## Example
+    /// ```
+    /// # use pddl::{DOp, Parser};
+    /// let (_, value) = DOp::parse("<=").unwrap();
+    /// assert_eq!(value, DOp::LessThanOrEqual);
+    ///```
+    ///
+    /// ## See also.
+    /// See [`parse_binary_op`].
+    ///
+    /// ## See also
     /// See [`parse_d_op`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_d_op(input)

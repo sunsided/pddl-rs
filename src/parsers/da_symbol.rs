@@ -18,6 +18,16 @@ pub fn parse_da_symbol<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Durat
 impl crate::parsers::Parser for DurativeActionSymbol {
     type Item = DurativeActionSymbol;
 
+    /// Parses a durative action symbol.
+    ///
+    /// ## Example
+    /// ```
+    /// # use pddl::{DurativeActionSymbol, Parser};
+    /// let (_, value) = DurativeActionSymbol::parse("abcde").unwrap();
+    /// assert_eq!(value, "abcde".into());
+    ///```
+    ///
+    /// ## See also
     /// See [`parse_da_symbol`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_da_symbol(input)
