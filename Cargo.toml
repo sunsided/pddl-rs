@@ -1,6 +1,6 @@
 [package]
 name = "pddl"
-version = "0.0.5-unstable"
+version = "0.0.5"
 description ="A PDDL 3.1 parser"
 license = "EUPL-1.2"
 documentation = "https://docs.rs/pddl"
