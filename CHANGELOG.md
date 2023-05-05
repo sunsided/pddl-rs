@@ -11,6 +11,8 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the only element of the list if it is a one-element list, or `None`.
 - `TryInto` implementations were added for `CEffect` to allow deconstruction into
   `PEffect`, `ForallCEffect` and `WhenCEffect`.
+- Added the `Parser::from_str` method that performs a `Parse::parse` but discards
+  the remaining unparsed text.
 
 ### Changed
 
