@@ -4,7 +4,7 @@ use crate::parsers::{parse_name, ParseResult, Span};
 use crate::types::ActionSymbol;
 use nom::combinator::map;
 
-/// Parses a function symbol, i.e. `<name>`.
+/// Parses an action symbol, i.e. `<name>`.
 ///
 /// ## Example
 /// ```
@@ -27,6 +27,16 @@ pub fn parse_action_symbol<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, A
 impl crate::parsers::Parser for ActionSymbol {
     type Item = ActionSymbol;
 
+    /// Parses an action symbol.
+    ///
+    /// ## Example
+    /// ```
+    /// # use pddl::{ActionSymbol, Parser};
+    /// let (_, action_symbol) = ActionSymbol::parse("abcde").unwrap();
+    /// assert_eq!(action_symbol, "abcde".into());
+    ///```
+    ///
+    /// ## See also
     /// See [`parse_action_symbol`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_action_symbol(input)

@@ -39,6 +39,19 @@ pub fn parse_term<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Term> {
 impl crate::parsers::Parser for Term {
     type Item = Term;
 
+    /// Parses a term.
+    ///
+    /// ## Example
+    /// ```
+    /// # use pddl::{Term, Parser};
+    /// let (_, value) = Term::parse("some-name").unwrap();
+    /// assert_eq!(value, Term::Name("some-name".into()));
+    ///
+    /// let (_, value) = Term::parse("?some-var").unwrap();
+    /// assert_eq!(value, Term::Variable("some-var".into()));
+    ///```
+    ///
+    /// ## See also
     /// See [`parse_term`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_term(input)

@@ -6,7 +6,7 @@ use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
 
-/// Parses a multi-operand operation, i.e. `* | + | - | /`.
+/// Parses a two-operand operation, i.e. `* | + | - | /`.
 ///
 /// ## Example
 /// ```
@@ -32,6 +32,16 @@ pub fn parse_binary_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Binar
 impl crate::parsers::Parser for BinaryOp {
     type Item = BinaryOp;
 
+    /// Parses a two-operand operation.
+    ///
+    /// ## Example
+    /// ```
+    /// # use pddl::{BinaryOp, Parser};
+    /// let (_, value) = BinaryOp::parse("*").unwrap();
+    /// assert_eq!(value, BinaryOp::Multiplication);
+    ///```
+    ///
+    /// ## See also.
     /// See [`parse_binary_op`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_binary_op(input)

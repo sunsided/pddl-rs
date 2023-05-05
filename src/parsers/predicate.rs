@@ -27,6 +27,15 @@ pub fn parse_predicate<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Predi
 impl crate::parsers::Parser for Predicate {
     type Item = Predicate;
 
+    /// Parses a predicate.
+    ///
+    /// ## Example
+    /// ```
+    /// # use pddl::{Predicate, Parser};
+    /// let (_, value) = Predicate::parse("abcde").unwrap();
+    /// assert_eq!(value, "abcde".into());
+    ///```
+    ///
     /// See [`parse_predicate`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_predicate(input)

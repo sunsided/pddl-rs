@@ -194,6 +194,49 @@ pub fn parse_when_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, W
 impl crate::parsers::Parser for CEffect {
     type Item = CEffect;
 
+    /// Parser that parses c-effects.
+    ///
+    /// ## Example
+    /// ```
+    /// # use pddl::{CEffect, ConditionalEffect, Effects, GoalDefinition, Parser, PEffect, Typed, TypedList, Variable};
+    /// let (_, value) = CEffect::parse("(= x y)").unwrap();
+    /// assert_eq!(value,
+    ///     CEffect::new_p_effect(
+    ///         PEffect::from_str("(= x y)").unwrap()
+    ///     )
+    /// );
+    ///
+    /// let (_, value) = CEffect::parse("(not (= ?a B))").unwrap();
+    /// assert_eq!(value,
+    ///     CEffect::new_p_effect(
+    ///         PEffect::from_str("(not (= ?a B))").unwrap()
+    ///     )
+    /// );
+    ///
+    /// let (_, value) = CEffect::parse("(forall (?a ?b) (= ?a ?b))").unwrap();
+    /// assert_eq!(value,
+    ///     CEffect::new_forall(
+    ///         TypedList::from_iter([
+    ///             Typed::new_object(Variable::from_str("a")),
+    ///             Typed::new_object(Variable::from_str("b")),
+    ///         ]),
+    ///         Effects::from_str("(= ?a ?b)").unwrap()
+    ///     )
+    /// );
+    ///
+    /// let input = r#"(when
+    ///     (and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))
+    ///     (and (person-is-happy ?p)))"#;
+    /// let (_, value) = CEffect::parse(input).unwrap();
+    /// assert_eq!(value,
+    ///     CEffect::new_when(
+    ///         GoalDefinition::from_str("(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))").unwrap(),
+    ///         ConditionalEffect::from_str("(and (person-is-happy ?p))").unwrap()
+    ///     )
+    /// );
+    /// ```
+    ///
+    /// ## See also
     /// See [`parse_c_effect`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_c_effect(input.into())
@@ -203,6 +246,24 @@ impl crate::parsers::Parser for CEffect {
 impl crate::parsers::Parser for ForallCEffect {
     type Item = ForallCEffect;
 
+    /// Parser that parses [`ForallCEffect`] values.
+    ///
+    /// ## Example
+    /// ```
+    /// # use pddl::{Effects, ForallCEffect, Parser, Typed, TypedList, Variable};
+    /// let (_, value) = ForallCEffect::parse("(forall (?a ?b) (= ?a ?b))").unwrap();
+    /// assert_eq!(value,
+    ///     ForallCEffect::new(
+    ///         TypedList::from_iter([
+    ///             Typed::new_object(Variable::from_str("a")),
+    ///             Typed::new_object(Variable::from_str("b")),
+    ///         ]),
+    ///         Effects::from_str("(= ?a ?b)").unwrap()
+    ///     )
+    /// );
+    /// ```
+    ///
+    /// ## See also
     /// See [`parse_forall_c_effect`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_forall_c_effect(input)
@@ -212,6 +273,25 @@ impl crate::parsers::Parser for ForallCEffect {
 impl crate::parsers::Parser for WhenCEffect {
     type Item = WhenCEffect;
 
+    /// Parser that parses c-effects.
+    ///
+    /// ## Example
+    /// ```
+    /// # use pddl::{ConditionalEffect, GoalDefinition, Parser, WhenCEffect};
+    /// let input = r#"(when
+    ///     (and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))
+    ///     (and (person-is-happy ?p)))"#;
+    ///
+    /// let (_, value) = WhenCEffect::parse(input).unwrap();
+    /// assert_eq!(value,
+    ///     WhenCEffect::new(
+    ///         GoalDefinition::from_str("(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))").unwrap(),
+    ///         ConditionalEffect::from_str("(and (person-is-happy ?p))").unwrap()
+    ///     )
+    /// );
+    /// ```
+    ///
+    /// ## See also
     /// See [`parse_when_c_effect`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_when_c_effect(input)
