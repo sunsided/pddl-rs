@@ -9,6 +9,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Renamed `Problem::goal` to `Problem::goals` to reflect the fact that it is iterable.
 
+### Internal
+
+- The `thiserror` dependency is now only brought in with the `parser` crate feature.
+
 ## [0.0.5] - 2023-05-05
 
 ### Added
