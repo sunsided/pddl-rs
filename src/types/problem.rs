@@ -129,7 +129,7 @@ impl Problem {
     }
 
     /// Returns the goal statement of the problem.
-    pub const fn goal(&self) -> &PreconditionGoalDefinitions {
+    pub const fn goals(&self) -> &PreconditionGoalDefinitions {
         &self.goal.value()
     }
 

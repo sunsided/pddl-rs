@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+
+- Renamed `Problem::goal` to `Problem::goals` to reflect the fact that it is iterable.
+
 ## [0.0.5] - 2023-05-05
 
 ### Added

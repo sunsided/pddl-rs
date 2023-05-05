@@ -49,8 +49,8 @@
 //!     )
 //!     "#;
 //!
-//! let (_, domain) = Domain::parse(BRIEFCASE_WORLD).unwrap();
-//! let (_, problem) = Problem::parse(BRIEFCASE_WORLD_PROBLEM).unwrap();
+//! let domain = Domain::from_str(BRIEFCASE_WORLD).unwrap();
+//! let problem = Problem::from_str(BRIEFCASE_WORLD_PROBLEM).unwrap();
 //!
 //! // All elements were parsed.
 //! assert_eq!(domain.name(), &"briefcase-world".into());
@@ -65,7 +65,7 @@
 //! assert_eq!(problem.domain(), &"briefcase-world".into());
 //! assert!(problem.requirements().is_empty());
 //! assert_eq!(problem.init().len(), 9);
-//! assert_eq!(problem.goal().len(), 3);
+//! assert_eq!(problem.goals().len(), 3);
 //! ```
 
 // only enables the `doc_cfg` feature when

@@ -33,7 +33,7 @@ use nom::sequence::{preceded, tuple};
 /// assert_eq!(problem.domain(), &Name::new("briefcase-world"));
 /// assert!(problem.requirements().is_empty());
 /// assert_eq!(problem.init().len(), 9);
-/// assert_eq!(problem.goal().len(), 3);
+/// assert_eq!(problem.goals().len(), 3);
 /// ```
 pub fn parse_problem<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Problem> {
     map(
@@ -92,7 +92,7 @@ impl crate::parsers::Parser for Problem {
     /// assert_eq!(problem.domain(), &Name::new("briefcase-world"));
     /// assert!(problem.requirements().is_empty());
     /// assert_eq!(problem.init().len(), 9);
-    /// assert_eq!(problem.goal().len(), 3);
+    /// assert_eq!(problem.goals().len(), 3);
     /// ```
     ///
     /// ## See also

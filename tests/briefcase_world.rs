@@ -70,10 +70,10 @@ fn parse_problem_works() {
     assert_eq!(problem.domain(), &"briefcase-world".into());
     assert!(problem.requirements().is_empty());
     assert_eq!(problem.init().len(), 9);
-    assert_eq!(problem.goal().len(), 3);
+    assert_eq!(problem.goals().len(), 3);
 
     let mut atomic_formulas = 0;
-    for goal in problem.goal().iter() {
+    for goal in problem.goals().iter() {
         match goal {
             PreconditionGoalDefinition::Preference(pref) => match pref {
                 PreferenceGD::Goal(goal) => match goal {
