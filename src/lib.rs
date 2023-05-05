@@ -65,7 +65,7 @@
 //! assert_eq!(problem.domain(), &"briefcase-world".into());
 //! assert!(problem.requirements().is_empty());
 //! assert_eq!(problem.init().len(), 9);
-//! assert_eq!(problem.goal().len(), 3);
+//! assert_eq!(problem.goals().len(), 3);
 //! ```
 
 // only enables the `doc_cfg` feature when

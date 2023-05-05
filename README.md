@@ -43,13 +43,13 @@ pub const BRIEFCASE_WORLD_PROBLEM: &'static str = r#"
     "#;
 
 fn main() {
-    let (_, problem) = Problem::parse(BRIEFCASE_WORLD_PROBLEM).unwrap();
+    let problem = Problem::from_str(BRIEFCASE_WORLD_PROBLEM).unwrap();
 
     assert_eq!(problem.name(), &"get-paid".into());
     assert_eq!(problem.domain(), &"briefcase-world".into());
     assert!(problem.requirements().is_empty());
     assert_eq!(problem.init().len(), 9);
-    assert!(matches! { problem.goal(), pddl::PreconditionGoalDefinition::And(_) });
+    assert_eq!(problem.goal().len(), 3);
 }
 ```
 
