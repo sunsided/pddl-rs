@@ -15,7 +15,7 @@ use nom::sequence::{preceded, tuple};
 /// # use pddl::parsers::{parse_da_gd, preamble::*};
 /// # use pddl::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Preference, PreferenceName, PreferenceGD, Term, Variable, DurativeActionGoalDefinition, PrefTimedGD, TimedGD, TimeSpecifier, Interval};
 /// # use pddl::{Typed, TypedList};
-/// assert!(parse_da_gd("(at start (= x y))".into()).is_value(
+/// assert!(parse_da_gd("(at start (= x y))").is_value(
 ///     DurativeActionGoalDefinition::Timed(
 ///         PrefTimedGD::Required(
 ///             TimedGD::new_at(
@@ -31,11 +31,11 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_da_gd("(and )".into()).is_value(
+/// assert!(parse_da_gd("(and )").is_value(
 ///     DurativeActionGoalDefinition::new_and([])
 /// ));
 ///
-/// assert!(parse_da_gd("(and (at start (= x y)) (over all (= a b)))".into()).is_value(
+/// assert!(parse_da_gd("(and (at start (= x y)) (over all (= a b)))").is_value(
 ///     DurativeActionGoalDefinition::new_and([
 ///         DurativeActionGoalDefinition::Timed(PrefTimedGD::Required(
 ///             TimedGD::new_at(
@@ -62,7 +62,7 @@ use nom::sequence::{preceded, tuple};
 ///     ])
 /// ));
 ///
-/// assert!(parse_da_gd("(forall (?a ?b) (at start (= a b)))".into()).is_value(
+/// assert!(parse_da_gd("(forall (?a ?b) (at start (= a b)))").is_value(
 ///     DurativeActionGoalDefinition::new_forall(
 ///         TypedList::from_iter([
 ///             Typed::new_object(Variable::from_str("a")),
@@ -84,7 +84,9 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 /// ```
-pub fn parse_da_gd(input: Span) -> ParseResult<DurativeActionGoalDefinition> {
+pub fn parse_da_gd<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, DurativeActionGoalDefinition<'a>> {
     let pref_timed_gd = map(parse_pref_timed_gd, DurativeActionGoalDefinition::new_timed);
     let and = map(
         prefix_expr("and", space_separated_list0(parse_da_gd)),
@@ -103,7 +105,7 @@ pub fn parse_da_gd(input: Span) -> ParseResult<DurativeActionGoalDefinition> {
         |(vars, gd)| DurativeActionGoalDefinition::new_forall(vars, gd),
     );
 
-    alt((forall, and, pref_timed_gd))(input)
+    alt((forall, and, pref_timed_gd))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for DurativeActionGoalDefinition<'a> {

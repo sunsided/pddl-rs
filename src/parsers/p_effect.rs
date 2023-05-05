@@ -18,7 +18,7 @@ use nom::sequence::{preceded, terminated, tuple};
 /// ```
 /// # use pddl::parsers::{parse_p_effect, preamble::*};
 /// # use pddl::{AssignOp, AtomicFormula, EqualityAtomicFormula, FExp, FHead, FunctionSymbol, FunctionTerm, PEffect, Term};
-/// assert!(parse_p_effect("(= x y)".into()).is_value(
+/// assert!(parse_p_effect("(= x y)").is_value(
 ///     PEffect::AtomicFormula(AtomicFormula::Equality(
 ///         EqualityAtomicFormula::new(
 ///             Term::Name("x".into()),
@@ -27,7 +27,7 @@ use nom::sequence::{preceded, terminated, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_p_effect("(not (= ?a B))".into()).is_value(
+/// assert!(parse_p_effect("(not (= ?a B))").is_value(
 ///     PEffect::NotAtomicFormula(AtomicFormula::Equality(
 ///         EqualityAtomicFormula::new(
 ///             Term::Variable("a".into()),
@@ -36,7 +36,7 @@ use nom::sequence::{preceded, terminated, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_p_effect("(assign fun-sym 1.23)".into()).is_value(
+/// assert!(parse_p_effect("(assign fun-sym 1.23)").is_value(
 ///     PEffect::new_numeric_fluent(
 ///         AssignOp::Assign,
 ///         FHead::new(FunctionSymbol::from_str("fun-sym")),
@@ -44,7 +44,7 @@ use nom::sequence::{preceded, terminated, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_p_effect("(assign fun-sym 1.23)".into()).is_value(
+/// assert!(parse_p_effect("(assign fun-sym 1.23)").is_value(
 ///     PEffect::new_numeric_fluent(
 ///         AssignOp::Assign,
 ///         FHead::new(FunctionSymbol::from_str("fun-sym")),
@@ -52,21 +52,21 @@ use nom::sequence::{preceded, terminated, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_p_effect("(assign (fun-sym) undefined)".into()).is_value(
+/// assert!(parse_p_effect("(assign (fun-sym) undefined)").is_value(
 ///     PEffect::new_object_fluent(
 ///         FunctionTerm::new(FunctionSymbol::from_str("fun-sym"), []),
 ///         None
 ///     )
 /// ));
 ///
-/// assert!(parse_p_effect("(assign (fun-sym) something)".into()).is_value(
+/// assert!(parse_p_effect("(assign (fun-sym) something)").is_value(
 ///     PEffect::new_object_fluent(
 ///         FunctionTerm::new(FunctionSymbol::from_str("fun-sym"), []),
 ///         Some(Term::Name("something".into()))
 ///     )
 /// ));
 /// ```
-pub fn parse_p_effect(input: Span) -> ParseResult<PEffect> {
+pub fn parse_p_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PEffect<'a>> {
     let is = map(atomic_formula(parse_term), |af| PEffect::new(af));
     let is_not = map(prefix_expr("not", atomic_formula(parse_term)), |af| {
         PEffect::new_not(af)
@@ -98,7 +98,7 @@ pub fn parse_p_effect(input: Span) -> ParseResult<PEffect> {
         |(f_term, term)| PEffect::new_object_fluent(f_term, Some(term)),
     );
 
-    alt((object_undefined, object, numeric, is_not, is))(input)
+    alt((object_undefined, object, numeric, is_not, is))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for PEffect<'a> {

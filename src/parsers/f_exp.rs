@@ -14,11 +14,11 @@ use nom::sequence::{preceded, tuple};
 /// ```
 /// # use pddl::parsers::{parse_f_exp, preamble::*};
 /// # use pddl::{BinaryOp, FExp, FHead, FunctionSymbol, MultiOp};
-/// assert!(parse_f_exp("1.23".into()).is_value(
+/// assert!(parse_f_exp("1.23").is_value(
 ///     FExp::new_number(1.23)
 /// ));
 ///
-/// assert!(parse_f_exp("(+ 1.23 2.34)".into()).is_value(
+/// assert!(parse_f_exp("(+ 1.23 2.34)").is_value(
 ///     FExp::new_binary_op(
 ///         BinaryOp::Addition,
 ///         FExp::new_number(1.23),
@@ -26,7 +26,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_f_exp("(+ 1.23 2.34 3.45)".into()).is_value(
+/// assert!(parse_f_exp("(+ 1.23 2.34 3.45)").is_value(
 ///     FExp::new_multi_op(
 ///         MultiOp::Addition,
 ///         FExp::new_number(1.23),
@@ -34,17 +34,17 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_f_exp("(- 1.23)".into()).is_value(
+/// assert!(parse_f_exp("(- 1.23)").is_value(
 ///     FExp::new_negative(FExp::new_number(1.23))
 /// ));
 ///
-/// assert!(parse_f_exp("fun-sym".into()).is_value(
+/// assert!(parse_f_exp("fun-sym").is_value(
 ///     FExp::new_function(
 ///         FHead::new(FunctionSymbol::from_str("fun-sym"))
 ///     )
 /// ));
 ///```
-pub fn parse_f_exp(input: Span) -> ParseResult<FExp> {
+pub fn parse_f_exp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExp<'a>> {
     // :numeric-fluents
     let number = map(parse_number, FExp::new_number);
 
@@ -77,7 +77,7 @@ pub fn parse_f_exp(input: Span) -> ParseResult<FExp> {
     // :numeric-fluents
     let f_head = map(parse_f_head, FExp::new_function);
 
-    alt((number, binary_op, multi_op, negated, f_head))(input)
+    alt((number, binary_op, multi_op, negated, f_head))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for FExp<'a> {

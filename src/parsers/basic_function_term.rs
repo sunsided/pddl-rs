@@ -26,7 +26,9 @@ use nom::sequence::tuple;
 ///     BasicFunctionTerm::new("abcde".into(), ["x".into(), "y".into(), "z".into()])
 /// ));
 ///```
-pub fn parse_basic_function_term(input: Span) -> ParseResult<BasicFunctionTerm> {
+pub fn parse_basic_function_term<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, BasicFunctionTerm<'a>> {
     let direct = map(parse_function_symbol, |s| BasicFunctionTerm::new(s, []));
     let named = map(
         parens(tuple((
@@ -35,7 +37,7 @@ pub fn parse_basic_function_term(input: Span) -> ParseResult<BasicFunctionTerm> 
         ))),
         |(s, ns)| BasicFunctionTerm::new(s, ns),
     );
-    alt((direct, named))(input)
+    alt((direct, named))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for BasicFunctionTerm<'a> {

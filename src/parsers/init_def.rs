@@ -11,7 +11,7 @@ use nom::combinator::map;
 /// # use pddl::parsers::{parse_problem_init_def, preamble::*};
 /// # use pddl::{AtomicFormula, InitElement, InitElements, NameLiteral, Number};
 /// let input = "(:init (train-not-in-use train1) (at 10 (train-not-in-use train2)))";
-/// assert!(parse_problem_init_def(input.into()).is_value(
+/// assert!(parse_problem_init_def(input).is_value(
 ///     InitElements::from_iter([
 ///         InitElement::new_literal(
 ///             NameLiteral::new(
@@ -33,11 +33,13 @@ use nom::combinator::map;
 ///     ])
 /// ));
 /// ```
-pub fn parse_problem_init_def(input: Span) -> ParseResult<InitElements> {
+pub fn parse_problem_init_def<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, InitElements<'a>> {
     map(
         prefix_expr(":init", space_separated_list0(parse_init_el)),
         InitElements::new,
-    )(input)
+    )(input.into())
 }
 impl<'a> crate::parsers::Parser<'a> for InitElements<'a> {
     type Item = InitElements<'a>;

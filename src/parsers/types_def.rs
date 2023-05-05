@@ -12,17 +12,17 @@ use nom::combinator::map;
 /// # use pddl::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions};
 /// # use pddl::{Name, Type, Typed, TypedList, Types};
 /// let input = "(:types location physob)";
-/// assert!(parse_types_def(input.into()).is_value(
+/// assert!(parse_types_def(input).is_value(
 ///     Types::new(TypedList::from_iter([
 ///         Typed::new(Name::from("location"), Type::OBJECT),
 ///         Typed::new(Name::from("physob"), Type::OBJECT),
 ///     ]))
 /// ));
 /// ```
-pub fn parse_types_def(input: Span) -> ParseResult<Types> {
+pub fn parse_types_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Types<'a>> {
     map(prefix_expr(":types", typed_list(parse_name)), |vec| {
         Types::new(vec)
-    })(input)
+    })(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for Types<'a> {

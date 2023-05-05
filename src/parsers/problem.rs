@@ -26,7 +26,7 @@ use nom::sequence::{preceded, tuple};
 ///         (:goal (and (at B office) (at D office) (at P home)))
 ///     )"#;
 ///
-/// let (remainder, problem) = parse_problem(input.into()).unwrap();
+/// let (remainder, problem) = parse_problem(input).unwrap();
 ///
 /// assert!(remainder.is_empty());
 /// assert_eq!(problem.name(), &Name::new("get-paid"));
@@ -35,7 +35,7 @@ use nom::sequence::{preceded, tuple};
 /// assert_eq!(problem.init().len(), 9);
 /// assert_eq!(problem.goal().len(), 3);
 /// ```
-pub fn parse_problem(input: Span) -> ParseResult<Problem> {
+pub fn parse_problem<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Problem<'a>> {
     map(
         ws(prefix_expr(
             "define",
@@ -67,7 +67,7 @@ pub fn parse_problem(input: Span) -> ParseResult<Problem> {
                 length,
             )
         },
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for Problem<'a> {

@@ -36,18 +36,18 @@ use nom::sequence::{preceded, tuple};
 ///         )
 ///     );
 ///
-/// assert!(parse_con_gd("(and)".into()).is_value(
+/// assert!(parse_con_gd("(and)").is_value(
 ///     ConGD::new_and([])
 /// ));
 ///
-/// assert!(parse_con_gd("(and (at end (= x y)) (at end (not (= x z))))".into()).is_value(
+/// assert!(parse_con_gd("(and (at end (= x y)) (at end (not (= x z))))").is_value(
 ///     ConGD::new_and([
 ///         ConGD::new_at_end(gd_a.clone()),
 ///         ConGD::new_at_end(gd_b.clone()),
 ///     ])
 /// ));
 ///
-/// assert!(parse_con_gd("(forall (?x ?z) (sometime (= ?x ?z)))".into()).is_value(
+/// assert!(parse_con_gd("(forall (?x ?z) (sometime (= ?x ?z)))").is_value(
 ///     ConGD::new_forall(
 ///         TypedList::from_iter([
 ///             Variable::from("x").to_typed(Type::OBJECT),
@@ -67,44 +67,44 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_con_gd("(at end (= x y))".into()).is_value(
+/// assert!(parse_con_gd("(at end (= x y))").is_value(
 ///     ConGD::AtEnd(gd_a.clone())
 /// ));
 ///
-/// assert!(parse_con_gd("(always (= x y))".into()).is_value(
+/// assert!(parse_con_gd("(always (= x y))").is_value(
 ///     ConGD::Always(Con2GD::new_goal(gd_a.clone()))
 /// ));
 ///
-/// assert!(parse_con_gd("(sometime (= x y))".into()).is_value(
+/// assert!(parse_con_gd("(sometime (= x y))").is_value(
 ///     ConGD::Sometime(Con2GD::new_goal(gd_a.clone()))
 /// ));
 ///
-/// assert!(parse_con_gd("(within 10 (= x y))".into()).is_value(
+/// assert!(parse_con_gd("(within 10 (= x y))").is_value(
 ///     ConGD::Within(
 ///         Number::from(10),
 ///         Con2GD::new_goal(gd_a.clone())
 ///     )
 /// ));
 ///
-/// assert!(parse_con_gd("(at-most-once (= x y))".into()).is_value(
+/// assert!(parse_con_gd("(at-most-once (= x y))").is_value(
 ///     ConGD::AtMostOnce(Con2GD::new_goal(gd_a.clone()))
 /// ));
 ///
-/// assert!(parse_con_gd("(sometime-after (= x y) (not (= x z)))".into()).is_value(
+/// assert!(parse_con_gd("(sometime-after (= x y) (not (= x z)))").is_value(
 ///     ConGD::SometimeAfter(
 ///         Con2GD::new_goal(gd_a.clone()),
 ///         Con2GD::new_goal(gd_b.clone())
 ///     )
 /// ));
 ///
-/// assert!(parse_con_gd("(sometime-before (= x y) (not (= x z)))".into()).is_value(
+/// assert!(parse_con_gd("(sometime-before (= x y) (not (= x z)))").is_value(
 ///     ConGD::SometimeBefore(
 ///         Con2GD::new_goal(gd_a.clone()),
 ///         Con2GD::new_goal(gd_b.clone())
 ///     )
 /// ));
 ///
-/// assert!(parse_con_gd("(always-within 10 (= x y) (not (= x z)))".into()).is_value(
+/// assert!(parse_con_gd("(always-within 10 (= x y) (not (= x z)))").is_value(
 ///     ConGD::AlwaysWithin(
 ///         Number::from(10),
 ///         Con2GD::new_goal(gd_a.clone()),
@@ -112,7 +112,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_con_gd("(hold-during 10 20 (= x y))".into()).is_value(
+/// assert!(parse_con_gd("(hold-during 10 20 (= x y))").is_value(
 ///     ConGD::HoldDuring(
 ///         Number::from(10),
 ///         Number::from(20),
@@ -120,7 +120,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_con_gd("(hold-after 10 (= x y))".into()).is_value(
+/// assert!(parse_con_gd("(hold-after 10 (= x y))").is_value(
 ///     ConGD::HoldAfter(
 ///         Number::from(10),
 ///         Con2GD::new_goal(gd_a.clone())
@@ -143,7 +143,7 @@ use nom::sequence::{preceded, tuple};
 /// #    );
 ///
 /// let input = "(within 10 (at-most-once (= x y)))";
-/// assert!(parse_con_gd(input.into()).is_value(
+/// assert!(parse_con_gd(input).is_value(
 ///     ConGD::new_within(
 ///         Number::from(10),
 ///         Con2GD::new_nested(
@@ -157,7 +157,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 /// ```
-pub fn parse_con_gd(input: Span) -> ParseResult<ConGD> {
+pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD<'a>> {
     let and = map(
         prefix_expr("and", space_separated_list0(parse_con_gd)),
         ConGD::new_and,
@@ -254,7 +254,7 @@ pub fn parse_con_gd(input: Span) -> ParseResult<ConGD> {
         always_within,
         hold_during,
         hold_after,
-    ))(input)
+    ))(input.into())
 }
 
 fn parse_con2_gd(input: Span) -> ParseResult<Con2GD> {

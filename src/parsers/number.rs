@@ -14,19 +14,19 @@ use nom::Parser;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_number, preamble::*};
-/// assert!(parse_number("0".into()).is_value(0.0.into()));
-/// assert!(parse_number("1000a".into()).is_value(1000.0.into()));
-/// assert!(parse_number("012".into()).is_value(12.0.into()));
-/// assert!(parse_number("1.234".into()).is_value(1.234.into()));
+/// assert!(parse_number("0").is_value(0.0.into()));
+/// assert!(parse_number("1000a").is_value(1000.0.into()));
+/// assert!(parse_number("012").is_value(12.0.into()));
+/// assert!(parse_number("1.234").is_value(1.234.into()));
 ///
-/// assert!(parse_number(".0".into()).is_err());
-/// assert!(parse_number(".".into()).is_err());
-/// assert!(parse_number("-1".into()).is_err());
+/// assert!(parse_number(".0").is_err());
+/// assert!(parse_number(".").is_err());
+/// assert!(parse_number("-1").is_err());
 ///```
-pub fn parse_number(input: Span) -> ParseResult<Number> {
+pub fn parse_number<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Number> {
     let pattern = recognize(tuple((digit1, many_m_n(0, 1, parse_decimal))));
     let float = pattern.and_then(float);
-    map(float, Number::new)(input)
+    map(float, Number::new)(input.into())
 }
 
 /// Parses a decimal, i.e. `.<digit>⁺`.

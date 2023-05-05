@@ -11,18 +11,20 @@ use nom::combinator::map;
 /// # use pddl::parsers::{parse_problem_constraints_def, preamble::*};
 /// # use pddl::{ConGD, ProblemConstraintsDef, PrefConGDs};
 /// let input = "(:constraints (preference test (and)))";
-/// assert!(parse_problem_constraints_def(input.into()).is_value(
+/// assert!(parse_problem_constraints_def(input).is_value(
 ///     ProblemConstraintsDef::new(
 ///         PrefConGDs::new_preference(Some("test".into()), ConGD::new_and([]))
 ///     )
 /// ));
 /// ```
-pub fn parse_problem_constraints_def(input: Span) -> ParseResult<ProblemConstraintsDef> {
+pub fn parse_problem_constraints_def<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, ProblemConstraintsDef<'a>> {
     // :constraints
     map(
         prefix_expr(":constraints", parse_pref_con_gd),
         ProblemConstraintsDef::new,
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for ProblemConstraintsDef<'a> {

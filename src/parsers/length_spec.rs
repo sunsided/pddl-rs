@@ -12,12 +12,12 @@ use nom::sequence::{preceded, tuple};
 /// ```
 /// # use pddl::parsers::{parse_problem_length_spec, preamble::*};
 /// # use pddl::LengthSpec;
-/// assert!(parse_problem_length_spec("(:length)".into()).is_value(LengthSpec::default()));
-/// assert!(parse_problem_length_spec("(:length (:serial 123))".into()).is_value(LengthSpec::new_serial(123)));
-/// assert!(parse_problem_length_spec("(:length (:parallel 42))".into()).is_value(LengthSpec::new_parallel(42)));
-/// assert!(parse_problem_length_spec("(:length (:serial 123) (:parallel 42))".into()).is_value(LengthSpec::new(Some(123), Some(42))));
+/// assert!(parse_problem_length_spec("(:length)").is_value(LengthSpec::default()));
+/// assert!(parse_problem_length_spec("(:length (:serial 123))").is_value(LengthSpec::new_serial(123)));
+/// assert!(parse_problem_length_spec("(:length (:parallel 42))").is_value(LengthSpec::new_parallel(42)));
+/// assert!(parse_problem_length_spec("(:length (:serial 123) (:parallel 42))").is_value(LengthSpec::new(Some(123), Some(42))));
 ///```
-pub fn parse_problem_length_spec(input: Span) -> ParseResult<LengthSpec> {
+pub fn parse_problem_length_spec<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, LengthSpec> {
     let serial = prefix_expr(":serial", nom::character::complete::u64);
     let parallel = prefix_expr(":parallel", nom::character::complete::u64);
     let length = prefix_expr(
@@ -27,7 +27,7 @@ pub fn parse_problem_length_spec(input: Span) -> ParseResult<LengthSpec> {
 
     map(length, |(serial, parallel)| {
         LengthSpec::new(serial, parallel)
-    })(input)
+    })(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for LengthSpec {

@@ -17,7 +17,7 @@ use nom::combinator::map;
 /// assert!(parse_binary_op(Span::new("-")).is_value(BinaryOp::Subtraction));
 /// assert!(parse_binary_op(Span::new("/")).is_value(BinaryOp::Division));
 ///```
-pub fn parse_binary_op(input: Span) -> ParseResult<BinaryOp> {
+pub fn parse_binary_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, BinaryOp> {
     map(
         alt((
             tag(names::MULTIPLICATION),
@@ -26,7 +26,7 @@ pub fn parse_binary_op(input: Span) -> ParseResult<BinaryOp> {
             tag(names::DIVISION),
         )),
         |x: Span| BinaryOp::try_from(*x.fragment()).expect("unhandled variant"),
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for BinaryOp {

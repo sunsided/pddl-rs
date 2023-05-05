@@ -12,14 +12,14 @@ use nom::combinator::map;
 /// ```
 /// # use pddl::parsers::{parse_optimization, preamble::*};
 /// # use pddl::{Optimization};
-/// assert!(parse_optimization("minimize".into()).is_value(Optimization::Minimize));
-/// assert!(parse_optimization("maximize".into()).is_value(Optimization::Maximize));
+/// assert!(parse_optimization("minimize").is_value(Optimization::Minimize));
+/// assert!(parse_optimization("maximize").is_value(Optimization::Maximize));
 ///```
-pub fn parse_optimization(input: Span) -> ParseResult<Optimization> {
+pub fn parse_optimization<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Optimization> {
     map(
         alt((tag(names::MINIMIZE), tag(names::MAXIMIZE))),
         |x: Span| Optimization::try_from(*x.fragment()).expect("unhandled variant"),
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for Optimization {

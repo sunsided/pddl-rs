@@ -11,11 +11,11 @@ use nom::combinator::map;
 /// # use pddl::parsers::{parse_function_type, preamble::*};
 /// # use pddl::{FunctionType};
 /// # use pddl::Type;
-/// assert!(parse_function_type("number".into()).is_value(FunctionType::new(Type::Exactly("number".into()))));
-/// assert!(parse_function_type("(either object number)".into()).is_value(FunctionType::new(Type::from_iter(["object", "number"]))));
+/// assert!(parse_function_type("number").is_value(FunctionType::new(Type::Exactly("number".into()))));
+/// assert!(parse_function_type("(either object number)").is_value(FunctionType::new(Type::from_iter(["object", "number"]))));
 ///```
-pub fn parse_function_type(input: Span) -> ParseResult<FunctionType> {
-    map(parse_type, FunctionType::from)(input)
+pub fn parse_function_type<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FunctionType<'a>> {
+    map(parse_type, FunctionType::from)(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for FunctionType<'a> {

@@ -16,8 +16,8 @@ use nom::combinator::map;
 /// assert!(parse_primitive_type(Span::new("a-1_2")).is_value("a-1_2".into()));
 /// assert!(parse_primitive_type(Span::new("obj!ect")).is_value("obj".into()));
 ///```
-pub fn parse_primitive_type(input: Span) -> ParseResult<PrimitiveType> {
-    map(alt((parse_object, parse_name)), PrimitiveType::from)(input)
+pub fn parse_primitive_type<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PrimitiveType<'a>> {
+    map(alt((parse_object, parse_name)), PrimitiveType::from)(input.into())
 }
 
 fn parse_object(input: Span) -> ParseResult<Name> {

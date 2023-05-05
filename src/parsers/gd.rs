@@ -18,7 +18,7 @@ use nom::sequence::{preceded, tuple};
 /// # use pddl::{AtomicFormula, BinaryComp, BinaryOp, EqualityAtomicFormula, FComp, FExp, GoalDefinition, Literal, Term, Variable};
 /// # use pddl::TypedList;
 /// // Atomic formula
-/// assert!(parse_gd("(= x y)".into()).is_value(
+/// assert!(parse_gd("(= x y)").is_value(
 ///     GoalDefinition::AtomicFormula(
 ///         AtomicFormula::new_equality(
 ///             Term::Name("x".into()),
@@ -28,7 +28,7 @@ use nom::sequence::{preceded, tuple};
 /// ));
 ///
 /// // Literal
-/// assert!(parse_gd("(not (= x y))".into()).is_value(
+/// assert!(parse_gd("(not (= x y))").is_value(
 ///     GoalDefinition::new_not(
 ///         GoalDefinition::new_atomic_formula(
 ///             AtomicFormula::new_equality(
@@ -40,7 +40,7 @@ use nom::sequence::{preceded, tuple};
 /// ));
 ///
 /// // Conjunction (and)
-/// assert!(parse_gd("(and (not (= x y)) (= x z))".into()).is_value(
+/// assert!(parse_gd("(and (not (= x y)) (= x z))").is_value(
 ///     GoalDefinition::new_and([
 ///         GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
 ///             AtomicFormula::new_equality(
@@ -56,7 +56,7 @@ use nom::sequence::{preceded, tuple};
 /// ));
 ///
 /// // Disjunction (or)
-/// assert!(parse_gd("(or (not (= x y)) (= x z))".into()).is_value(
+/// assert!(parse_gd("(or (not (= x y)) (= x z))").is_value(
 ///     GoalDefinition::new_or([
 ///         GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
 ///             AtomicFormula::new_equality(
@@ -72,7 +72,7 @@ use nom::sequence::{preceded, tuple};
 /// ));
 ///
 /// // Implication
-/// assert!(parse_gd("(imply (not (= x y)) (= x z))".into()).is_value(
+/// assert!(parse_gd("(imply (not (= x y)) (= x z))").is_value(
 ///     GoalDefinition::new_imply(
 ///         GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
 ///             AtomicFormula::new_equality(
@@ -88,7 +88,7 @@ use nom::sequence::{preceded, tuple};
 /// ));
 ///
 /// // Existential preconditions
-/// assert!(parse_gd("(exists (?x ?y) (not (= ?x ?y)))".into()).is_value(
+/// assert!(parse_gd("(exists (?x ?y) (not (= ?x ?y)))").is_value(
 ///     GoalDefinition::new_exists(
 ///         TypedList::from_iter([Variable::from_str("x").into(), Variable::from_str("y").into()]),
 ///         GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
@@ -101,7 +101,7 @@ use nom::sequence::{preceded, tuple};
 /// ));
 ///
 /// // Universal preconditions
-/// assert!(parse_gd("(forall (?x ?y) (not (= ?x ?y)))".into()).is_value(
+/// assert!(parse_gd("(forall (?x ?y) (not (= ?x ?y)))").is_value(
 ///     GoalDefinition::new_forall(
 ///         TypedList::from_iter([Variable::from_str("x").into(), Variable::from_str("y").into()]),
 ///         GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
@@ -113,7 +113,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_gd("(= (+ 1.23 2.34) (+ 1.23 2.34))".into()).is_value(
+/// assert!(parse_gd("(= (+ 1.23 2.34) (+ 1.23 2.34))").is_value(
 ///     GoalDefinition::new_f_comp(
 ///         FComp::new(
 ///             BinaryComp::Equal,
@@ -131,7 +131,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 /// ```
-pub fn parse_gd(input: Span) -> ParseResult<GoalDefinition> {
+pub fn parse_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, GoalDefinition<'a>> {
     let af = map(
         atomic_formula(parse_term),
         GoalDefinition::new_atomic_formula,
@@ -187,7 +187,7 @@ pub fn parse_gd(input: Span) -> ParseResult<GoalDefinition> {
     // :numeric-fluents
     let f_comp = map(parse_f_comp, GoalDefinition::new_f_comp);
 
-    alt((and, or, not, imply, exists, forall, af, literal, f_comp))(input)
+    alt((and, or, not, imply, exists, forall, af, literal, f_comp))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for GoalDefinition<'a> {

@@ -13,15 +13,17 @@ use nom::combinator::map;
 /// # use pddl::{Type, Typed, TypedList};
 ///
 /// let input = "(:constraints (and))";
-/// assert!(parse_domain_constraints_def(input.into()).is_value(
+/// assert!(parse_domain_constraints_def(input).is_value(
 ///     DomainConstraintsDef::new(ConGD::new_and([]))
 /// ));
 /// ```
-pub fn parse_domain_constraints_def(input: Span) -> ParseResult<DomainConstraintsDef> {
+pub fn parse_domain_constraints_def<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, DomainConstraintsDef<'a>> {
     map(
         prefix_expr(":constraints", parse_con_gd),
         DomainConstraintsDef::new,
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for DomainConstraintsDef<'a> {

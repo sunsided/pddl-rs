@@ -9,10 +9,12 @@ use nom::combinator::map;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_da_symbol, preamble::*};
-/// assert!(parse_da_symbol("abcde".into()).is_value("abcde".into()));
+/// assert!(parse_da_symbol("abcde").is_value("abcde".into()));
 ///```
-pub fn parse_da_symbol(input: Span) -> ParseResult<DurativeActionSymbol> {
-    map(parse_name, DurativeActionSymbol::from)(input)
+pub fn parse_da_symbol<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, DurativeActionSymbol<'a>> {
+    map(parse_name, DurativeActionSymbol::from)(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for DurativeActionSymbol<'a> {

@@ -20,8 +20,8 @@ use nom::combinator::map;
 /// assert!(parse_predicate(Span::new("0124")).is_err());
 /// assert!(parse_predicate(Span::new("-1")).is_err());
 ///```
-pub fn parse_predicate<'a>(input: Span<'a>) -> ParseResult<'a, Predicate> {
-    map(parse_name, Predicate::from)(input)
+pub fn parse_predicate<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Predicate<'a>> {
+    map(parse_name, Predicate::from)(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for Predicate<'a> {

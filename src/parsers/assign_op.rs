@@ -16,7 +16,7 @@ use nom::combinator::map;
 /// assert!(parse_assign_op(Span::new("assign")).is_value(AssignOp::Assign));
 /// assert!(parse_assign_op(Span::new("scale-up")).is_value(AssignOp::ScaleUp));
 ///```
-pub fn parse_assign_op(input: Span) -> ParseResult<AssignOp> {
+pub fn parse_assign_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, AssignOp> {
     map(
         alt((
             tag(names::CHANGE), // deprecated
@@ -27,7 +27,7 @@ pub fn parse_assign_op(input: Span) -> ParseResult<AssignOp> {
             tag(names::DECREASE),
         )),
         |x: Span| AssignOp::try_from(*x.fragment()).expect("unhandled variant"),
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for AssignOp {

@@ -12,12 +12,12 @@ use nom::combinator::map;
 /// ```
 /// # use pddl::parsers::{parse_interval, preamble::*};
 /// # use pddl::{Interval};
-/// assert!(parse_interval("all".into()).is_value(Interval::All));
+/// assert!(parse_interval("all").is_value(Interval::All));
 ///```
-pub fn parse_interval(input: Span) -> ParseResult<Interval> {
+pub fn parse_interval<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Interval> {
     map(tag(names::ALL), |x: Span| {
         Interval::try_from(*x.fragment()).expect("unhandled variant")
-    })(input)
+    })(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for Interval {

@@ -12,14 +12,14 @@ use nom::combinator::map;
 /// ```
 /// # use pddl::parsers::{parse_multi_op, preamble::*};
 /// # use pddl::{MultiOp};
-/// assert!(parse_multi_op("*".into()).is_value(MultiOp::Multiplication));
-/// assert!(parse_multi_op("+".into()).is_value(MultiOp::Addition));
+/// assert!(parse_multi_op("*").is_value(MultiOp::Multiplication));
+/// assert!(parse_multi_op("+").is_value(MultiOp::Addition));
 ///```
-pub fn parse_multi_op(input: Span) -> ParseResult<MultiOp> {
+pub fn parse_multi_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, MultiOp> {
     map(
         alt((tag(names::MULTIPLICATION), tag(names::ADDITION))),
         |x: Span| MultiOp::try_from(*x.fragment()).expect("unhandled variant"),
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for MultiOp {

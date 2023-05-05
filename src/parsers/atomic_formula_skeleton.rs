@@ -22,11 +22,13 @@ use nom::sequence::tuple;
 ///         ]))
 /// ));
 /// ```
-pub fn parse_atomic_formula_skeleton(input: Span) -> ParseResult<AtomicFormulaSkeleton> {
+pub fn parse_atomic_formula_skeleton<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, AtomicFormulaSkeleton<'a>> {
     map(
         parens(tuple((parse_predicate, ws(typed_list(parse_variable))))),
         |tuple| AtomicFormulaSkeleton::from(tuple),
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for AtomicFormulaSkeleton<'a> {

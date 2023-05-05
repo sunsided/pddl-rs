@@ -21,14 +21,16 @@ use nom::sequence::tuple;
 ///         ]))
 /// ));
 /// ```
-pub fn parse_atomic_function_skeleton(input: Span) -> ParseResult<AtomicFunctionSkeleton> {
+pub fn parse_atomic_function_skeleton<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, AtomicFunctionSkeleton<'a>> {
     map(
         parens(tuple((
             parse_function_symbol,
             ws(typed_list(parse_variable)),
         ))),
         |tuple| AtomicFunctionSkeleton::from(tuple),
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for AtomicFunctionSkeleton<'a> {

@@ -12,7 +12,7 @@ use nom::combinator::map;
 /// # use pddl::parsers::{parse_timeless_def, preamble::*};
 /// # use pddl::{AtomicFormula, EqualityAtomicFormula, Literal, Name, Objects, Timeless, ToTyped, Type};
 /// let input = "(:timeless (= x y) (= a b))";
-/// assert!(parse_timeless_def(input.into()).is_value(
+/// assert!(parse_timeless_def(input).is_value(
 ///     Timeless::from_iter([
 ///         Literal::AtomicFormula(
 ///             AtomicFormula::Equality(
@@ -34,11 +34,11 @@ use nom::combinator::map;
 ///     ])
 /// ));
 /// ```
-pub fn parse_timeless_def(input: Span) -> ParseResult<Timeless> {
+pub fn parse_timeless_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Timeless<'a>> {
     map(
         prefix_expr(":timeless", space_separated_list1(literal(parse_name))),
         Timeless::from_iter,
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for Timeless<'a> {

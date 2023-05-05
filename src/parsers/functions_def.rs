@@ -13,7 +13,7 @@ use nom::combinator::map;
 /// # use pddl::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions, FunctionTypedList, FunctionTyped, AtomicFunctionSkeleton, FunctionSymbol, Functions};
 /// # use pddl::{Type, Typed, TypedList};
 /// let input = "(:functions (battery-amount ?r - rover))";
-/// assert!(parse_functions_def(input.into()).is_value(
+/// assert!(parse_functions_def(input).is_value(
 ///     Functions::from_iter([
 ///         FunctionTyped::new_number(
 ///             AtomicFunctionSkeleton::new(
@@ -26,14 +26,14 @@ use nom::combinator::map;
 ///     ])
 /// ));
 /// ```
-pub fn parse_functions_def(input: Span) -> ParseResult<Functions> {
+pub fn parse_functions_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Functions<'a>> {
     map(
         prefix_expr(
             ":functions",
             function_typed_list(parse_atomic_function_skeleton),
         ),
         |vec| Functions::new(vec),
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for Functions<'a> {

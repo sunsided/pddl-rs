@@ -20,11 +20,13 @@ use nom::sequence::{preceded, tuple};
 ///                     )
 ///                 )"#;
 ///
-/// let (remaining, predicate) = parse_derived_predicate(input.into()).unwrap();
+/// let (remaining, predicate) = parse_derived_predicate(input).unwrap();
 /// assert_eq!(predicate.predicate().name(), &"train-usable".into());
 /// assert!(matches!(predicate.expression(), &GoalDefinition::And(..)));
 ///```
-pub fn parse_derived_predicate(input: Span) -> ParseResult<DerivedPredicate> {
+pub fn parse_derived_predicate<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, DerivedPredicate<'a>> {
     map(
         prefix_expr(
             ":derived",
@@ -34,7 +36,7 @@ pub fn parse_derived_predicate(input: Span) -> ParseResult<DerivedPredicate> {
             )),
         ),
         DerivedPredicate::from,
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for DerivedPredicate<'a> {

@@ -13,22 +13,22 @@ use nom::sequence::{delimited, tuple};
 /// ```
 /// # use pddl::parsers::{parse_function_term, preamble::*};
 /// # use pddl::{FunctionTerm, Variable, FunctionSymbol, Term};
-/// assert!(parse_function_term("(fun-sym)".into()).is_value(FunctionTerm::new("fun-sym".into(), vec![])));
+/// assert!(parse_function_term("(fun-sym)").is_value(FunctionTerm::new("fun-sym".into(), vec![])));
 ///
 /// let x = Term::Name("x".into());
-/// assert!(parse_function_term("(fun-sym x)".into()).is_value(FunctionTerm::new("fun-sym".into(), vec![x])));
+/// assert!(parse_function_term("(fun-sym x)").is_value(FunctionTerm::new("fun-sym".into(), vec![x])));
 ///
 /// let x = Term::Name("x".into());
 /// let y = Term::Variable("y".into());
-/// assert!(parse_function_term("(fun-sym ?y x)".into()).is_value(FunctionTerm::new("fun-sym".into(), vec![y, x])));
+/// assert!(parse_function_term("(fun-sym ?y x)").is_value(FunctionTerm::new("fun-sym".into(), vec![y, x])));
 ///
 /// let x = Term::Name("x".into());
 /// let y = Term::Variable("y".into());
 /// let a = Term::Name("a".into());
 /// let ft = Term::Function(FunctionTerm::new(FunctionSymbol::from("fn"), vec![a]));
-/// assert!(parse_function_term("(fun-sym ?y x (fn a))".into()).is_value(FunctionTerm::new("fun-sym".into(), vec![y, x, ft])));
+/// assert!(parse_function_term("(fun-sym ?y x (fn a))").is_value(FunctionTerm::new("fun-sym".into(), vec![y, x, ft])));
 ///```
-pub fn parse_function_term(input: Span) -> ParseResult<FunctionTerm> {
+pub fn parse_function_term<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FunctionTerm<'a>> {
     map(
         delimited(
             tag("("),
@@ -36,7 +36,7 @@ pub fn parse_function_term(input: Span) -> ParseResult<FunctionTerm> {
             tag(")"),
         ),
         |(symbol, terms)| FunctionTerm::new(symbol, terms),
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for FunctionTerm<'a> {

@@ -19,7 +19,7 @@ use nom::combinator::map;
 ///                     :effect (not (in ?x))
 ///                 )"#;
 ///
-/// let action = parse_structure_def(input.into());
+/// let action = parse_structure_def(input);
 ///
 /// assert!(action.is_value(
 ///     StructureDef::new_action(ActionDefinition::new(
@@ -48,13 +48,13 @@ use nom::combinator::map;
 ///     )
 /// )));
 /// ```
-pub fn parse_structure_def(input: Span) -> ParseResult<StructureDef> {
+pub fn parse_structure_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, StructureDef<'a>> {
     let action = map(parse_action_def, StructureDef::new_action);
     // :durative-actions
     let durative = map(parse_da_def, StructureDef::new_durative_action);
     // :derived-predicates
     let derived = map(parse_derived_predicate, StructureDef::new_derived);
-    alt((derived, action, durative))(input)
+    alt((derived, action, durative))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for StructureDef<'a> {

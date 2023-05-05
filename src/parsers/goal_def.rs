@@ -11,7 +11,7 @@ use nom::combinator::map;
 /// # use pddl::parsers::{parse_problem_goal_def, preamble::*};
 /// # use pddl::{AtomicFormula, GoalDef, GoalDefinition, PreferenceGD, PreconditionGoalDefinition, Term};
 /// let input = "(:goal (= x y))";
-/// assert!(parse_problem_goal_def(input.into()).is_value(
+/// assert!(parse_problem_goal_def(input).is_value(
 ///     GoalDef::from(
 ///         PreconditionGoalDefinition::Preference(
 ///             PreferenceGD::Goal(
@@ -26,8 +26,8 @@ use nom::combinator::map;
 ///     )
 /// ));
 /// ```
-pub fn parse_problem_goal_def(input: Span) -> ParseResult<GoalDef> {
-    map(prefix_expr(":goal", parse_pre_gd), GoalDef::new)(input)
+pub fn parse_problem_goal_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, GoalDef<'a>> {
+    map(prefix_expr(":goal", parse_pre_gd), GoalDef::new)(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for GoalDef<'a> {

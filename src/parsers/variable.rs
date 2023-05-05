@@ -20,8 +20,8 @@ use nom::sequence::preceded;
 /// assert!(parse_variable(Span::new("?-")).is_err());
 /// assert!(parse_variable(Span::new("?1")).is_err());
 ///```
-pub fn parse_variable<'a>(input: Span<'a>) -> ParseResult<'a, Variable> {
-    map(preceded(tag("?"), parse_name), Variable::from)(input)
+pub fn parse_variable<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Variable<'a>> {
+    map(preceded(tag("?"), parse_name), Variable::from)(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for Variable<'a> {

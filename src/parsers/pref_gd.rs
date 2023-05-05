@@ -15,7 +15,7 @@ use nom::sequence::{preceded, tuple};
 /// # use pddl::parsers::{parse_pref_gd, preamble::*};
 /// # use pddl::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Preference, PreferenceName, PreferenceGD, Term, Variable};
 /// // Simple goal definition.
-/// assert!(parse_pref_gd("(= x y)".into()).is_value(
+/// assert!(parse_pref_gd("(= x y)").is_value(
 ///     PreferenceGD::Goal(
 ///         GoalDefinition::AtomicFormula(
 ///             AtomicFormula::new_equality(
@@ -27,7 +27,7 @@ use nom::sequence::{preceded, tuple};
 /// ));
 ///
 /// // Named preference.
-/// assert!(parse_pref_gd("(preference p (= x y))".into()).is_value(
+/// assert!(parse_pref_gd("(preference p (= x y))").is_value(
 ///     PreferenceGD::Preference(
 ///         Preference::new(
 ///             Some(PreferenceName::from("p")),
@@ -42,7 +42,7 @@ use nom::sequence::{preceded, tuple};
 /// ));
 ///
 /// // Unnamed preference.
-/// assert!(parse_pref_gd("(preference (= x y))".into()).is_value(
+/// assert!(parse_pref_gd("(preference (= x y))").is_value(
 ///     PreferenceGD::Preference(
 ///         Preference::new(
 ///             None,
@@ -56,7 +56,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 /// ```
-pub fn parse_pref_gd(input: Span) -> ParseResult<PreferenceGD> {
+pub fn parse_pref_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PreferenceGD<'a>> {
     // :preferences
     let pref_named = map(
         prefix_expr(
@@ -72,7 +72,7 @@ pub fn parse_pref_gd(input: Span) -> ParseResult<PreferenceGD> {
 
     let gd = map(parse_gd, PreferenceGD::from_gd);
 
-    alt((pref_named, pref_unnamed, gd))(input)
+    alt((pref_named, pref_unnamed, gd))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for PreferenceGD<'a> {

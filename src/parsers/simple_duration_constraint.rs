@@ -16,7 +16,7 @@ use nom::sequence::{preceded, tuple};
 /// # use pddl::parsers::{parse_simple_duration_constraint, preamble::*};
 /// # use pddl::{DOp, DurationValue, FunctionType, SimpleDurationConstraint, TimeSpecifier};
 /// let input = "(>= ?duration 1.23)";
-/// assert!(parse_simple_duration_constraint(input.into()).is_value(
+/// assert!(parse_simple_duration_constraint(input).is_value(
 ///     SimpleDurationConstraint::new_op(
 ///         DOp::GreaterOrEqual,
 ///         DurationValue::new_number(1.23)
@@ -24,7 +24,7 @@ use nom::sequence::{preceded, tuple};
 /// ));
 ///
 /// let input = "(at end (<= ?duration 1.23))";
-/// assert!(parse_simple_duration_constraint(input.into()).is_value(
+/// assert!(parse_simple_duration_constraint(input).is_value(
 ///     SimpleDurationConstraint::new_at(
 ///         TimeSpecifier::End,
 ///         SimpleDurationConstraint::Op(
@@ -34,7 +34,9 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///```
-pub fn parse_simple_duration_constraint(input: Span) -> ParseResult<SimpleDurationConstraint> {
+pub fn parse_simple_duration_constraint<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, SimpleDurationConstraint<'a>> {
     let op = map(
         parens(tuple((
             parse_d_op,
@@ -57,7 +59,7 @@ pub fn parse_simple_duration_constraint(input: Span) -> ParseResult<SimpleDurati
         SimpleDurationConstraint::from,
     );
 
-    alt((op, at))(input)
+    alt((op, at))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for SimpleDurationConstraint<'a> {

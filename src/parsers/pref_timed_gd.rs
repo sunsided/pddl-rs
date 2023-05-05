@@ -14,7 +14,7 @@ use nom::sequence::{terminated, tuple};
 /// ```
 /// # use pddl::parsers::{parse_pref_timed_gd, preamble::*};
 /// # use pddl::{AtomicFormula, GoalDefinition, Interval, PrefTimedGD, Term, TimedGD, TimeSpecifier};
-/// assert!(parse_pref_timed_gd("(at start (= x y))".into()).is_value(
+/// assert!(parse_pref_timed_gd("(at start (= x y))").is_value(
 ///     PrefTimedGD::Required(
 ///         TimedGD::new_at(
 ///             TimeSpecifier::Start,
@@ -29,7 +29,7 @@ use nom::sequence::{terminated, tuple};
 /// ));
 ///
 ///
-/// assert!(parse_pref_timed_gd("(preference (over all (= x y)))".into()).is_value(
+/// assert!(parse_pref_timed_gd("(preference (over all (= x y)))").is_value(
 ///     PrefTimedGD::Preference(
 ///         None,
 ///         TimedGD::new_over(
@@ -44,7 +44,7 @@ use nom::sequence::{terminated, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_pref_timed_gd("(preference pref-name (over all (= x y)))".into()).is_value(
+/// assert!(parse_pref_timed_gd("(preference pref-name (over all (= x y)))").is_value(
 ///     PrefTimedGD::Preference(
 ///         Some("pref-name".into()),
 ///         TimedGD::new_over(
@@ -59,7 +59,7 @@ use nom::sequence::{terminated, tuple};
 ///     )
 /// ));
 /// ```
-pub fn parse_pref_timed_gd(input: Span) -> ParseResult<PrefTimedGD> {
+pub fn parse_pref_timed_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PrefTimedGD<'a>> {
     let required = map(parse_timed_gd, PrefTimedGD::from);
 
     // :preferences
@@ -74,7 +74,7 @@ pub fn parse_pref_timed_gd(input: Span) -> ParseResult<PrefTimedGD> {
         PrefTimedGD::from,
     );
 
-    alt((preference, required))(input)
+    alt((preference, required))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for PrefTimedGD<'a> {

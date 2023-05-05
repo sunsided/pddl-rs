@@ -45,14 +45,16 @@ use nom::sequence::{preceded, tuple};
 ///                 )
 ///     )"#;
 ///
-/// let (_, da_def) = parse_da_def(input.into()).unwrap();
+/// let (_, da_def) = parse_da_def(input).unwrap();
 /// assert_eq!(da_def.symbol(), &"move".into());
 /// assert_eq!(da_def.parameters().len(), 3);
 /// assert!(da_def.duration().is_some());
 /// assert!(da_def.condition().is_some());
 /// assert!(da_def.effect().is_some());
 /// ```
-pub fn parse_da_def(input: Span) -> ParseResult<DurativeActionDefinition> {
+pub fn parse_da_def<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, DurativeActionDefinition<'a>> {
     let parameters = preceded(
         tag(":parameters"),
         preceded(multispace1, parens(typed_list(parse_variable))),
@@ -88,7 +90,7 @@ pub fn parse_da_def(input: Span) -> ParseResult<DurativeActionDefinition> {
         |(symbol, parameters, duration, condition, effect)| {
             DurativeActionDefinition::new(symbol, parameters, duration, condition, effect)
         },
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for DurativeActionDefinition<'a> {

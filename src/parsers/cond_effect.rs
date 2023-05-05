@@ -12,7 +12,7 @@ use nom::combinator::map;
 /// ```
 /// # use pddl::parsers::{parse_cond_effect, preamble::*};
 /// # use pddl::{AtomicFormula, CEffect, ConditionalEffect, EqualityAtomicFormula, PEffect, Term};
-/// assert!(parse_cond_effect("(= x y)".into()).is_value(
+/// assert!(parse_cond_effect("(= x y)").is_value(
 ///     ConditionalEffect::Single(
 ///         PEffect::AtomicFormula(AtomicFormula::Equality(
 ///             EqualityAtomicFormula::new(
@@ -23,7 +23,7 @@ use nom::combinator::map;
 ///     )
 /// ));
 ///
-/// assert!(parse_cond_effect("(and (= x y) (not (= ?a B)))".into()).is_value(
+/// assert!(parse_cond_effect("(and (= x y) (not (= ?a B)))").is_value(
 ///     ConditionalEffect::All(vec![
 ///         PEffect::AtomicFormula(AtomicFormula::Equality(
 ///             EqualityAtomicFormula::new(
@@ -40,14 +40,16 @@ use nom::combinator::map;
 ///     ])
 /// ));
 /// ```
-pub fn parse_cond_effect(input: Span) -> ParseResult<ConditionalEffect> {
+pub fn parse_cond_effect<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, ConditionalEffect<'a>> {
     let exactly = map(parse_p_effect, ConditionalEffect::from);
     let all = map(
         prefix_expr("and", space_separated_list0(parse_p_effect)),
         ConditionalEffect::from,
     );
 
-    alt((all, exactly))(input)
+    alt((all, exactly))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for ConditionalEffect<'a> {

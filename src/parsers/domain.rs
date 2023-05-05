@@ -48,7 +48,7 @@ use nom::sequence::{preceded, tuple};
 ///            :effect (not (in ?x)) )
 ///     )"#;
 ///
-/// let (remainder, domain) = parse_domain(input.into()).unwrap();
+/// let (remainder, domain) = parse_domain(input).unwrap();
 ///
 /// assert!(remainder.is_empty());
 /// assert_eq!(domain.name(), &Name::new("briefcase-world"));
@@ -59,7 +59,7 @@ use nom::sequence::{preceded, tuple};
 /// assert!(domain.constraints().is_empty());
 /// assert_eq!(domain.structure().len(), 3);
 /// ```
-pub fn parse_domain(input: Span) -> ParseResult<Domain> {
+pub fn parse_domain<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Domain<'a>> {
     map(
         ws(prefix_expr(
             "define",
@@ -107,7 +107,7 @@ pub fn parse_domain(input: Span) -> ParseResult<Domain> {
                 .with_functions(functions.unwrap_or(Functions::default()))
                 .with_constraints(constraints.unwrap_or(DomainConstraintsDef::default()))
         },
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for Domain<'a> {

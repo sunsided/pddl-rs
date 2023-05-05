@@ -15,7 +15,7 @@ use nom::sequence::{preceded, tuple};
 /// ```
 /// # use pddl::parsers::{parse_init_el, preamble::*};
 /// # use pddl::{AtomicFormula, BasicFunctionTerm, InitElement, Name, NameLiteral, Number, Predicate};
-/// assert!(parse_init_el("(train-not-in-use train1)".into()).is_value(
+/// assert!(parse_init_el("(train-not-in-use train1)").is_value(
 ///     InitElement::new_literal(
 ///         NameLiteral::new(
 ///             AtomicFormula::new_predicate(
@@ -26,7 +26,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_init_el("(at 10 (train-not-in-use train2))".into()).is_value(
+/// assert!(parse_init_el("(at 10 (train-not-in-use train2))").is_value(
 ///     InitElement::new_at(
 ///         Number::from(10),
 ///         NameLiteral::new(
@@ -38,21 +38,21 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_init_el("(= (battery rover) 100)".into()).is_value(
+/// assert!(parse_init_el("(= (battery rover) 100)").is_value(
 ///     InitElement::new_is_value(
 ///         BasicFunctionTerm::new("battery".into(), ["rover".into()]),
 ///         Number::from(100)
 ///     )
 /// ));
 ///
-/// assert!(parse_init_el("(= (location rover) base)".into()).is_value(
+/// assert!(parse_init_el("(= (location rover) base)").is_value(
 ///     InitElement::new_is_object(
 ///         BasicFunctionTerm::new("location".into(), ["rover".into()]),
 ///         Name::from("base")
 ///     )
 /// ));
 /// ```
-pub fn parse_init_el(input: Span) -> ParseResult<InitElement> {
+pub fn parse_init_el<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, InitElement<'a>> {
     let literal_ = map(literal(parse_name), InitElement::new_literal);
 
     // :timed-initial-literals
@@ -85,7 +85,7 @@ pub fn parse_init_el(input: Span) -> ParseResult<InitElement> {
         |(fun, name)| InitElement::new_is_object(fun, name),
     );
 
-    alt((literal_, at, is_numeric, is_object))(input)
+    alt((literal_, at, is_numeric, is_object))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for InitElement<'a> {

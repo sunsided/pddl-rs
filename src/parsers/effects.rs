@@ -12,7 +12,7 @@ use nom::combinator::map;
 /// ```
 /// # use pddl::parsers::{parse_effect, preamble::*};
 /// # use pddl::{AtomicFormula, CEffect, Effects, EqualityAtomicFormula, PEffect, Term};
-/// assert!(parse_effect("(= x y)".into()).is_value(
+/// assert!(parse_effect("(= x y)").is_value(
 ///     Effects::new(
 ///         CEffect::Effect(
 ///             PEffect::AtomicFormula(AtomicFormula::Equality(
@@ -24,7 +24,7 @@ use nom::combinator::map;
 ///         )
 ///     )
 /// ));
-/// assert!(parse_effect("(and (= x y) (not (= ?a B)))".into()).is_value(
+/// assert!(parse_effect("(and (= x y) (not (= ?a B)))").is_value(
 ///     Effects::from_iter([
 ///         CEffect::Effect(
 ///             PEffect::AtomicFormula(AtomicFormula::Equality(
@@ -45,14 +45,14 @@ use nom::combinator::map;
 ///     ])
 /// ));
 /// ```
-pub fn parse_effect<'a>(input: Span<'a>) -> ParseResult<'a, Effects> {
+pub fn parse_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Effects<'a>> {
     let exactly = map(parse_c_effect, Effects::from);
     let all = map(
         prefix_expr("and", space_separated_list0(parse_c_effect)),
         Effects::from,
     );
 
-    alt((exactly, all))(input)
+    alt((exactly, all))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for Effects<'a> {

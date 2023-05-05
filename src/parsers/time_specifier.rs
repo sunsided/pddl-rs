@@ -13,13 +13,13 @@ use nom::combinator::map;
 /// ```
 /// # use pddl::parsers::{parse_time_specifier, preamble::*};
 /// # use pddl::{TimeSpecifier};
-/// assert!(parse_time_specifier("start".into()).is_value(TimeSpecifier::Start));
-/// assert!(parse_time_specifier("end".into()).is_value(TimeSpecifier::End));
+/// assert!(parse_time_specifier("start").is_value(TimeSpecifier::Start));
+/// assert!(parse_time_specifier("end").is_value(TimeSpecifier::End));
 ///```
-pub fn parse_time_specifier(input: Span) -> ParseResult<TimeSpecifier> {
+pub fn parse_time_specifier<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimeSpecifier> {
     map(alt((tag(names::START), tag(names::END))), |x: Span| {
         TimeSpecifier::try_from(*x.fragment()).expect("unhandled variant")
-    })(input)
+    })(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for TimeSpecifier {

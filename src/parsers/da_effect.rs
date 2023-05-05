@@ -15,7 +15,7 @@ use nom::sequence::{preceded, tuple};
 /// # use pddl::parsers::{parse_da_effect, preamble::*};
 /// # use pddl::{AtomicFormula, ConditionalEffect, DurativeActionEffect, EqualityAtomicFormula, PEffect, Term, TimedEffect, TimeSpecifier, Variable};
 /// # use pddl::{Typed, TypedList};
-/// assert!(parse_da_effect("(at start (= x y))".into()).is_value(
+/// assert!(parse_da_effect("(at start (= x y))").is_value(
 ///     DurativeActionEffect::Timed(
 ///         TimedEffect::new_conditional(
 ///             TimeSpecifier::Start,
@@ -31,11 +31,11 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_da_effect("(and )".into()).is_value(
+/// assert!(parse_da_effect("(and )").is_value(
 ///     DurativeActionEffect::new_and([])
 /// ));
 ///
-/// assert!(parse_da_effect("(and (at start (= x y)) (and ))".into()).is_value(
+/// assert!(parse_da_effect("(and (at start (= x y)) (and ))").is_value(
 ///     DurativeActionEffect::new_and([
 ///         DurativeActionEffect::Timed(
 ///             TimedEffect::new_conditional(
@@ -54,7 +54,7 @@ use nom::sequence::{preceded, tuple};
 ///     ])
 /// ));
 ///
-/// assert!(parse_da_effect("(forall (?a ?b) (at start (= a b)))".into()).is_value(
+/// assert!(parse_da_effect("(forall (?a ?b) (at start (= a b)))").is_value(
 ///     DurativeActionEffect::new_forall(
 ///         TypedList::from_iter([
 ///             Typed::new_object(Variable::from_str("a")),
@@ -76,7 +76,9 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 /// ```
-pub fn parse_da_effect(input: Span) -> ParseResult<DurativeActionEffect> {
+pub fn parse_da_effect<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, DurativeActionEffect<'a>> {
     let exactly = map(parse_timed_effect, DurativeActionEffect::from);
 
     let all = map(
@@ -105,7 +107,7 @@ pub fn parse_da_effect(input: Span) -> ParseResult<DurativeActionEffect> {
         DurativeActionEffect::from,
     );
 
-    alt((all, forall, when, exactly))(input)
+    alt((all, forall, when, exactly))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for DurativeActionEffect<'a> {

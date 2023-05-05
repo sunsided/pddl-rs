@@ -14,21 +14,21 @@ use nom::sequence::{preceded, tuple};
 /// ```
 /// # use pddl::parsers::{parse_f_head, preamble::*};
 /// # use pddl::{FunctionTerm, Variable, FunctionSymbol, Term, FHead};
-/// assert!(parse_f_head("fun-sym".into()).is_value(
+/// assert!(parse_f_head("fun-sym").is_value(
 ///     FHead::new(FunctionSymbol::from_str("fun-sym"))
 /// ));
 ///
-/// assert!(parse_f_head("(fun-sym)".into()).is_value(
+/// assert!(parse_f_head("(fun-sym)").is_value(
 ///     FHead::new(FunctionSymbol::from_str("fun-sym"))
 /// ));
 ///
-/// assert!(parse_f_head("(fun-sym term)".into()).is_value(
+/// assert!(parse_f_head("(fun-sym term)").is_value(
 ///     FHead::new_with_terms(FunctionSymbol::from_str("fun-sym"), [
 ///         Term::Name("term".into())
 ///     ])
 /// ));
 ///```
-pub fn parse_f_head(input: Span) -> ParseResult<FHead> {
+pub fn parse_f_head<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FHead<'a>> {
     let simple = map(parse_function_symbol, FHead::new);
     let simple_parens = map(parens(parse_function_symbol), FHead::new);
     let with_terms = map(
@@ -39,7 +39,7 @@ pub fn parse_f_head(input: Span) -> ParseResult<FHead> {
         |(symbol, terms)| FHead::new_with_terms(symbol, terms),
     );
 
-    alt((simple, simple_parens, with_terms))(input)
+    alt((simple, simple_parens, with_terms))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for FHead<'a> {

@@ -51,7 +51,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 /// ```
-pub fn parse_action_def<'a>(input: Span<'a>) -> ParseResult<'a, ActionDefinition> {
+pub fn parse_action_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ActionDefinition<'a>> {
     let precondition = preceded(
         tag(":precondition"),
         preceded(multispace1, empty_or(parse_pre_gd)),
@@ -81,7 +81,7 @@ pub fn parse_action_def<'a>(input: Span<'a>) -> ParseResult<'a, ActionDefinition
             preconditions.flatten().into(),
             effects.flatten(),
         )
-    })(input)
+    })(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for ActionDefinition<'a> {

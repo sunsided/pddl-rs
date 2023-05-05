@@ -18,7 +18,7 @@ use nom::sequence::{preceded, tuple};
 /// # use pddl::parsers::{parse_timed_effect, preamble::*};
 /// # use pddl::{AssignOp, AssignOpT, AtomicFormula, CEffect, ConditionalEffect, EqualityAtomicFormula, FAssignDa, FExpDa, FExpT, FHead, PEffect, Term, TimedEffect, TimeSpecifier};
 /// # use pddl::FExpDa::FExp;
-/// assert!(parse_timed_effect("(at start (= x y))".into()).is_value(
+/// assert!(parse_timed_effect("(at start (= x y))").is_value(
 ///     TimedEffect::new_conditional(
 ///         TimeSpecifier::Start,
 ///         ConditionalEffect::new(
@@ -32,7 +32,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_timed_effect("(at end (assign fun-sym ?duration))".into()).is_value(
+/// assert!(parse_timed_effect("(at end (assign fun-sym ?duration))").is_value(
 ///     TimedEffect::new_fluent(
 ///         TimeSpecifier::End,
 ///         FAssignDa::new(
@@ -43,7 +43,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_timed_effect("(increase fun-sym #t)".into()).is_value(
+/// assert!(parse_timed_effect("(increase fun-sym #t)").is_value(
 ///     TimedEffect::new_continuous(
 ///         AssignOpT::Increase,
 ///         FHead::Simple("fun-sym".into()),
@@ -51,7 +51,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 /// ```
-pub fn parse_timed_effect(input: Span) -> ParseResult<TimedEffect> {
+pub fn parse_timed_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedEffect<'a>> {
     let cond = map(
         prefix_expr(
             "at",
@@ -85,7 +85,7 @@ pub fn parse_timed_effect(input: Span) -> ParseResult<TimedEffect> {
         TimedEffect::from,
     );
 
-    alt((fluent, cond, continuous))(input)
+    alt((fluent, cond, continuous))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for TimedEffect<'a> {

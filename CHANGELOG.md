@@ -21,6 +21,7 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The parser now uses [nom-greedyerror](https://github.com/dalance/nom-greedyerror) and 
   [nom_locate](https://github.com/fflorent/nom_locate) to improve error handling.
 - The `Parser` trait now takes an `T: Into<Span<'a>>` argument.
+- All parser methods now take an `T: Into<Span<'a>>` argument.
 
 ### Fixed
 

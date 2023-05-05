@@ -16,11 +16,11 @@ use nom::combinator::map;
 /// assert!(parse_assign_op_t(Span::new("increase")).is_value(AssignOpT::Increase));
 /// assert!(parse_assign_op_t(Span::new("decrease")).is_value(AssignOpT::Decrease));
 ///```
-pub fn parse_assign_op_t(input: Span) -> ParseResult<AssignOpT> {
+pub fn parse_assign_op_t<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, AssignOpT> {
     map(
         alt((tag(names::INCREASE), tag(names::DECREASE))),
         |x: Span| AssignOpT::try_from(*x.fragment()).expect("unhandled variant"),
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for AssignOpT {

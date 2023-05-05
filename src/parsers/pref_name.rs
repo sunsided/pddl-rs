@@ -8,10 +8,10 @@ use nom::combinator::map;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_pref_name, preamble::*};
-/// assert!(parse_pref_name("abcde".into()).is_value("abcde".into()));
+/// assert!(parse_pref_name("abcde").is_value("abcde".into()));
 ///```
-pub fn parse_pref_name(input: Span) -> ParseResult<PreferenceName> {
-    map(parse_name, PreferenceName::new)(input)
+pub fn parse_pref_name<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PreferenceName<'a>> {
+    map(parse_name, PreferenceName::new)(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for PreferenceName<'a> {

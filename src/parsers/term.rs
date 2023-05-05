@@ -12,10 +12,10 @@ use nom::error_position;
 /// ```
 /// # use pddl::parsers::{parse_term, preamble::*};
 /// # use pddl::Term;
-/// assert!(parse_term("abcde".into()).is_value(Term::Name("abcde".into())));
-/// assert!(parse_term("?abcde".into()).is_value(Term::Variable("abcde".into())));
+/// assert!(parse_term("abcde").is_value(Term::Name("abcde".into())));
+/// assert!(parse_term("?abcde").is_value(Term::Variable("abcde".into())));
 ///```
-pub fn parse_term(input: Span) -> ParseResult<Term> {
+pub fn parse_term<'a, T: Into<Span<'a>> + Copy>(input: T) -> ParseResult<'a, Term<'a>> {
     if let Ok((remaining, variable)) = parse_variable(input) {
         return Ok((remaining, Term::Variable(variable)));
     }
@@ -28,7 +28,10 @@ pub fn parse_term(input: Span) -> ParseResult<Term> {
         return Ok((remaining, Term::Function(ft)));
     }
 
-    return Err(nom::Err::Error(error_position!(input, ErrorKind::Alt)));
+    return Err(nom::Err::Error(error_position!(
+        input.into(),
+        ErrorKind::Alt
+    )));
 }
 
 impl<'a> crate::parsers::Parser<'a> for Term<'a> {

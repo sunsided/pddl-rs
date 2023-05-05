@@ -17,7 +17,7 @@ use nom::combinator::map;
 ///                     (in ?x ?y - physob)
 ///                )"#;
 ///
-/// assert!(parse_predicates_def(input.into()).is_value(
+/// assert!(parse_predicates_def(input).is_value(
 ///     PredicateDefinitions::new(vec![
 ///         AtomicFormulaSkeleton::new(
 ///             Predicate::from("at"),
@@ -34,14 +34,16 @@ use nom::combinator::map;
 ///     ])
 /// ));
 /// ```
-pub fn parse_predicates_def(input: Span) -> ParseResult<PredicateDefinitions> {
+pub fn parse_predicates_def<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, PredicateDefinitions<'a>> {
     map(
         prefix_expr(
             ":predicates",
             space_separated_list1(parse_atomic_formula_skeleton),
         ),
         |vec| PredicateDefinitions::new(vec),
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for PredicateDefinitions<'a> {

@@ -91,12 +91,12 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 /// ```
-pub fn parse_c_effect<'a>(input: Span<'a>) -> ParseResult<'a, CEffect> {
+pub fn parse_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, CEffect<'a>> {
     let p_effect = map(parse_p_effect, CEffect::from);
     let forall = map(parse_forall_c_effect, CEffect::from);
     let when = map(parse_when_c_effect, CEffect::from);
 
-    alt((forall, when, p_effect))(input)
+    alt((forall, when, p_effect))(input.into())
 }
 
 /// Parser that parses [`ForallCEffect`] values.

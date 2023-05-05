@@ -11,18 +11,20 @@ use nom::combinator::map;
 /// # use pddl::parsers::{parse_problem_objects_declaration, preamble::*};
 /// # use pddl::{Name, Objects, ToTyped, Type};
 /// let input = "(:objects train1 train2)";
-/// assert!(parse_problem_objects_declaration(input.into()).is_value(
+/// assert!(parse_problem_objects_declaration(input).is_value(
 ///     Objects::new([
 ///         Name::new("train1").to_typed(Type::OBJECT),
 ///         Name::new("train2").to_typed(Type::OBJECT),
 ///     ])
 /// ));
 /// ```
-pub fn parse_problem_objects_declaration(input: Span) -> ParseResult<Objects> {
+pub fn parse_problem_objects_declaration<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, Objects<'a>> {
     map(
         prefix_expr(":objects", typed_list(parse_name)),
         Objects::new,
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for Objects<'a> {

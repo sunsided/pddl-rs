@@ -12,14 +12,16 @@ use nom::sequence::{preceded, tuple};
 /// ```
 /// # use pddl::parsers::{parse_problem_metric_spec, preamble::*};
 /// # use pddl::{MetricFExp, MetricSpec, Optimization};
-/// assert!(parse_problem_metric_spec("(:metric minimize total-time)".into()).is_value(
+/// assert!(parse_problem_metric_spec("(:metric minimize total-time)").is_value(
 ///     MetricSpec::new(
 ///         Optimization::Minimize,
 ///         MetricFExp::TotalTime
 ///     )
 /// ));
 ///```
-pub fn parse_problem_metric_spec(input: Span) -> ParseResult<MetricSpec> {
+pub fn parse_problem_metric_spec<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, MetricSpec<'a>> {
     // :numeric-fluents
     map(
         prefix_expr(
@@ -30,7 +32,7 @@ pub fn parse_problem_metric_spec(input: Span) -> ParseResult<MetricSpec> {
             )),
         ),
         |(optimization, exp)| MetricSpec::new(optimization, exp),
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for MetricSpec<'a> {

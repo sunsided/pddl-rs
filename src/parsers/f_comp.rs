@@ -13,7 +13,7 @@ use nom::sequence::{preceded, tuple};
 /// ```
 /// # use pddl::parsers::{parse_f_comp, preamble::*};
 /// # use pddl::{FunctionTerm, Variable, FunctionSymbol, Term, FComp, BinaryComp, FExp, BinaryOp};
-/// assert!(parse_f_comp("(= (+ 1.23 2.34) (+ 1.23 2.34))".into()).is_value(
+/// assert!(parse_f_comp("(= (+ 1.23 2.34) (+ 1.23 2.34))").is_value(
 ///     FComp::new(
 ///         BinaryComp::Equal,
 ///         FExp::new_binary_op(
@@ -29,7 +29,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///```
-pub fn parse_f_comp(input: Span) -> ParseResult<FComp> {
+pub fn parse_f_comp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FComp<'a>> {
     map(
         parens(tuple((
             parse_binary_comp,
@@ -37,7 +37,7 @@ pub fn parse_f_comp(input: Span) -> ParseResult<FComp> {
             preceded(multispace1, parse_f_exp),
         ))),
         FComp::from,
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for FComp<'a> {

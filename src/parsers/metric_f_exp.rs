@@ -18,17 +18,17 @@ use nom::sequence::{preceded, tuple};
 /// ```
 /// # use pddl::parsers::{parse_metric_f_exp, preamble::*};
 /// # use pddl::{BinaryOp, MetricFExp, FunctionSymbol, MultiOp, Name, PreferenceName};
-/// assert!(parse_metric_f_exp("1.23".into()).is_value(
+/// assert!(parse_metric_f_exp("1.23").is_value(
 ///     MetricFExp::new_number(1.23)
 /// ));
 ///
-/// assert!(parse_metric_f_exp("(- total-time)".into()).is_value(
+/// assert!(parse_metric_f_exp("(- total-time)").is_value(
 ///     MetricFExp::new_negative(
 ///         MetricFExp::TotalTime
 ///     )
 /// ));
 ///
-/// assert!(parse_metric_f_exp("(+ 1.23 2.34)".into()).is_value(
+/// assert!(parse_metric_f_exp("(+ 1.23 2.34)").is_value(
 ///     MetricFExp::new_binary_op(
 ///         BinaryOp::Addition,
 ///         MetricFExp::new_number(1.23),
@@ -36,7 +36,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_metric_f_exp("(+ 1.23 2.34 3.45)".into()).is_value(
+/// assert!(parse_metric_f_exp("(+ 1.23 2.34 3.45)").is_value(
 ///     MetricFExp::new_multi_op(
 ///         MultiOp::Addition,
 ///         MetricFExp::new_number(1.23),
@@ -44,27 +44,27 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_metric_f_exp("(is-violated preference)".into()).is_value(
+/// assert!(parse_metric_f_exp("(is-violated preference)").is_value(
 ///     MetricFExp::new_is_violated(
 ///         PreferenceName::from("preference")
 ///     )
 /// ));
 ///
-/// assert!(parse_metric_f_exp("fun-sym".into()).is_value(
+/// assert!(parse_metric_f_exp("fun-sym").is_value(
 ///     MetricFExp::new_function(
 ///         FunctionSymbol::from_str("fun-sym"),
 ///         []
 ///     )
 /// ));
 ///
-/// assert!(parse_metric_f_exp("(fun-sym)".into()).is_value(
+/// assert!(parse_metric_f_exp("(fun-sym)").is_value(
 ///     MetricFExp::new_function(
 ///         FunctionSymbol::from_str("fun-sym"),
 ///         []
 ///     )
 /// ));
 ///
-/// assert!(parse_metric_f_exp("(fun-sym a b c)".into()).is_value(
+/// assert!(parse_metric_f_exp("(fun-sym a b c)").is_value(
 ///     MetricFExp::new_function(
 ///         FunctionSymbol::from_str("fun-sym"),
 ///         [
@@ -75,7 +75,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///```
-pub fn parse_metric_f_exp(input: Span) -> ParseResult<MetricFExp> {
+pub fn parse_metric_f_exp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, MetricFExp<'a>> {
     let binary_op = map(
         parens(tuple((
             parse_binary_op,
@@ -132,7 +132,7 @@ pub fn parse_metric_f_exp(input: Span) -> ParseResult<MetricFExp> {
         is_violated,
         complex_function,
         simple_function,
-    ))(input)
+    ))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for MetricFExp<'a> {

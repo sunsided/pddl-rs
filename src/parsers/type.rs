@@ -15,7 +15,7 @@ use nom::error_position;
 /// assert!(parse_type(Span::new("object")).is_value(Type::Exactly("object".into())));
 /// assert!(parse_type(Span::new("(either object number)")).is_value(Type::from_iter(["object", "number"])));
 ///```
-pub fn parse_type<'a>(input: Span<'a>) -> ParseResult<'a, Type> {
+pub fn parse_type<'a, T: Into<Span<'a>> + Copy>(input: T) -> ParseResult<'a, Type<'a>> {
     if let Ok((remaining, r#type)) = parse_primitive_type(input) {
         return Ok((remaining, Type::Exactly(r#type)));
     }
@@ -24,12 +24,15 @@ pub fn parse_type<'a>(input: Span<'a>) -> ParseResult<'a, Type> {
         return Ok((remaining, Type::EitherOf(types)));
     }
 
-    Err(nom::Err::Failure(error_position!(input, ErrorKind::Alt)))
+    Err(nom::Err::Failure(error_position!(
+        input.into(),
+        ErrorKind::Alt
+    )))
 }
 
 /// Parses a either type, i.e. `(either a b c)`.
-fn parse_either_type<'a>(input: Span<'a>) -> ParseResult<'a, Vec<PrimitiveType>> {
-    prefix_expr("either", space_separated_list1(parse_primitive_type))(input)
+fn parse_either_type<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Vec<PrimitiveType<'a>>> {
+    prefix_expr("either", space_separated_list1(parse_primitive_type))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for Type<'a> {

@@ -12,9 +12,9 @@ use nom::sequence::{preceded, tuple};
 /// ## Example
 /// ```
 /// # use pddl::parsers::parse_f_assign_da;
-/// assert!(parse_f_assign_da("(assign fun-sym ?duration)".into()).is_ok());
+/// assert!(parse_f_assign_da("(assign fun-sym ?duration)").is_ok());
 ///```
-pub fn parse_f_assign_da(input: Span) -> ParseResult<FAssignDa> {
+pub fn parse_f_assign_da<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FAssignDa<'a>> {
     map(
         parens(tuple((
             parse_assign_op,
@@ -22,7 +22,7 @@ pub fn parse_f_assign_da(input: Span) -> ParseResult<FAssignDa> {
             preceded(multispace1, parse_f_exp_da),
         ))),
         FAssignDa::from,
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for FAssignDa<'a> {

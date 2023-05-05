@@ -14,7 +14,7 @@ use nom::sequence::{preceded, tuple};
 /// ```
 /// # use pddl::parsers::{parse_timed_gd, preamble::*};
 /// # use pddl::{AtomicFormula, GoalDefinition, Interval, Term, TimedGD, TimeSpecifier};
-/// assert!(parse_timed_gd("(at start (= x y))".into()).is_value(
+/// assert!(parse_timed_gd("(at start (= x y))").is_value(
 ///     TimedGD::new_at(
 ///         TimeSpecifier::Start,
 ///         GoalDefinition::AtomicFormula(
@@ -26,7 +26,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_timed_gd("(over all (= x y))".into()).is_value(
+/// assert!(parse_timed_gd("(over all (= x y))").is_value(
 ///     TimedGD::new_over(
 ///         Interval::All,
 ///         GoalDefinition::AtomicFormula(
@@ -38,7 +38,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 /// ```
-pub fn parse_timed_gd(input: Span) -> ParseResult<TimedGD> {
+pub fn parse_timed_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedGD<'a>> {
     let at = map(
         prefix_expr(
             "at",
@@ -55,7 +55,7 @@ pub fn parse_timed_gd(input: Span) -> ParseResult<TimedGD> {
         TimedGD::from,
     );
 
-    alt((at, over))(input)
+    alt((at, over))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for TimedGD<'a> {

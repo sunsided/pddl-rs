@@ -14,10 +14,10 @@ use nom::combinator::map;
 /// # use pddl::parsers::{parse_duration_constraint, preamble::*};
 /// # use pddl::{DOp, DurationConstraint, DurationValue, FunctionType, SimpleDurationConstraint, TimeSpecifier};
 /// let input = "()";
-/// assert!(parse_duration_constraint(input.into()).is_value(None));
+/// assert!(parse_duration_constraint(input).is_value(None));
 ///
 /// let input = "(= ?duration 5)";
-/// assert!(parse_duration_constraint(input.into()).is_value(
+/// assert!(parse_duration_constraint(input).is_value(
 ///     Some(DurationConstraint::new(
 ///         SimpleDurationConstraint::Op(
 ///             DOp::Equal,
@@ -27,7 +27,7 @@ use nom::combinator::map;
 /// ));
 ///
 /// let input = "(at end (<= ?duration 1.23))";
-/// assert!(parse_duration_constraint(input.into()).is_value(
+/// assert!(parse_duration_constraint(input).is_value(
 ///     Some(DurationConstraint::new(
 ///         SimpleDurationConstraint::new_at(
 ///             TimeSpecifier::End,
@@ -40,7 +40,7 @@ use nom::combinator::map;
 /// ));
 ///
 /// let input = "(and (at end (<= ?duration 1.23)) (>= ?duration 1.0))";
-/// assert!(parse_duration_constraint(input.into()).is_value(
+/// assert!(parse_duration_constraint(input).is_value(
 ///     Some(DurationConstraint::new_all([
 ///         SimpleDurationConstraint::new_at(
 ///             TimeSpecifier::End,
@@ -56,7 +56,9 @@ use nom::combinator::map;
 ///     ]))
 /// ));
 ///```
-pub fn parse_duration_constraint(input: Span) -> ParseResult<Option<DurationConstraint>> {
+pub fn parse_duration_constraint<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, Option<DurationConstraint<'a>>> {
     let none = map(tag("()"), |_| None);
     let simple = map(parse_simple_duration_constraint, |c| {
         Some(DurationConstraint::from(c))
@@ -71,7 +73,7 @@ pub fn parse_duration_constraint(input: Span) -> ParseResult<Option<DurationCons
         |cs| Some(DurationConstraint::from_iter(cs)),
     );
 
-    alt((none, simple, and))(input)
+    alt((none, simple, and))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for DurationConstraint<'a> {

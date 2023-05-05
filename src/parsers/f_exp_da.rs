@@ -15,11 +15,11 @@ use nom::sequence::{preceded, tuple};
 /// ```
 /// # use pddl::parsers::{parse_f_exp_da, preamble::*};
 /// # use pddl::{BinaryOp, FExpDa, FExp, FunctionSymbol, MultiOp};
-/// assert!(parse_f_exp_da("?duration".into()).is_value(
+/// assert!(parse_f_exp_da("?duration").is_value(
 ///     FExpDa::Duration
 /// ));
 ///
-/// assert!(parse_f_exp_da("(+ 1.23 2.34)".into()).is_value(
+/// assert!(parse_f_exp_da("(+ 1.23 2.34)").is_value(
 ///     FExpDa::new_binary_op(
 ///         BinaryOp::Addition,
 ///             FExpDa::new_f_exp(FExp::new_number(1.23)),
@@ -27,7 +27,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_f_exp_da("(+ 1.23 2.34 3.45)".into()).is_value(
+/// assert!(parse_f_exp_da("(+ 1.23 2.34 3.45)").is_value(
 ///     FExpDa::new_multi_op(
 ///         MultiOp::Addition,
 ///         FExpDa::new_f_exp(FExp::new_number(1.23)),
@@ -35,7 +35,7 @@ use nom::sequence::{preceded, tuple};
 ///     )
 /// ));
 ///```
-pub fn parse_f_exp_da(input: Span) -> ParseResult<FExpDa> {
+pub fn parse_f_exp_da<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExpDa<'a>> {
     // :duration-inequalities
     let duration = map(tag("?duration"), |_| FExpDa::new_duration());
 
@@ -64,7 +64,7 @@ pub fn parse_f_exp_da(input: Span) -> ParseResult<FExpDa> {
 
     let f_exp = map(parse_f_exp, FExpDa::new_f_exp);
 
-    alt((duration, binary_op, multi_op, negated, f_exp))(input)
+    alt((duration, binary_op, multi_op, negated, f_exp))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for FExpDa<'a> {

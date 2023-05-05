@@ -15,9 +15,9 @@ use nom::sequence::{preceded, terminated, tuple};
 /// ```
 /// # use pddl::parsers::{parse_f_exp, parse_f_exp_t, preamble::*};
 /// # use pddl::{BinaryOp, FExp, FExpT, FHead, FunctionSymbol, MultiOp, Term, Variable};
-/// assert!(parse_f_exp_t("#t".into()).is_value(FExpT::Now));
+/// assert!(parse_f_exp_t("#t").is_value(FExpT::Now));
 ///
-/// assert!(parse_f_exp_t("(* (fuel ?tank) #t)".into()).is_value(
+/// assert!(parse_f_exp_t("(* (fuel ?tank) #t)").is_value(
 ///     FExpT::new_scaled(
 ///         FExp::new_function(
 ///             FHead::new_with_terms(
@@ -28,7 +28,7 @@ use nom::sequence::{preceded, terminated, tuple};
 ///     )
 /// ));
 ///
-/// assert!(parse_f_exp_t("(* #t (fuel ?tank))".into()).is_value(
+/// assert!(parse_f_exp_t("(* #t (fuel ?tank))").is_value(
 ///     FExpT::new_scaled(
 ///         FExp::new_function(
 ///             FHead::new_with_terms(
@@ -39,7 +39,7 @@ use nom::sequence::{preceded, terminated, tuple};
 ///     )
 /// ));
 ///```
-pub fn parse_f_exp_t(input: Span) -> ParseResult<FExpT> {
+pub fn parse_f_exp_t<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExpT<'a>> {
     let now = map(tag("#t"), |_| FExpT::new());
     let scaled = map(
         prefix_expr(
@@ -52,7 +52,7 @@ pub fn parse_f_exp_t(input: Span) -> ParseResult<FExpT> {
         FExpT::new_scaled,
     );
 
-    alt((scaled, now))(input)
+    alt((scaled, now))(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for FExpT<'a> {

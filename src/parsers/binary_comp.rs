@@ -18,7 +18,7 @@ use nom::combinator::map;
 /// assert!(parse_binary_comp(Span::new(">=")).is_value(BinaryComp::GreaterOrEqual));
 /// assert!(parse_binary_comp(Span::new("<=")).is_value(BinaryComp::LessThanOrEqual));
 ///```
-pub fn parse_binary_comp(input: Span) -> ParseResult<BinaryComp> {
+pub fn parse_binary_comp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, BinaryComp> {
     map(
         alt((
             tag(names::GREATER_THAN_OR_EQUAL),
@@ -28,7 +28,7 @@ pub fn parse_binary_comp(input: Span) -> ParseResult<BinaryComp> {
             tag(names::LESS_THAN),
         )),
         |x: Span| BinaryComp::try_from(*x.fragment()).expect("unhandled variant"),
-    )(input)
+    )(input.into())
 }
 
 impl<'a> crate::parsers::Parser<'a> for BinaryComp {
