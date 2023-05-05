@@ -11,6 +11,8 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the only element of the list if it is a one-element list, or `None`.
 - `TryInto` implementations were added for `CEffect` to allow deconstruction into
   `PEffect`, `ForallCEffect` and `WhenCEffect`.
+- Added the `Parser::from_str` method that performs a `Parse::parse` but discards
+  the remaining unparsed text.
 
 ### Changed
 
@@ -18,6 +20,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The `Effect::All` and `Effect::Single` variants were removed and the `Effect` type
   was changed to a struct wrapping a vector `Effects`.
 - The `CEffect` variants were changed to wrap `ForallCEffect` and `WhenCEffect` types.
+- The parser now uses [nom-greedyerror](https://github.com/dalance/nom-greedyerror) and 
+  [nom_locate](https://github.com/fflorent/nom_locate) to improve error handling.
+- The `Parser` trait now takes an `T: Into<Span<'a>>` argument.
+- All parser methods now take an `T: Into<Span<'a>>` argument.
 
 ### Fixed
 

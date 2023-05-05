@@ -1,32 +1,32 @@
 //! Provides parsers for optimization.
 
+use crate::parsers::{ParseResult, Span};
 use crate::types::{optimization::names, Optimization};
 use nom::branch::alt;
 use nom::bytes::complete::tag;
-use nom::combinator::map_res;
-use nom::IResult;
+use nom::combinator::map;
 
 /// Parses an optimization goal, i.e. `minimize | maximize`.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::parse_optimization;
+/// # use pddl::parsers::{parse_optimization, preamble::*};
 /// # use pddl::{Optimization};
-/// assert_eq!(parse_optimization("minimize"), Ok(("", Optimization::Minimize)));
-/// assert_eq!(parse_optimization("maximize"), Ok(("", Optimization::Maximize)));
+/// assert!(parse_optimization("minimize").is_value(Optimization::Minimize));
+/// assert!(parse_optimization("maximize").is_value(Optimization::Maximize));
 ///```
-pub fn parse_optimization(input: &str) -> IResult<&str, Optimization> {
-    map_res(
+pub fn parse_optimization<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Optimization> {
+    map(
         alt((tag(names::MINIMIZE), tag(names::MAXIMIZE))),
-        Optimization::try_from,
-    )(input)
+        |x: Span| Optimization::try_from(*x.fragment()).expect("unhandled variant"),
+    )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for Optimization {
+impl crate::parsers::Parser for Optimization {
     type Item = Optimization;
 
     /// See [`parse_optimization`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_optimization(input)
     }
 }

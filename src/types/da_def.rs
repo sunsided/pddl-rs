@@ -24,21 +24,21 @@ use crate::types::{
 /// ## Usage
 /// Used by [`StructureDef`](crate::StructureDef).
 #[derive(Debug, Clone, PartialEq)]
-pub struct DurativeActionDefinition<'a> {
-    symbol: DurativeActionSymbol<'a>,
-    parameters: TypedVariables<'a>,
-    duration: Option<DurationConstraint<'a>>,
-    condition: Option<DurativeActionGoalDefinition<'a>>,
-    effect: Option<DurativeActionEffect<'a>>,
+pub struct DurativeActionDefinition {
+    symbol: DurativeActionSymbol,
+    parameters: TypedVariables,
+    duration: Option<DurationConstraint>,
+    condition: Option<DurativeActionGoalDefinition>,
+    effect: Option<DurativeActionEffect>,
 }
 
-impl<'a> DurativeActionDefinition<'a> {
+impl DurativeActionDefinition {
     pub const fn new(
-        symbol: DurativeActionSymbol<'a>,
-        parameters: TypedVariables<'a>,
-        duration: Option<DurationConstraint<'a>>,
-        condition: Option<DurativeActionGoalDefinition<'a>>,
-        effect: Option<DurativeActionEffect<'a>>,
+        symbol: DurativeActionSymbol,
+        parameters: TypedVariables,
+        duration: Option<DurationConstraint>,
+        condition: Option<DurativeActionGoalDefinition>,
+        effect: Option<DurativeActionEffect>,
     ) -> Self {
         Self {
             symbol,
@@ -49,7 +49,7 @@ impl<'a> DurativeActionDefinition<'a> {
         }
     }
 
-    pub const fn symbol(&self) -> &DurativeActionSymbol<'a> {
+    pub const fn symbol(&self) -> &DurativeActionSymbol {
         &self.symbol
     }
 
@@ -81,7 +81,7 @@ impl<'a> DurativeActionDefinition<'a> {
     /// which you're trying to solve. For example here we haven't modelled the person who's
     /// actually going to perform the work, but maybe if we were the manager of a larger
     /// building site we might want to and therefore we would need to adapt my models.
-    pub const fn parameters(&self) -> &TypedVariables<'a> {
+    pub const fn parameters(&self) -> &TypedVariables {
         &self.parameters
     }
 
@@ -93,7 +93,7 @@ impl<'a> DurativeActionDefinition<'a> {
     /// ```pddl
     /// :duration (= ?duration 10)
     /// ```
-    pub const fn duration(&self) -> &Option<DurationConstraint<'a>> {
+    pub const fn duration(&self) -> &Option<DurationConstraint> {
         &self.duration
     }
 
@@ -103,44 +103,44 @@ impl<'a> DurativeActionDefinition<'a> {
     /// Because a durative action occurs over time, we may wish to express that additional
     /// conditions be met for the duration or end of the action, not just the start.
     /// This gives rise to three new keywords `at start`, `at end` and `over all`.
-    pub const fn condition(&self) -> &Option<DurativeActionGoalDefinition<'a>> {
+    pub const fn condition(&self) -> &Option<DurativeActionGoalDefinition> {
         &self.condition
     }
 
     /// An effect is a condition which is made true when an action is applied.
     /// Note that the effect is always more restrictive than an action and typically only
     /// allows `and` and `not` as logical expressions.
-    pub const fn effect(&self) -> &Option<DurativeActionEffect<'a>> {
+    pub const fn effect(&self) -> &Option<DurativeActionEffect> {
         &self.effect
     }
 }
 
-impl<'a> AsRef<DurativeActionSymbol<'a>> for DurativeActionDefinition<'a> {
-    fn as_ref(&self) -> &DurativeActionSymbol<'a> {
+impl AsRef<DurativeActionSymbol> for DurativeActionDefinition {
+    fn as_ref(&self) -> &DurativeActionSymbol {
         self.symbol()
     }
 }
 
-impl<'a> AsRef<TypedVariables<'a>> for DurativeActionDefinition<'a> {
-    fn as_ref(&self) -> &TypedVariables<'a> {
+impl AsRef<TypedVariables> for DurativeActionDefinition {
+    fn as_ref(&self) -> &TypedVariables {
         self.parameters()
     }
 }
 
-impl<'a> AsRef<Option<DurationConstraint<'a>>> for DurativeActionDefinition<'a> {
-    fn as_ref(&self) -> &Option<DurationConstraint<'a>> {
+impl AsRef<Option<DurationConstraint>> for DurativeActionDefinition {
+    fn as_ref(&self) -> &Option<DurationConstraint> {
         self.duration()
     }
 }
 
-impl<'a> AsRef<Option<DurativeActionGoalDefinition<'a>>> for DurativeActionDefinition<'a> {
-    fn as_ref(&self) -> &Option<DurativeActionGoalDefinition<'a>> {
+impl AsRef<Option<DurativeActionGoalDefinition>> for DurativeActionDefinition {
+    fn as_ref(&self) -> &Option<DurativeActionGoalDefinition> {
         self.condition()
     }
 }
 
-impl<'a> AsRef<Option<DurativeActionEffect<'a>>> for DurativeActionDefinition<'a> {
-    fn as_ref(&self) -> &Option<DurativeActionEffect<'a>> {
+impl AsRef<Option<DurativeActionEffect>> for DurativeActionDefinition {
+    fn as_ref(&self) -> &Option<DurativeActionEffect> {
         self.effect()
     }
 }

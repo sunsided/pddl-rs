@@ -47,7 +47,7 @@ fn parse_domain_works() {
     let (remainder, domain) = Domain::parse(BRIEFCASE_WORLD).unwrap();
 
     // The input was parsed completely, nothing followed the domain definition.
-    assert_eq!(remainder, "");
+    assert!(remainder.is_empty());
 
     // All elements were parsed.
     assert_eq!(domain.name(), &"briefcase-world".into());
@@ -63,7 +63,7 @@ fn parse_problem_works() {
     let (remainder, problem) = Problem::parse(BRIEFCASE_WORLD_PROBLEM).unwrap();
 
     // The input was parsed completely, nothing followed the problem definition.
-    assert_eq!(remainder, "");
+    assert!(remainder.is_empty());
 
     // All elements were parsed.
     assert_eq!(problem.name(), &"get-paid".into());

@@ -12,10 +12,10 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`FunctionTypedList`](crate::FunctionTypedList).
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct FunctionTyped<'a, O>(O, FunctionType<'a>);
+pub struct FunctionTyped<O>(O, FunctionType);
 
-impl<'a, O> FunctionTyped<'a, O> {
-    pub const fn new(value: O, r#type: FunctionType<'a>) -> Self {
+impl<O> FunctionTyped<O> {
+    pub const fn new(value: O, r#type: FunctionType) -> Self {
         Self(value, r#type)
     }
 
@@ -23,7 +23,7 @@ impl<'a, O> FunctionTyped<'a, O> {
         Self::new(value, FunctionType::NUMBER)
     }
 
-    pub const fn from_type(value: O, r#type: Type<'a>) -> Self {
+    pub const fn from_type(value: O, r#type: Type) -> Self {
         Self::new(value, FunctionType::from(r#type))
     }
 
@@ -31,18 +31,18 @@ impl<'a, O> FunctionTyped<'a, O> {
         &self.0
     }
 
-    pub const fn type_ref(&self) -> &FunctionType<'a> {
+    pub const fn type_ref(&self) -> &FunctionType {
         &self.1
     }
 }
 
-impl<'a, O> From<O> for FunctionTyped<'a, O> {
+impl<O> From<O> for FunctionTyped<O> {
     fn from(value: O) -> Self {
         FunctionTyped::new_number(value)
     }
 }
 
-impl<'a, O> Deref for FunctionTyped<'a, O> {
+impl<O> Deref for FunctionTyped<O> {
     type Target = O;
 
     fn deref(&self) -> &Self::Target {

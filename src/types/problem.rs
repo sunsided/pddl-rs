@@ -11,33 +11,33 @@ use crate::{PreconditionGoalDefinitions, PrefConGDs};
 /// ## Usages
 /// This is the top-level type of a problem description within a [`Domain`](crate::Domain).
 #[derive(Debug, Clone, PartialEq)]
-pub struct Problem<'a> {
-    name: Name<'a>,
-    domain: Name<'a>,
+pub struct Problem {
+    name: Name,
+    domain: Name,
     requires: Requirements,
-    objects: Objects<'a>,
-    init: InitElements<'a>,
-    goal: GoalDef<'a>,
+    objects: Objects,
+    init: InitElements,
+    goal: GoalDef,
     /// ## Requirements
     /// Requires [Constraints](crate::Requirement::Constraints).
-    constraints: ProblemConstraintsDef<'a>,
+    constraints: ProblemConstraintsDef,
     /// ## Requirements
     /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
-    metric_spec: Option<MetricSpec<'a>>,
+    metric_spec: Option<MetricSpec>,
     /// Deprecated since PDDL 2.1.
     length_spec: Option<LengthSpec>,
 }
 
-impl<'a> Problem<'a> {
+impl Problem {
     pub const fn new(
-        name: Name<'a>,
-        domain: Name<'a>,
+        name: Name,
+        domain: Name,
         requires: Requirements,
-        objects: Objects<'a>,
-        init: InitElements<'a>,
-        goal: GoalDef<'a>,
-        constraints: ProblemConstraintsDef<'a>,
-        metric_spec: Option<MetricSpec<'a>>,
+        objects: Objects,
+        init: InitElements,
+        goal: GoalDef,
+        constraints: ProblemConstraintsDef,
+        metric_spec: Option<MetricSpec>,
         length_spec: Option<LengthSpec>,
     ) -> Self {
         Self {
@@ -54,11 +54,11 @@ impl<'a> Problem<'a> {
     }
 
     /// Creates a builder to easily construct problems.
-    pub fn builder<P: Into<Name<'a>>, D: Into<Name<'a>>>(
+    pub fn builder<P: Into<Name>, D: Into<Name>>(
         problem_name: P,
         domain_name: D,
-        init: InitElements<'a>,
-        goal: GoalDef<'a>,
+        init: InitElements,
+        goal: GoalDef,
     ) -> Self {
         Self {
             name: problem_name.into(),
@@ -80,19 +80,19 @@ impl<'a> Problem<'a> {
     }
 
     /// Adds a list of object declarations to the problem.
-    pub fn with_objects<O: Into<Objects<'a>>>(mut self, objects: O) -> Self {
+    pub fn with_objects<O: Into<Objects>>(mut self, objects: O) -> Self {
         self.objects = objects.into();
         self
     }
 
     /// Adds a list of constraints to the problem.
-    pub fn with_constraints<C: Into<ProblemConstraintsDef<'a>>>(mut self, constraints: C) -> Self {
+    pub fn with_constraints<C: Into<ProblemConstraintsDef>>(mut self, constraints: C) -> Self {
         self.constraints = constraints.into();
         self
     }
 
     /// Adds a list of metric specifications to the problem.
-    pub fn with_metric_spec<M: Into<MetricSpec<'a>>>(mut self, metric: M) -> Self {
+    pub fn with_metric_spec<M: Into<MetricSpec>>(mut self, metric: M) -> Self {
         self.metric_spec = Some(metric.into());
         self
     }
@@ -104,12 +104,12 @@ impl<'a> Problem<'a> {
     }
 
     /// Returns the problem name.
-    pub const fn name(&self) -> &Name<'a> {
+    pub const fn name(&self) -> &Name {
         &self.name
     }
 
     /// Returns the domain name.
-    pub const fn domain(&self) -> &Name<'a> {
+    pub const fn domain(&self) -> &Name {
         &self.domain
     }
 
@@ -119,31 +119,31 @@ impl<'a> Problem<'a> {
     }
 
     /// Returns the optional object declarations.
-    pub const fn objects(&self) -> &Objects<'a> {
+    pub const fn objects(&self) -> &Objects {
         &self.objects
     }
 
     /// Returns the initialization of the problem.
-    pub const fn init(&self) -> &InitElements<'a> {
+    pub const fn init(&self) -> &InitElements {
         &self.init
     }
 
     /// Returns the goal statement of the problem.
-    pub const fn goal(&self) -> &PreconditionGoalDefinitions<'a> {
+    pub const fn goal(&self) -> &PreconditionGoalDefinitions {
         &self.goal.value()
     }
 
     /// Returns the optional constraints of the problem.
     /// ## Requirements
     /// Requires [Constraints](crate::Requirement::Constraints).
-    pub const fn constraints(&self) -> &PrefConGDs<'a> {
+    pub const fn constraints(&self) -> &PrefConGDs {
         &self.constraints.value()
     }
 
     /// Returns the optional metric specification of the problem.
     /// ## Requirements
     /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
-    pub const fn metric_spec(&self) -> &Option<MetricSpec<'a>> {
+    pub const fn metric_spec(&self) -> &Option<MetricSpec> {
         &self.metric_spec
     }
 

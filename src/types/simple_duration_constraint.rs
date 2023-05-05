@@ -7,31 +7,31 @@ use crate::types::{DOp, DurationValue, TimeSpecifier};
 /// ## Usage
 /// Used by [`SimpleDurationConstraint`] itself, as well as [`DurationConstraint`](crate::DurationConstraint).
 #[derive(Debug, Clone, PartialEq)]
-pub enum SimpleDurationConstraint<'a> {
+pub enum SimpleDurationConstraint {
     /// A comparison operation against a duration value.
-    Op(DOp, DurationValue<'a>),
+    Op(DOp, DurationValue),
     /// A specific time at or after which a constraint applies.
-    At(TimeSpecifier, Box<SimpleDurationConstraint<'a>>),
+    At(TimeSpecifier, Box<SimpleDurationConstraint>),
 }
 
-impl<'a> SimpleDurationConstraint<'a> {
-    pub const fn new_op(op: DOp, value: DurationValue<'a>) -> Self {
+impl SimpleDurationConstraint {
+    pub const fn new_op(op: DOp, value: DurationValue) -> Self {
         Self::Op(op, value)
     }
 
-    pub fn new_at(time: TimeSpecifier, constraint: SimpleDurationConstraint<'a>) -> Self {
+    pub fn new_at(time: TimeSpecifier, constraint: SimpleDurationConstraint) -> Self {
         Self::At(time, Box::new(constraint))
     }
 }
 
-impl<'a> From<(DOp, DurationValue<'a>)> for SimpleDurationConstraint<'a> {
-    fn from(value: (DOp, DurationValue<'a>)) -> Self {
+impl From<(DOp, DurationValue)> for SimpleDurationConstraint {
+    fn from(value: (DOp, DurationValue)) -> Self {
         SimpleDurationConstraint::new_op(value.0, value.1)
     }
 }
 
-impl<'a> From<(TimeSpecifier, SimpleDurationConstraint<'a>)> for SimpleDurationConstraint<'a> {
-    fn from(value: (TimeSpecifier, SimpleDurationConstraint<'a>)) -> Self {
+impl From<(TimeSpecifier, SimpleDurationConstraint)> for SimpleDurationConstraint {
+    fn from(value: (TimeSpecifier, SimpleDurationConstraint)) -> Self {
         SimpleDurationConstraint::new_at(value.0, value.1)
     }
 }

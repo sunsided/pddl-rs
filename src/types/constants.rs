@@ -8,30 +8,30 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`Domain`](crate::Domain).
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
-pub struct Constants<'a>(TypedNames<'a>);
+pub struct Constants(TypedNames);
 
-impl<'a> Constants<'a> {
-    pub const fn new(predicates: TypedNames<'a>) -> Self {
+impl Constants {
+    pub const fn new(predicates: TypedNames) -> Self {
         Self(predicates)
     }
 }
 
-impl<'a> Deref for Constants<'a> {
-    type Target = TypedNames<'a>;
+impl Deref for Constants {
+    type Target = TypedNames;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl<'a> From<TypedNames<'a>> for Constants<'a> {
-    fn from(value: TypedNames<'a>) -> Self {
+impl From<TypedNames> for Constants {
+    fn from(value: TypedNames) -> Self {
         Constants::new(value)
     }
 }
 
-impl<'a> FromIterator<Typed<'a, Name<'a>>> for Constants<'a> {
-    fn from_iter<T: IntoIterator<Item = Typed<'a, Name<'a>>>>(iter: T) -> Self {
+impl FromIterator<Typed<Name>> for Constants {
+    fn from_iter<T: IntoIterator<Item = Typed<Name>>>(iter: T) -> Self {
         Constants::new(TypedNames::from_iter(iter))
     }
 }

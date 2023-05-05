@@ -8,24 +8,24 @@ use crate::types::PEffect;
 /// ## Usage
 /// Used by [`CEffect`](crate::CEffect) and [`TimedEffect`](crate::types::TimedEffect).
 #[derive(Debug, Clone, PartialEq)]
-pub enum ConditionalEffect<'a> {
+pub enum ConditionalEffect {
     /// Exactly the specified effect applies.
-    Single(PEffect<'a>), // TODO: Unify with `All`; vector is allowed to be empty.
+    Single(PEffect), // TODO: Unify with `All`; vector is allowed to be empty.
     /// Conjunction: All effects apply (i.e. a and b and c ..).
-    All(Vec<PEffect<'a>>),
+    All(Vec<PEffect>),
 }
 
-impl<'a> ConditionalEffect<'a> {
-    pub const fn new(effect: PEffect<'a>) -> Self {
+impl ConditionalEffect {
+    pub const fn new(effect: PEffect) -> Self {
         Self::Single(effect)
     }
-    pub const fn new_and(effect: Vec<PEffect<'a>>) -> Self {
+    pub const fn new_and(effect: Vec<PEffect>) -> Self {
         Self::All(effect)
     }
 }
 
-impl<'a> IntoIterator for ConditionalEffect<'a> {
-    type Item = PEffect<'a>;
+impl IntoIterator for ConditionalEffect {
+    type Item = PEffect;
     type IntoIter = FlatteningIntoIterator<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -36,20 +36,20 @@ impl<'a> IntoIterator for ConditionalEffect<'a> {
     }
 }
 
-impl<'a> From<PEffect<'a>> for ConditionalEffect<'a> {
-    fn from(value: PEffect<'a>) -> Self {
+impl From<PEffect> for ConditionalEffect {
+    fn from(value: PEffect) -> Self {
         ConditionalEffect::new(value)
     }
 }
 
-impl<'a> From<Vec<PEffect<'a>>> for ConditionalEffect<'a> {
-    fn from(value: Vec<PEffect<'a>>) -> Self {
+impl From<Vec<PEffect>> for ConditionalEffect {
+    fn from(value: Vec<PEffect>) -> Self {
         ConditionalEffect::new_and(value)
     }
 }
 
-impl<'a> FromIterator<PEffect<'a>> for ConditionalEffect<'a> {
-    fn from_iter<T: IntoIterator<Item = PEffect<'a>>>(iter: T) -> Self {
+impl FromIterator<PEffect> for ConditionalEffect {
+    fn from_iter<T: IntoIterator<Item = PEffect>>(iter: T) -> Self {
         ConditionalEffect::new_and(iter.into_iter().collect())
     }
 }
@@ -57,11 +57,12 @@ impl<'a> FromIterator<PEffect<'a>> for ConditionalEffect<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parsers::Span;
     use crate::Parser;
 
     #[test]
     fn flatten_with_single_element_works() {
-        let (_, effect_a) = PEffect::parse("(= x y)").unwrap();
+        let (_, effect_a) = PEffect::parse(Span::new("(= x y)")).unwrap();
 
         let mut iter = ConditionalEffect::new(effect_a).into_iter();
         assert!(iter.next().is_some());
@@ -70,8 +71,8 @@ mod tests {
 
     #[test]
     fn flatten_with_many_elements_works() {
-        let (_, effect_a) = PEffect::parse("(= x y)").unwrap();
-        let (_, effect_b) = PEffect::parse("(assign fun-sym 1.23)").unwrap();
+        let (_, effect_a) = PEffect::parse(Span::new("(= x y)")).unwrap();
+        let (_, effect_b) = PEffect::parse(Span::new("(assign fun-sym 1.23)")).unwrap();
 
         let mut iter = ConditionalEffect::from_iter([effect_a, effect_b]).into_iter();
         assert!(iter.next().is_some());

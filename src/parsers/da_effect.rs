@@ -1,22 +1,21 @@
 //! Provides parsers for durative action effects.
 
-use crate::parsers::{parens, prefix_expr, space_separated_list0, typed_list};
+use crate::parsers::{parens, prefix_expr, space_separated_list0, typed_list, ParseResult, Span};
 use crate::parsers::{parse_da_gd, parse_timed_effect, parse_variable};
 use crate::types::DurativeActionEffect;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
-use nom::IResult;
 
 /// Parses effects.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::parse_da_effect;
+/// # use pddl::parsers::{parse_da_effect, preamble::*};
 /// # use pddl::{AtomicFormula, ConditionalEffect, DurativeActionEffect, EqualityAtomicFormula, PEffect, Term, TimedEffect, TimeSpecifier, Variable};
 /// # use pddl::{Typed, TypedList};
-/// assert_eq!(parse_da_effect("(at start (= x y))"), Ok(("",
+/// assert!(parse_da_effect("(at start (= x y))").is_value(
 ///     DurativeActionEffect::Timed(
 ///         TimedEffect::new_conditional(
 ///             TimeSpecifier::Start,
@@ -30,13 +29,13 @@ use nom::IResult;
 ///             )
 ///         )
 ///     )
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_da_effect("(and )"), Ok(("",
+/// assert!(parse_da_effect("(and )").is_value(
 ///     DurativeActionEffect::new_and([])
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_da_effect("(and (at start (= x y)) (and ))"), Ok(("",
+/// assert!(parse_da_effect("(and (at start (= x y)) (and ))").is_value(
 ///     DurativeActionEffect::new_and([
 ///         DurativeActionEffect::Timed(
 ///             TimedEffect::new_conditional(
@@ -53,9 +52,9 @@ use nom::IResult;
 ///         ),
 ///         DurativeActionEffect::new_and([])
 ///     ])
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_da_effect("(forall (?a ?b) (at start (= a b)))"), Ok(("",
+/// assert!(parse_da_effect("(forall (?a ?b) (at start (= a b)))").is_value(
 ///     DurativeActionEffect::new_forall(
 ///         TypedList::from_iter([
 ///             Typed::new_object(Variable::from_str("a")),
@@ -75,9 +74,9 @@ use nom::IResult;
 ///             )
 ///         )
 ///     )
-/// )));
+/// ));
 /// ```
-pub fn parse_da_effect(input: &str) -> IResult<&str, DurativeActionEffect> {
+pub fn parse_da_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DurativeActionEffect> {
     let exactly = map(parse_timed_effect, DurativeActionEffect::from);
 
     let all = map(
@@ -106,14 +105,14 @@ pub fn parse_da_effect(input: &str) -> IResult<&str, DurativeActionEffect> {
         DurativeActionEffect::from,
     );
 
-    alt((all, forall, when, exactly))(input)
+    alt((all, forall, when, exactly))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for DurativeActionEffect<'a> {
-    type Item = DurativeActionEffect<'a>;
+impl crate::parsers::Parser for DurativeActionEffect {
+    type Item = DurativeActionEffect;
 
     /// See [`parse_da_effect`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_da_effect(input)
     }
 }
@@ -133,7 +132,7 @@ mod tests {
                 (at end (increase (distance-travelled) 5))
                 )"#;
 
-        let (_, _effect) = parse_da_effect(input).unwrap();
+        let (_, _effect) = parse_da_effect(Span::new(input)).unwrap();
     }
 
     #[test]
@@ -147,6 +146,6 @@ mod tests {
                 (at end (increase (distance-travelled) 5))
                 )"#;
 
-        let (_, _effect) = parse_da_effect(input).unwrap();
+        let (_, _effect) = parse_da_effect(Span::new(input)).unwrap();
     }
 }

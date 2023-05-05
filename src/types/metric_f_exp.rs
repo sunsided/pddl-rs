@@ -10,19 +10,19 @@ use crate::types::{BinaryOp, FunctionSymbol, MultiOp, Name, Number, PreferenceNa
 /// ## Usage
 /// Used by [`MetricSpec`](crate::MetricSpec).
 #[derive(Debug, Clone, PartialEq)]
-pub enum MetricFExp<'a> {
+pub enum MetricFExp {
     BinaryOp(BinaryOp, Box<Self>, Box<Self>),
     MultiOp(MultiOp, Box<Self>, Vec<Self>),
     Negative(Box<Self>),
     Number(Number),
-    Function(FunctionSymbol<'a>, Vec<Name<'a>>),
+    Function(FunctionSymbol, Vec<Name>),
     TotalTime,
     /// ## Requirements
     /// Requires [Preferences](crate::Requirement::Preferences).
-    IsViolated(PreferenceName<'a>),
+    IsViolated(PreferenceName),
 }
 
-impl<'a> MetricFExp<'a> {
+impl MetricFExp {
     pub fn new_binary_op(op: BinaryOp, lhs: Self, rhs: Self) -> Self {
         Self::BinaryOp(op, Box::new(lhs), Box::new(rhs))
     }
@@ -44,10 +44,7 @@ impl<'a> MetricFExp<'a> {
         Self::Number(number.into())
     }
 
-    pub fn new_function<I: IntoIterator<Item = Name<'a>>>(
-        symbol: FunctionSymbol<'a>,
-        names: I,
-    ) -> Self {
+    pub fn new_function<I: IntoIterator<Item = Name>>(symbol: FunctionSymbol, names: I) -> Self {
         Self::Function(symbol, names.into_iter().collect())
     }
 
@@ -55,7 +52,7 @@ impl<'a> MetricFExp<'a> {
         Self::TotalTime
     }
 
-    pub const fn new_is_violated(pref: PreferenceName<'a>) -> Self {
+    pub const fn new_is_violated(pref: PreferenceName) -> Self {
         Self::IsViolated(pref)
     }
 }

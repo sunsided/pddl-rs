@@ -8,41 +8,41 @@ use std::ops::Deref;
 /// ## Requirements
 /// Requires [Constraints](crate::Requirement::Constraints).
 #[derive(Debug, Default, Clone, PartialEq)]
-pub struct ProblemConstraintsDef<'a>(PrefConGDs<'a>);
+pub struct ProblemConstraintsDef(PrefConGDs);
 
-impl<'a> ProblemConstraintsDef<'a> {
-    pub const fn new(gd: PrefConGDs<'a>) -> Self {
+impl ProblemConstraintsDef {
+    pub const fn new(gd: PrefConGDs) -> Self {
         Self(gd)
     }
 
     /// Gets the value.
-    pub const fn value(&self) -> &PrefConGDs<'a> {
+    pub const fn value(&self) -> &PrefConGDs {
         &self.0
     }
 }
 
-impl<'a> PartialEq<PrefConGDs<'a>> for ProblemConstraintsDef<'a> {
-    fn eq(&self, other: &PrefConGDs<'a>) -> bool {
+impl PartialEq<PrefConGDs> for ProblemConstraintsDef {
+    fn eq(&self, other: &PrefConGDs) -> bool {
         self.0.eq(other)
     }
 }
 
-impl<'a> From<PrefConGDs<'a>> for ProblemConstraintsDef<'a> {
-    fn from(value: PrefConGDs<'a>) -> Self {
+impl From<PrefConGDs> for ProblemConstraintsDef {
+    fn from(value: PrefConGDs) -> Self {
         Self::new(value)
     }
 }
 
-impl<'a> Deref for ProblemConstraintsDef<'a> {
-    type Target = PrefConGDs<'a>;
+impl Deref for ProblemConstraintsDef {
+    type Target = PrefConGDs;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl<'a> Into<PrefConGDs<'a>> for ProblemConstraintsDef<'a> {
-    fn into(self) -> PrefConGDs<'a> {
+impl Into<PrefConGDs> for ProblemConstraintsDef {
+    fn into(self) -> PrefConGDs {
         self.0
     }
 }

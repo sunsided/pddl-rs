@@ -9,53 +9,53 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`Problem`](crate::Problem).
 #[derive(Debug, Clone, PartialEq)]
-pub struct GoalDef<'a>(PreconditionGoalDefinitions<'a>);
+pub struct GoalDef(PreconditionGoalDefinitions);
 
-impl<'a> GoalDef<'a> {
-    pub const fn new(gd: PreconditionGoalDefinitions<'a>) -> Self {
+impl GoalDef {
+    pub const fn new(gd: PreconditionGoalDefinitions) -> Self {
         Self(gd)
     }
 
     /// Gets the value.
-    pub const fn value(&self) -> &PreconditionGoalDefinitions<'a> {
+    pub const fn value(&self) -> &PreconditionGoalDefinitions {
         &self.0
     }
 }
 
-impl<'a> PartialEq<PreconditionGoalDefinitions<'a>> for GoalDef<'a> {
-    fn eq(&self, other: &PreconditionGoalDefinitions<'a>) -> bool {
+impl PartialEq<PreconditionGoalDefinitions> for GoalDef {
+    fn eq(&self, other: &PreconditionGoalDefinitions) -> bool {
         self.0.eq(other)
     }
 }
 
-impl<'a> From<PreconditionGoalDefinitions<'a>> for GoalDef<'a> {
-    fn from(value: PreconditionGoalDefinitions<'a>) -> Self {
+impl From<PreconditionGoalDefinitions> for GoalDef {
+    fn from(value: PreconditionGoalDefinitions) -> Self {
         Self::new(value)
     }
 }
 
-impl<'a> From<PreconditionGoalDefinition<'a>> for GoalDef<'a> {
-    fn from(value: PreconditionGoalDefinition<'a>) -> Self {
+impl From<PreconditionGoalDefinition> for GoalDef {
+    fn from(value: PreconditionGoalDefinition) -> Self {
         Self::new(PreconditionGoalDefinitions::from(value))
     }
 }
 
-impl<'a> FromIterator<PreconditionGoalDefinition<'a>> for GoalDef<'a> {
-    fn from_iter<T: IntoIterator<Item = PreconditionGoalDefinition<'a>>>(iter: T) -> Self {
+impl FromIterator<PreconditionGoalDefinition> for GoalDef {
+    fn from_iter<T: IntoIterator<Item = PreconditionGoalDefinition>>(iter: T) -> Self {
         GoalDef::new(PreconditionGoalDefinitions::from_iter(iter))
     }
 }
 
-impl<'a> Deref for GoalDef<'a> {
-    type Target = PreconditionGoalDefinitions<'a>;
+impl Deref for GoalDef {
+    type Target = PreconditionGoalDefinitions;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl<'a> Into<PreconditionGoalDefinitions<'a>> for GoalDef<'a> {
-    fn into(self) -> PreconditionGoalDefinitions<'a> {
+impl Into<PreconditionGoalDefinitions> for GoalDef {
+    fn into(self) -> PreconditionGoalDefinitions {
         self.0
     }
 }

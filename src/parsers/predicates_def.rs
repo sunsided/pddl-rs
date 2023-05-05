@@ -1,16 +1,15 @@
 //! Provides parsers for predicate definitions.
 
-use crate::parsers::parse_atomic_formula_skeleton;
+use crate::parsers::{parse_atomic_formula_skeleton, ParseResult, Span};
 use crate::parsers::{prefix_expr, space_separated_list1};
 use crate::types::PredicateDefinitions;
 use nom::combinator::map;
-use nom::IResult;
 
 /// Parser that parses predicate definitions, i.e. `(:predicates <atomic formula skeleton>⁺)`.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::parse_predicates_def;
+/// # use pddl::parsers::{parse_predicates_def, preamble::*};
 /// # use pddl::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions};
 /// # use pddl::{ToTyped, TypedList};
 /// let input = r#"(:predicates
@@ -18,7 +17,7 @@ use nom::IResult;
 ///                     (in ?x ?y - physob)
 ///                )"#;
 ///
-/// assert_eq!(parse_predicates_def(input), Ok(("",
+/// assert!(parse_predicates_def(input).is_value(
 ///     PredicateDefinitions::new(vec![
 ///         AtomicFormulaSkeleton::new(
 ///             Predicate::from("at"),
@@ -33,23 +32,25 @@ use nom::IResult;
 ///                 Variable::from("y").to_typed("physob"),
 ///             ]))
 ///     ])
-/// )));
+/// ));
 /// ```
-pub fn parse_predicates_def(input: &str) -> IResult<&str, PredicateDefinitions> {
+pub fn parse_predicates_def<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, PredicateDefinitions> {
     map(
         prefix_expr(
             ":predicates",
             space_separated_list1(parse_atomic_formula_skeleton),
         ),
         |vec| PredicateDefinitions::new(vec),
-    )(input)
+    )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for PredicateDefinitions<'a> {
-    type Item = PredicateDefinitions<'a>;
+impl crate::parsers::Parser for PredicateDefinitions {
+    type Item = PredicateDefinitions;
 
     /// See [`parse_predicates_def`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_predicates_def(input)
     }
 }

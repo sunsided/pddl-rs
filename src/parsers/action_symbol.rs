@@ -1,35 +1,34 @@
 //! Provides parsers for action symbols.
 
-use crate::parsers::parse_name;
+use crate::parsers::{parse_name, ParseResult, Span};
 use crate::types::ActionSymbol;
-use nom::IResult;
+use nom::combinator::map;
 
 /// Parses a function symbol, i.e. `<name>`.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::parse_action_symbol;
-/// assert_eq!(parse_action_symbol("abcde"), Ok(("", "abcde".into())));
-/// assert_eq!(parse_action_symbol("a-1_2"), Ok(("", "a-1_2".into())));
-/// assert_eq!(parse_action_symbol("Z01"), Ok(("", "Z01".into())));
-/// assert_eq!(parse_action_symbol("x-_-_"), Ok(("", "x-_-_".into())));
+/// # use pddl::parsers::{parse_action_symbol, Span, UnwrapValue};
+/// assert!(parse_action_symbol(Span::new("abcde")).is_value("abcde".into()));
+/// assert!(parse_action_symbol(Span::new("a-1_2")).is_value("a-1_2".into()));
+/// assert!(parse_action_symbol(Span::new("Z01")).is_value("Z01".into()));
+/// assert!(parse_action_symbol(Span::new("x-_-_")).is_value("x-_-_".into()));
 ///
-/// assert!(parse_action_symbol("").is_err());
-/// assert!(parse_action_symbol(".").is_err());
-/// assert!(parse_action_symbol("-abc").is_err());
-/// assert!(parse_action_symbol("0124").is_err());
-/// assert!(parse_action_symbol("-1").is_err());
+/// assert!(parse_action_symbol(Span::new("")).is_err());
+/// assert!(parse_action_symbol(Span::new(".")).is_err());
+/// assert!(parse_action_symbol(Span::new("-abc")).is_err());
+/// assert!(parse_action_symbol(Span::new("0124")).is_err());
+/// assert!(parse_action_symbol(Span::new("-1")).is_err());
 ///```
-pub fn parse_action_symbol(input: &str) -> IResult<&str, ActionSymbol> {
-    let (remaining, name) = parse_name(input)?;
-    Ok((remaining, name.into()))
+pub fn parse_action_symbol<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ActionSymbol> {
+    map(parse_name, ActionSymbol::new)(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for ActionSymbol<'a> {
-    type Item = ActionSymbol<'a>;
+impl crate::parsers::Parser for ActionSymbol {
+    type Item = ActionSymbol;
 
     /// See [`parse_action_symbol`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_action_symbol(input)
     }
 }

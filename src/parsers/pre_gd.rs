@@ -1,6 +1,6 @@
 //! Provides parsers for goal definitions.
 
-use crate::parsers::{parens, prefix_expr, space_separated_list0, typed_list};
+use crate::parsers::{parens, prefix_expr, space_separated_list0, typed_list, ParseResult, Span};
 use crate::parsers::{parse_pref_gd, parse_variable};
 use crate::types::PreconditionGoalDefinition;
 use crate::PreconditionGoalDefinitions;
@@ -8,15 +8,14 @@ use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
-use nom::IResult;
 
 /// Parser for goal definitions.
 ///
 /// ## Examples
 /// ```
-/// # use pddl::parsers::{parse_pre_gd};
+/// # use pddl::parsers::{parse_pre_gd, preamble::*};
 /// # use pddl::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Preference, PreferenceName, PreferenceGD, PreconditionGoalDefinitions, PreconditionGoalDefinition, Term, Variable, Type, Typed, TypedList};
-/// assert_eq!(parse_pre_gd("(= x y)"), Ok(("",
+/// assert!(parse_pre_gd(Span::new("(= x y)")).is_value(
 ///     PreconditionGoalDefinitions::new_preference(
 ///         PreferenceGD::Goal(
 ///             GoalDefinition::AtomicFormula(
@@ -27,9 +26,9 @@ use nom::IResult;
 ///             )
 ///         )
 ///     )
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_pre_gd("(and (= x y) (= a b))"), Ok(("",
+/// assert!(parse_pre_gd(Span::new("(and (= x y) (= a b))")).is_value(
 ///     PreconditionGoalDefinitions::from_iter([
 ///         PreconditionGoalDefinition::Preference(PreferenceGD::Goal(
 ///             GoalDefinition::AtomicFormula(
@@ -48,9 +47,9 @@ use nom::IResult;
 ///             )
 ///         ))
 ///     ])
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_pre_gd("(forall (?a ?b) (= a b))"), Ok(("",
+/// assert!(parse_pre_gd(Span::new("(forall (?a ?b) (= a b))")).is_value(
 ///     PreconditionGoalDefinition::new_forall(
 ///         TypedList::from_iter([
 ///             Typed::new(Variable::from_str("a"), Type::OBJECT),
@@ -65,9 +64,11 @@ use nom::IResult;
 ///             )
 ///         )).into()
 ///     ).into()
-/// )));
+/// ));
 /// ```
-pub fn parse_pre_gd(input: &str) -> IResult<&str, PreconditionGoalDefinitions> {
+pub fn parse_pre_gd<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, PreconditionGoalDefinitions> {
     let pref_gd = map(parse_pref_gd, |x| {
         PreconditionGoalDefinitions::from(PreconditionGoalDefinition::new_preference(x))
     });
@@ -90,14 +91,14 @@ pub fn parse_pre_gd(input: &str) -> IResult<&str, PreconditionGoalDefinitions> {
         },
     );
 
-    alt((forall, and, pref_gd))(input)
+    alt((forall, and, pref_gd))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for PreconditionGoalDefinitions<'a> {
-    type Item = PreconditionGoalDefinitions<'a>;
+impl crate::parsers::Parser for PreconditionGoalDefinitions {
+    type Item = PreconditionGoalDefinitions;
 
     /// See [`parse_pre_gd`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_pre_gd(input)
     }
 }

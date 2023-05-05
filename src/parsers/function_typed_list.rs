@@ -1,21 +1,22 @@
-use crate::parsers::{parse_type, space_separated_list0, space_separated_list1, ws};
+use crate::parsers::{
+    parse_type, space_separated_list0, space_separated_list1, ws, ParseResult, Span,
+};
 use crate::types::{FunctionType, FunctionTyped, FunctionTypedList};
 use nom::character::complete::char;
 use nom::combinator::map;
 use nom::multi::many0;
 use nom::sequence::{preceded, tuple};
-use nom::IResult;
 
 /// Parses a typed list, i.e. `x* | x⁺ - <type> <typed-list (x)>.
 ///
 /// ## Example
 /// ```
 /// # use nom::character::complete::alpha1;
-/// # use pddl::parsers::{function_typed_list, parse_atomic_function_skeleton};
+/// # use pddl::parsers::{function_typed_list, parse_atomic_function_skeleton, preamble::*};
 /// # use pddl::{AtomicFunctionSkeleton, FunctionSymbol, FunctionTyped, FunctionTypedList, Variable};
 /// # use pddl::{Type, Typed, TypedList};
 /// // Single implicitly typed element.
-/// assert_eq!(function_typed_list(parse_atomic_function_skeleton)("(battery-amount ?r - rover)"), Ok(("",
+/// assert!(function_typed_list(parse_atomic_function_skeleton)("(battery-amount ?r - rover)".into()).is_value(
 ///     FunctionTypedList::from_iter([
 ///         FunctionTyped::new_number(
 ///             AtomicFunctionSkeleton::new(
@@ -26,13 +27,13 @@ use nom::IResult;
 ///             )
 ///         )
 ///     ])
-/// )));
+/// ));
 /// ```
 pub fn function_typed_list<'a, F, O>(
     inner: F,
-) -> impl FnMut(&'a str) -> IResult<&'a str, FunctionTypedList<O>>
+) -> impl FnMut(Span<'a>) -> ParseResult<'a, FunctionTypedList<O>>
 where
-    F: Clone + FnMut(&'a str) -> IResult<&'a str, O>,
+    F: Clone + FnMut(Span<'a>) -> ParseResult<'a, O>,
 {
     // TODO: With :numeric-fluents, this list can be x⁺ (i.e., implicitly typed number).
     // TODO: Without :numeric-fluents, this list is allowed to be empty or an explicitly typed list.

@@ -12,10 +12,10 @@ use crate::types::{AssignOp, FExpDa, FHead};
 /// ## Usage
 /// Used by [`TimedEffect`](crate::TimedEffect).
 #[derive(Debug, Clone, PartialEq)]
-pub struct FAssignDa<'a>(AssignOp, FHead<'a>, FExpDa<'a>);
+pub struct FAssignDa(AssignOp, FHead, FExpDa);
 
-impl<'a> FAssignDa<'a> {
-    pub const fn new(comp: AssignOp, head: FHead<'a>, exp: FExpDa<'a>) -> Self {
+impl FAssignDa {
+    pub const fn new(comp: AssignOp, head: FHead, exp: FExpDa) -> Self {
         Self(comp, head, exp)
     }
 
@@ -25,18 +25,18 @@ impl<'a> FAssignDa<'a> {
     }
 
     /// Returns the function head.
-    pub const fn function(&self) -> &FHead<'a> {
+    pub const fn function(&self) -> &FHead {
         &self.1
     }
 
     /// Returns the function expression of the durative action.
-    pub const fn function_expr(&self) -> &FExpDa<'a> {
+    pub const fn function_expr(&self) -> &FExpDa {
         &self.2
     }
 }
 
-impl<'a> From<(AssignOp, FHead<'a>, FExpDa<'a>)> for FAssignDa<'a> {
-    fn from(value: (AssignOp, FHead<'a>, FExpDa<'a>)) -> Self {
+impl From<(AssignOp, FHead, FExpDa)> for FAssignDa {
+    fn from(value: (AssignOp, FHead, FExpDa)) -> Self {
         FAssignDa::new(value.0, value.1, value.2)
     }
 }

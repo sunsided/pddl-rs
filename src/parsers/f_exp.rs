@@ -1,51 +1,50 @@
 //! Provides parsers for f-exps.
 
-use crate::parsers::{parens, parse_number, space_separated_list1};
+use crate::parsers::{parens, parse_number, space_separated_list1, ParseResult, Span};
 use crate::parsers::{parse_binary_op, parse_f_head, parse_multi_op};
 use crate::types::FExp;
 use nom::branch::alt;
 use nom::character::complete::{char, multispace0, multispace1};
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
-use nom::IResult;
 
 /// Parses an f-exp.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::parse_f_exp;
+/// # use pddl::parsers::{parse_f_exp, preamble::*};
 /// # use pddl::{BinaryOp, FExp, FHead, FunctionSymbol, MultiOp};
-/// assert_eq!(parse_f_exp("1.23"), Ok(("",
+/// assert!(parse_f_exp("1.23").is_value(
 ///     FExp::new_number(1.23)
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_f_exp("(+ 1.23 2.34)"), Ok(("",
+/// assert!(parse_f_exp("(+ 1.23 2.34)").is_value(
 ///     FExp::new_binary_op(
 ///         BinaryOp::Addition,
 ///         FExp::new_number(1.23),
 ///         FExp::new_number(2.34)
 ///     )
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_f_exp("(+ 1.23 2.34 3.45)"), Ok(("",
+/// assert!(parse_f_exp("(+ 1.23 2.34 3.45)").is_value(
 ///     FExp::new_multi_op(
 ///         MultiOp::Addition,
 ///         FExp::new_number(1.23),
 ///         [FExp::new_number(2.34), FExp::new_number(3.45)]
 ///     )
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_f_exp("(- 1.23)"), Ok(("",
+/// assert!(parse_f_exp("(- 1.23)").is_value(
 ///     FExp::new_negative(FExp::new_number(1.23))
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_f_exp("fun-sym"), Ok(("",
+/// assert!(parse_f_exp("fun-sym").is_value(
 ///     FExp::new_function(
 ///         FHead::new(FunctionSymbol::from_str("fun-sym"))
 ///     )
-/// )));
+/// ));
 ///```
-pub fn parse_f_exp(input: &str) -> IResult<&str, FExp> {
+pub fn parse_f_exp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExp> {
     // :numeric-fluents
     let number = map(parse_number, FExp::new_number);
 
@@ -78,14 +77,14 @@ pub fn parse_f_exp(input: &str) -> IResult<&str, FExp> {
     // :numeric-fluents
     let f_head = map(parse_f_head, FExp::new_function);
 
-    alt((number, binary_op, multi_op, negated, f_head))(input)
+    alt((number, binary_op, multi_op, negated, f_head))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for FExp<'a> {
-    type Item = FExp<'a>;
+impl crate::parsers::Parser for FExp {
+    type Item = FExp;
 
     /// See [`parse_f_exp`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_f_exp(input)
     }
 }

@@ -66,6 +66,7 @@ mod requirements;
 mod simple_duration_constraint;
 mod structure_def;
 mod term;
+mod test_helpers;
 mod time_specifier;
 mod timed_effect;
 mod timed_gd;
@@ -76,12 +77,43 @@ mod types_def;
 mod utilities;
 mod variable;
 
+#[cfg(test)]
+pub(crate) use test_helpers::Match;
+pub use test_helpers::UnwrapValue;
+
 /// Provides the `parse` method.
-pub trait Parser<'a> {
+pub trait Parser {
     type Item;
 
     /// Parses the `input` into the specified [`Item`](Self::Item) type.
-    fn parse(input: &'a str) -> nom::IResult<&str, Self::Item>;
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item>;
+
+    /// Parses the `input` into the specified [`Item`](Self::Item) type.
+    fn parse_span(input: Span) -> ParseResult<Self::Item> {
+        Self::parse(input)
+    }
+
+    /// Uses the [`Parser::parse`] method to parse the input and, if successful,
+    /// discards the unparsed remaining input.
+    fn from_str(input: &str) -> Result<Self::Item, nom::Err<ParseError>> {
+        let (_, value) = Self::parse(input)?;
+        Ok(value)
+    }
+}
+
+/// Input type for parsers.
+pub type Span<'a> = nom_locate::LocatedSpan<&'a str>;
+
+/// A parsing error.
+pub type ParseError<'a> = nom_greedyerror::GreedyError<Span<'a>, nom::error::ErrorKind>;
+
+/// A result from a parser.
+pub type ParseResult<'a, T, E = ParseError<'a>> = nom::IResult<Span<'a>, T, E>;
+
+pub mod preamble {
+    pub use crate::parsers::test_helpers::UnwrapValue;
+    pub use crate::parsers::Parser;
+    pub use crate::parsers::{ParseError, ParseResult, Span};
 }
 
 // Parsers.

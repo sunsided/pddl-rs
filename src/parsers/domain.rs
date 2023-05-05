@@ -2,7 +2,7 @@
 
 use crate::parsers::{
     parse_constants_def, parse_domain_constraints_def, parse_functions_def, parse_predicates_def,
-    parse_require_def, parse_structure_def,
+    parse_require_def, parse_structure_def, ParseResult, Span,
 };
 use crate::parsers::{parse_name, parse_types_def, prefix_expr, space_separated_list1, ws};
 use crate::types::{
@@ -12,13 +12,12 @@ use crate::types::{DomainConstraintsDef, Types};
 use nom::character::complete::multispace1;
 use nom::combinator::{map, opt};
 use nom::sequence::{preceded, tuple};
-use nom::IResult;
 
 /// Parses a domain definition.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::{parse_action_def, parse_domain};
+/// # use pddl::parsers::{parse_action_def, parse_domain, preamble::*};
 /// # use pddl::Name;
 ///
 /// let input = r#"(define (domain briefcase-world)
@@ -51,7 +50,7 @@ use nom::IResult;
 ///
 /// let (remainder, domain) = parse_domain(input).unwrap();
 ///
-/// assert_eq!(remainder, "");
+/// assert!(remainder.is_empty());
 /// assert_eq!(domain.name(), &Name::new("briefcase-world"));
 /// assert_eq!(domain.requirements().len(), 4);
 /// assert_eq!(domain.types().len(), 2);
@@ -60,7 +59,7 @@ use nom::IResult;
 /// assert!(domain.constraints().is_empty());
 /// assert_eq!(domain.structure().len(), 3);
 /// ```
-pub fn parse_domain(input: &str) -> IResult<&str, Domain> {
+pub fn parse_domain<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Domain> {
     map(
         ws(prefix_expr(
             "define",
@@ -108,14 +107,14 @@ pub fn parse_domain(input: &str) -> IResult<&str, Domain> {
                 .with_functions(functions.unwrap_or(Functions::default()))
                 .with_constraints(constraints.unwrap_or(DomainConstraintsDef::default()))
         },
-    )(input)
+    )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for Domain<'a> {
-    type Item = Domain<'a>;
+impl crate::parsers::Parser for Domain {
+    type Item = Domain;
 
     /// See [`parse_domain`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_domain(input)
     }
 }

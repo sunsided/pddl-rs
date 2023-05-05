@@ -1,6 +1,6 @@
 //! Provides parsers for durative action definitions.
 
-use crate::parsers::{empty_or, parens, prefix_expr, typed_list};
+use crate::parsers::{empty_or, parens, prefix_expr, typed_list, ParseResult, Span};
 use crate::parsers::{
     parse_da_effect, parse_da_gd, parse_da_symbol, parse_duration_constraint, parse_variable,
 };
@@ -9,13 +9,12 @@ use nom::bytes::complete::tag;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
-use nom::IResult;
 
 /// Parses a durative action definition.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::{parse_action_def, parse_da_def};
+/// # use pddl::parsers::{parse_action_def, parse_da_def, preamble::*};
 /// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effects, GoalDefinition, Literal, PEffect, Predicate, Preference, PreferenceGD, PreconditionGoalDefinition, Term, Variable};
 /// let input = r#"(:durative-action move
 ///         :parameters
@@ -53,7 +52,7 @@ use nom::IResult;
 /// assert!(da_def.condition().is_some());
 /// assert!(da_def.effect().is_some());
 /// ```
-pub fn parse_da_def(input: &str) -> IResult<&str, DurativeActionDefinition> {
+pub fn parse_da_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DurativeActionDefinition> {
     let parameters = preceded(
         tag(":parameters"),
         preceded(multispace1, parens(typed_list(parse_variable))),
@@ -89,14 +88,14 @@ pub fn parse_da_def(input: &str) -> IResult<&str, DurativeActionDefinition> {
         |(symbol, parameters, duration, condition, effect)| {
             DurativeActionDefinition::new(symbol, parameters, duration, condition, effect)
         },
-    )(input)
+    )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for DurativeActionDefinition<'a> {
-    type Item = DurativeActionDefinition<'a>;
+impl crate::parsers::Parser for DurativeActionDefinition {
+    type Item = DurativeActionDefinition;
 
     /// See [`parse_da_def`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_da_def(input)
     }
 }
@@ -135,6 +134,6 @@ mod tests {
                         (at end (increase (distance-travelled) 5))
                         )
             )"#;
-        let (_, _gd) = parse_da_def(input).unwrap();
+        let (_, _gd) = parse_da_def(Span::new(input)).unwrap();
     }
 }

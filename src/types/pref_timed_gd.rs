@@ -7,31 +7,31 @@ use crate::types::{PreferenceName, TimedGD};
 /// ## Usage
 /// Used by [`DurativeActionGoalDefinition`](crate::DurativeActionGoalDefinition).
 #[derive(Debug, Clone, PartialEq)]
-pub enum PrefTimedGD<'a> {
-    Required(TimedGD<'a>),
+pub enum PrefTimedGD {
+    Required(TimedGD),
     /// ## Requirements
     /// Requires [Preferences](crate::Requirement::Preferences).
-    Preference(Option<PreferenceName<'a>>, TimedGD<'a>),
+    Preference(Option<PreferenceName>, TimedGD),
 }
 
-impl<'a> PrefTimedGD<'a> {
-    pub const fn new_required(gd: TimedGD<'a>) -> Self {
+impl PrefTimedGD {
+    pub const fn new_required(gd: TimedGD) -> Self {
         Self::Required(gd)
     }
 
-    pub const fn new_preference(name: Option<PreferenceName<'a>>, gd: TimedGD<'a>) -> Self {
+    pub const fn new_preference(name: Option<PreferenceName>, gd: TimedGD) -> Self {
         Self::Preference(name, gd)
     }
 }
 
-impl<'a> From<TimedGD<'a>> for PrefTimedGD<'a> {
-    fn from(value: TimedGD<'a>) -> Self {
+impl From<TimedGD> for PrefTimedGD {
+    fn from(value: TimedGD) -> Self {
         PrefTimedGD::Required(value)
     }
 }
 
-impl<'a> From<(Option<PreferenceName<'a>>, TimedGD<'a>)> for PrefTimedGD<'a> {
-    fn from(value: (Option<PreferenceName<'a>>, TimedGD<'a>)) -> Self {
+impl From<(Option<PreferenceName>, TimedGD)> for PrefTimedGD {
+    fn from(value: (Option<PreferenceName>, TimedGD)) -> Self {
         PrefTimedGD::Preference(value.0, value.1)
     }
 }

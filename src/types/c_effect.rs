@@ -8,20 +8,20 @@ use crate::types::{ConditionalEffect, Effects, GoalDefinition, PEffect};
 /// ## Usage
 /// Used by [`Effect`](Effects).
 #[derive(Debug, Clone, PartialEq)]
-pub enum CEffect<'a> {
+pub enum CEffect {
     /// A regular effect.
-    Effect(PEffect<'a>),
+    Effect(PEffect),
     /// A universal affect that is conditioned by variables.
     ///
     /// ## Requirements
     /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
-    Forall(ForallCEffect<'a>),
+    Forall(ForallCEffect),
     /// A conditional effect that applies only if a given
     /// precondition holds true.
     ///
     /// ## Requirements
     /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
-    When(WhenCEffect<'a>),
+    When(WhenCEffect),
 }
 
 /// Applies the specified effects for all listed variables.
@@ -29,16 +29,16 @@ pub enum CEffect<'a> {
 /// ## Requirements
 /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
 #[derive(Debug, Clone, PartialEq)]
-pub struct ForallCEffect<'a> {
+pub struct ForallCEffect {
     /// The (possibly empty) set of variables constraining the effects.
-    pub variables: TypedVariables<'a>,
+    pub variables: TypedVariables,
     /// The effects to apply.
-    pub effects: Effects<'a>,
+    pub effects: Effects,
 }
 
-impl<'a> ForallCEffect<'a> {
+impl ForallCEffect {
     /// Creates a new [`ForallCEffect`] value.
-    pub const fn new(variables: TypedVariables<'a>, effects: Effects<'a>) -> Self {
+    pub const fn new(variables: TypedVariables, effects: Effects) -> Self {
         ForallCEffect { variables, effects }
     }
 }
@@ -48,23 +48,23 @@ impl<'a> ForallCEffect<'a> {
 /// ## Requirements
 /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
 #[derive(Debug, Clone, PartialEq)]
-pub struct WhenCEffect<'a> {
+pub struct WhenCEffect {
     /// The antecedent. This needs to be true for the effect to apply.
-    pub condition: GoalDefinition<'a>,
+    pub condition: GoalDefinition,
     /// The consequent. This is the effect that applies when the condition is true.
-    pub effect: ConditionalEffect<'a>,
+    pub effect: ConditionalEffect,
 }
 
-impl<'a> WhenCEffect<'a> {
+impl WhenCEffect {
     /// Creates a new [`WhenCEffect`] value.
-    pub const fn new(condition: GoalDefinition<'a>, effect: ConditionalEffect<'a>) -> Self {
+    pub const fn new(condition: GoalDefinition, effect: ConditionalEffect) -> Self {
         WhenCEffect { condition, effect }
     }
 }
 
-impl<'a> CEffect<'a> {
+impl CEffect {
     /// Crates a new effect.
-    pub const fn new_p_effect(effect: PEffect<'a>) -> Self {
+    pub const fn new_p_effect(effect: PEffect) -> Self {
         Self::Effect(effect)
     }
 
@@ -73,7 +73,7 @@ impl<'a> CEffect<'a> {
     ///
     /// ## Requirements
     /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
-    pub const fn new_forall(variables: TypedVariables<'a>, effect: Effects<'a>) -> Self {
+    pub const fn new_forall(variables: TypedVariables, effect: Effects) -> Self {
         Self::Forall(ForallCEffect::new(variables, effect))
     }
 
@@ -81,45 +81,45 @@ impl<'a> CEffect<'a> {
     ///
     /// ## Requirements
     /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
-    pub const fn new_when(condition: GoalDefinition<'a>, effect: ConditionalEffect<'a>) -> Self {
+    pub const fn new_when(condition: GoalDefinition, effect: ConditionalEffect) -> Self {
         Self::When(WhenCEffect::new(condition, effect))
     }
 }
 
-impl<'a> From<PEffect<'a>> for CEffect<'a> {
-    fn from(value: PEffect<'a>) -> Self {
+impl From<PEffect> for CEffect {
+    fn from(value: PEffect) -> Self {
         CEffect::new_p_effect(value)
     }
 }
 
-impl<'a> From<ForallCEffect<'a>> for CEffect<'a> {
-    fn from(value: ForallCEffect<'a>) -> Self {
+impl From<ForallCEffect> for CEffect {
+    fn from(value: ForallCEffect) -> Self {
         CEffect::Forall(value)
     }
 }
 
-impl<'a> From<WhenCEffect<'a>> for CEffect<'a> {
-    fn from(value: WhenCEffect<'a>) -> Self {
+impl From<WhenCEffect> for CEffect {
+    fn from(value: WhenCEffect) -> Self {
         CEffect::When(value)
     }
 }
 
-impl<'a> From<(TypedVariables<'a>, Effects<'a>)> for ForallCEffect<'a> {
-    fn from(value: (TypedVariables<'a>, Effects<'a>)) -> Self {
+impl From<(TypedVariables, Effects)> for ForallCEffect {
+    fn from(value: (TypedVariables, Effects)) -> Self {
         ForallCEffect::new(value.0, value.1)
     }
 }
 
-impl<'a> From<(GoalDefinition<'a>, ConditionalEffect<'a>)> for WhenCEffect<'a> {
-    fn from(value: (GoalDefinition<'a>, ConditionalEffect<'a>)) -> Self {
+impl From<(GoalDefinition, ConditionalEffect)> for WhenCEffect {
+    fn from(value: (GoalDefinition, ConditionalEffect)) -> Self {
         WhenCEffect::new(value.0, value.1)
     }
 }
 
-impl<'a> TryInto<PEffect<'a>> for CEffect<'a> {
+impl TryInto<PEffect> for CEffect {
     type Error = ();
 
-    fn try_into(self) -> Result<PEffect<'a>, Self::Error> {
+    fn try_into(self) -> Result<PEffect, Self::Error> {
         match self {
             CEffect::Effect(x) => Ok(x),
             CEffect::Forall(_) => Err(()),
@@ -128,10 +128,10 @@ impl<'a> TryInto<PEffect<'a>> for CEffect<'a> {
     }
 }
 
-impl<'a> TryInto<WhenCEffect<'a>> for CEffect<'a> {
+impl TryInto<WhenCEffect> for CEffect {
     type Error = ();
 
-    fn try_into(self) -> Result<WhenCEffect<'a>, Self::Error> {
+    fn try_into(self) -> Result<WhenCEffect, Self::Error> {
         match self {
             CEffect::Effect(_) => Err(()),
             CEffect::Forall(_) => Err(()),
@@ -140,10 +140,10 @@ impl<'a> TryInto<WhenCEffect<'a>> for CEffect<'a> {
     }
 }
 
-impl<'a> TryInto<ForallCEffect<'a>> for CEffect<'a> {
+impl TryInto<ForallCEffect> for CEffect {
     type Error = ();
 
-    fn try_into(self) -> Result<ForallCEffect<'a>, Self::Error> {
+    fn try_into(self) -> Result<ForallCEffect, Self::Error> {
         match self {
             CEffect::Effect(_) => Err(()),
             CEffect::Forall(x) => Ok(x),

@@ -1,39 +1,39 @@
 //! Provides parsers for binary-operand operations.
 
+use crate::parsers::{ParseResult, Span};
 use crate::types::{binary_op::names, BinaryOp};
 use nom::branch::alt;
 use nom::bytes::complete::tag;
-use nom::combinator::map_res;
-use nom::IResult;
+use nom::combinator::map;
 
 /// Parses a multi-operand operation, i.e. `* | + | - | /`.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::parse_binary_op;
+/// # use pddl::parsers::{parse_binary_op, Span, UnwrapValue};
 /// # use pddl::{BinaryOp};
-/// assert_eq!(parse_binary_op("*"), Ok(("", BinaryOp::Multiplication)));
-/// assert_eq!(parse_binary_op("+"), Ok(("", BinaryOp::Addition)));
-/// assert_eq!(parse_binary_op("-"), Ok(("", BinaryOp::Subtraction)));
-/// assert_eq!(parse_binary_op("/"), Ok(("", BinaryOp::Division)));
+/// assert!(parse_binary_op(Span::new("*")).is_value(BinaryOp::Multiplication));
+/// assert!(parse_binary_op(Span::new("+")).is_value(BinaryOp::Addition));
+/// assert!(parse_binary_op(Span::new("-")).is_value(BinaryOp::Subtraction));
+/// assert!(parse_binary_op(Span::new("/")).is_value(BinaryOp::Division));
 ///```
-pub fn parse_binary_op(input: &str) -> IResult<&str, BinaryOp> {
-    map_res(
+pub fn parse_binary_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, BinaryOp> {
+    map(
         alt((
             tag(names::MULTIPLICATION),
             tag(names::ADDITION),
             tag(names::SUBTRACTION),
             tag(names::DIVISION),
         )),
-        BinaryOp::try_from,
-    )(input)
+        |x: Span| BinaryOp::try_from(*x.fragment()).expect("unhandled variant"),
+    )(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for BinaryOp {
+impl crate::parsers::Parser for BinaryOp {
     type Item = BinaryOp;
 
     /// See [`parse_binary_op`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_binary_op(input)
     }
 }

@@ -1,36 +1,35 @@
 //! Provides parsers for constant definitions.
 
-use crate::parsers::{parse_name, prefix_expr, typed_list};
+use crate::parsers::{parse_name, prefix_expr, typed_list, ParseResult, Span};
 use crate::types::Types;
 use nom::combinator::map;
-use nom::IResult;
 
 /// Parser that parses constant definitions, i.e. `(:constants <typed list (name)>)`.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::parse_types_def;
+/// # use pddl::parsers::{parse_types_def, preamble::*};
 /// # use pddl::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions};
 /// # use pddl::{Name, Type, Typed, TypedList, Types};
 /// let input = "(:types location physob)";
-/// assert_eq!(parse_types_def(input), Ok(("",
+/// assert!(parse_types_def(input).is_value(
 ///     Types::new(TypedList::from_iter([
 ///         Typed::new(Name::from("location"), Type::OBJECT),
 ///         Typed::new(Name::from("physob"), Type::OBJECT),
 ///     ]))
-/// )));
+/// ));
 /// ```
-pub fn parse_types_def(input: &str) -> IResult<&str, Types> {
+pub fn parse_types_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Types> {
     map(prefix_expr(":types", typed_list(parse_name)), |vec| {
         Types::new(vec)
-    })(input)
+    })(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for Types<'a> {
-    type Item = Types<'a>;
+impl crate::parsers::Parser for Types {
+    type Item = Types;
 
     /// See [`parse_types_def`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_types_def(input)
     }
 }

@@ -1,18 +1,17 @@
 //! Provides parsers for goal initial state definitions.
 
-use crate::parsers::{parse_init_el, prefix_expr, space_separated_list0};
+use crate::parsers::{parse_init_el, prefix_expr, space_separated_list0, ParseResult, Span};
 use crate::types::InitElements;
 use nom::combinator::map;
-use nom::IResult;
 
 /// Parser for goal initial state definitions.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::{parse_problem_init_def};
+/// # use pddl::parsers::{parse_problem_init_def, preamble::*};
 /// # use pddl::{AtomicFormula, InitElement, InitElements, NameLiteral, Number};
 /// let input = "(:init (train-not-in-use train1) (at 10 (train-not-in-use train2)))";
-/// assert_eq!(parse_problem_init_def(input), Ok(("",
+/// assert!(parse_problem_init_def(input).is_value(
 ///     InitElements::from_iter([
 ///         InitElement::new_literal(
 ///             NameLiteral::new(
@@ -32,19 +31,19 @@ use nom::IResult;
 ///             )
 ///         )
 ///     ])
-/// )));
+/// ));
 /// ```
-pub fn parse_problem_init_def(input: &str) -> IResult<&str, InitElements> {
+pub fn parse_problem_init_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, InitElements> {
     map(
         prefix_expr(":init", space_separated_list0(parse_init_el)),
         InitElements::new,
-    )(input)
+    )(input.into())
 }
-impl<'a> crate::parsers::Parser<'a> for InitElements<'a> {
-    type Item = InitElements<'a>;
+impl crate::parsers::Parser for InitElements {
+    type Item = InitElements;
 
     /// See [`parse_problem_init_def`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_problem_init_def(input)
     }
 }

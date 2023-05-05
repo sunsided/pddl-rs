@@ -8,10 +8,10 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`TypedList`](crate::TypedList).
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct Typed<'a, O>(O, Type<'a>);
+pub struct Typed<O>(O, Type);
 
-impl<'a, O> Typed<'a, O> {
-    pub const fn new(value: O, r#type: Type<'a>) -> Self {
+impl<O> Typed<O> {
+    pub const fn new(value: O, r#type: Type) -> Self {
         Self(value, r#type)
     }
 
@@ -25,12 +25,12 @@ impl<'a, O> Typed<'a, O> {
     }
 
     /// Gets the assigned type.
-    pub const fn type_(&self) -> &Type<'a> {
+    pub const fn type_(&self) -> &Type {
         &self.1
     }
 }
 
-pub trait ToTyped<'a, T> {
+pub trait ToTyped<T> {
     /// Wraps the value into a [`Typed`] as [`Type::Exactly`] the specified type.
     ///
     /// ## Example
@@ -41,7 +41,7 @@ pub trait ToTyped<'a, T> {
     ///     Typed::new(Name::from("kitchen"), Type::Exactly(PrimitiveType::from("room")))
     /// );
     /// ```
-    fn to_typed<I: Into<Type<'a>>>(self, r#type: I) -> Typed<'a, T>;
+    fn to_typed<I: Into<Type>>(self, r#type: I) -> Typed<T>;
 
     /// Wraps the value into a [`Typed`] as [`Type::EitherOf`] the specified types.
     ///
@@ -58,19 +58,19 @@ pub trait ToTyped<'a, T> {
     ///     )
     /// );
     /// ```
-    fn to_typed_either<I: IntoIterator<Item = P>, P: Into<PrimitiveType<'a>>>(
+    fn to_typed_either<I: IntoIterator<Item = P>, P: Into<PrimitiveType>>(
         self,
         r#type: I,
-    ) -> Typed<'a, T>;
+    ) -> Typed<T>;
 }
 
-impl<'a, O> From<O> for Typed<'a, O> {
+impl<'a, O> From<O> for Typed<O> {
     fn from(value: O) -> Self {
         Typed::new_object(value)
     }
 }
 
-impl<'a, O> Deref for Typed<'a, O> {
+impl<'a, O> Deref for Typed<O> {
     type Target = O;
 
     fn deref(&self) -> &Self::Target {

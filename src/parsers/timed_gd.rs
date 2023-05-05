@@ -1,21 +1,20 @@
 //! Provides parsers for timed goal definitions.
 
-use crate::parsers::prefix_expr;
 use crate::parsers::{parse_gd, parse_interval, parse_time_specifier};
+use crate::parsers::{prefix_expr, ParseResult, Span};
 use crate::types::TimedGD;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
-use nom::IResult;
 
 /// Parser for timed goal definitions.
 ///
 /// ## Examples
 /// ```
-/// # use pddl::parsers::{parse_timed_gd};
+/// # use pddl::parsers::{parse_timed_gd, preamble::*};
 /// # use pddl::{AtomicFormula, GoalDefinition, Interval, Term, TimedGD, TimeSpecifier};
-/// assert_eq!(parse_timed_gd("(at start (= x y))"), Ok(("",
+/// assert!(parse_timed_gd("(at start (= x y))").is_value(
 ///     TimedGD::new_at(
 ///         TimeSpecifier::Start,
 ///         GoalDefinition::AtomicFormula(
@@ -25,9 +24,9 @@ use nom::IResult;
 ///             )
 ///         )
 ///     )
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_timed_gd("(over all (= x y))"), Ok(("",
+/// assert!(parse_timed_gd("(over all (= x y))").is_value(
 ///     TimedGD::new_over(
 ///         Interval::All,
 ///         GoalDefinition::AtomicFormula(
@@ -37,9 +36,9 @@ use nom::IResult;
 ///             )
 ///         )
 ///     )
-/// )));
+/// ));
 /// ```
-pub fn parse_timed_gd(input: &str) -> IResult<&str, TimedGD> {
+pub fn parse_timed_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedGD> {
     let at = map(
         prefix_expr(
             "at",
@@ -56,16 +55,14 @@ pub fn parse_timed_gd(input: &str) -> IResult<&str, TimedGD> {
         TimedGD::from,
     );
 
-    alt((at, over))(input)
+    alt((at, over))(input.into())
 }
 
-#[cfg_attr(docsrs, doc(cfg(feature = "parser")))]
-#[cfg(feature = "parser")]
-impl<'a> crate::parsers::Parser<'a> for TimedGD<'a> {
-    type Item = TimedGD<'a>;
+impl crate::parsers::Parser for TimedGD {
+    type Item = TimedGD;
 
     /// See [`parse_timed_gd`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_timed_gd(input)
     }
 }
@@ -77,6 +74,6 @@ mod tests {
     #[test]
     fn it_works() {
         let input = "(over all (can-move ?from-waypoint ?to-waypoint))";
-        let (_, _gd) = parse_timed_gd(input).unwrap();
+        let (_, _gd) = parse_timed_gd(Span::new(input)).unwrap();
     }
 }

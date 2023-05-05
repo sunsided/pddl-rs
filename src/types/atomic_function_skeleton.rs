@@ -31,37 +31,37 @@ use crate::types::{FunctionSymbol, TypedVariables, Variable};
 /// ## Usage
 /// Used by [`Functions`](crate::Functions).
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct AtomicFunctionSkeleton<'a> {
+pub struct AtomicFunctionSkeleton {
     /// The name of the fluent, e.g. `battery-level`.
-    symbol: FunctionSymbol<'a>,
+    symbol: FunctionSymbol,
     /// The list of parameters to the fluent, e.g. `?r - rover`.
-    variables: TypedVariables<'a>,
+    variables: TypedVariables,
 }
 
-impl<'a> AtomicFunctionSkeleton<'a> {
-    pub const fn new(symbol: FunctionSymbol<'a>, variables: TypedVariables<'a>) -> Self {
+impl AtomicFunctionSkeleton {
+    pub const fn new(symbol: FunctionSymbol, variables: TypedVariables) -> Self {
         Self { symbol, variables }
     }
 
     /// Gets a reference to the function symbol.
-    pub const fn symbol(&self) -> &FunctionSymbol<'a> {
+    pub const fn symbol(&self) -> &FunctionSymbol {
         &self.symbol
     }
 
     /// Gets a reference to the variables.
-    pub fn variables(&self) -> &TypedVariables<'a> {
+    pub fn variables(&self) -> &TypedVariables {
         &self.variables
     }
 }
 
-impl<'a> From<(FunctionSymbol<'a>, TypedVariables<'a>)> for AtomicFunctionSkeleton<'a> {
-    fn from(value: (FunctionSymbol<'a>, TypedVariables<'a>)) -> Self {
+impl From<(FunctionSymbol, TypedVariables)> for AtomicFunctionSkeleton {
+    fn from(value: (FunctionSymbol, TypedVariables)) -> Self {
         AtomicFunctionSkeleton::new(value.0, value.1)
     }
 }
 
-impl<'a> From<(FunctionSymbol<'a>, Vec<Typed<'a, Variable<'a>>>)> for AtomicFunctionSkeleton<'a> {
-    fn from(value: (FunctionSymbol<'a>, Vec<Typed<'a, Variable<'a>>>)) -> Self {
+impl From<(FunctionSymbol, Vec<Typed<Variable>>)> for AtomicFunctionSkeleton {
+    fn from(value: (FunctionSymbol, Vec<Typed<Variable>>)) -> Self {
         AtomicFunctionSkeleton::new(value.0, value.1.into())
     }
 }

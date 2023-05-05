@@ -7,36 +7,36 @@ use crate::types::{AtomicFormulaSkeleton, GoalDefinition};
 /// ## Usage
 /// Used by [`StructureDef`](crate::StructureDef).
 #[derive(Debug, Clone, PartialEq)]
-pub struct DerivedPredicate<'a>(AtomicFormulaSkeleton<'a>, GoalDefinition<'a>);
+pub struct DerivedPredicate(AtomicFormulaSkeleton, GoalDefinition);
 
-impl<'a> DerivedPredicate<'a> {
-    pub const fn new(formula: AtomicFormulaSkeleton<'a>, gd: GoalDefinition<'a>) -> Self {
+impl DerivedPredicate {
+    pub const fn new(formula: AtomicFormulaSkeleton, gd: GoalDefinition) -> Self {
         Self(formula, gd)
     }
 
-    pub const fn predicate(&self) -> &AtomicFormulaSkeleton<'a> {
+    pub const fn predicate(&self) -> &AtomicFormulaSkeleton {
         &self.0
     }
 
-    pub const fn expression(&self) -> &GoalDefinition<'a> {
+    pub const fn expression(&self) -> &GoalDefinition {
         &self.1
     }
 }
 
-impl<'a> From<(AtomicFormulaSkeleton<'a>, GoalDefinition<'a>)> for DerivedPredicate<'a> {
-    fn from(value: (AtomicFormulaSkeleton<'a>, GoalDefinition<'a>)) -> Self {
+impl From<(AtomicFormulaSkeleton, GoalDefinition)> for DerivedPredicate {
+    fn from(value: (AtomicFormulaSkeleton, GoalDefinition)) -> Self {
         DerivedPredicate::new(value.0, value.1)
     }
 }
 
-impl<'a> AsRef<AtomicFormulaSkeleton<'a>> for DerivedPredicate<'a> {
-    fn as_ref(&self) -> &AtomicFormulaSkeleton<'a> {
+impl AsRef<AtomicFormulaSkeleton> for DerivedPredicate {
+    fn as_ref(&self) -> &AtomicFormulaSkeleton {
         self.predicate()
     }
 }
 
-impl<'a> AsRef<GoalDefinition<'a>> for DerivedPredicate<'a> {
-    fn as_ref(&self) -> &GoalDefinition<'a> {
+impl AsRef<GoalDefinition> for DerivedPredicate {
+    fn as_ref(&self) -> &GoalDefinition {
         self.expression()
     }
 }

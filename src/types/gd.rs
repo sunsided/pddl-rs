@@ -10,92 +10,92 @@ use crate::types::{AtomicFormula, FComp, Term, TypedVariables};
 /// [`TimedGD`](crate::TimedGD), [`DerivedPredicate`](crate::DerivedPredicate) and
 /// [`Con2GD`](crate::Con2GD).
 #[derive(Debug, Clone, PartialEq)]
-pub enum GoalDefinition<'a> {
-    AtomicFormula(AtomicFormula<'a, Term<'a>>),
+pub enum GoalDefinition {
+    AtomicFormula(AtomicFormula<Term>),
     /// ## Requirements
     /// Requires [Negative Preconditions](crate::Requirement::NegativePreconditions).
-    Literal(TermLiteral<'a>),
-    And(Vec<GoalDefinition<'a>>),
+    Literal(TermLiteral),
+    And(Vec<GoalDefinition>),
     /// ## Requirements
     /// Requires [Disjunctive Preconditions](crate::Requirement::DisjunctivePreconditions).
-    Or(Vec<GoalDefinition<'a>>),
+    Or(Vec<GoalDefinition>),
     /// ## Requirements
     /// Requires [Disjunctive Preconditions](crate::Requirement::DisjunctivePreconditions).
-    Not(Box<GoalDefinition<'a>>),
+    Not(Box<GoalDefinition>),
     /// ## Requirements
     /// Requires [Disjunctive Preconditions](crate::Requirement::DisjunctivePreconditions).
-    Imply(Box<GoalDefinition<'a>>, Box<GoalDefinition<'a>>),
+    Imply(Box<GoalDefinition>, Box<GoalDefinition>),
     /// ## Requirements
     /// Requires [Existential Preconditions](crate::Requirement::ExistentialPreconditions).
-    Exists(TypedVariables<'a>, Box<GoalDefinition<'a>>),
+    Exists(TypedVariables, Box<GoalDefinition>),
     /// ## Requirements
     /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
-    ForAll(TypedVariables<'a>, Box<GoalDefinition<'a>>),
+    ForAll(TypedVariables, Box<GoalDefinition>),
     /// ## Requirements
     /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
-    FComp(FComp<'a>),
+    FComp(FComp),
 }
 
-impl<'a> GoalDefinition<'a> {
+impl GoalDefinition {
     #[inline(always)]
-    pub const fn new_atomic_formula(value: AtomicFormula<'a, Term<'a>>) -> Self {
+    pub const fn new_atomic_formula(value: AtomicFormula<Term>) -> Self {
         Self::AtomicFormula(value)
     }
 
     #[inline(always)]
-    pub const fn new_literal(value: TermLiteral<'a>) -> Self {
+    pub const fn new_literal(value: TermLiteral) -> Self {
         Self::Literal(value)
     }
 
     #[inline(always)]
-    pub fn new_and<T: IntoIterator<Item = GoalDefinition<'a>>>(values: T) -> Self {
+    pub fn new_and<T: IntoIterator<Item = GoalDefinition>>(values: T) -> Self {
         // TODO: Flatten `(and (and a b) (and x y))` into `(and a b c y)`.
         Self::And(values.into_iter().collect())
     }
 
     #[inline(always)]
-    pub fn new_or<T: IntoIterator<Item = GoalDefinition<'a>>>(values: T) -> Self {
+    pub fn new_or<T: IntoIterator<Item = GoalDefinition>>(values: T) -> Self {
         // TODO: Flatten `(or (or a b) (or x y))` into `(or a b c y)`.
         Self::Or(values.into_iter().collect())
     }
 
     #[inline(always)]
-    pub fn new_not(value: GoalDefinition<'a>) -> Self {
+    pub fn new_not(value: GoalDefinition) -> Self {
         Self::Not(Box::new(value))
     }
 
     #[inline(always)]
-    pub fn new_imply_tuple(tuple: (GoalDefinition<'a>, GoalDefinition<'a>)) -> Self {
+    pub fn new_imply_tuple(tuple: (GoalDefinition, GoalDefinition)) -> Self {
         Self::new_imply(tuple.0, tuple.1)
     }
 
     #[inline(always)]
-    pub fn new_imply(a: GoalDefinition<'a>, b: GoalDefinition<'a>) -> Self {
+    pub fn new_imply(a: GoalDefinition, b: GoalDefinition) -> Self {
         Self::Imply(Box::new(a), Box::new(b))
     }
 
     #[inline(always)]
-    pub fn new_exists_tuple(tuple: (TypedVariables<'a>, GoalDefinition<'a>)) -> Self {
+    pub fn new_exists_tuple(tuple: (TypedVariables, GoalDefinition)) -> Self {
         Self::new_exists(tuple.0, tuple.1)
     }
 
     #[inline(always)]
-    pub fn new_exists(variables: TypedVariables<'a>, gd: GoalDefinition<'a>) -> Self {
+    pub fn new_exists(variables: TypedVariables, gd: GoalDefinition) -> Self {
         Self::Exists(variables, Box::new(gd))
     }
 
     #[inline(always)]
-    pub fn new_forall_tuple(tuple: (TypedVariables<'a>, GoalDefinition<'a>)) -> Self {
+    pub fn new_forall_tuple(tuple: (TypedVariables, GoalDefinition)) -> Self {
         Self::new_forall(tuple.0, tuple.1)
     }
 
     #[inline(always)]
-    pub fn new_forall(variables: TypedVariables<'a>, gd: GoalDefinition<'a>) -> Self {
+    pub fn new_forall(variables: TypedVariables, gd: GoalDefinition) -> Self {
         Self::ForAll(variables, Box::new(gd))
     }
 
     #[inline(always)]
-    pub const fn new_f_comp(f_comp: FComp<'a>) -> Self {
+    pub const fn new_f_comp(f_comp: FComp) -> Self {
         Self::FComp(f_comp)
     }
 

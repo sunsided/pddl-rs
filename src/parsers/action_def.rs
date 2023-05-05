@@ -1,29 +1,28 @@
 //! Provides parsers for action definitions.
 
-use crate::parsers::{empty_or, parens, prefix_expr, typed_list, ws};
+use crate::parsers::{empty_or, parens, prefix_expr, typed_list, ws, ParseResult, Span};
 use crate::parsers::{parse_action_symbol, parse_effect, parse_pre_gd, parse_variable};
 use crate::types::ActionDefinition;
 use nom::bytes::complete::tag;
 use nom::character::complete::multispace1;
 use nom::combinator::{map, opt};
 use nom::sequence::{preceded, tuple};
-use nom::IResult;
 
 /// Parses an action definition.
 ///
 /// ## Example
 /// ```
 /// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effects, GoalDefinition, Name, PEffect, Predicate, PreferenceGD, PreconditionGoalDefinitions, PreconditionGoalDefinition, Term, ToTyped, TypedList, Variable};
-/// # use pddl::parsers::parse_action_def;
+/// # use pddl::parsers::{parse_action_def, Span, UnwrapValue};
 /// let input = r#"(:action take-out
 ///                     :parameters (?x - physob)
 ///                     :precondition (not (= ?x B))
 ///                     :effect (not (in ?x))
 ///                 )"#;
 ///
-/// let action = parse_action_def(input);
+/// let action = parse_action_def(Span::new(input));
 ///
-/// assert_eq!(action, Ok(("",
+/// assert!(action.is_value(
 ///     ActionDefinition::new(
 ///         ActionSymbol::from_str("take-out"),
 ///         TypedList::from_iter([
@@ -50,9 +49,9 @@ use nom::IResult;
 ///             )
 ///         )))
 ///     )
-/// )));
+/// ));
 /// ```
-pub fn parse_action_def(input: &str) -> IResult<&str, ActionDefinition> {
+pub fn parse_action_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ActionDefinition> {
     let precondition = preceded(
         tag(":precondition"),
         preceded(multispace1, empty_or(parse_pre_gd)),
@@ -82,14 +81,14 @@ pub fn parse_action_def(input: &str) -> IResult<&str, ActionDefinition> {
             preconditions.flatten().into(),
             effects.flatten(),
         )
-    })(input)
+    })(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for ActionDefinition<'a> {
-    type Item = ActionDefinition<'a>;
+impl crate::parsers::Parser for ActionDefinition {
+    type Item = ActionDefinition;
 
     /// See [`parse_action_def`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_action_def(input)
     }
 }

@@ -1,26 +1,25 @@
 //! Provides parsers for length specification.
 
-use crate::parsers::prefix_expr;
+use crate::parsers::{prefix_expr, ParseResult, Span};
 use crate::types::LengthSpec;
-use nom::character::complete::{digit1, multispace0};
-use nom::combinator::{map, map_res, opt, recognize};
+use nom::character::complete::multispace0;
+use nom::combinator::{map, opt};
 use nom::sequence::{preceded, tuple};
-use nom::IResult;
 
 /// Parses a length specification. Deprecated since PDDL 2.1.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::parse_problem_length_spec;
+/// # use pddl::parsers::{parse_problem_length_spec, preamble::*};
 /// # use pddl::LengthSpec;
-/// assert_eq!(parse_problem_length_spec("(:length)"), Ok(("", LengthSpec::default())));
-/// assert_eq!(parse_problem_length_spec("(:length (:serial 123))"), Ok(("", LengthSpec::new_serial(123))));
-/// assert_eq!(parse_problem_length_spec("(:length (:parallel 42))"), Ok(("", LengthSpec::new_parallel(42))));
-/// assert_eq!(parse_problem_length_spec("(:length (:serial 123) (:parallel 42))"), Ok(("", LengthSpec::new(Some(123), Some(42)))));
+/// assert!(parse_problem_length_spec("(:length)").is_value(LengthSpec::default()));
+/// assert!(parse_problem_length_spec("(:length (:serial 123))").is_value(LengthSpec::new_serial(123)));
+/// assert!(parse_problem_length_spec("(:length (:parallel 42))").is_value(LengthSpec::new_parallel(42)));
+/// assert!(parse_problem_length_spec("(:length (:serial 123) (:parallel 42))").is_value(LengthSpec::new(Some(123), Some(42))));
 ///```
-pub fn parse_problem_length_spec(input: &str) -> IResult<&str, LengthSpec> {
-    let serial = prefix_expr(":serial", map_res(recognize(digit1), str::parse));
-    let parallel = prefix_expr(":parallel", map_res(recognize(digit1), str::parse));
+pub fn parse_problem_length_spec<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, LengthSpec> {
+    let serial = prefix_expr(":serial", nom::character::complete::u64);
+    let parallel = prefix_expr(":parallel", nom::character::complete::u64);
     let length = prefix_expr(
         ":length",
         tuple((opt(serial), opt(preceded(multispace0, parallel)))),
@@ -28,14 +27,14 @@ pub fn parse_problem_length_spec(input: &str) -> IResult<&str, LengthSpec> {
 
     map(length, |(serial, parallel)| {
         LengthSpec::new(serial, parallel)
-    })(input)
+    })(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for LengthSpec {
+impl crate::parsers::Parser for LengthSpec {
     type Item = LengthSpec;
 
     /// See [`parse_problem_length_spec`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_problem_length_spec(input)
     }
 }

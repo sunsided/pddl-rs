@@ -8,10 +8,10 @@ use crate::types::{BinaryComp, FExp};
 /// ## Usage
 /// Used by [`GoalDefinition`](crate::GoalDefinition).
 #[derive(Debug, Clone, PartialEq)]
-pub struct FComp<'a>(BinaryComp, FExp<'a>, FExp<'a>);
+pub struct FComp(BinaryComp, FExp, FExp);
 
-impl<'a> FComp<'a> {
-    pub const fn new(comp: BinaryComp, lhs: FExp<'a>, rhs: FExp<'a>) -> Self {
+impl FComp {
+    pub const fn new(comp: BinaryComp, lhs: FExp, rhs: FExp) -> Self {
         Self(comp, lhs, rhs)
     }
 
@@ -21,18 +21,18 @@ impl<'a> FComp<'a> {
     }
 
     /// Returns the first operand.
-    pub const fn first(&self) -> &FExp<'a> {
+    pub const fn first(&self) -> &FExp {
         &self.1
     }
 
     /// Returns the second operand.
-    pub const fn second(&self) -> &FExp<'a> {
+    pub const fn second(&self) -> &FExp {
         &self.2
     }
 }
 
-impl<'a> From<(BinaryComp, FExp<'a>, FExp<'a>)> for FComp<'a> {
-    fn from(value: (BinaryComp, FExp<'a>, FExp<'a>)) -> Self {
+impl From<(BinaryComp, FExp, FExp)> for FComp {
+    fn from(value: (BinaryComp, FExp, FExp)) -> Self {
         FComp::new(value.0, value.1, value.2)
     }
 }

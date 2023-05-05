@@ -9,36 +9,41 @@ use std::ops::Deref;
 /// Used by [`PrefGD`](crate::PreferenceGD), [`PrefTimedGD`](crate::PrefTimedGD),
 /// [`PrefConGD`](crate::PrefConGD) and [`MetricFExp`](crate::MetricFExp).
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct PreferenceName<'a>(Name<'a>);
+pub struct PreferenceName(Name);
 
-impl<'a> PreferenceName<'a> {
+impl PreferenceName {
     #[inline(always)]
-    pub fn new<N: Into<Name<'a>>>(name: N) -> Self {
+    pub fn new<N: Into<Name>>(name: N) -> Self {
         Self(name.into())
     }
 
     #[inline(always)]
-    pub const fn from_str(name: &'a str) -> Self {
+    pub fn from_str(name: &str) -> Self {
         Self(Name::new(name))
     }
 
     #[inline(always)]
-    pub const fn from_name(name: Name<'a>) -> Self {
+    pub const fn from_static(name: &'static str) -> Self {
+        Self(Name::new_static(name))
+    }
+
+    #[inline(always)]
+    pub const fn from_name(name: Name) -> Self {
         Self(name)
     }
 }
 
-impl<'a> Deref for PreferenceName<'a> {
-    type Target = Name<'a>;
+impl Deref for PreferenceName {
+    type Target = Name;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl<'a, T> From<T> for PreferenceName<'a>
+impl<'a, T> From<T> for PreferenceName
 where
-    T: Into<Name<'a>>,
+    T: Into<Name>,
 {
     fn from(value: T) -> Self {
         PreferenceName::new(value.into())

@@ -11,16 +11,16 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`ActionDefinition`](crate::ActionDefinition).
 #[derive(Debug, Clone, PartialEq, Default)]
-pub struct Effects<'a>(Vec<CEffect<'a>>);
+pub struct Effects(Vec<CEffect>);
 
-impl<'a> Effects<'a> {
+impl Effects {
     /// Constructs a new instance from the value.
-    pub fn new(effect: CEffect<'a>) -> Self {
+    pub fn new(effect: CEffect) -> Self {
         Self(vec![effect])
     }
 
     /// Constructs a new instance from the provided vector of values.
-    pub fn new_and(effects: Vec<CEffect<'a>>) -> Self {
+    pub fn new_and(effects: Vec<CEffect>) -> Self {
         Self(effects)
     }
 
@@ -38,13 +38,13 @@ impl<'a> Effects<'a> {
     /// Returns an iterator over the list.
     ///
     /// The iterator yields all items from start to end.
-    pub fn iter(&'a self) -> std::slice::Iter<'a, CEffect<'a>> {
+    pub fn iter(&self) -> std::slice::Iter<CEffect> {
         self.0.iter()
     }
 
     /// Get the only element of this list if the list has
     /// exactly one element. Returns [`None`] in all other cases.
-    pub fn try_get_single(self) -> Option<CEffect<'a>> {
+    pub fn try_get_single(self) -> Option<CEffect> {
         if self.len() == 1 {
             self.into_iter().next()
         } else {
@@ -53,8 +53,8 @@ impl<'a> Effects<'a> {
     }
 }
 
-impl<'a> IntoIterator for Effects<'a> {
-    type Item = CEffect<'a>;
+impl IntoIterator for Effects {
+    type Item = CEffect;
     type IntoIter = std::vec::IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -62,42 +62,42 @@ impl<'a> IntoIterator for Effects<'a> {
     }
 }
 
-impl<'a> Deref for Effects<'a> {
-    type Target = [CEffect<'a>];
+impl Deref for Effects {
+    type Target = [CEffect];
 
     fn deref(&self) -> &Self::Target {
         self.0.as_slice()
     }
 }
 
-impl<'a> AsRef<[CEffect<'a>]> for Effects<'a> {
-    fn as_ref(&self) -> &[CEffect<'a>] {
+impl AsRef<[CEffect]> for Effects {
+    fn as_ref(&self) -> &[CEffect] {
         self.0.as_slice()
     }
 }
 
-impl<'a> From<CEffect<'a>> for Effects<'a> {
-    fn from(value: CEffect<'a>) -> Self {
+impl From<CEffect> for Effects {
+    fn from(value: CEffect) -> Self {
         Effects::new(value)
     }
 }
 
-impl<'a> From<Vec<CEffect<'a>>> for Effects<'a> {
-    fn from(value: Vec<CEffect<'a>>) -> Self {
+impl From<Vec<CEffect>> for Effects {
+    fn from(value: Vec<CEffect>) -> Self {
         Effects::new_and(value)
     }
 }
 
-impl<'a> FromIterator<CEffect<'a>> for Effects<'a> {
-    fn from_iter<T: IntoIterator<Item = CEffect<'a>>>(iter: T) -> Self {
+impl FromIterator<CEffect> for Effects {
+    fn from_iter<T: IntoIterator<Item = CEffect>>(iter: T) -> Self {
         Effects::new_and(iter.into_iter().collect())
     }
 }
 
-impl<'a> TryInto<CEffect<'a>> for Effects<'a> {
+impl TryInto<CEffect> for Effects {
     type Error = ();
 
-    fn try_into(self) -> Result<CEffect<'a>, Self::Error> {
+    fn try_into(self) -> Result<CEffect, Self::Error> {
         self.try_get_single().ok_or(())
     }
 }

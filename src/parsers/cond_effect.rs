@@ -1,19 +1,18 @@
 //! Provides parsers for conditional effects.
 
-use crate::parsers::parse_p_effect;
+use crate::parsers::{parse_p_effect, ParseResult, Span};
 use crate::parsers::{prefix_expr, space_separated_list0};
 use crate::types::ConditionalEffect;
 use nom::branch::alt;
 use nom::combinator::map;
-use nom::IResult;
 
 /// Parses conditional effects.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::parse_cond_effect;
+/// # use pddl::parsers::{parse_cond_effect, preamble::*};
 /// # use pddl::{AtomicFormula, CEffect, ConditionalEffect, EqualityAtomicFormula, PEffect, Term};
-/// assert_eq!(parse_cond_effect("(= x y)"), Ok(("",
+/// assert!(parse_cond_effect("(= x y)").is_value(
 ///     ConditionalEffect::Single(
 ///         PEffect::AtomicFormula(AtomicFormula::Equality(
 ///             EqualityAtomicFormula::new(
@@ -22,9 +21,9 @@ use nom::IResult;
 ///             )
 ///         )
 ///     )
-/// )));
+/// ));
 ///
-/// assert_eq!(parse_cond_effect("(and (= x y) (not (= ?a B)))"), Ok(("",
+/// assert!(parse_cond_effect("(and (= x y) (not (= ?a B)))").is_value(
 ///     ConditionalEffect::All(vec![
 ///         PEffect::AtomicFormula(AtomicFormula::Equality(
 ///             EqualityAtomicFormula::new(
@@ -39,23 +38,23 @@ use nom::IResult;
 ///             )
 ///         )
 ///     ])
-/// )));
+/// ));
 /// ```
-pub fn parse_cond_effect(input: &str) -> IResult<&str, ConditionalEffect> {
+pub fn parse_cond_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConditionalEffect> {
     let exactly = map(parse_p_effect, ConditionalEffect::from);
     let all = map(
         prefix_expr("and", space_separated_list0(parse_p_effect)),
         ConditionalEffect::from,
     );
 
-    alt((all, exactly))(input)
+    alt((all, exactly))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for ConditionalEffect<'a> {
-    type Item = ConditionalEffect<'a>;
+impl crate::parsers::Parser for ConditionalEffect {
+    type Item = ConditionalEffect;
 
     /// See [`parse_cond_effect`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_cond_effect(input)
     }
 }

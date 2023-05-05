@@ -1,34 +1,33 @@
 //! Provides parsers for duration constraints.
 
-use crate::parsers::parse_simple_duration_constraint;
+use crate::parsers::{parse_simple_duration_constraint, ParseResult, Span};
 use crate::parsers::{prefix_expr, space_separated_list1};
 use crate::types::DurationConstraint;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
-use nom::IResult;
 
 /// Parses a duration constraint.
 ///
 /// ## Example
 /// ```
-/// # use pddl::parsers::parse_duration_constraint;
+/// # use pddl::parsers::{parse_duration_constraint, preamble::*};
 /// # use pddl::{DOp, DurationConstraint, DurationValue, FunctionType, SimpleDurationConstraint, TimeSpecifier};
 /// let input = "()";
-/// assert_eq!(parse_duration_constraint(input), Ok(("", None)));
+/// assert!(parse_duration_constraint(input).is_value(None));
 ///
 /// let input = "(= ?duration 5)";
-/// assert_eq!(parse_duration_constraint(input), Ok(("",
+/// assert!(parse_duration_constraint(input).is_value(
 ///     Some(DurationConstraint::new(
 ///         SimpleDurationConstraint::Op(
 ///             DOp::Equal,
 ///             DurationValue::Number(5.into())
 ///         )
 ///     ))
-/// )));
+/// ));
 ///
 /// let input = "(at end (<= ?duration 1.23))";
-/// assert_eq!(parse_duration_constraint(input), Ok(("",
+/// assert!(parse_duration_constraint(input).is_value(
 ///     Some(DurationConstraint::new(
 ///         SimpleDurationConstraint::new_at(
 ///             TimeSpecifier::End,
@@ -38,10 +37,10 @@ use nom::IResult;
 ///             )
 ///         )
 ///     ))
-/// )));
+/// ));
 ///
 /// let input = "(and (at end (<= ?duration 1.23)) (>= ?duration 1.0))";
-/// assert_eq!(parse_duration_constraint(input), Ok(("",
+/// assert!(parse_duration_constraint(input).is_value(
 ///     Some(DurationConstraint::new_all([
 ///         SimpleDurationConstraint::new_at(
 ///             TimeSpecifier::End,
@@ -55,9 +54,11 @@ use nom::IResult;
 ///             DurationValue::Number(1.0.into())
 ///         )
 ///     ]))
-/// )));
+/// ));
 ///```
-pub fn parse_duration_constraint(input: &str) -> IResult<&str, Option<DurationConstraint>> {
+pub fn parse_duration_constraint<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, Option<DurationConstraint>> {
     let none = map(tag("()"), |_| None);
     let simple = map(parse_simple_duration_constraint, |c| {
         Some(DurationConstraint::from(c))
@@ -72,14 +73,14 @@ pub fn parse_duration_constraint(input: &str) -> IResult<&str, Option<DurationCo
         |cs| Some(DurationConstraint::from_iter(cs)),
     );
 
-    alt((none, simple, and))(input)
+    alt((none, simple, and))(input.into())
 }
 
-impl<'a> crate::parsers::Parser<'a> for DurationConstraint<'a> {
-    type Item = Option<DurationConstraint<'a>>;
+impl crate::parsers::Parser for DurationConstraint {
+    type Item = Option<DurationConstraint>;
 
     /// See [`parse_duration_constraint`].
-    fn parse(input: &'a str) -> IResult<&str, Self::Item> {
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_duration_constraint(input)
     }
 }

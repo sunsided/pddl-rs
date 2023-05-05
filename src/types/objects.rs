@@ -8,33 +8,33 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`Problem`](crate::Problem).
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
-pub struct Objects<'a>(TypedNames<'a>);
+pub struct Objects(TypedNames);
 
-impl<'a> Objects<'a> {
+impl Objects {
     // TODO: Convert to const again that takes `TypedNames` directly.
-    pub fn new<I: IntoIterator<Item = Typed<'a, Name<'a>>>>(objects: I) -> Self {
+    pub fn new<I: IntoIterator<Item = Typed<Name>>>(objects: I) -> Self {
         Self(objects.into_iter().collect())
     }
 
-    pub fn values(&self) -> &TypedNames<'a> {
+    pub fn values(&self) -> &TypedNames {
         &self.0
     }
 }
 
-impl<'a> From<TypedNames<'a>> for Objects<'a> {
-    fn from(value: TypedNames<'a>) -> Self {
+impl From<TypedNames> for Objects {
+    fn from(value: TypedNames) -> Self {
         Self(value)
     }
 }
 
-impl<'a> FromIterator<Typed<'a, Name<'a>>> for Objects<'a> {
-    fn from_iter<T: IntoIterator<Item = Typed<'a, Name<'a>>>>(iter: T) -> Self {
+impl FromIterator<Typed<Name>> for Objects {
+    fn from_iter<T: IntoIterator<Item = Typed<Name>>>(iter: T) -> Self {
         Objects::new(TypedNames::from_iter(iter))
     }
 }
 
-impl<'a> Deref for Objects<'a> {
-    type Target = TypedNames<'a>;
+impl Deref for Objects {
+    type Target = TypedNames;
 
     #[inline(always)]
     fn deref(&self) -> &Self::Target {

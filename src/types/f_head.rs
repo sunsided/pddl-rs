@@ -11,20 +11,17 @@ use crate::types::{FunctionSymbol, Term};
 /// Used by [`FExp`](crate::FExp), [`PEffect`](crate::PEffect), [`TimedEffect`](crate::TimedEffect)
 /// and [`FAssignDa`](crate::FAssignDa).
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum FHead<'a> {
-    Simple(FunctionSymbol<'a>), // TODO: Unify with `WithTerms`?
-    WithTerms(FunctionSymbol<'a>, Vec<Term<'a>>),
+pub enum FHead {
+    Simple(FunctionSymbol), // TODO: Unify with `WithTerms`?
+    WithTerms(FunctionSymbol, Vec<Term>),
 }
 
-impl<'a> FHead<'a> {
-    pub const fn new(symbol: FunctionSymbol<'a>) -> Self {
+impl FHead {
+    pub const fn new(symbol: FunctionSymbol) -> Self {
         Self::Simple(symbol)
     }
 
-    pub fn new_with_terms<I: IntoIterator<Item = Term<'a>>>(
-        symbol: FunctionSymbol<'a>,
-        terms: I,
-    ) -> Self {
+    pub fn new_with_terms<I: IntoIterator<Item = Term>>(symbol: FunctionSymbol, terms: I) -> Self {
         Self::WithTerms(symbol, terms.into_iter().collect())
     }
 }

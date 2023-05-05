@@ -6,15 +6,15 @@ use crate::types::SimpleDurationConstraint;
 /// ## Usage
 /// Used by [`DurativeActionDefinition`](crate::DurativeActionDefinition).
 #[derive(Debug, Clone, PartialEq)]
-pub enum DurationConstraint<'a> {
-    Single(SimpleDurationConstraint<'a>),
+pub enum DurationConstraint {
+    Single(SimpleDurationConstraint),
     /// ## Requirements
     /// Requires [Duration Inequalities](crate::Requirement::DurationInequalities).
-    All(Vec<SimpleDurationConstraint<'a>>),
+    All(Vec<SimpleDurationConstraint>),
 }
 
-impl<'a> IntoIterator for DurationConstraint<'a> {
-    type Item = SimpleDurationConstraint<'a>;
+impl IntoIterator for DurationConstraint {
+    type Item = SimpleDurationConstraint;
     type IntoIter = FlatteningIntoIterator<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -25,12 +25,12 @@ impl<'a> IntoIterator for DurationConstraint<'a> {
     }
 }
 
-impl<'a> DurationConstraint<'a> {
-    pub const fn new(constraint: SimpleDurationConstraint<'a>) -> Self {
+impl DurationConstraint {
+    pub const fn new(constraint: SimpleDurationConstraint) -> Self {
         Self::Single(constraint)
     }
 
-    pub fn new_all<I: IntoIterator<Item = SimpleDurationConstraint<'a>>>(constraints: I) -> Self {
+    pub fn new_all<I: IntoIterator<Item = SimpleDurationConstraint>>(constraints: I) -> Self {
         let vec: Vec<_> = constraints.into_iter().collect();
         debug_assert!(!vec.is_empty());
         Self::All(vec)
@@ -51,14 +51,14 @@ impl<'a> DurationConstraint<'a> {
     }
 }
 
-impl<'a> From<SimpleDurationConstraint<'a>> for DurationConstraint<'a> {
-    fn from(value: SimpleDurationConstraint<'a>) -> Self {
+impl From<SimpleDurationConstraint> for DurationConstraint {
+    fn from(value: SimpleDurationConstraint) -> Self {
         DurationConstraint::new(value)
     }
 }
 
-impl<'a> FromIterator<SimpleDurationConstraint<'a>> for DurationConstraint<'a> {
-    fn from_iter<T: IntoIterator<Item = SimpleDurationConstraint<'a>>>(iter: T) -> Self {
+impl FromIterator<SimpleDurationConstraint> for DurationConstraint {
+    fn from_iter<T: IntoIterator<Item = SimpleDurationConstraint>>(iter: T) -> Self {
         DurationConstraint::new_all(iter)
     }
 }
@@ -66,11 +66,12 @@ impl<'a> FromIterator<SimpleDurationConstraint<'a>> for DurationConstraint<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parsers::Span;
     use crate::Parser;
 
     #[test]
     fn flatten_with_single_element_works() {
-        let (_, dc_a) = SimpleDurationConstraint::parse("(>= ?duration 1.23)").unwrap();
+        let (_, dc_a) = SimpleDurationConstraint::parse(Span::new("(>= ?duration 1.23)")).unwrap();
 
         let mut iter = DurationConstraint::new(dc_a).into_iter();
         assert!(iter.next().is_some());
@@ -79,8 +80,9 @@ mod tests {
 
     #[test]
     fn flatten_with_many_elements_works() {
-        let (_, dc_a) = SimpleDurationConstraint::parse("(>= ?duration 1.23)").unwrap();
-        let (_, dc_b) = SimpleDurationConstraint::parse("(at end (<= ?duration 1.23))").unwrap();
+        let (_, dc_a) = SimpleDurationConstraint::parse(Span::new("(>= ?duration 1.23)")).unwrap();
+        let (_, dc_b) =
+            SimpleDurationConstraint::parse(Span::new("(at end (<= ?duration 1.23))")).unwrap();
 
         let mut iter = DurationConstraint::from_iter([dc_a, dc_b]).into_iter();
         assert!(iter.next().is_some());

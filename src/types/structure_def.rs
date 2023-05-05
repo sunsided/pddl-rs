@@ -7,42 +7,42 @@ use crate::types::{ActionDefinition, DerivedPredicate, DurativeActionDefinition}
 /// ## Usage
 /// Used by [`StructureDefs`](crate::StructureDefs) in [`Domain`](crate::Domain).
 #[derive(Debug, Clone, PartialEq)]
-pub enum StructureDef<'a> {
-    Action(ActionDefinition<'a>),
+pub enum StructureDef {
+    Action(ActionDefinition),
     /// ## Requirements
     /// Requires [Durative Actions](crate::Requirement::DurativeActions).
-    DurativeAction(DurativeActionDefinition<'a>),
+    DurativeAction(DurativeActionDefinition),
     /// ## Requirements
     /// Requires [Derived Predicates](crate::Requirement::DerivedPredicates).
-    Derived(DerivedPredicate<'a>),
+    Derived(DerivedPredicate),
 }
 
-impl<'a> StructureDef<'a> {
-    pub const fn new_action(action: ActionDefinition<'a>) -> Self {
+impl StructureDef {
+    pub const fn new_action(action: ActionDefinition) -> Self {
         Self::Action(action)
     }
-    pub const fn new_durative_action(action: DurativeActionDefinition<'a>) -> Self {
+    pub const fn new_durative_action(action: DurativeActionDefinition) -> Self {
         Self::DurativeAction(action)
     }
-    pub const fn new_derived(predicate: DerivedPredicate<'a>) -> Self {
+    pub const fn new_derived(predicate: DerivedPredicate) -> Self {
         Self::Derived(predicate)
     }
 }
 
-impl<'a> From<ActionDefinition<'a>> for StructureDef<'a> {
-    fn from(value: ActionDefinition<'a>) -> Self {
+impl From<ActionDefinition> for StructureDef {
+    fn from(value: ActionDefinition) -> Self {
         StructureDef::new_action(value)
     }
 }
 
-impl<'a> From<DurativeActionDefinition<'a>> for StructureDef<'a> {
-    fn from(value: DurativeActionDefinition<'a>) -> Self {
+impl From<DurativeActionDefinition> for StructureDef {
+    fn from(value: DurativeActionDefinition) -> Self {
         StructureDef::new_durative_action(value)
     }
 }
 
-impl<'a> From<DerivedPredicate<'a>> for StructureDef<'a> {
-    fn from(value: DerivedPredicate<'a>) -> Self {
+impl From<DerivedPredicate> for StructureDef {
+    fn from(value: DerivedPredicate) -> Self {
         StructureDef::new_derived(value)
     }
 }

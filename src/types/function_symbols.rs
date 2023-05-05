@@ -9,28 +9,28 @@ use std::ops::Deref;
 /// Used by [`FunctionTerm`](crate::FunctionTerm), [`FHead`](crate::FHead),
 /// [`BasicFunctionTerm`](crate::BasicFunctionTerm) and [`MetricFExp`](crate::MetricFExp).
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
-pub struct FunctionSymbol<'a>(Name<'a>);
+pub struct FunctionSymbol(Name);
 
-impl<'a> FunctionSymbol<'a> {
+impl FunctionSymbol {
     #[inline(always)]
-    pub fn new(name: Name<'a>) -> Self {
+    pub fn new(name: Name) -> Self {
         Self(name)
     }
 
     #[inline(always)]
-    pub const fn from_str(name: &'a str) -> Self {
+    pub fn from_str(name: &str) -> Self {
         Self(Name::new(name))
     }
 
     #[inline(always)]
-    pub const fn from_name(name: Name<'a>) -> Self {
+    pub const fn from_name(name: Name) -> Self {
         Self(name)
     }
 }
 
-impl<'a, T> From<T> for FunctionSymbol<'a>
+impl<'a, T> From<T> for FunctionSymbol
 where
-    T: Into<Name<'a>>,
+    T: Into<Name>,
 {
     #[inline(always)]
     fn from(value: T) -> Self {
@@ -38,22 +38,22 @@ where
     }
 }
 
-impl<'a> AsRef<Name<'a>> for FunctionSymbol<'a> {
+impl AsRef<Name> for FunctionSymbol {
     #[inline(always)]
-    fn as_ref(&self) -> &Name<'a> {
+    fn as_ref(&self) -> &Name {
         &self.0
     }
 }
 
-impl<'a> AsRef<str> for FunctionSymbol<'a> {
+impl AsRef<str> for FunctionSymbol {
     #[inline(always)]
     fn as_ref(&self) -> &str {
         self.0.as_ref()
     }
 }
 
-impl<'a> Deref for FunctionSymbol<'a> {
-    type Target = Name<'a>;
+impl Deref for FunctionSymbol {
+    type Target = Name;
 
     #[inline(always)]
     fn deref(&self) -> &Self::Target {

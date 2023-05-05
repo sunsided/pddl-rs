@@ -8,40 +8,40 @@ use crate::types::Variable;
 /// Used by [`GoalDefinition`](crate::GoalDefinition), [`FunctionTerm`](FunctionTerm),
 /// [`FHead`](crate::FHead), [`PEffect`](crate::PEffect) and [`InitElement`](crate::InitElement).
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum Term<'a> {
-    Name(Name<'a>),
-    Variable(Variable<'a>),
-    Function(FunctionTerm<'a>),
+pub enum Term {
+    Name(Name),
+    Variable(Variable),
+    Function(FunctionTerm),
 }
 
-impl<'a> Term<'a> {
-    pub const fn new_name(name: Name<'a>) -> Self {
+impl Term {
+    pub const fn new_name(name: Name) -> Self {
         Self::Name(name)
     }
 
-    pub const fn new_variable(var: Variable<'a>) -> Self {
+    pub const fn new_variable(var: Variable) -> Self {
         Self::Variable(var)
     }
 
-    pub const fn new_function(fun: FunctionTerm<'a>) -> Self {
+    pub const fn new_function(fun: FunctionTerm) -> Self {
         Self::Function(fun)
     }
 }
 
-impl<'a> From<Name<'a>> for Term<'a> {
-    fn from(value: Name<'a>) -> Self {
+impl From<Name> for Term {
+    fn from(value: Name) -> Self {
         Self::Name(value)
     }
 }
 
-impl<'a> From<Variable<'a>> for Term<'a> {
-    fn from(value: Variable<'a>) -> Self {
+impl From<Variable> for Term {
+    fn from(value: Variable) -> Self {
         Self::Variable(value)
     }
 }
 
-impl<'a> From<FunctionTerm<'a>> for Term<'a> {
-    fn from(value: FunctionTerm<'a>) -> Self {
+impl From<FunctionTerm> for Term {
+    fn from(value: FunctionTerm) -> Self {
         Self::Function(value)
     }
 }

@@ -9,19 +9,19 @@ use crate::PreconditionGoalDefinitions;
 /// ## Usage
 /// Used by [`StructureDef`](crate::StructureDef).
 #[derive(Debug, Clone, PartialEq)]
-pub struct ActionDefinition<'a> {
-    symbol: ActionSymbol<'a>,
-    parameters: TypedVariables<'a>,
-    precondition: PreconditionGoalDefinitions<'a>,
-    effect: Option<Effects<'a>>,
+pub struct ActionDefinition {
+    symbol: ActionSymbol,
+    parameters: TypedVariables,
+    precondition: PreconditionGoalDefinitions,
+    effect: Option<Effects>,
 }
 
-impl<'a> ActionDefinition<'a> {
+impl ActionDefinition {
     pub const fn new(
-        symbol: ActionSymbol<'a>,
-        parameters: TypedVariables<'a>,
-        precondition: PreconditionGoalDefinitions<'a>,
-        effect: Option<Effects<'a>>,
+        symbol: ActionSymbol,
+        parameters: TypedVariables,
+        precondition: PreconditionGoalDefinitions,
+        effect: Option<Effects>,
     ) -> Self {
         Self {
             symbol,
@@ -31,25 +31,25 @@ impl<'a> ActionDefinition<'a> {
         }
     }
 
-    pub const fn symbol(&self) -> &ActionSymbol<'a> {
+    pub const fn symbol(&self) -> &ActionSymbol {
         &self.symbol
     }
 
-    pub const fn parameters(&self) -> &TypedVariables<'a> {
+    pub const fn parameters(&self) -> &TypedVariables {
         &self.parameters
     }
 
-    pub const fn precondition(&self) -> &PreconditionGoalDefinitions<'a> {
+    pub const fn precondition(&self) -> &PreconditionGoalDefinitions {
         &self.precondition
     }
 
-    pub const fn effect(&self) -> &Option<Effects<'a>> {
+    pub const fn effect(&self) -> &Option<Effects> {
         &self.effect
     }
 }
 
-impl<'a> AsRef<ActionSymbol<'a>> for ActionDefinition<'a> {
-    fn as_ref(&self) -> &ActionSymbol<'a> {
+impl AsRef<ActionSymbol> for ActionDefinition {
+    fn as_ref(&self) -> &ActionSymbol {
         &self.symbol
     }
 }
