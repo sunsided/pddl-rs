@@ -1,6 +1,6 @@
 # A PDDL 3.1 parser, strongly typed
 
-A PDDL 3.1 parser implementation in Rust based on [nom](https://crates.io/crates/nom).
+A parser for the Planning Domain Definition Language version 3.1: written in Rust, based on [nom](https://crates.io/crates/nom).
 
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/sunsided/pddl-rs/rust.yml)
 ![docs.rs](https://img.shields.io/docsrs/pddl)
