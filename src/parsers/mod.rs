@@ -110,6 +110,7 @@ pub type ParseError<'a> = nom_greedyerror::GreedyError<Span<'a>, nom::error::Err
 /// A result from a parser.
 pub type ParseResult<'a, T, E = ParseError<'a>> = nom::IResult<Span<'a>, T, E>;
 
+/// Re-exports commonly used types.
 pub mod preamble {
     pub use crate::parsers::test_helpers::UnwrapValue;
     pub use crate::parsers::Parser;
