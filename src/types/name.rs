@@ -1,12 +1,14 @@
 //! Contains names via the [`Name`] type.
 
 use crate::types::{PrimitiveType, ToTyped, Type, Typed};
-use lazy_static::lazy_static;
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::Deref;
+
+#[cfg(feature = "interning")]
 use std::sync::{Arc, Mutex};
 
-lazy_static! {
+#[cfg(feature = "interning")]
+lazy_static::lazy_static! {
     /// Used in [`Name::new_string_interned`] to deduplicate string occurrences.
     static ref STRING_INTERNING: Mutex<Vec<Arc<String>>> = Mutex::new(Vec::default());
 }
@@ -25,9 +27,15 @@ pub struct Name(NameVariant);
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 enum NameVariant {
-    String(Arc<String>),
+    String(InternedString),
     Static(&'static str),
 }
+
+#[cfg(feature = "interning")]
+type InternedString = Arc<String>;
+
+#[cfg(not(feature = "interning"))]
+type InternedString = String;
 
 impl Name {
     /// Constructs a new [`Name`] from a provided string.
@@ -69,19 +77,28 @@ impl Name {
     ///
     /// This uses a simple binary search approach to identify the correct position of
     /// the input in question and inserts the element if it wasn't found before.
+    #[cfg_attr(not(feature = "interning"), inline(always))]
     fn new_string_interned<S: Into<String> + AsRef<str>>(name: S) -> Self {
-        let mut guard = STRING_INTERNING.lock().expect("failed to obtain lock");
-        let name_ref = name.as_ref();
-        let pos = guard.binary_search_by(|name| name_ref.cmp(name.as_str()));
-        let pos = match pos {
-            Ok(pos) => pos,
-            Err(pos) => {
-                guard.insert(pos, Arc::new(name.into()));
-                pos
-            }
-        };
+        #[cfg(feature = "interning")]
+        {
+            let mut guard = STRING_INTERNING.lock().expect("failed to obtain lock");
+            let name_ref = name.as_ref();
+            let pos = guard.binary_search_by(|name| name_ref.cmp(name.as_str()));
+            let pos = match pos {
+                Ok(pos) => pos,
+                Err(pos) => {
+                    guard.insert(pos, Arc::new(name.into()));
+                    pos
+                }
+            };
 
-        Self(NameVariant::String(guard[pos].clone()))
+            Self(NameVariant::String(guard[pos].clone()))
+        }
+
+        #[cfg(not(feature = "interning"))]
+        {
+            Self(NameVariant::String(name.into()))
+        }
     }
 
     pub fn is_empty(&self) -> bool {
@@ -190,7 +207,7 @@ impl Deref for NameVariant {
     fn deref(&self) -> &Self::Target {
         match self {
             NameVariant::String(str) => str.as_str(),
-            NameVariant::Static(str) => str,
+            NameVariant::Static(str) => *str,
         }
     }
 }
@@ -198,8 +215,17 @@ impl Deref for NameVariant {
 impl PartialEq<str> for NameVariant {
     fn eq(&self, other: &str) -> bool {
         match self {
-            NameVariant::String(str) => str.as_ref().eq(other),
             NameVariant::Static(str) => (*str).eq(other),
+            NameVariant::String(str) => {
+                #[cfg(feature = "interning")]
+                {
+                    str.as_ref().eq(other)
+                }
+                #[cfg(not(feature = "interning"))]
+                {
+                    str.eq(other)
+                }
+            }
         }
     }
 }
