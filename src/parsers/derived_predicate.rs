@@ -21,7 +21,7 @@ use nom::sequence::{preceded, tuple};
 ///                 )"#;
 ///
 /// let (remaining, predicate) = parse_derived_predicate(input).unwrap();
-/// assert_eq!(predicate.predicate().name(), &"train-usable".into());
+/// assert_eq!(predicate.predicate().name(), "train-usable");
 /// assert!(matches!(predicate.expression(), &GoalDefinition::And(..)));
 ///```
 pub fn parse_derived_predicate<'a, T: Into<Span<'a>>>(

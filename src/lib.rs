@@ -53,7 +53,7 @@
 //! let problem = Problem::from_str(BRIEFCASE_WORLD_PROBLEM).unwrap();
 //!
 //! // All elements were parsed.
-//! assert_eq!(domain.name(), &"briefcase-world".into());
+//! assert_eq!(domain.name(), "briefcase-world");
 //! assert_eq!(domain.requirements().len(), 4);
 //! assert_eq!(domain.types().len(), 2);
 //! assert_eq!(domain.constants().len(), 3);
@@ -61,8 +61,8 @@
 //! assert_eq!(domain.structure().len(), 3);
 //!
 //! // All elements were parsed.
-//! assert_eq!(problem.name(), &"get-paid".into());
-//! assert_eq!(problem.domain(), &"briefcase-world".into());
+//! assert_eq!(problem.name(), "get-paid");
+//! assert_eq!(problem.domain(), "briefcase-world");
 //! assert!(problem.requirements().is_empty());
 //! assert_eq!(problem.init().len(), 9);
 //! assert_eq!(problem.goals().len(), 3);

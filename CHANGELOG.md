@@ -5,9 +5,15 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+### Added
+
+- Added a `PartialEq` for `Name` that allows comparison with `str` and `String` directly.
+
 ### Changed
 
 - Renamed `Problem::goal` to `Problem::goals` to reflect the fact that it is iterable.
+- If well-known names such as `object` or `number` are used for a `Name`, these values
+  will be interned to a `'static str`.
 
 ### Internal
 
