@@ -61,6 +61,7 @@ pub struct Problem {
 }
 
 impl Problem {
+    /// Creates a new [`Problem`] instance.
     pub const fn new(
         name: Name,
         domain: Name,

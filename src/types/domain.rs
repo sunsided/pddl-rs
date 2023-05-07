@@ -90,7 +90,7 @@ pub struct Domain {
 }
 
 impl Domain {
-    /// Creates a builder to easily construct problems.
+    /// Creates a builder to easily construct [`Domain`] instances.
     pub fn builder(name: Name, structure: StructureDefs) -> Self {
         Self {
             name,
