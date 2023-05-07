@@ -5,7 +5,7 @@ use crate::parsers::{prefix_expr, ParseResult, Span};
 use crate::types::Functions;
 use nom::combinator::map;
 
-/// Parser that parses constant definitions, i.e. `(:constants <typed list (name)>)`.
+/// Parses constant definitions, i.e. `(:constants <typed list (name)>)`.
 ///
 /// ## Example
 /// ```

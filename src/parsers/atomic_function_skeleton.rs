@@ -6,7 +6,7 @@ use crate::types::AtomicFunctionSkeleton;
 use nom::combinator::map;
 use nom::sequence::tuple;
 
-/// Parser that parses an atomic function skeleton, i.e. `(<function-symbol> <typed list (variable)>)`.
+/// Parses an atomic function skeleton, i.e. `(<function-symbol> <typed list (variable)>)`.
 ///
 /// ## Example
 /// ```
@@ -36,7 +36,7 @@ pub fn parse_atomic_function_skeleton<'a, T: Into<Span<'a>>>(
 impl crate::parsers::Parser for AtomicFunctionSkeleton {
     type Item = AtomicFunctionSkeleton;
 
-    /// Parser that parses an atomic function skeleton, i.e. `(<function-symbol> <typed list (variable)>)`.
+    /// Parses an atomic function skeleton, i.e. `(<function-symbol> <typed list (variable)>)`.
     ///
     /// ## Example
     /// ```

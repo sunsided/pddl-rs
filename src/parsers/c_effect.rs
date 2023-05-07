@@ -9,7 +9,7 @@ use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
 
-/// Parser that parses c-effects.
+/// Parses c-effects.
 ///
 /// ## Example
 /// ```
@@ -99,7 +99,7 @@ pub fn parse_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, CEffec
     alt((forall, when, p_effect))(input.into())
 }
 
-/// Parser that parses [`ForallCEffect`] values.
+/// Parses [`ForallCEffect`] values.
 ///
 /// ## Example
 /// ```
@@ -136,7 +136,7 @@ pub fn parse_forall_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a,
     )(input.into())
 }
 
-/// Parser that parses c-effects.
+/// Parses c-effects.
 ///
 /// ## Example
 /// ```
@@ -194,7 +194,7 @@ pub fn parse_when_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, W
 impl crate::parsers::Parser for CEffect {
     type Item = CEffect;
 
-    /// Parser that parses c-effects.
+    /// Parses c-effects.
     ///
     /// ## Example
     /// ```
@@ -246,7 +246,7 @@ impl crate::parsers::Parser for CEffect {
 impl crate::parsers::Parser for ForallCEffect {
     type Item = ForallCEffect;
 
-    /// Parser that parses [`ForallCEffect`] values.
+    /// Parses [`ForallCEffect`] values.
     ///
     /// ## Example
     /// ```
@@ -273,7 +273,7 @@ impl crate::parsers::Parser for ForallCEffect {
 impl crate::parsers::Parser for WhenCEffect {
     type Item = WhenCEffect;
 
-    /// Parser that parses c-effects.
+    /// Parses c-effects.
     ///
     /// ## Example
     /// ```

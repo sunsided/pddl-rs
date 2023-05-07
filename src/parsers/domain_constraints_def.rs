@@ -4,7 +4,7 @@ use crate::parsers::{parse_con_gd, prefix_expr, ParseResult, Span};
 use crate::types::DomainConstraintsDef;
 use nom::combinator::map;
 
-/// Parser that parses domain constraint definitions, i.e. `(:constraints <con-gd>)`.
+/// Parses domain constraint definitions, i.e. `(:constraints <con-gd>)`.
 ///
 /// ## Example
 /// ```
