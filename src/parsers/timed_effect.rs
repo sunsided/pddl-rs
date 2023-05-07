@@ -11,7 +11,7 @@ use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
 
-/// Parser that parses timed effects.
+/// Parses timed effects.
 ///
 /// ## Example
 /// ```

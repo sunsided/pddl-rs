@@ -5,7 +5,7 @@ use crate::parsers::{prefix_expr, space_separated_list1};
 use crate::types::PredicateDefinitions;
 use nom::combinator::map;
 
-/// Parser that parses predicate definitions, i.e. `(:predicates <atomic formula skeleton>⁺)`.
+/// Parses predicate definitions, i.e. `(:predicates <atomic formula skeleton>⁺)`.
 ///
 /// ## Example
 /// ```

@@ -10,6 +10,26 @@ use crate::{PreconditionGoalDefinitions, PrefConGDs};
 ///
 /// ## Usages
 /// This is the top-level type of a problem description within a [`Domain`](crate::Domain).
+///
+/// ## Example
+/// ```
+/// # use pddl::{Name, Parser, Problem};
+/// let input = r#"(define (problem get-paid)
+///         (:domain briefcase-world)
+///         (:init (place home) (place office)
+///                (object p) (object d) (object b)
+///                (at B home) (at P home) (at D home) (in P))
+///         (:goal (and (at B office) (at D office) (at P home)))
+///     )"#;
+///
+/// let problem = Problem::from_str(input).unwrap();
+///
+/// assert_eq!(problem.name(), "get-paid");
+/// assert_eq!(problem.domain(), "briefcase-world");
+/// assert!(problem.requirements().is_empty());
+/// assert_eq!(problem.init().len(), 9);
+/// assert_eq!(problem.goals().len(), 3);
+/// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct Problem {
     name: Name,

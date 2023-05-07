@@ -18,6 +18,7 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Internal
 
 - The `thiserror` dependency is now only brought in with the `parser` crate feature.
+- Use string interning to reduce the number of allocations required for `Name` types.
 
 ## [0.0.5] - 2023-05-05
 

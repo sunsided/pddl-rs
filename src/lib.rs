@@ -2,6 +2,11 @@
 //!
 //! This crates provides a PDDL 3.1 parser implementation based on [nom](https://crates.io/crates/nom).
 //!
+//! ## Default crate features
+//!
+//! * `parser` - Enables parsing of PDDL types through the [`Parser`] trait.
+//! * `interning` - Enables string interning for [`Name`] types to reduce memory footprint.
+//!
 //! ## Example
 //!
 //! The two core types of a PDDL are [`Domain`] and [`Problem`]. This example shows how to

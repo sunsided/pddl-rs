@@ -1,4 +1,4 @@
-//! Parser logic.
+//! Provides parsing functions, as well as the [`Parser`] trait.
 
 mod action_def;
 mod action_symbol;
@@ -81,7 +81,7 @@ mod variable;
 pub(crate) use test_helpers::Match;
 pub use test_helpers::UnwrapValue;
 
-/// Provides the `parse` method.
+/// Provides the [`Parser::parse`] and [`Parser::from_str`] methods.
 pub trait Parser {
     type Item;
 
@@ -110,6 +110,7 @@ pub type ParseError<'a> = nom_greedyerror::GreedyError<Span<'a>, nom::error::Err
 /// A result from a parser.
 pub type ParseResult<'a, T, E = ParseError<'a>> = nom::IResult<Span<'a>, T, E>;
 
+/// Re-exports commonly used types.
 pub mod preamble {
     pub use crate::parsers::test_helpers::UnwrapValue;
     pub use crate::parsers::Parser;

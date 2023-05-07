@@ -4,7 +4,7 @@ use crate::parsers::{parse_pref_con_gd, prefix_expr, ParseResult, Span};
 use crate::types::ProblemConstraintsDef;
 use nom::combinator::map;
 
-/// Parser that parses problem constraint definitions, i.e. `(:constraints <pref-con-GD>)`.
+/// Parses problem constraint definitions, i.e. `(:constraints <pref-con-GD>)`.
 ///
 /// ## Example
 /// ```

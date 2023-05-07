@@ -6,7 +6,7 @@ use crate::types::AtomicFormulaSkeleton;
 use nom::combinator::map;
 use nom::sequence::tuple;
 
-/// Parser that parses an atomic formula skeleton, i.e. `(<predicate> <typed list (variable)>)`.
+/// Parses an atomic formula skeleton, i.e. `(<predicate> <typed list (variable)>)`.
 ///
 /// ## Example
 /// ```
@@ -34,7 +34,7 @@ pub fn parse_atomic_formula_skeleton<'a, T: Into<Span<'a>>>(
 impl crate::parsers::Parser for AtomicFormulaSkeleton {
     type Item = AtomicFormulaSkeleton;
 
-    /// Parser that parses an atomic formula skeleton.
+    /// Parses an atomic formula skeleton.
     ///
     /// ## Example
     /// ```

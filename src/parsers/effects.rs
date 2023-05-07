@@ -52,7 +52,7 @@ pub fn parse_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Effects>
         Effects::from,
     );
 
-    alt((exactly, all))(input.into())
+    alt((all, exactly))(input.into())
 }
 
 impl crate::parsers::Parser for Effects {
