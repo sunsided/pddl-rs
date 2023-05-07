@@ -1,4 +1,4 @@
-//! Parser logic.
+//! Provides parsing functions, as well as the [`Parser`] trait.
 
 mod action_def;
 mod action_symbol;
