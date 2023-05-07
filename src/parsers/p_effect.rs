@@ -98,7 +98,7 @@ pub fn parse_p_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PEffec
         |(f_term, term)| PEffect::new_object_fluent(f_term, Some(term)),
     );
 
-    alt((object_undefined, object, numeric, is_not, is))(input.into())
+    alt((is_not, object_undefined, object, numeric, is))(input.into())
 }
 
 impl crate::parsers::Parser for PEffect {
@@ -118,5 +118,16 @@ mod tests {
     fn it_works() {
         let input = "(can-move ?from-waypoint ?to-waypoint)";
         let (_, _effect) = parse_p_effect(Span::new(input)).unwrap();
+    }
+
+    #[test]
+    fn not_works() {
+        let input = "(not (at B ?m))";
+        let mut is_not = map(prefix_expr("not", atomic_formula(parse_term)), |af| {
+            PEffect::new_not(af)
+        });
+
+        let result = is_not(input.into());
+        assert!(result.is_ok());
     }
 }
