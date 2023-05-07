@@ -54,23 +54,38 @@ use crate::types::{Name, Types};
 /// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct Domain {
+    /// The domain name.
     name: Name,
+    /// The domain extension list.
     // TODO: PDDL 1.2 - deprecated?
     extends: Vec<Name>,
+    /// The specified requirements.
     requirements: Requirements,
+    /// The optional type declarations.
+    ///
     /// ## Requirements
     /// Requires [Typing](crate::Requirement::Typing).
     types: Types,
+    /// The optional constant declarations.
     constants: Constants,
+    /// The predicate definitions.
     predicates: PredicateDefinitions,
+    /// The optional function definitions.
+    ///
     /// ## Requirements
     /// Requires [Fluents](crate::Requirement::Fluents).
     functions: Functions,
+    /// The optional constraint definitions.
+    ///
     /// ## Requirements
     /// Requires [Constraints](crate::Requirement::Constraints).
     constraints: DomainConstraintsDef,
+    /// The optional timeless predicate definitions.
     // TODO: PDDL 1.2 - deprecated?
     timeless: Timeless,
+    /// The structure definition, i.e. [action](crate::ActionDefinition),
+    /// [durative action](crate::DurativeActionDefinition), and/or
+    /// [derived predicate](crate::DerivedPredicate) definitions.
     structure: StructureDefs,
 }
 

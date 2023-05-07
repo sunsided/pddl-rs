@@ -32,18 +32,30 @@ use crate::{PreconditionGoalDefinitions, PrefConGDs};
 /// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct Problem {
+    // The problem name.
     name: Name,
+    /// The name of the [`Domain`] this problem belongs to.
     domain: Name,
+    /// The optional list of requirements.
     requires: Requirements,
+    /// The optional list of object declarations.
     objects: Objects,
+    /// The initial state definition.
     init: InitElements,
+    /// The goal definition.
     goal: GoalDef,
+    /// The optional list of constraints.
+    ///
     /// ## Requirements
     /// Requires [Constraints](crate::Requirement::Constraints).
     constraints: ProblemConstraintsDef,
+    /// The optional list of metrics specifications.
+    ///
     /// ## Requirements
     /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
     metric_spec: Option<MetricSpec>,
+    /// The optional goal length specification.
+    ///
     /// Deprecated since PDDL 2.1.
     length_spec: Option<LengthSpec>,
 }
