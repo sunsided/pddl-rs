@@ -40,6 +40,10 @@ type InternedString = String;
 impl Name {
     /// Constructs a new [`Name`] from a provided string.
     ///
+    /// ## Interning
+    /// If the `interning` crate feature is enabled, strings passed to this
+    /// method will be deduplicated, reducing memory footprint.
+    ///
     /// ## Arguments
     /// * `name` - The name to wrap.
     ///
@@ -56,6 +60,12 @@ impl Name {
 
     /// Like [`new`] but makes use of the fact that if the string provided
     /// is `'static`, the method can be `const`.
+    ///
+    /// ## Interning
+    /// Note that strings passed to this method are not themselves interned
+    /// even if the create feature `interning` is enabled, and they will be invisible
+    /// to other strings partaking in interning. To ensure that a name value
+    /// exists exactly once, use the (non-const) [`Name::new`] function instead.
     ///
     /// ## Arguments
     /// * `name` - The name to wrap.
@@ -113,8 +123,8 @@ impl Name {
     /// Maps the provided to a well-known `'static` string if possible.
     fn map_to_static<'a>(value: &'a str) -> Option<&'static str> {
         match value {
-            well_known::OBJECT => Some(well_known::OBJECT),
-            well_known::NUMBER => Some(well_known::NUMBER),
+            "object" => Some(well_known::OBJECT),
+            "number" => Some(well_known::NUMBER),
             _ => None,
         }
     }
@@ -122,8 +132,8 @@ impl Name {
 
 /// Provides well-known names for string interning.
 mod well_known {
-    pub const OBJECT: &'static str = "object";
-    pub const NUMBER: &'static str = "number";
+    pub static OBJECT: &'static str = "object";
+    pub static NUMBER: &'static str = "number";
 }
 
 impl<T> From<T> for Name
@@ -242,5 +252,19 @@ impl Display for NameVariant {
             NameVariant::String(str) => write!(f, "{}", str),
             NameVariant::Static(str) => write!(f, "{}", str),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use nom_greedyerror::AsStr;
+
+    #[test]
+    fn map_to_static_works() {
+        let object = Name::map_to_static("object").expect("mapping works");
+        let number = Name::map_to_static("number").expect("mapping works");
+        assert!(std::ptr::eq(object.as_str(), well_known::OBJECT));
+        assert!(std::ptr::eq(number.as_str(), well_known::NUMBER));
     }
 }
