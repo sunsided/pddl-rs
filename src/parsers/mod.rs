@@ -81,7 +81,7 @@ mod variable;
 pub(crate) use test_helpers::Match;
 pub use test_helpers::UnwrapValue;
 
-/// Provides the `parse` method.
+/// Provides the [`Parser::parse`] and [`Parser::from_str`] methods.
 pub trait Parser {
     type Item;
 
