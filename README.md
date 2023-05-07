@@ -45,8 +45,8 @@ pub const BRIEFCASE_WORLD_PROBLEM: &'static str = r#"
 fn main() {
     let problem = Problem::from_str(BRIEFCASE_WORLD_PROBLEM).unwrap();
 
-    assert_eq!(problem.name(), &"get-paid".into());
-    assert_eq!(problem.domain(), &"briefcase-world".into());
+    assert_eq!(problem.name(), "get-paid");
+    assert_eq!(problem.domain(), "briefcase-world");
     assert!(problem.requirements().is_empty());
     assert_eq!(problem.init().len(), 9);
     assert_eq!(problem.goal().len(), 3);
