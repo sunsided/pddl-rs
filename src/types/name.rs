@@ -1,8 +1,15 @@
 //! Contains names via the [`Name`] type.
 
 use crate::types::{PrimitiveType, ToTyped, Type, Typed};
+use lazy_static::lazy_static;
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::Deref;
+use std::sync::{Arc, Mutex};
+
+lazy_static! {
+    /// Used in [`Name::new_string_interned`] to deduplicate string occurrences.
+    static ref STRING_INTERNING: Mutex<Vec<Arc<String>>> = Mutex::new(Vec::default());
+}
 
 /// A name.
 ///
@@ -18,7 +25,7 @@ pub struct Name(NameVariant);
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 enum NameVariant {
-    String(String),
+    String(Arc<String>),
     Static(&'static str),
 }
 
@@ -35,7 +42,7 @@ impl Name {
         if let Some(str) = Self::map_to_static(name.as_ref()) {
             Self::new_static(str)
         } else {
-            Self(NameVariant::String(name.into()))
+            Self::new_string_interned(name)
         }
     }
 
@@ -56,6 +63,25 @@ impl Name {
     #[inline(always)]
     pub const fn new_static(name: &'static str) -> Self {
         Self(NameVariant::Static(name))
+    }
+
+    /// Takes the provided `name` and interns the string.
+    ///
+    /// This uses a simple binary search approach to identify the correct position of
+    /// the input in question and inserts the element if it wasn't found before.
+    fn new_string_interned<S: Into<String> + AsRef<str>>(name: S) -> Self {
+        let mut guard = STRING_INTERNING.lock().expect("failed to obtain lock");
+        let name_ref = name.as_ref();
+        let pos = guard.binary_search_by(|name| name_ref.cmp(name.as_str()));
+        let pos = match pos {
+            Ok(pos) => pos,
+            Err(pos) => {
+                guard.insert(pos, Arc::new(name.into()));
+                pos
+            }
+        };
+
+        Self(NameVariant::String(guard[pos].clone()))
     }
 
     pub fn is_empty(&self) -> bool {
@@ -172,7 +198,7 @@ impl Deref for NameVariant {
 impl PartialEq<str> for NameVariant {
     fn eq(&self, other: &str) -> bool {
         match self {
-            NameVariant::String(str) => str.eq(other),
+            NameVariant::String(str) => str.as_ref().eq(other),
             NameVariant::Static(str) => (*str).eq(other),
         }
     }
