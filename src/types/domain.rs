@@ -10,6 +10,48 @@ use crate::types::{Name, Types};
 ///
 /// ## Usage
 /// This is the top-level type of a domain description. See also [`Problem`](crate::Problem).
+///
+/// ## Example
+/// ```
+/// # use pddl::{Domain, Name, Parser};
+/// let input = r#"(define (domain briefcase-world)
+///       (:requirements :strips :equality :typing :conditional-effects)
+///       (:types location physob)
+///       (:constants B P D - physob)
+///       (:predicates (at ?x - physob ?y - location)
+///                    (in ?x ?y - physob))
+///       (:constraints (and))
+///
+///       (:action mov-B
+///            :parameters (?m ?l - location)
+///            :precondition (and (at B ?m) (not (= ?m ?l)))
+///            :effect (and (at B ?l) (not (at B ?m))
+///                         (forall (?z)
+///                             (when (and (in ?z) (not (= ?z B)))
+///                                   (and (at ?z ?l) (not (at ?z ?m)))))) )
+///
+///       (:action put-in
+///            :parameters (?x - physob ?l - location)
+///            :precondition (not (= ?x B))
+///            :effect (when (and (at ?x ?l) (at B ?l))
+///                  (in ?x)) )
+///
+///       (:action take-out
+///            :parameters (?x - physob)
+///            :precondition (not (= ?x B))
+///            :effect (not (in ?x)) )
+///     )"#;
+///
+/// let domain = Domain::from_str(input).unwrap();
+///
+/// assert_eq!(domain.name(), "briefcase-world");
+/// assert_eq!(domain.requirements().len(), 4);
+/// assert_eq!(domain.types().len(), 2);
+/// assert_eq!(domain.constants().len(), 3);
+/// assert_eq!(domain.predicates().len(), 2);
+/// assert!(domain.constraints().is_empty());
+/// assert_eq!(domain.structure().len(), 3);
+/// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct Domain {
     name: Name,
