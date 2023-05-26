@@ -17,11 +17,16 @@ use crate::types::{Name, Types};
 /// let input = r#"(define (domain briefcase-world)
 ///       (:requirements :strips :equality :typing :conditional-effects)
 ///       (:types location physob)
-///       (:constants B P D - physob)
-///       (:predicates (at ?x - physob ?y - location)
-///                    (in ?x ?y - physob))
+///       (:constants
+///             B ; the briefcase
+///             P ; the paycheck
+///             D
+///             - physob)
+///       (:predicates (at ?x - physob ?y - location) ; an item is at a location
+///                    (in ?x ?y - physob))           ; an item is in another item
 ///       (:constraints (and))
 ///
+///       ; Move briefcase from one location to another.
 ///       (:action mov-B
 ///            :parameters (?m ?l - location)
 ///            :precondition (and (at B ?m) (not (= ?m ?l)))
@@ -30,15 +35,17 @@ use crate::types::{Name, Types};
 ///                             (when (and (in ?z) (not (= ?z B)))
 ///                                   (and (at ?z ?l) (not (at ?z ?m)))))) )
 ///
+///       ; Put the item in the briefcase.
 ///       (:action put-in
 ///            :parameters (?x - physob ?l - location)
-///            :precondition (not (= ?x B))
+///            :precondition (not (= ?x B))  ; the item must not be the briefcase itself
 ///            :effect (when (and (at ?x ?l) (at B ?l))
 ///                  (in ?x)) )
 ///
+///       ; Take the item out of the briefcase.
 ///       (:action take-out
 ///            :parameters (?x - physob)
-///            :precondition (not (= ?x B))
+///            :precondition (not (= ?x B)) ; the item must be the briefcase itself
 ///            :effect (not (in ?x)) )
 ///     )"#;
 ///

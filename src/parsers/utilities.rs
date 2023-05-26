@@ -1,6 +1,6 @@
 //! Utility parsers.
 
-use crate::parsers::{ParseResult, Span};
+use crate::parsers::{ignore_eol_comment, ParseResult, Span};
 use nom::bytes::complete::tag;
 use nom::character::complete::{char, multispace0, multispace1};
 use nom::multi::{separated_list0, separated_list1};
@@ -13,16 +13,33 @@ pub fn prefix_expr<'a, F, O>(name: &'a str, inner: F) -> impl FnMut(Span<'a>) ->
 where
     F: FnMut(Span<'a>) -> ParseResult<'a, O>,
 {
-    delimited(preceded(tag("("), tag(name)), ws(inner), tag(")"))
+    delimited(preceded(ws(tag("(")), tag(name)), ws(inner), ws(tag(")")))
 }
 
-/// A combinator that takes a parser `inner` and produces a parser that also consumes both leading and
-/// trailing whitespace, returning the output of `inner`.
+/// A combinator that takes a parser `inner` and produces a parser that also consumes leading whitespace,
+/// returning the output of `inner`.
+///
+/// This parser also suppresses line comments.
 pub fn ws<'a, F, O>(inner: F) -> impl FnMut(Span<'a>) -> ParseResult<'a, O>
 where
     F: FnMut(Span<'a>) -> ParseResult<'a, O>,
 {
-    delimited(multispace0, inner, multispace0)
+    preceded(preceded(multispace0, ignore_eol_comment), inner)
+}
+
+/// A combinator that takes a parser `inner` and produces a parser that also consumes leading
+/// and trailing whitespace, returning the output of `inner`.
+///
+/// This parser also suppresses line comments.
+pub fn ws2<'a, F, O>(inner: F) -> impl FnMut(Span<'a>) -> ParseResult<'a, O>
+where
+    F: FnMut(Span<'a>) -> ParseResult<'a, O>,
+{
+    delimited(
+        preceded(multispace0, ignore_eol_comment),
+        inner,
+        preceded(multispace0, ignore_eol_comment),
+    )
 }
 
 /// A combinator that takes a parser `inner` and produces a parser that also
@@ -32,7 +49,10 @@ pub fn space_separated_list0<'a, F, O>(inner: F) -> impl FnMut(Span<'a>) -> Pars
 where
     F: FnMut(Span<'a>) -> ParseResult<'a, O>,
 {
-    ws(separated_list0(multispace1, inner))
+    ws(separated_list0(
+        multispace1,
+        preceded(ignore_eol_comment, inner),
+    ))
 }
 
 /// A combinator that takes a parser `inner` and produces a parser that also
@@ -41,7 +61,10 @@ pub fn space_separated_list1<'a, F, O>(inner: F) -> impl FnMut(Span<'a>) -> Pars
 where
     F: FnMut(Span<'a>) -> ParseResult<'a, O>,
 {
-    ws(separated_list1(multispace1, inner))
+    ws(separated_list1(
+        multispace1,
+        preceded(ignore_eol_comment, inner),
+    ))
 }
 
 /// A combinator that takes a parser `inner` and produces a parser that consumes
@@ -50,7 +73,10 @@ pub fn parens<'a, F, O>(inner: F) -> impl FnMut(Span<'a>) -> ParseResult<'a, O>
 where
     F: FnMut(Span<'a>) -> ParseResult<'a, O>,
 {
-    delimited(char('('), ws(inner), char(')'))
+    preceded(
+        ignore_eol_comment,
+        delimited(char('('), ws(inner), char(')')),
+    )
 }
 
 #[cfg(test)]

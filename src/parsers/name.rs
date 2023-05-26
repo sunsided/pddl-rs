@@ -1,6 +1,6 @@
 //! Provides parsers for names.
 
-use crate::parsers::{ParseResult, Span};
+use crate::parsers::{ws, ParseResult, Span};
 use crate::types::Name;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
@@ -27,7 +27,7 @@ use nom::sequence::tuple;
 ///```
 pub fn parse_name<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Name> {
     map(
-        recognize(tuple((alpha1, many0(parse_any_char)))),
+        ws(recognize(tuple((alpha1, many0(parse_any_char))))),
         |x: Span| Name::from(*x.fragment()),
     )(input.into())
 }

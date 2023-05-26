@@ -4,7 +4,7 @@ use crate::parsers::{
     parse_constants_def, parse_domain_constraints_def, parse_functions_def, parse_predicates_def,
     parse_require_def, parse_structure_def, ParseResult, Span,
 };
-use crate::parsers::{parse_name, parse_types_def, prefix_expr, space_separated_list1, ws};
+use crate::parsers::{parse_name, parse_types_def, prefix_expr, space_separated_list1, ws2};
 use crate::types::{
     Constants, Domain, Functions, PredicateDefinitions, Requirements, StructureDefs,
 };
@@ -60,7 +60,7 @@ use nom::sequence::{preceded, tuple};
 /// ```
 pub fn parse_domain<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Domain> {
     map(
-        ws(prefix_expr(
+        ws2(prefix_expr(
             "define",
             tuple((
                 prefix_expr("domain", parse_name),
@@ -117,14 +117,18 @@ impl crate::parsers::Parser for Domain {
     /// ## Example
     /// ```
     /// # use pddl::{Domain, Name, Parser};
-    /// let input = r#"(define (domain briefcase-world)
+    /// let input = r#"
+    ///  ; A toy domain.
+    ///  (define (domain briefcase-world)
+    ///       ; If no requirements are provided, :strips is implied.
     ///       (:requirements :strips :equality :typing :conditional-effects)
-    ///       (:types location physob)
+    ///       (:types location physob) ; type definitions could also be represented as predicates
     ///       (:constants B P D - physob)
     ///       (:predicates (at ?x - physob ?y - location)
     ///                    (in ?x ?y - physob))
     ///       (:constraints (and))
     ///
+    ///       ; Move briefcase from one location to another.
     ///       (:action mov-B
     ///            :parameters (?m ?l - location)
     ///            :precondition (and (at B ?m) (not (= ?m ?l)))
@@ -133,12 +137,14 @@ impl crate::parsers::Parser for Domain {
     ///                             (when (and (in ?z) (not (= ?z B)))
     ///                                   (and (at ?z ?l) (not (at ?z ?m)))))) )
     ///
+    ///       ; Put the item in the briefcase if it is not already in there.
     ///       (:action put-in
     ///            :parameters (?x - physob ?l - location)
     ///            :precondition (not (= ?x B))
     ///            :effect (when (and (at ?x ?l) (at B ?l))
     ///                  (in ?x)) )
     ///
+    ///       ; Take the item out of the briefcase if it is in there.
     ///       (:action take-out
     ///            :parameters (?x - physob)
     ///            :precondition (not (= ?x B))

@@ -11,6 +11,7 @@ mod basic_function_term;
 mod binary_comp;
 mod binary_op;
 mod c_effect;
+mod comments;
 mod con_gd;
 mod cond_effect;
 mod constants_def;
@@ -128,6 +129,7 @@ pub use basic_function_term::parse_basic_function_term;
 pub use binary_comp::parse_binary_comp;
 pub use binary_op::parse_binary_op;
 pub use c_effect::{parse_c_effect, parse_forall_c_effect, parse_when_c_effect};
+pub use comments::ignore_eol_comment;
 pub use con_gd::parse_con_gd;
 pub use cond_effect::parse_cond_effect;
 pub use constants_def::parse_constants_def;
@@ -197,4 +199,6 @@ pub use typed_list::typed_list;
 
 // Utility parser combinators.
 #[allow(unused_imports)]
-pub(crate) use utilities::{parens, prefix_expr, space_separated_list0, space_separated_list1, ws};
+pub(crate) use utilities::{
+    parens, prefix_expr, space_separated_list0, space_separated_list1, ws, ws2,
+};
