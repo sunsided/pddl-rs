@@ -35,9 +35,9 @@ use pddl::{Problem, Parser};
 pub const BRIEFCASE_WORLD_PROBLEM: &'static str = r#"
     (define (problem get-paid)
         (:domain briefcase-world)
-        (:init (place home) (place office)
-               (object p) (object d) (object b)
-               (at B home) (at P home) (at D home) (in P))
+        (:init (place home) (place office)                  ; place types
+               (object p) (object d) (object b)             ; object types
+               (at B home) (at P home) (at D home) (in P))  ; setup
         (:goal (and (at B office) (at D office) (at P home)))
     )
     "#;

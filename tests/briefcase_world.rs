@@ -43,8 +43,12 @@ pub const BRIEFCASE_WORLD: &'static str = r#"
 pub const BRIEFCASE_WORLD_PROBLEM: &'static str = r#"
     (define (problem get-paid)
         (:domain briefcase-world)
-        (:init (place home) (place office)
+        (:init
+               ; types: locations
+               (place home) (place office)
+               ; types: objects
                (object p) (object d) (object b)
+               ; setup
                (at B home) (at P home) (at D home) (in P))
         (:goal (and (at B office) (at D office) (at P home)))
     )
