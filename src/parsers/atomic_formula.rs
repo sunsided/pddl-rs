@@ -5,9 +5,9 @@ use crate::parsers::{parse_predicate, ParseResult, Span};
 use crate::types::AtomicFormula;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
-use nom::character::complete::{char, multispace1};
+use nom::character::complete::char;
 use nom::combinator::map;
-use nom::sequence::{delimited, preceded, tuple};
+use nom::sequence::{delimited, tuple};
 
 /// Parses an atomic formula, i.e. `(<predicate> t*) | (= t t)`.
 ///
@@ -31,12 +31,9 @@ where
 {
     let equality = map(
         delimited(
-            tag("(="),
-            preceded(
-                multispace1,
-                tuple((inner.clone(), preceded(multispace1, inner.clone()))),
-            ),
-            char(')'),
+            ws(tag("(=")),
+            tuple((ws(inner.clone()), ws(inner.clone()))),
+            ws(char(')')),
         ),
         |tuple| AtomicFormula::Equality(tuple.into()),
     );

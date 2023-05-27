@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- [#81](https://github.com/sunsided/pddl-rs/issues/81): Added support for PDDL line comments.
+
 ## [0.0.6] - 2023-05-07
 
 ### Added

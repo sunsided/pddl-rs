@@ -1,6 +1,6 @@
 //! Provides parsers for problem definitions.
 
-use crate::parsers::{parse_name, prefix_expr, ws, ParseResult, Span};
+use crate::parsers::{parse_name, prefix_expr, ws2, ParseResult, Span};
 use crate::parsers::{
     parse_problem_constraints_def, parse_problem_goal_def, parse_problem_init_def,
     parse_problem_length_spec, parse_problem_metric_spec, parse_problem_objects_declaration,
@@ -37,7 +37,7 @@ use nom::sequence::{preceded, tuple};
 /// ```
 pub fn parse_problem<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Problem> {
     map(
-        ws(prefix_expr(
+        ws2(prefix_expr(
             "define",
             tuple((
                 prefix_expr("problem", parse_name),
