@@ -3,8 +3,8 @@
 A parser for the Planning Domain Definition Language version 3.1: written in Rust, based on [nom](https://crates.io/crates/nom).
 
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/sunsided/pddl-rs/rust.yml)
-[![codecov](https://codecov.io/gh/sunsided/pddl-rs/graph/badge.svg?token=8H8K6HW6AF)](https://codecov.io/gh/sunsided/pddl-rs)
 ![docs.rs](https://img.shields.io/docsrs/pddl)
+[![codecov](https://codecov.io/gh/sunsided/pddl-rs/graph/badge.svg?token=8H8K6HW6AF)](https://codecov.io/gh/sunsided/pddl-rs)
 ![Crates.io](https://img.shields.io/crates/v/pddl)
 ![Crates.io](https://img.shields.io/crates/l/pddl)
 
