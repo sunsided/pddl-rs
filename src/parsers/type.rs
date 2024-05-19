@@ -27,7 +27,7 @@ pub fn parse_type<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Type> {
     }
 
     Err(nom::Err::Failure(error_position!(
-        input.into(),
+        input,
         ErrorKind::Alt
     )))
 }

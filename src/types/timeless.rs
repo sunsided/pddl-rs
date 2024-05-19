@@ -24,7 +24,7 @@ impl Timeless {
 
     /// Gets the literals.
     pub fn values(&self) -> &[NameLiteral] {
-        &self.0.as_slice()
+        self.0.as_slice()
     }
 }
 

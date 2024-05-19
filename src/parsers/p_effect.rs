@@ -67,7 +67,7 @@ use nom::sequence::{preceded, terminated, tuple};
 /// ));
 /// ```
 pub fn parse_p_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PEffect> {
-    let is = map(atomic_formula(parse_term), |af| PEffect::new(af));
+    let is = map(atomic_formula(parse_term), PEffect::new);
     let is_not = map(prefix_expr("not", atomic_formula(parse_term)), |af| {
         PEffect::new_not(af)
     });

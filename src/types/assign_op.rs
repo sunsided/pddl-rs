@@ -72,12 +72,12 @@ pub enum AssignOp {
 
 pub mod names {
     /// [`CHANGE`] is a deprecated name for [`ASSIGN`].
-    pub const CHANGE: &'static str = "change";
-    pub const ASSIGN: &'static str = "assign";
-    pub const SCALE_UP: &'static str = "scale-up";
-    pub const SCALE_DOWN: &'static str = "scale-down";
-    pub const INCREASE: &'static str = "increase";
-    pub const DECREASE: &'static str = "decrease";
+    pub const CHANGE: &str = "change";
+    pub const ASSIGN: &str = "assign";
+    pub const SCALE_UP: &str = "scale-up";
+    pub const SCALE_DOWN: &str = "scale-down";
+    pub const INCREASE: &str = "increase";
+    pub const DECREASE: &str = "decrease";
 }
 
 impl AssignOp {

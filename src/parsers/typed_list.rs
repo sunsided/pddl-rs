@@ -72,10 +72,10 @@ where
         implicitly_typed_list,
     ));
 
-    let repeated_lists = map(typed_list_choice, |(mut explicit, mut implicit)| {
+    
+
+    map(typed_list_choice, |(mut explicit, mut implicit)| {
         explicit.append(&mut implicit);
         TypedList::new(explicit)
-    });
-
-    repeated_lists
+    })
 }

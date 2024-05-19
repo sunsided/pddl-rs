@@ -41,8 +41,8 @@ impl Deref for ProblemConstraintsDef {
     }
 }
 
-impl Into<PrefConGDs> for ProblemConstraintsDef {
-    fn into(self) -> PrefConGDs {
-        self.0
+impl From<ProblemConstraintsDef> for PrefConGDs {
+    fn from(val: ProblemConstraintsDef) -> Self {
+        val.0
     }
 }

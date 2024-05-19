@@ -170,7 +170,7 @@ impl Domain {
     /// Gets the names of the domains this definition extends.
     /// This is a PDDL 1.2 construct.
     pub fn extends(&self) -> &[Name] {
-        &self.extends.as_slice()
+        self.extends.as_slice()
     }
 
     /// Returns the optional domain requirements.
@@ -205,7 +205,7 @@ impl Domain {
 
     /// Returns the optional constraint declaration.
     pub const fn constraints(&self) -> &ConGD {
-        &self.constraints.value()
+        self.constraints.value()
     }
 
     /// Returns the domain structure definitions.

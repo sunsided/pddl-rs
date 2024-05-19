@@ -42,7 +42,7 @@ pub fn parse_predicates_def<'a, T: Into<Span<'a>>>(
             ":predicates",
             space_separated_list1(parse_atomic_formula_skeleton),
         ),
-        |vec| PredicateDefinitions::new(vec),
+        PredicateDefinitions::new,
     )(input.into())
 }
 

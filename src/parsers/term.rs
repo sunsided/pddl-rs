@@ -30,10 +30,10 @@ pub fn parse_term<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Term> {
         return Ok((remaining, Term::Function(ft)));
     }
 
-    return Err(nom::Err::Error(error_position!(
-        input.into(),
+    Err(nom::Err::Error(error_position!(
+        input,
         ErrorKind::Alt
-    )));
+    )))
 }
 
 impl crate::parsers::Parser for Term {

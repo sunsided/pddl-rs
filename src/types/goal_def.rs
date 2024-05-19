@@ -54,8 +54,8 @@ impl Deref for GoalDef {
     }
 }
 
-impl Into<PreconditionGoalDefinitions> for GoalDef {
-    fn into(self) -> PreconditionGoalDefinitions {
-        self.0
+impl From<GoalDef> for PreconditionGoalDefinitions {
+    fn from(val: GoalDef) -> Self {
+        val.0
     }
 }

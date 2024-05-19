@@ -16,11 +16,11 @@ pub enum BinaryComp {
 }
 
 pub mod names {
-    pub const GREATER_THAN: &'static str = ">";
-    pub const LESS_THAN: &'static str = "<";
-    pub const EQUAL: &'static str = "=";
-    pub const GREATER_THAN_OR_EQUAL: &'static str = ">=";
-    pub const LESS_THAN_OR_EQUAL: &'static str = "<=";
+    pub const GREATER_THAN: &str = ">";
+    pub const LESS_THAN: &str = "<";
+    pub const EQUAL: &str = "=";
+    pub const GREATER_THAN_OR_EQUAL: &str = ">=";
+    pub const LESS_THAN_OR_EQUAL: &str = "<=";
 }
 
 impl Display for BinaryComp {

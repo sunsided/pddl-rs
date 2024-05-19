@@ -13,7 +13,7 @@ pub enum Interval {
 }
 
 pub mod names {
-    pub const ALL: &'static str = "all";
+    pub const ALL: &str = "all";
 }
 
 impl Display for Interval {

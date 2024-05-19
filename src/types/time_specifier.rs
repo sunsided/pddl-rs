@@ -15,8 +15,8 @@ pub enum TimeSpecifier {
 }
 
 pub mod names {
-    pub const START: &'static str = "start";
-    pub const END: &'static str = "end";
+    pub const START: &str = "start";
+    pub const END: &str = "end";
 }
 
 impl Display for TimeSpecifier {

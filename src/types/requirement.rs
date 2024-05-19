@@ -16,8 +16,10 @@ use std::fmt::{Display, Formatter};
 /// ## References
 /// - "Complete BNF description of PDDL 3.1 (completely corrected)", Daniel L. Kovacs (`dkovacs@mit.bme.hu`).
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Default)]
 pub enum Requirement {
     /// Basic STRIPS-style adds and deletes.
+    #[default]
     Strips,
     /// Allow type names in declarations of variables.
     Typing,
@@ -104,27 +106,27 @@ pub enum Requirement {
 }
 
 pub mod names {
-    pub const STRIPS: &'static str = ":strips";
-    pub const TYPING: &'static str = ":typing";
-    pub const NEGATIVE_PRECONDITIONS: &'static str = ":negative-preconditions";
-    pub const DISJUNCTIVE_PRECONDITIONS: &'static str = ":disjunctive-preconditions";
-    pub const EQUALITY: &'static str = ":equality";
-    pub const EXISTENTIAL_PRECONDITIONS: &'static str = ":existential-preconditions";
-    pub const UNIVERSAL_PRECONDITIONS: &'static str = ":universal-preconditions";
-    pub const QUANTIFIED_PRECONDITIONS: &'static str = ":quantified-preconditions";
-    pub const CONDITIONAL_EFFECTS: &'static str = ":conditional-effects";
-    pub const FLUENTS: &'static str = ":fluents";
-    pub const NUMERIC_FLUENTS: &'static str = ":numeric-fluents";
-    pub const OBJECT_FLUENTS: &'static str = ":object-fluents";
-    pub const ADL: &'static str = ":adl";
-    pub const DURATIVE_ACTIONS: &'static str = ":durative-actions";
-    pub const DURATION_INEQUALITIES: &'static str = ":duration-inequalities";
-    pub const CONTINUOUS_EFFECTS: &'static str = ":continuous-effects";
-    pub const DERIVED_PREDICATES: &'static str = ":derived-predicates";
-    pub const TIMED_INITIAL_LITERALS: &'static str = ":timed-initial-literals";
-    pub const PREFERENCES: &'static str = ":preferences";
-    pub const CONSTRAINTS: &'static str = ":constraints";
-    pub const ACTION_COSTS: &'static str = ":action-costs";
+    pub const STRIPS: &str = ":strips";
+    pub const TYPING: &str = ":typing";
+    pub const NEGATIVE_PRECONDITIONS: &str = ":negative-preconditions";
+    pub const DISJUNCTIVE_PRECONDITIONS: &str = ":disjunctive-preconditions";
+    pub const EQUALITY: &str = ":equality";
+    pub const EXISTENTIAL_PRECONDITIONS: &str = ":existential-preconditions";
+    pub const UNIVERSAL_PRECONDITIONS: &str = ":universal-preconditions";
+    pub const QUANTIFIED_PRECONDITIONS: &str = ":quantified-preconditions";
+    pub const CONDITIONAL_EFFECTS: &str = ":conditional-effects";
+    pub const FLUENTS: &str = ":fluents";
+    pub const NUMERIC_FLUENTS: &str = ":numeric-fluents";
+    pub const OBJECT_FLUENTS: &str = ":object-fluents";
+    pub const ADL: &str = ":adl";
+    pub const DURATIVE_ACTIONS: &str = ":durative-actions";
+    pub const DURATION_INEQUALITIES: &str = ":duration-inequalities";
+    pub const CONTINUOUS_EFFECTS: &str = ":continuous-effects";
+    pub const DERIVED_PREDICATES: &str = ":derived-predicates";
+    pub const TIMED_INITIAL_LITERALS: &str = ":timed-initial-literals";
+    pub const PREFERENCES: &str = ":preferences";
+    pub const CONSTRAINTS: &str = ":constraints";
+    pub const ACTION_COSTS: &str = ":action-costs";
 }
 
 impl Requirement {
@@ -247,11 +249,6 @@ pub enum ParseError {
     InvalidRequirement,
 }
 
-impl Default for Requirement {
-    fn default() -> Self {
-        Requirement::Strips
-    }
-}
 
 impl Borrow<str> for Requirement {
     fn borrow(&self) -> &str {

@@ -3,7 +3,7 @@ use pddl::{
     Problem, TermLiteral,
 };
 
-pub const BRIEFCASE_WORLD: &'static str = r#"
+pub const BRIEFCASE_WORLD: &str = r#"
     (define (domain briefcase-world)
       (:requirements :strips :equality :typing :conditional-effects)
       (:types location physob)
@@ -40,7 +40,7 @@ pub const BRIEFCASE_WORLD: &'static str = r#"
     )
     "#;
 
-pub const BRIEFCASE_WORLD_PROBLEM: &'static str = r#"
+pub const BRIEFCASE_WORLD_PROBLEM: &str = r#"
     (define (problem get-paid)
         (:domain briefcase-world)
         (:init

@@ -27,7 +27,7 @@ pub fn parse_atomic_formula_skeleton<'a, T: Into<Span<'a>>>(
 ) -> ParseResult<'a, AtomicFormulaSkeleton> {
     map(
         parens(tuple((parse_predicate, ws(typed_list(parse_variable))))),
-        |tuple| AtomicFormulaSkeleton::from(tuple),
+        AtomicFormulaSkeleton::from,
     )(input.into())
 }
 

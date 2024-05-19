@@ -29,7 +29,7 @@ pub fn parse_atomic_function_skeleton<'a, T: Into<Span<'a>>>(
             parse_function_symbol,
             ws(typed_list(parse_variable)),
         ))),
-        |tuple| AtomicFunctionSkeleton::from(tuple),
+        AtomicFunctionSkeleton::from,
     )(input.into())
 }
 

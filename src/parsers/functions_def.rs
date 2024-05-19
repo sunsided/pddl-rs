@@ -32,7 +32,7 @@ pub fn parse_functions_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, F
             ":functions",
             function_typed_list(parse_atomic_function_skeleton),
         ),
-        |vec| Functions::new(vec),
+        Functions::new,
     )(input.into())
 }
 

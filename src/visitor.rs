@@ -48,7 +48,7 @@ mod tests {
     struct Item(i32);
 
     impl VisitorMut<Item, ()> for Visi {
-        fn visit_mut(&mut self, value: &Item) -> () {
+        fn visit_mut(&mut self, value: &Item) {
             self.0 += value.0 as isize;
         }
     }

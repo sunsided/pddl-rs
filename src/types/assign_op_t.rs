@@ -13,8 +13,8 @@ pub enum AssignOpT {
 }
 
 pub mod names {
-    pub const INCREASE: &'static str = "increase";
-    pub const DECREASE: &'static str = "decrease";
+    pub const INCREASE: &str = "increase";
+    pub const DECREASE: &str = "decrease";
 }
 
 impl Display for AssignOpT {

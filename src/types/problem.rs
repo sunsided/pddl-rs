@@ -163,14 +163,14 @@ impl Problem {
 
     /// Returns the goal statement of the problem.
     pub const fn goals(&self) -> &PreconditionGoalDefinitions {
-        &self.goal.value()
+        self.goal.value()
     }
 
     /// Returns the optional constraints of the problem.
     /// ## Requirements
     /// Requires [Constraints](crate::Requirement::Constraints).
     pub const fn constraints(&self) -> &PrefConGDs {
-        &self.constraints.value()
+        self.constraints.value()
     }
 
     /// Returns the optional metric specification of the problem.
