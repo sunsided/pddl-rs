@@ -120,6 +120,11 @@ impl crate::parsers::Parser for DurativeActionEffect {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parsers::UnwrapValue;
+    use crate::{
+        AtomicFormula, ConditionalEffect, EqualityAtomicFormula, PEffect, Parser, Term,
+        TimeSpecifier, TimedEffect, Typed, TypedList, Variable,
+    };
 
     #[test]
     fn simple_works() {
@@ -132,7 +137,7 @@ mod tests {
                 (at end (increase (distance-travelled) 5))
                 )"#;
 
-        let (_, _effect) = parse_da_effect(Span::new(input)).unwrap();
+        let (_, _effect) = DurativeActionEffect::parse(Span::new(input)).unwrap();
     }
 
     #[test]
@@ -146,6 +151,66 @@ mod tests {
                 (at end (increase (distance-travelled) 5))
                 )"#;
 
-        let (_, _effect) = parse_da_effect(Span::new(input)).unwrap();
+        let (_, _effect) = DurativeActionEffect::parse(Span::new(input)).unwrap();
+    }
+
+    #[test]
+    fn test_at_start() {
+        assert!(DurativeActionEffect::parse("(at start (= x y))").is_value(
+            DurativeActionEffect::Timed(TimedEffect::new_conditional(
+                TimeSpecifier::Start,
+                ConditionalEffect::new(PEffect::AtomicFormula(AtomicFormula::Equality(
+                    EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
+                )))
+            ))
+        ));
+    }
+
+    #[test]
+    fn test_and_empty() {
+        assert!(DurativeActionEffect::parse("(and )").is_value(DurativeActionEffect::new_and([])));
+    }
+
+    #[test]
+    fn test_and() {
+        assert!(
+            DurativeActionEffect::parse("(and (at start (= x y)) (and ))").is_value(
+                DurativeActionEffect::new_and([
+                    DurativeActionEffect::Timed(TimedEffect::new_conditional(
+                        TimeSpecifier::Start,
+                        ConditionalEffect::new(PEffect::AtomicFormula(AtomicFormula::Equality(
+                            EqualityAtomicFormula::new(
+                                Term::Name("x".into()),
+                                Term::Name("y".into())
+                            )
+                        )))
+                    )),
+                    DurativeActionEffect::new_and([])
+                ])
+            )
+        );
+    }
+
+    #[test]
+    fn test_forall() {
+        assert!(
+            DurativeActionEffect::parse("(forall (?a ?b) (at start (= a b)))").is_value(
+                DurativeActionEffect::new_forall(
+                    TypedList::from_iter([
+                        Typed::new_object(Variable::from_str("a")),
+                        Typed::new_object(Variable::from_str("b")),
+                    ]),
+                    DurativeActionEffect::Timed(TimedEffect::new_conditional(
+                        TimeSpecifier::Start,
+                        ConditionalEffect::new(PEffect::AtomicFormula(AtomicFormula::Equality(
+                            EqualityAtomicFormula::new(
+                                Term::Name("a".into()),
+                                Term::Name("b".into())
+                            )
+                        )))
+                    ))
+                )
+            )
+        );
     }
 }

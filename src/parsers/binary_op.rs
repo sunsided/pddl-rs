@@ -1,10 +1,11 @@
 //! Provides parsers for binary-operand operations.
 
-use crate::parsers::{ParseResult, Span};
-use crate::types::{binary_op::names, BinaryOp};
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
+
+use crate::parsers::{ParseResult, Span};
+use crate::types::{binary_op::names, BinaryOp};
 
 /// Parses a two-operand operation, i.e. `* | + | - | /`.
 ///
@@ -45,5 +46,25 @@ impl crate::parsers::Parser for BinaryOp {
     /// See [`parse_binary_op`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_binary_op(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{BinaryOp, Parser};
+
+    #[test]
+    fn test_parse() {
+        let (_, value) = BinaryOp::parse("*").unwrap();
+        assert_eq!(value, BinaryOp::Multiplication);
+
+        let (_, value) = BinaryOp::parse("/").unwrap();
+        assert_eq!(value, BinaryOp::Division);
+
+        let (_, value) = BinaryOp::parse("+").unwrap();
+        assert_eq!(value, BinaryOp::Addition);
+
+        let (_, value) = BinaryOp::parse("-").unwrap();
+        assert_eq!(value, BinaryOp::Subtraction);
     }
 }

@@ -1,10 +1,11 @@
 //! Provides parsers for assignment operations.
 
+use nom::bytes::complete::tag;
+use nom::combinator::map;
+
 use crate::parsers::{ParseResult, Span};
 use crate::types::interval::names;
 use crate::types::Interval;
-use nom::bytes::complete::tag;
-use nom::combinator::map;
 
 /// Parses an intervals, i.e. `all`.
 ///
@@ -26,5 +27,16 @@ impl crate::parsers::Parser for Interval {
     /// See [`parse_interval`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_interval(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::UnwrapValue;
+    use crate::{Interval, Parser};
+
+    #[test]
+    fn test_parse() {
+        assert!(Interval::parse("all").is_value(Interval::All));
     }
 }

@@ -1,13 +1,14 @@
 //! Provides parsers for c-effects.
 
-use crate::parsers::{parens, prefix_expr, typed_list, ParseResult, Span};
-use crate::parsers::{parse_cond_effect, parse_effect, parse_gd, parse_p_effect, parse_variable};
-use crate::types::CEffect;
-use crate::{ForallCEffect, WhenCEffect};
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
+
+use crate::parsers::{parens, prefix_expr, typed_list, ParseResult, Span};
+use crate::parsers::{parse_cond_effect, parse_effect, parse_gd, parse_p_effect, parse_variable};
+use crate::types::CEffect;
+use crate::{ForallCEffect, WhenCEffect};
 
 /// Parses c-effects.
 ///
@@ -295,5 +296,85 @@ impl crate::parsers::Parser for WhenCEffect {
     /// See [`parse_when_c_effect`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_when_c_effect(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        CEffect, ConditionalEffect, Effects, ForallCEffect, GoalDefinition, PEffect, Parser, Typed,
+        TypedList, Variable, WhenCEffect,
+    };
+
+    #[test]
+    fn test_parse() {
+        let (_, value) = CEffect::parse("(= x y)").unwrap();
+        assert_eq!(
+            value,
+            CEffect::new_p_effect(PEffect::from_str("(= x y)").unwrap())
+        );
+
+        let (_, value) = CEffect::parse("(not (= ?a B))").unwrap();
+        assert_eq!(
+            value,
+            CEffect::new_p_effect(PEffect::from_str("(not (= ?a B))").unwrap())
+        );
+
+        let (_, value) = CEffect::parse("(forall (?a ?b) (= ?a ?b))").unwrap();
+        assert_eq!(
+            value,
+            CEffect::new_forall(
+                TypedList::from_iter([
+                    Typed::new_object(Variable::from_str("a")),
+                    Typed::new_object(Variable::from_str("b")),
+                ]),
+                Effects::from_str("(= ?a ?b)").unwrap()
+            )
+        );
+
+        let input = r#"(when
+            (and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))
+            (and (person-is-happy ?p)))"#;
+        let (_, value) = CEffect::parse(input).unwrap();
+        assert_eq!(
+            value,
+            CEffect::new_when(
+                GoalDefinition::from_str("(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))")
+                    .unwrap(),
+                ConditionalEffect::from_str("(and (person-is-happy ?p))").unwrap()
+            )
+        );
+    }
+
+    #[test]
+    fn test_parse_forall() {
+        let (_, value) = ForallCEffect::parse("(forall (?a ?b) (= ?a ?b))").unwrap();
+        assert_eq!(
+            value,
+            ForallCEffect::new(
+                TypedList::from_iter([
+                    Typed::new_object(Variable::from_str("a")),
+                    Typed::new_object(Variable::from_str("b")),
+                ]),
+                Effects::from_str("(= ?a ?b)").unwrap()
+            )
+        );
+    }
+
+    #[test]
+    fn test_parse_when() {
+        let input = r#"(when
+            (and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))
+            (and (person-is-happy ?p)))"#;
+
+        let (_, value) = WhenCEffect::parse(input).unwrap();
+        assert_eq!(
+            value,
+            WhenCEffect::new(
+                GoalDefinition::from_str("(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))")
+                    .unwrap(),
+                ConditionalEffect::from_str("(and (person-is-happy ?p))").unwrap()
+            )
+        );
     }
 }

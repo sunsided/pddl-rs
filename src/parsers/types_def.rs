@@ -1,8 +1,9 @@
 //! Provides parsers for constant definitions.
 
+use nom::combinator::map;
+
 use crate::parsers::{parse_name, prefix_expr, typed_list, ParseResult, Span};
 use crate::types::Types;
-use nom::combinator::map;
 
 /// Parses constant definitions, i.e. `(:constants <typed list (name)>)`.
 ///
@@ -31,5 +32,22 @@ impl crate::parsers::Parser for Types {
     /// See [`parse_types_def`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_types_def(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::UnwrapValue;
+    use crate::{Name, Parser, Type, Typed, TypedList, Types};
+
+    #[test]
+    fn test_parse() {
+        let input = "(:types location physob)";
+        assert!(
+            Types::parse(input).is_value(Types::new(TypedList::from_iter([
+                Typed::new(Name::from("location"), Type::OBJECT),
+                Typed::new(Name::from("physob"), Type::OBJECT),
+            ])))
+        );
     }
 }

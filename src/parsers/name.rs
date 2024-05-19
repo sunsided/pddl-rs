@@ -50,10 +50,11 @@ impl crate::parsers::Parser for Name {
 mod test {
     use super::*;
     use crate::parsers::Match;
+    use crate::Parser;
 
     #[test]
     fn parse_name_works() {
-        assert!(parse_name(Span::new("abcde")).is_exactly("abcde"));
+        assert!(Name::parse(Span::new("abcde")).is_exactly("abcde"));
     }
 
     #[test]

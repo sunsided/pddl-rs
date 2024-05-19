@@ -32,11 +32,13 @@ where
 pub trait Match<V> {
     /// Ensures the parser produced the specified value
     /// and leaves no remaining value to be parsed.
+    #[allow(unused)]
     fn is_exactly(&self, value: V) -> bool {
         self.is_result("", value)
     }
 
     /// Ensures the remainder value are as specified.
+    #[allow(unused)]
     fn is_result(&self, remainder: &str, value: V) -> bool;
 }
 

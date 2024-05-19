@@ -1,8 +1,9 @@
 //! Provides parsers for goal object declarations.
 
+use nom::combinator::map;
+
 use crate::parsers::{parse_name, prefix_expr, typed_list, ParseResult, Span};
 use crate::types::Objects;
-use nom::combinator::map;
 
 /// Parser for goal object declarations.
 ///
@@ -33,5 +34,24 @@ impl crate::parsers::Parser for Objects {
     /// See [`parse_problem_objects_declaration`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_problem_objects_declaration(input)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::parsers::UnwrapValue;
+    use crate::{Name, ToTyped, Type};
+
+    use super::*;
+
+    #[test]
+    fn test_parse() {
+        let input = "(:objects train1 train2)";
+        assert!(
+            parse_problem_objects_declaration(input).is_value(Objects::new([
+                Name::new("train1").to_typed(Type::OBJECT),
+                Name::new("train2").to_typed(Type::OBJECT),
+            ]))
+        );
     }
 }

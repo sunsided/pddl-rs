@@ -1,12 +1,13 @@
 //! Provides parsers for preference goal definitions.
 
-use crate::parsers::{parse_gd, parse_pref_name};
-use crate::parsers::{prefix_expr, ParseResult, Span};
-use crate::types::{Preference, PreferenceGD};
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::{map, opt};
 use nom::sequence::{preceded, tuple};
+
+use crate::parsers::{parse_gd, parse_pref_name};
+use crate::parsers::{prefix_expr, ParseResult, Span};
+use crate::types::{Preference, PreferenceGD};
 
 /// Parser for goal definitions.
 ///
@@ -81,5 +82,48 @@ impl crate::parsers::Parser for PreferenceGD {
     /// See [`parse_pref_gd`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_pref_gd(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::preamble::*;
+    use crate::{AtomicFormula, GoalDefinition, Preference, PreferenceGD, PreferenceName, Term};
+
+    #[test]
+    fn test_parse() {
+        // Simple goal definition.
+        assert!(PreferenceGD::parse("(= x y)").is_value(PreferenceGD::Goal(
+            GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                Term::Name("x".into()),
+                Term::Name("y".into())
+            ))
+        )));
+
+        // Named preference.
+        assert!(
+            PreferenceGD::parse("(preference p (= x y))").is_value(PreferenceGD::Preference(
+                Preference::new(
+                    Some(PreferenceName::from("p")),
+                    GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                        Term::Name("x".into()),
+                        Term::Name("y".into())
+                    ))
+                )
+            ))
+        );
+
+        // Unnamed preference.
+        assert!(
+            PreferenceGD::parse("(preference (= x y))").is_value(PreferenceGD::Preference(
+                Preference::new(
+                    None,
+                    GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                        Term::Name("x".into()),
+                        Term::Name("y".into())
+                    ))
+                )
+            ))
+        );
     }
 }

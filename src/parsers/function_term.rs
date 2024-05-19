@@ -47,3 +47,32 @@ impl crate::parsers::Parser for FunctionTerm {
         parse_function_term(input)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::UnwrapValue;
+    use crate::{FunctionSymbol, FunctionTerm, Parser, Term};
+
+    #[test]
+    fn test_parse() {
+        assert!(
+            FunctionTerm::parse("(fun-sym)").is_value(FunctionTerm::new("fun-sym".into(), vec![]))
+        );
+
+        let x = Term::Name("x".into());
+        assert!(FunctionTerm::parse("(fun-sym x)")
+            .is_value(FunctionTerm::new("fun-sym".into(), vec![x])));
+
+        let x = Term::Name("x".into());
+        let y = Term::Variable("y".into());
+        assert!(FunctionTerm::parse("(fun-sym ?y x)")
+            .is_value(FunctionTerm::new("fun-sym".into(), vec![y, x])));
+
+        let x = Term::Name("x".into());
+        let y = Term::Variable("y".into());
+        let a = Term::Name("a".into());
+        let ft = Term::Function(FunctionTerm::new(FunctionSymbol::from("fn"), vec![a]));
+        assert!(FunctionTerm::parse("(fun-sym ?y x (fn a))")
+            .is_value(FunctionTerm::new("fun-sym".into(), vec![y, x, ft])));
+    }
+}

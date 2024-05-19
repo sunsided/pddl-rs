@@ -1,11 +1,12 @@
 //! Provides parsers for requirements.
 
-use crate::parsers::{prefix_expr, space_separated_list1, ParseResult, Span};
-use crate::types::requirement::{names, Requirement};
-use crate::types::Requirements;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
+
+use crate::parsers::{prefix_expr, space_separated_list1, ParseResult, Span};
+use crate::types::requirement::{names, Requirement};
+use crate::types::Requirements;
 
 /// Parses a requirement definition, i.e. `(:requirements <require-key>)⁺`.
 ///
@@ -97,5 +98,47 @@ impl crate::parsers::Parser for Requirement {
     /// See [`parse_require_key`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_require_key(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::preamble::*;
+    use crate::Requirement;
+
+    #[test]
+    fn test_parse() {
+        assert!(Requirement::parse(":strips").is_value(Requirement::Strips));
+        assert!(Requirement::parse(":typing").is_value(Requirement::Typing));
+        assert!(Requirement::parse(":negative-preconditions")
+            .is_value(Requirement::NegativePreconditions));
+        assert!(Requirement::parse(":disjunctive-preconditions")
+            .is_value(Requirement::DisjunctivePreconditions));
+        assert!(Requirement::parse(":equality").is_value(Requirement::Equality));
+        assert!(Requirement::parse(":existential-preconditions")
+            .is_value(Requirement::ExistentialPreconditions));
+        assert!(Requirement::parse(":universal-preconditions")
+            .is_value(Requirement::UniversalPreconditions));
+        assert!(Requirement::parse(":quantified-preconditions")
+            .is_value(Requirement::QuantifiedPreconditions));
+        assert!(
+            Requirement::parse(":conditional-effects").is_value(Requirement::ConditionalEffects)
+        );
+        assert!(Requirement::parse(":fluents").is_value(Requirement::Fluents));
+        assert!(Requirement::parse(":numeric-fluents").is_value(Requirement::NumericFluents));
+        assert!(Requirement::parse(":adl").is_value(Requirement::Adl));
+        assert!(Requirement::parse(":durative-actions").is_value(Requirement::DurativeActions));
+        assert!(Requirement::parse(":duration-inequalities")
+            .is_value(Requirement::DurationInequalities));
+        assert!(Requirement::parse(":continuous-effects").is_value(Requirement::ContinuousEffects));
+        assert!(Requirement::parse(":derived-predicates").is_value(Requirement::DerivedPredicates));
+        assert!(Requirement::parse(":timed-initial-literals")
+            .is_value(Requirement::TimedInitialLiterals));
+        assert!(Requirement::parse(":preferences").is_value(Requirement::Preferences));
+        assert!(Requirement::parse(":constraints").is_value(Requirement::Constraints));
+        assert!(Requirement::parse(":action-costs").is_value(Requirement::ActionCosts));
+
+        assert!(Requirement::parse(":unknown").is_err());
+        assert!(Requirement::parse("invalid").is_err());
     }
 }

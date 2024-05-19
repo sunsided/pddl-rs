@@ -1,10 +1,11 @@
 //! Provides parsers for metric specification.
 
-use crate::parsers::{parse_metric_f_exp, parse_optimization, prefix_expr, ParseResult, Span};
-use crate::types::MetricSpec;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
+
+use crate::parsers::{parse_metric_f_exp, parse_optimization, prefix_expr, ParseResult, Span};
+use crate::types::MetricSpec;
 
 /// Parses a metric specification.
 ///
@@ -39,5 +40,21 @@ impl crate::parsers::Parser for MetricSpec {
     /// See [`parse_problem_metric_spec`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_problem_metric_spec(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::UnwrapValue;
+    use crate::{MetricFExp, MetricSpec, Optimization, Parser};
+
+    #[test]
+    fn test_parse() {
+        assert!(
+            MetricSpec::parse("(:metric minimize total-time)").is_value(MetricSpec::new(
+                Optimization::Minimize,
+                MetricFExp::TotalTime
+            ))
+        );
     }
 }

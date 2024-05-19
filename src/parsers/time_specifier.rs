@@ -1,11 +1,12 @@
 //! Provides parsers for assignment operations.
 
-use crate::parsers::{ParseResult, Span};
-use crate::types::time_specifier::names;
-use crate::types::TimeSpecifier;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
+
+use crate::parsers::{ParseResult, Span};
+use crate::types::time_specifier::names;
+use crate::types::TimeSpecifier;
 
 /// Parses an assignment operation, i.e. `increase | decrease`.
 ///
@@ -28,5 +29,17 @@ impl crate::parsers::Parser for TimeSpecifier {
     /// See [`parse_time_specifier`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_time_specifier(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::{parse_time_specifier, UnwrapValue};
+    use crate::TimeSpecifier;
+
+    #[test]
+    fn test_parse() {
+        assert!(parse_time_specifier("start").is_value(TimeSpecifier::Start));
+        assert!(parse_time_specifier("end").is_value(TimeSpecifier::End));
     }
 }

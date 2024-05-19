@@ -1,12 +1,13 @@
 //! Provides parsers for f-heads.
 
-use crate::parsers::{parens, space_separated_list0, ParseResult, Span};
-use crate::parsers::{parse_function_symbol, parse_term};
-use crate::types::FHead;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
+
+use crate::parsers::{parens, space_separated_list0, ParseResult, Span};
+use crate::parsers::{parse_function_symbol, parse_term};
+use crate::types::FHead;
 
 /// Parses an f-head.
 ///
@@ -48,5 +49,25 @@ impl crate::parsers::Parser for FHead {
     /// See [`parse_f_head`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_f_head(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::UnwrapValue;
+    use crate::{FHead, FunctionSymbol, Parser, Term};
+
+    #[test]
+    fn test_parse() {
+        assert!(FHead::parse("fun-sym").is_value(FHead::new(FunctionSymbol::from_str("fun-sym"))));
+
+        assert!(FHead::parse("(fun-sym)").is_value(FHead::new(FunctionSymbol::from_str("fun-sym"))));
+
+        assert!(
+            FHead::parse("(fun-sym term)").is_value(FHead::new_with_terms(
+                FunctionSymbol::from_str("fun-sym"),
+                [Term::Name("term".into())]
+            ))
+        );
     }
 }

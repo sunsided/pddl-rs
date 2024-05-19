@@ -70,10 +70,35 @@ impl crate::parsers::Parser for TimedGD {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parsers::UnwrapValue;
+    use crate::{AtomicFormula, GoalDefinition, Interval, Parser, Term, TimeSpecifier};
 
     #[test]
     fn it_works() {
         let input = "(over all (can-move ?from-waypoint ?to-waypoint))";
         let (_, _gd) = parse_timed_gd(Span::new(input)).unwrap();
+    }
+
+    #[test]
+    fn test_parse() {
+        assert!(
+            TimedGD::parse("(at start (= x y))").is_value(TimedGD::new_at(
+                TimeSpecifier::Start,
+                GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                    Term::Name("x".into()),
+                    Term::Name("y".into())
+                ))
+            ))
+        );
+
+        assert!(
+            parse_timed_gd("(over all (= x y))").is_value(TimedGD::new_over(
+                Interval::All,
+                GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                    Term::Name("x".into()),
+                    Term::Name("y".into())
+                ))
+            ))
+        );
     }
 }

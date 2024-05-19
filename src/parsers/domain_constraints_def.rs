@@ -1,8 +1,9 @@
 //! Provides parsers for domain constraint definitions.
 
+use nom::combinator::map;
+
 use crate::parsers::{parse_con_gd, prefix_expr, ParseResult, Span};
 use crate::types::DomainConstraintsDef;
-use nom::combinator::map;
 
 /// Parses domain constraint definitions, i.e. `(:constraints <con-gd>)`.
 ///
@@ -32,5 +33,18 @@ impl crate::parsers::Parser for DomainConstraintsDef {
     /// See [`parse_domain_constraints_def`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_domain_constraints_def(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::UnwrapValue;
+    use crate::{ConGD, DomainConstraintsDef, Parser};
+
+    #[test]
+    fn test_parse() {
+        let input = "(:constraints (and))";
+        assert!(DomainConstraintsDef::parse(input)
+            .is_value(DomainConstraintsDef::new(ConGD::new_and([]))));
     }
 }

@@ -1,12 +1,13 @@
 //! Provides parsers for action definitions.
 
-use crate::parsers::{empty_or, parens, prefix_expr, typed_list, ws, ParseResult, Span};
-use crate::parsers::{parse_action_symbol, parse_effect, parse_pre_gd, parse_variable};
-use crate::types::ActionDefinition;
 use nom::bytes::complete::tag;
 use nom::character::complete::multispace1;
 use nom::combinator::{map, opt};
 use nom::sequence::{preceded, tuple};
+
+use crate::parsers::{empty_or, parens, prefix_expr, typed_list, ws, ParseResult, Span};
+use crate::parsers::{parse_action_symbol, parse_effect, parse_pre_gd, parse_variable};
+use crate::types::ActionDefinition;
 
 /// Parses an action definition.
 ///
@@ -117,5 +118,34 @@ impl crate::parsers::Parser for ActionDefinition {
     /// See [`parse_action_def`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_action_def(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        ActionDefinition, ActionSymbol, Effects, Parser, PreconditionGoalDefinitions, ToTyped,
+        TypedList, Variable,
+    };
+
+    #[test]
+    fn test_parse() {
+        let input = r#"(:action take-out
+                            :parameters (?x - physob)
+                            :precondition (not (= ?x B))
+                            :effect (not (in ?x))
+                        )"#;
+
+        let (_, action) = ActionDefinition::parse(input).unwrap();
+
+        assert_eq!(
+            action,
+            ActionDefinition::new(
+                ActionSymbol::from_str("take-out"),
+                TypedList::from_iter([Variable::from_str("x").to_typed("physob")]),
+                PreconditionGoalDefinitions::from_str("(not (= ?x B))").unwrap(),
+                Some(Effects::from_str("(not (in ?x))").unwrap())
+            )
+        );
     }
 }

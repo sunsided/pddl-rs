@@ -113,6 +113,11 @@ impl crate::parsers::Parser for PEffect {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parsers::UnwrapValue;
+    use crate::{
+        AssignOp, AtomicFormula, EqualityAtomicFormula, FExp, FHead, FunctionSymbol, FunctionTerm,
+        Parser, Term,
+    };
 
     #[test]
     fn it_works() {
@@ -129,5 +134,54 @@ mod tests {
 
         let result = is_not(input.into());
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_parse() {
+        assert!(PEffect::parse("(= x y)").is_value(PEffect::AtomicFormula(
+            AtomicFormula::Equality(EqualityAtomicFormula::new(
+                Term::Name("x".into()),
+                Term::Name("y".into())
+            ))
+        )));
+
+        assert!(
+            PEffect::parse("(not (= ?a B))").is_value(PEffect::NotAtomicFormula(
+                AtomicFormula::Equality(EqualityAtomicFormula::new(
+                    Term::Variable("a".into()),
+                    Term::Name("B".into())
+                ))
+            ))
+        );
+
+        assert!(
+            PEffect::parse("(assign fun-sym 1.23)").is_value(PEffect::new_numeric_fluent(
+                AssignOp::Assign,
+                FHead::new(FunctionSymbol::from_str("fun-sym")),
+                FExp::new_number(1.23)
+            ))
+        );
+
+        assert!(
+            PEffect::parse("(assign fun-sym 1.23)").is_value(PEffect::new_numeric_fluent(
+                AssignOp::Assign,
+                FHead::new(FunctionSymbol::from_str("fun-sym")),
+                FExp::new_number(1.23)
+            ))
+        );
+
+        assert!(PEffect::parse("(assign (fun-sym) undefined)").is_value(
+            PEffect::new_object_fluent(
+                FunctionTerm::new(FunctionSymbol::from_str("fun-sym"), []),
+                None
+            )
+        ));
+
+        assert!(PEffect::parse("(assign (fun-sym) something)").is_value(
+            PEffect::new_object_fluent(
+                FunctionTerm::new(FunctionSymbol::from_str("fun-sym"), []),
+                Some(Term::Name("something".into()))
+            )
+        ));
     }
 }

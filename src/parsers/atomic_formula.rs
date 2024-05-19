@@ -49,11 +49,24 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parsers::parse_term;
+    use crate::parsers::{parse_name, parse_term, UnwrapValue};
+    use crate::{EqualityAtomicFormula, Predicate, PredicateAtomicFormula};
 
     #[test]
     fn it_works() {
         let input = "(can-move ?from-waypoint ?to-waypoint)";
         let (_, _effect) = atomic_formula(parse_term)(Span::new(input)).unwrap();
+    }
+
+    #[test]
+    fn test_parse() {
+        assert!(atomic_formula(parse_name)(Span::new("(= x y)")).is_value(
+            AtomicFormula::Equality(EqualityAtomicFormula::new("x".into(), "y".into()))
+        ));
+        assert!(
+            atomic_formula(parse_name)(Span::new("(move a b)")).is_value(AtomicFormula::Predicate(
+                PredicateAtomicFormula::new(Predicate::from("move"), vec!["a".into(), "b".into()])
+            ))
+        );
     }
 }

@@ -1,9 +1,10 @@
 //! Provides parsers for constant definitions.
 
+use nom::combinator::map;
+
 use crate::parsers::{function_typed_list, parse_atomic_function_skeleton};
 use crate::parsers::{prefix_expr, ParseResult, Span};
 use crate::types::Functions;
-use nom::combinator::map;
 
 /// Parses constant definitions, i.e. `(:constants <typed list (name)>)`.
 ///
@@ -42,5 +43,28 @@ impl crate::parsers::Parser for Functions {
     /// See [`parse_functions_def`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_functions_def(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::UnwrapValue;
+    use crate::{
+        AtomicFunctionSkeleton, FunctionSymbol, FunctionTyped, Functions, Parser, Type, Typed,
+        TypedList, Variable,
+    };
+
+    #[test]
+    fn test_parse() {
+        let input = "(:functions (battery-amount ?r - rover))";
+        assert!(Functions::parse(input).is_value(Functions::from_iter([
+            FunctionTyped::new_number(AtomicFunctionSkeleton::new(
+                FunctionSymbol::from_str("battery-amount"),
+                TypedList::from_iter([Typed::new(
+                    Variable::from("r"),
+                    Type::Exactly("rover".into())
+                )])
+            ))
+        ])));
     }
 }
