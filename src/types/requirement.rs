@@ -15,8 +15,7 @@ use std::fmt::{Display, Formatter};
 ///
 /// ## References
 /// - "Complete BNF description of PDDL 3.1 (completely corrected)", Daniel L. Kovacs (`dkovacs@mit.bme.hu`).
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-#[derive(Default)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub enum Requirement {
     /// Basic STRIPS-style adds and deletes.
     #[default]
@@ -248,7 +247,6 @@ pub enum ParseError {
     #[error("Invalid requirement")]
     InvalidRequirement,
 }
-
 
 impl Borrow<str> for Requirement {
     fn borrow(&self) -> &str {
