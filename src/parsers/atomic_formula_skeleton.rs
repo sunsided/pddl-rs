@@ -59,3 +59,25 @@ impl crate::parsers::Parser for AtomicFormulaSkeleton {
         parse_atomic_formula_skeleton(input)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{AtomicFormulaSkeleton, Parser, Predicate, Variable};
+    use crate::{ToTyped, TypedList};
+
+    #[test]
+    fn test_parse() {
+        let (_, value) = AtomicFormulaSkeleton::parse("(at ?x - physob ?y - location)").unwrap();
+
+        assert_eq!(
+            value,
+            AtomicFormulaSkeleton::new(
+                Predicate::from("at"),
+                TypedList::from_iter([
+                    Variable::from("x").to_typed("physob"),
+                    Variable::from("y").to_typed("location")
+                ])
+            )
+        );
+    }
+}
