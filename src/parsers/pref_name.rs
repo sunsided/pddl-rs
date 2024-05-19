@@ -22,3 +22,14 @@ impl crate::parsers::Parser for PreferenceName {
         parse_pref_name(input)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::preamble::*;
+    use crate::PreferenceName;
+
+    #[test]
+    fn test_parse() {
+        assert!(PreferenceName::parse("abcde").is_value("abcde".into()));
+    }
+}

@@ -125,3 +125,66 @@ impl crate::parsers::Parser for PrefConGDs {
         parse_pref_con_gd(input)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::preamble::*;
+    use crate::{
+        AtomicFormula, Con2GD, ConGD, GoalDefinition, PrefConGD, PrefConGDs, Term, ToTyped, Type,
+        TypedList, Variable,
+    };
+
+    #[test]
+    fn test_parse() {
+        // (= x y)
+        let gd_a = GoalDefinition::new_atomic_formula(AtomicFormula::new_equality(
+            Term::Name("x".into()),
+            Term::Name("y".into()),
+        ));
+        ///
+        // (not (= x z))
+        let gd_b = GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
+            AtomicFormula::new_equality(Term::Name("x".into()), Term::Name("z".into())),
+        ));
+
+        assert!(PrefConGDs::parse("(and)").is_value(PrefConGDs::default()));
+
+        assert!(
+            PrefConGDs::parse("(and (at end (= x y)) (at end (not (= x z))))").is_value(
+                PrefConGDs::from_iter([
+                    PrefConGD::new_goal(ConGD::new_at_end(gd_a.clone())),
+                    PrefConGD::new_goal(ConGD::new_at_end(gd_b.clone())),
+                ])
+            )
+        );
+
+        assert!(
+            PrefConGDs::parse("(forall (?x ?z) (sometime (= ?x ?z)))").is_value(
+                PrefConGDs::new_forall(
+                    TypedList::from_iter([
+                        Variable::from("x").to_typed(Type::OBJECT),
+                        Variable::from("z").to_typed(Type::OBJECT),
+                    ]),
+                    PrefConGDs::new_goal(ConGD::new_sometime(Con2GD::Goal(
+                        GoalDefinition::new_atomic_formula(AtomicFormula::new_equality(
+                            Term::Variable("x".into()),
+                            Term::Variable("z".into())
+                        ))
+                    )))
+                )
+            )
+        );
+
+        assert!(PrefConGDs::parse("(at end (= x y))")
+            .is_value(PrefConGDs::new_goal(ConGD::AtEnd(gd_a.clone()))));
+
+        assert!(PrefConGDs::parse("(preference (at end (= x y)))")
+            .is_value(PrefConGDs::new_preference(None, ConGD::AtEnd(gd_a.clone()))));
+
+        assert!(
+            PrefConGDs::parse("(preference name (at end (= x y)))").is_value(
+                PrefConGDs::new_preference(Some("name".into()), ConGD::AtEnd(gd_a.clone()))
+            )
+        );
+    }
+}

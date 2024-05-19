@@ -282,3 +282,23 @@ impl crate::parsers::Parser for Con2GD {
         parse_con2_gd(input)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::preamble::*;
+    use crate::{AtomicFormula, Con2GD, ConGD, GoalDefinition, Number, Term};
+
+    #[test]
+    fn test_parse() {
+        let gd = GoalDefinition::new_atomic_formula(AtomicFormula::new_equality(
+            Term::Name("x".into()),
+            Term::Name("y".into()),
+        ));
+
+        let input = "(within 10 (at-most-once (= x y)))";
+        assert!(ConGD::parse(input).is_value(ConGD::new_within(
+            Number::from(10),
+            Con2GD::new_nested(ConGD::new_at_most_once(Con2GD::new_goal(gd)))
+        )));
+    }
+}
