@@ -41,3 +41,14 @@ impl crate::parsers::Parser for Predicate {
         parse_predicate(input)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{Parser, Predicate};
+
+    #[test]
+    fn test_parse() {
+        let (_, value) = Predicate::parse("abcde").unwrap();
+        assert_eq!(value, "abcde".into());
+    }
+}

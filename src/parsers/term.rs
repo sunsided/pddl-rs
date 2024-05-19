@@ -57,3 +57,17 @@ impl crate::parsers::Parser for Term {
         parse_term(input)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{Parser, Term};
+
+    #[test]
+    fn test_parse() {
+        let (_, value) = Term::parse("some-name").unwrap();
+        assert_eq!(value, Term::Name("some-name".into()));
+
+        let (_, value) = Term::parse("?some-var").unwrap();
+        assert_eq!(value, Term::Variable("some-var".into()));
+    }
+}
