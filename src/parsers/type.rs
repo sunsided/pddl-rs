@@ -68,4 +68,9 @@ mod tests {
             ])
         );
     }
+
+    #[test]
+    fn test_invalid() {
+        assert!(parse_type(Span::new("()")).is_err());
+    }
 }

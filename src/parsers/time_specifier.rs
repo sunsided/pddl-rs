@@ -34,12 +34,12 @@ impl crate::parsers::Parser for TimeSpecifier {
 
 #[cfg(test)]
 mod tests {
-    use crate::parsers::{parse_time_specifier, UnwrapValue};
-    use crate::TimeSpecifier;
+    use crate::parsers::UnwrapValue;
+    use crate::{Parser, TimeSpecifier};
 
     #[test]
     fn test_parse() {
-        assert!(parse_time_specifier("start").is_value(TimeSpecifier::Start));
-        assert!(parse_time_specifier("end").is_value(TimeSpecifier::End));
+        assert!(TimeSpecifier::parse("start").is_value(TimeSpecifier::Start));
+        assert!(TimeSpecifier::parse("end").is_value(TimeSpecifier::End));
     }
 }

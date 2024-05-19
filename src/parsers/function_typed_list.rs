@@ -91,5 +91,18 @@ mod tests {
                 )])
             )
         )])));
+
+        assert!(function_typed_list(parse_atomic_function_skeleton)(
+            "(move ?from ?to - location)".into()
+        )
+        .is_value(FunctionTypedList::from_iter([FunctionTyped::new_number(
+            AtomicFunctionSkeleton::new(
+                FunctionSymbol::from_str("move"),
+                TypedList::from_iter([
+                    Typed::new(Variable::from("from"), Type::Exactly("location".into())),
+                    Typed::new(Variable::from("to"), Type::Exactly("location".into()))
+                ])
+            )
+        )])));
     }
 }

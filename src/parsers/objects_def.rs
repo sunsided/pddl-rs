@@ -40,18 +40,16 @@ impl crate::parsers::Parser for Objects {
 #[cfg(test)]
 mod test {
     use crate::parsers::UnwrapValue;
-    use crate::{Name, ToTyped, Type};
+    use crate::{Name, Parser, ToTyped, Type};
 
     use super::*;
 
     #[test]
     fn test_parse() {
         let input = "(:objects train1 train2)";
-        assert!(
-            parse_problem_objects_declaration(input).is_value(Objects::new([
-                Name::new("train1").to_typed(Type::OBJECT),
-                Name::new("train2").to_typed(Type::OBJECT),
-            ]))
-        );
+        assert!(Objects::parse(input).is_value(Objects::new([
+            Name::new("train1").to_typed(Type::OBJECT),
+            Name::new("train2").to_typed(Type::OBJECT),
+        ])));
     }
 }

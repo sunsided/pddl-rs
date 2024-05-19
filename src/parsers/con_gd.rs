@@ -298,7 +298,15 @@ mod tests {
         let input = "(within 10 (at-most-once (= x y)))";
         assert!(ConGD::parse(input).is_value(ConGD::new_within(
             Number::from(10),
-            Con2GD::new_nested(ConGD::new_at_most_once(Con2GD::new_goal(gd)))
+            Con2GD::new_nested(ConGD::new_at_most_once(Con2GD::new_goal(gd.clone())))
         )));
+
+        let input = "(within 10 (at-most-once (= x y)))";
+        assert!(
+            Con2GD::parse(input).is_value(Con2GD::Nested(Box::new(ConGD::new_within(
+                Number::from(10),
+                Con2GD::new_nested(ConGD::new_at_most_once(Con2GD::new_goal(gd)))
+            ))))
+        );
     }
 }

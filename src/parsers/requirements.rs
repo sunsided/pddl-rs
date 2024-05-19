@@ -104,10 +104,10 @@ impl crate::parsers::Parser for Requirement {
 #[cfg(test)]
 mod tests {
     use crate::parsers::preamble::*;
-    use crate::Requirement;
+    use crate::{Requirement, Requirements};
 
     #[test]
-    fn test_parse() {
+    fn test_parse_requirement() {
         assert!(Requirement::parse(":strips").is_value(Requirement::Strips));
         assert!(Requirement::parse(":typing").is_value(Requirement::Typing));
         assert!(Requirement::parse(":negative-preconditions")
@@ -140,5 +140,22 @@ mod tests {
 
         assert!(Requirement::parse(":unknown").is_err());
         assert!(Requirement::parse("invalid").is_err());
+    }
+
+    #[test]
+    fn test_parse_requirements() {
+        assert!(Requirements::parse("(:requirements :adl)")
+            .is_value(Requirements::new([Requirement::Adl])));
+        assert!(
+            Requirements::parse("(:requirements :strips :typing)").is_value(Requirements::new([
+                Requirement::Strips,
+                Requirement::Typing
+            ]))
+        );
+        assert!(
+            Requirements::parse("(:requirements\n:strips   :typing  )").is_value(
+                Requirements::new([Requirement::Strips, Requirement::Typing])
+            )
+        );
     }
 }

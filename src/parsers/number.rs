@@ -48,6 +48,7 @@ impl crate::parsers::Parser for Number {
 mod tests {
     use crate::parsers::number::parse_decimal;
     use crate::parsers::{Match, Span};
+    use crate::{Number, Parser};
 
     #[test]
     fn parse_decimal_works() {
@@ -55,5 +56,11 @@ mod tests {
         assert!(parse_decimal(Span::new(".012")).is_exactly(".012"));
         assert!(parse_decimal(Span::new(".")).is_err());
         assert!(parse_decimal(Span::new("012")).is_err());
+    }
+
+    #[test]
+    fn test_parse() {
+        let (_, value) = Number::parse("1.20").unwrap();
+        assert_eq!(value, Number::from(1.2));
     }
 }
