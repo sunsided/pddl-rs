@@ -42,3 +42,14 @@ impl crate::parsers::Parser for FunctionSymbol {
         parse_function_symbol(input)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{FunctionSymbol, Parser};
+
+    #[test]
+    fn test_parse() {
+        let (_, value) = FunctionSymbol::parse("abcde").unwrap();
+        assert_eq!(value, "abcde".into());
+    }
+}

@@ -38,3 +38,25 @@ impl crate::parsers::Parser for GoalDef {
         parse_problem_goal_def(input)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::UnwrapValue;
+    use crate::{
+        AtomicFormula, GoalDef, GoalDefinition, Parser, PreconditionGoalDefinition, PreferenceGD,
+        Term,
+    };
+
+    #[test]
+    fn test_parse() {
+        let input = "(:goal (= x y))";
+        assert!(GoalDef::parse(input).is_value(GoalDef::from(
+            PreconditionGoalDefinition::Preference(PreferenceGD::Goal(
+                GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                    Term::Name("x".into()),
+                    Term::Name("y".into())
+                ))
+            ))
+        )));
+    }
+}

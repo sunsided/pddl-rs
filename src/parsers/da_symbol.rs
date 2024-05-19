@@ -33,3 +33,14 @@ impl crate::parsers::Parser for DurativeActionSymbol {
         parse_da_symbol(input)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{DurativeActionSymbol, Parser};
+
+    #[test]
+    fn test_parse() {
+        let (_, value) = DurativeActionSymbol::parse("abcde").unwrap();
+        assert_eq!(value, "abcde".into());
+    }
+}

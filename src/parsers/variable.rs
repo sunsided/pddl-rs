@@ -1,10 +1,11 @@
 //! Provides parsers for variables.
 
-use crate::parsers::{parse_name, ParseResult, Span};
-use crate::types::Variable;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
 use nom::sequence::preceded;
+
+use crate::parsers::{parse_name, ParseResult, Span};
+use crate::types::Variable;
 
 /// Parses a variable, i.e. `?<name>` and returns its name.
 ///
@@ -40,5 +41,16 @@ impl crate::parsers::Parser for Variable {
     /// See [`parse_variable`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_variable(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{Parser, Variable};
+
+    #[test]
+    fn test_parse() {
+        let (_, value) = Variable::parse("?abcde").unwrap();
+        assert_eq!(value, "abcde".into());
     }
 }
