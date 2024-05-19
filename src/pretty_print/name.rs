@@ -3,21 +3,21 @@ use crate::types::{FunctionSymbol, Name, Variable};
 use crate::visitor::Visitor;
 use pretty::RcDoc;
 
-impl<'a> Visitor<Name<'a>, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Name<'a>) -> RcDoc<'a> {
-        RcDoc::text(value.as_str())
+impl<'a> Visitor<Name, RcDoc<'a>> for PrettyRenderer {
+    fn visit(&self, value: &Name) -> RcDoc<'a> {
+        RcDoc::text(value.to_string())
     }
 }
 
-impl<'a> Visitor<Variable<'a>, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Variable<'a>) -> RcDoc<'a> {
-        RcDoc::text("?").append(value.as_str())
+impl<'a> Visitor<Variable, RcDoc<'a>> for PrettyRenderer {
+    fn visit(&self, value: &Variable) -> RcDoc<'a> {
+        RcDoc::text(value.to_string())
     }
 }
 
-impl<'a> Visitor<FunctionSymbol<'a>, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &FunctionSymbol<'a>) -> RcDoc<'a> {
-        RcDoc::text(value.as_str())
+impl<'a> Visitor<FunctionSymbol, RcDoc<'a>> for PrettyRenderer {
+    fn visit(&self, value: &FunctionSymbol) -> RcDoc<'a> {
+        RcDoc::text(value.to_string())
     }
 }
 

@@ -3,16 +3,16 @@ use crate::types::{PrimitiveType, Type};
 use crate::visitor::{Accept, Visitor};
 use pretty::RcDoc;
 
-impl<'a> Visitor<PrimitiveType<'a>, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &PrimitiveType<'a>) -> RcDoc<'a> {
-        RcDoc::text(value.as_str())
+impl<'a> Visitor<PrimitiveType, RcDoc<'a>> for PrettyRenderer {
+    fn visit(&self, value: &PrimitiveType) -> RcDoc<'a> {
+        RcDoc::text(value.to_string())
     }
 }
 
-impl<'a> Visitor<Type<'a>, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Type<'a>) -> RcDoc<'a> {
+impl<'a> Visitor<Type, RcDoc<'a>> for PrettyRenderer {
+    fn visit(&self, value: &Type) -> RcDoc<'a> {
         match value {
-            Type::Exactly(t) => RcDoc::text(t.as_str()),
+            Type::Exactly(t) => RcDoc::text(t.to_string()),
             Type::EitherOf(ts) => RcDoc::text("(either")
                 .append(RcDoc::softline())
                 .group()
