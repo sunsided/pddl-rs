@@ -1,13 +1,14 @@
 //! Provides parsers for f-exps.
 
-use crate::parsers::prefix_expr;
-use crate::parsers::{parse_f_exp, ParseResult, Span};
-use crate::types::FExpT;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, terminated, tuple};
+
+use crate::parsers::prefix_expr;
+use crate::parsers::{parse_f_exp, ParseResult, Span};
+use crate::types::FExpT;
 
 /// Parses an f-exp-t.
 ///
@@ -61,5 +62,34 @@ impl crate::parsers::Parser for FExpT {
     /// See [`parse_f_exp_t`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_f_exp_t(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::UnwrapValue;
+    use crate::{FExp, FExpT, FHead, FunctionSymbol, Parser, Term, Variable};
+
+    #[test]
+    fn test_parse() {
+        assert!(FExpT::parse("#t").is_value(FExpT::Now));
+
+        assert!(
+            FExpT::parse("(* (fuel ?tank) #t)").is_value(FExpT::new_scaled(FExp::new_function(
+                FHead::new_with_terms(
+                    FunctionSymbol::from_str("fuel"),
+                    [Term::Variable(Variable::from_str("tank"))]
+                )
+            )))
+        );
+
+        assert!(
+            FExpT::parse("(* #t (fuel ?tank))").is_value(FExpT::new_scaled(FExp::new_function(
+                FHead::new_with_terms(
+                    FunctionSymbol::from_str("fuel"),
+                    [Term::Variable(Variable::from_str("tank"))]
+                )
+            )))
+        );
     }
 }

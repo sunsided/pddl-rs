@@ -1,10 +1,11 @@
 //! Provides parsers for length specification.
 
-use crate::parsers::{prefix_expr, ParseResult, Span};
-use crate::types::LengthSpec;
 use nom::character::complete::multispace0;
 use nom::combinator::{map, opt};
 use nom::sequence::{preceded, tuple};
+
+use crate::parsers::{prefix_expr, ParseResult, Span};
+use crate::types::LengthSpec;
 
 /// Parses a length specification. Deprecated since PDDL 2.1.
 ///
@@ -36,5 +37,22 @@ impl crate::parsers::Parser for LengthSpec {
     /// See [`parse_problem_length_spec`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_problem_length_spec(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::UnwrapValue;
+    use crate::{LengthSpec, Parser};
+
+    #[test]
+    fn test_parse() {
+        assert!(LengthSpec::parse("(:length)").is_value(LengthSpec::default()));
+        assert!(LengthSpec::parse("(:length (:serial 123))").is_value(LengthSpec::new_serial(123)));
+        assert!(
+            LengthSpec::parse("(:length (:parallel 42))").is_value(LengthSpec::new_parallel(42))
+        );
+        assert!(LengthSpec::parse("(:length (:serial 123) (:parallel 42))")
+            .is_value(LengthSpec::new(Some(123), Some(42))));
     }
 }

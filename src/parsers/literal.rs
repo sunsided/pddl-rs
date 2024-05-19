@@ -1,10 +1,11 @@
 //! Provides parsers for literals.
 
+use nom::branch::alt;
+use nom::combinator::map;
+
 use crate::parsers::prefix_expr;
 use crate::parsers::{atomic_formula, ParseResult, Span};
 use crate::types::Literal;
-use nom::branch::alt;
-use nom::combinator::map;
 
 /// Parser combinator that parses a literal, i.e. `<atomic formula(t)> | (not <atomic formula(t)>)`.
 ///
@@ -44,4 +45,25 @@ where
     });
 
     alt((is_not, is))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::{literal, parse_name, Span, UnwrapValue};
+    use crate::{AtomicFormula, EqualityAtomicFormula, Literal};
+
+    #[test]
+    fn test_parse() {
+        assert!(
+            literal(parse_name)(Span::new("(= x y)")).is_value(Literal::AtomicFormula(
+                AtomicFormula::Equality(EqualityAtomicFormula::new("x".into(), "y".into()))
+            ))
+        );
+        assert!(literal(parse_name)(Span::new("(not (= x y))")).is_value(
+            Literal::NotAtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new(
+                "x".into(),
+                "y".into()
+            )))
+        ));
+    }
 }

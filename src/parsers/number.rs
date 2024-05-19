@@ -1,13 +1,14 @@
 //! Provides parsers for numbers, decimals and digits.
 
-use crate::parsers::{ParseResult, Span};
-use crate::types::Number;
 use nom::character::complete::{char, digit1};
 use nom::combinator::{map, recognize};
 use nom::multi::many_m_n;
 use nom::number::complete::float;
 use nom::sequence::tuple;
 use nom::Parser;
+
+use crate::parsers::{ParseResult, Span};
+use crate::types::Number;
 
 /// Parses a number, i.e. `<digit>⁺[<decimal>]`.
 ///
@@ -45,8 +46,9 @@ impl crate::parsers::Parser for Number {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::parsers::Match;
+    use crate::parsers::number::parse_decimal;
+    use crate::parsers::{Match, Span};
+    use crate::{Number, Parser};
 
     #[test]
     fn parse_decimal_works() {
@@ -54,5 +56,11 @@ mod tests {
         assert!(parse_decimal(Span::new(".012")).is_exactly(".012"));
         assert!(parse_decimal(Span::new(".")).is_err());
         assert!(parse_decimal(Span::new("012")).is_err());
+    }
+
+    #[test]
+    fn test_parse() {
+        let (_, value) = Number::parse("1.20").unwrap();
+        assert_eq!(value, Number::from(1.2));
     }
 }

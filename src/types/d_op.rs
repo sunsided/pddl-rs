@@ -16,9 +16,9 @@ pub enum DOp {
 }
 
 pub mod names {
-    pub const EQUAL: &'static str = "=";
-    pub const GREATER_OR_EQUAL: &'static str = ">=";
-    pub const LESS_THAN_OR_EQUAL: &'static str = "<=";
+    pub const EQUAL: &str = "=";
+    pub const GREATER_OR_EQUAL: &str = ">=";
+    pub const LESS_THAN_OR_EQUAL: &str = "<=";
 }
 
 impl Display for DOp {

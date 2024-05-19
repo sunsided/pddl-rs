@@ -27,7 +27,7 @@ pub fn parse_atomic_formula_skeleton<'a, T: Into<Span<'a>>>(
 ) -> ParseResult<'a, AtomicFormulaSkeleton> {
     map(
         parens(tuple((parse_predicate, ws(typed_list(parse_variable))))),
-        |tuple| AtomicFormulaSkeleton::from(tuple),
+        AtomicFormulaSkeleton::from,
     )(input.into())
 }
 
@@ -57,5 +57,27 @@ impl crate::parsers::Parser for AtomicFormulaSkeleton {
     /// See [`parse_atomic_formula_skeleton`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_atomic_formula_skeleton(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{AtomicFormulaSkeleton, Parser, Predicate, Variable};
+    use crate::{ToTyped, TypedList};
+
+    #[test]
+    fn test_parse() {
+        let (_, value) = AtomicFormulaSkeleton::parse("(at ?x - physob ?y - location)").unwrap();
+
+        assert_eq!(
+            value,
+            AtomicFormulaSkeleton::new(
+                Predicate::from("at"),
+                TypedList::from_iter([
+                    Variable::from("x").to_typed("physob"),
+                    Variable::from("y").to_typed("location")
+                ])
+            )
+        );
     }
 }

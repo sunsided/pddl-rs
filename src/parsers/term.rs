@@ -30,10 +30,7 @@ pub fn parse_term<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Term> {
         return Ok((remaining, Term::Function(ft)));
     }
 
-    return Err(nom::Err::Error(error_position!(
-        input.into(),
-        ErrorKind::Alt
-    )));
+    Err(nom::Err::Error(error_position!(input, ErrorKind::Alt)))
 }
 
 impl crate::parsers::Parser for Term {
@@ -55,5 +52,19 @@ impl crate::parsers::Parser for Term {
     /// See [`parse_term`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_term(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{Parser, Term};
+
+    #[test]
+    fn test_parse() {
+        let (_, value) = Term::parse("some-name").unwrap();
+        assert_eq!(value, Term::Name("some-name".into()));
+
+        let (_, value) = Term::parse("?some-var").unwrap();
+        assert_eq!(value, Term::Variable("some-var".into()));
     }
 }

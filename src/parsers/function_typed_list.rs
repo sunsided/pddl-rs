@@ -1,11 +1,12 @@
-use crate::parsers::{
-    parse_type, space_separated_list0, space_separated_list1, ws, ParseResult, Span,
-};
-use crate::types::{FunctionType, FunctionTyped, FunctionTypedList};
 use nom::character::complete::char;
 use nom::combinator::map;
 use nom::multi::many0;
 use nom::sequence::{preceded, tuple};
+
+use crate::parsers::{
+    parse_type, space_separated_list0, space_separated_list1, ws, ParseResult, Span,
+};
+use crate::types::{FunctionType, FunctionTyped, FunctionTypedList};
 
 /// Parses a typed list, i.e. `x* | x⁺ - <type> <typed-list (x)>.
 ///
@@ -62,10 +63,46 @@ where
         implicitly_typed_list,
     ));
 
-    let repeated_lists = map(typed_list_choice, |(mut explicit, mut implicit)| {
+    map(typed_list_choice, |(mut explicit, mut implicit)| {
         explicit.append(&mut implicit);
         FunctionTypedList::new(explicit)
-    });
+    })
+}
 
-    repeated_lists
+#[cfg(test)]
+mod tests {
+    use crate::parsers::{function_typed_list, parse_atomic_function_skeleton, UnwrapValue};
+    use crate::{
+        AtomicFunctionSkeleton, FunctionSymbol, FunctionTyped, FunctionTypedList, Type, Typed,
+        TypedList, Variable,
+    };
+
+    #[test]
+    fn test_parse() {
+        assert!(function_typed_list(parse_atomic_function_skeleton)(
+            "(battery-amount ?r - rover)".into()
+        )
+        .is_value(FunctionTypedList::from_iter([FunctionTyped::new_number(
+            AtomicFunctionSkeleton::new(
+                FunctionSymbol::from_str("battery-amount"),
+                TypedList::from_iter([Typed::new(
+                    Variable::from("r"),
+                    Type::Exactly("rover".into())
+                )])
+            )
+        )])));
+
+        assert!(function_typed_list(parse_atomic_function_skeleton)(
+            "(move ?from ?to - location)".into()
+        )
+        .is_value(FunctionTypedList::from_iter([FunctionTyped::new_number(
+            AtomicFunctionSkeleton::new(
+                FunctionSymbol::from_str("move"),
+                TypedList::from_iter([
+                    Typed::new(Variable::from("from"), Type::Exactly("location".into())),
+                    Typed::new(Variable::from("to"), Type::Exactly("location".into()))
+                ])
+            )
+        )])));
+    }
 }

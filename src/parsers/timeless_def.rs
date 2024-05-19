@@ -49,3 +49,24 @@ impl crate::parsers::Parser for Timeless {
         parse_timeless_def(input)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::preamble::*;
+    use crate::{AtomicFormula, EqualityAtomicFormula, Literal, Timeless};
+
+    #[test]
+    fn test_parse() {
+        let input = "(:timeless (= x y) (= a b))";
+        assert!(Timeless::parse(input).is_value(Timeless::from_iter([
+            Literal::AtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new(
+                "x".into(),
+                "y".into()
+            ))),
+            Literal::AtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new(
+                "a".into(),
+                "b".into()
+            )))
+        ])));
+    }
+}

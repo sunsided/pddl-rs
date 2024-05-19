@@ -1,13 +1,14 @@
 //! Provides parsers for f-exp-da values..
 
-use crate::parsers::{parens, space_separated_list1, ParseResult, Span};
-use crate::parsers::{parse_binary_op, parse_f_exp, parse_multi_op};
-use crate::types::FExpDa;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::character::complete::{char, multispace0, multispace1};
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
+
+use crate::parsers::{parens, space_separated_list1, ParseResult, Span};
+use crate::parsers::{parse_binary_op, parse_f_exp, parse_multi_op};
+use crate::types::FExpDa;
 
 /// Parses an f-exp-da.
 ///
@@ -73,5 +74,32 @@ impl crate::parsers::Parser for FExpDa {
     /// See [`parse_f_exp_da`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_f_exp_da(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::UnwrapValue;
+    use crate::{BinaryOp, FExp, FExpDa, MultiOp, Parser};
+
+    #[test]
+    fn test_parse() {
+        assert!(FExpDa::parse("?duration").is_value(FExpDa::Duration));
+
+        assert!(
+            FExpDa::parse("(+ 1.23 2.34)").is_value(FExpDa::new_binary_op(
+                BinaryOp::Addition,
+                FExpDa::new_f_exp(FExp::new_number(1.23)),
+                FExpDa::new_f_exp(FExp::new_number(2.34))
+            ))
+        );
+
+        assert!(
+            FExpDa::parse("(+ 1.23 2.34 3.45)").is_value(FExpDa::new_multi_op(
+                MultiOp::Addition,
+                FExpDa::new_f_exp(FExp::new_number(1.23)),
+                [FExp::new_number(2.34).into(), FExp::new_number(3.45).into()]
+            ))
+        );
     }
 }

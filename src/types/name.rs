@@ -121,7 +121,7 @@ impl Name {
     }
 
     /// Maps the provided to a well-known `'static` string if possible.
-    fn map_to_static<'a>(value: &'a str) -> Option<&'static str> {
+    fn map_to_static(value: &str) -> Option<&'static str> {
         match value {
             "object" => Some(well_known::OBJECT),
             "number" => Some(well_known::NUMBER),
@@ -132,8 +132,8 @@ impl Name {
 
 /// Provides well-known names for string interning.
 mod well_known {
-    pub static OBJECT: &'static str = "object";
-    pub static NUMBER: &'static str = "number";
+    pub static OBJECT: &str = "object";
+    pub static NUMBER: &str = "number";
 }
 
 impl<T> From<T> for Name
@@ -217,7 +217,7 @@ impl Deref for NameVariant {
     fn deref(&self) -> &Self::Target {
         match self {
             NameVariant::String(str) => str.as_str(),
-            NameVariant::Static(str) => *str,
+            NameVariant::Static(str) => str,
         }
     }
 }

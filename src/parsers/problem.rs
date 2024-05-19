@@ -1,5 +1,9 @@
 //! Provides parsers for problem definitions.
 
+use nom::character::complete::multispace1;
+use nom::combinator::{map, opt};
+use nom::sequence::{preceded, tuple};
+
 use crate::parsers::{parse_name, prefix_expr, ws2, ParseResult, Span};
 use crate::parsers::{
     parse_problem_constraints_def, parse_problem_goal_def, parse_problem_init_def,
@@ -8,9 +12,6 @@ use crate::parsers::{
 };
 use crate::types::{Objects, Problem};
 use crate::types::{ProblemConstraintsDef, Requirements};
-use nom::character::complete::multispace1;
-use nom::combinator::{map, opt};
-use nom::sequence::{preceded, tuple};
 
 /// Parses a problem definitions.
 ///
@@ -99,5 +100,31 @@ impl crate::parsers::Parser for Problem {
     /// See [`parse_problem`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_problem(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::preamble::*;
+    use crate::{Name, Problem};
+
+    #[test]
+    fn test_parse() {
+        let input = r#"(define (problem get-paid)
+                 (:domain briefcase-world)
+                 (:init (place home) (place office)
+                        (object p) (object d) (object b)
+                        (at B home) (at P home) (at D home) (in P))
+                 (:goal (and (at B office) (at D office) (at P home)))
+             )"#;
+
+        let (remainder, problem) = Problem::parse(input).unwrap();
+
+        assert!(remainder.is_empty());
+        assert_eq!(problem.name(), &Name::new("get-paid"));
+        assert_eq!(problem.domain(), &Name::new("briefcase-world"));
+        assert!(problem.requirements().is_empty());
+        assert_eq!(problem.init().len(), 9);
+        assert_eq!(problem.goals().len(), 3);
     }
 }

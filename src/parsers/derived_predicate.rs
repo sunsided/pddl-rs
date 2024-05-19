@@ -1,11 +1,12 @@
 //! Provides parsers for derived predicates.
 
-use crate::parsers::{parse_atomic_formula_skeleton, parse_gd};
-use crate::parsers::{prefix_expr, ParseResult, Span};
-use crate::types::DerivedPredicate;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
+
+use crate::parsers::{parse_atomic_formula_skeleton, parse_gd};
+use crate::parsers::{prefix_expr, ParseResult, Span};
+use crate::types::DerivedPredicate;
 
 /// Parses a derived predicate, i.e. `(:derived <atomic formula skeleton> <GD>)`.
 ///
@@ -45,5 +46,24 @@ impl crate::parsers::Parser for DerivedPredicate {
     /// See [`parse_derived_predicate`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_derived_predicate(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{DerivedPredicate, GoalDefinition, Parser};
+
+    #[test]
+    fn test_parse() {
+        let input = r#"(:derived (train-usable ?t - train)
+                            (and
+                                (train-has-guard ?t)
+                                (train-has-driver ?t)
+                            )
+                        )"#;
+
+        let (_, predicate) = DerivedPredicate::parse(input).unwrap();
+        assert_eq!(predicate.predicate().name(), "train-usable");
+        assert!(matches!(predicate.expression(), &GoalDefinition::And(..)));
     }
 }

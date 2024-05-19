@@ -26,10 +26,7 @@ pub fn parse_type<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Type> {
         return Ok((remaining, Type::EitherOf(types)));
     }
 
-    Err(nom::Err::Failure(error_position!(
-        input.into(),
-        ErrorKind::Alt
-    )))
+    Err(nom::Err::Failure(error_position!(input, ErrorKind::Alt)))
 }
 
 /// Parses a either type, i.e. `(either a b c)`.
@@ -70,5 +67,10 @@ mod tests {
                 PrimitiveType::from("number")
             ])
         );
+    }
+
+    #[test]
+    fn test_invalid() {
+        assert!(parse_type(Span::new("()")).is_err());
     }
 }

@@ -103,6 +103,7 @@ impl crate::parsers::Parser for DurativeActionDefinition {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Parser;
 
     #[test]
     fn it_works() {
@@ -134,6 +135,6 @@ mod tests {
                         (at end (increase (distance-travelled) 5))
                         )
             )"#;
-        let (_, _gd) = parse_da_def(Span::new(input)).unwrap();
+        let (_, _gd) = DurativeActionDefinition::parse(Span::new(input)).unwrap();
     }
 }

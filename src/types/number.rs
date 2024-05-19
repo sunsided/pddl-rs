@@ -126,13 +126,13 @@ impl Ord for Number {
             unreachable!("Proper construction of this type prevents NaN");
         }
 
-        return lhs.partial_cmp(&rhs).expect("Values cannot be ambiguous");
+        lhs.partial_cmp(&rhs).expect("Values cannot be ambiguous")
     }
 }
 
 impl PartialOrd for Number {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.total_cmp(&other))
+        Some(self.total_cmp(other))
     }
 }
 

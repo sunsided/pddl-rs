@@ -100,10 +100,48 @@ impl crate::parsers::Parser for TimedEffect {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parsers::UnwrapValue;
+    use crate::{
+        AssignOp, AssignOpT, AtomicFormula, ConditionalEffect, EqualityAtomicFormula, FAssignDa,
+        FExpDa, FExpT, FHead, PEffect, Parser, Term, TimeSpecifier,
+    };
 
     #[test]
     fn it_works() {
         let input = "(at end (increase (distance-travelled) 5))";
         let (_, _effect) = parse_timed_effect(Span::new(input)).unwrap();
+    }
+
+    #[test]
+    fn test_parse() {
+        assert!(
+            TimedEffect::parse("(at start (= x y))").is_value(TimedEffect::new_conditional(
+                TimeSpecifier::Start,
+                ConditionalEffect::new(PEffect::AtomicFormula(AtomicFormula::Equality(
+                    EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
+                )))
+            ))
+        );
+
+        assert!(
+            TimedEffect::parse("(at end (assign fun-sym ?duration))").is_value(
+                TimedEffect::new_fluent(
+                    TimeSpecifier::End,
+                    FAssignDa::new(
+                        AssignOp::Assign,
+                        FHead::Simple("fun-sym".into()),
+                        FExpDa::Duration
+                    )
+                )
+            )
+        );
+
+        assert!(
+            TimedEffect::parse("(increase fun-sym #t)").is_value(TimedEffect::new_continuous(
+                AssignOpT::Increase,
+                FHead::Simple("fun-sym".into()),
+                FExpT::Now
+            ))
+        );
     }
 }

@@ -18,8 +18,8 @@ pub enum Optimization {
 }
 
 pub mod names {
-    pub const MINIMIZE: &'static str = "minimize";
-    pub const MAXIMIZE: &'static str = "maximize";
+    pub const MINIMIZE: &str = "minimize";
+    pub const MAXIMIZE: &str = "maximize";
 }
 
 impl Display for Optimization {

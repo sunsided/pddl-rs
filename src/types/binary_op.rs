@@ -16,10 +16,10 @@ pub enum BinaryOp {
 }
 
 pub mod names {
-    pub const MULTIPLICATION: &'static str = "*";
-    pub const ADDITION: &'static str = "+";
-    pub const SUBTRACTION: &'static str = "-";
-    pub const DIVISION: &'static str = "/";
+    pub const MULTIPLICATION: &str = "*";
+    pub const ADDITION: &str = "+";
+    pub const SUBTRACTION: &str = "-";
+    pub const DIVISION: &str = "/";
 }
 
 impl Display for BinaryOp {

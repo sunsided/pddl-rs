@@ -32,11 +32,13 @@ where
 pub trait Match<V> {
     /// Ensures the parser produced the specified value
     /// and leaves no remaining value to be parsed.
+    #[allow(unused)]
     fn is_exactly(&self, value: V) -> bool {
         self.is_result("", value)
     }
 
     /// Ensures the remainder value are as specified.
+    #[allow(unused)]
     fn is_result(&self, remainder: &str, value: V) -> bool;
 }
 
@@ -103,5 +105,39 @@ where
         } else {
             false
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::parsers::name::parse_any_char;
+    use crate::parsers::Match;
+    use crate::{Name, Parser};
+
+    #[test]
+    fn test_is_value() {
+        assert!(Name::parse("abcde").is_value("abcde".into()));
+    }
+
+    #[test]
+    fn test_is_value_fails() {
+        assert!(!Name::parse("abcde").is_value("xyz".into()));
+        assert!(!Name::parse("-").is_value("abcde".into()));
+    }
+
+    #[test]
+    fn test_unwrap_value() {
+        assert_eq!(Name::parse("abcde").unwrap_value(), "abcde");
+    }
+
+    #[test]
+    fn test_is_exactly() {
+        assert!(Name::parse(Span::new("abcde")).is_exactly("abcde"));
+    }
+
+    #[test]
+    fn test_is_er() {
+        assert!(parse_any_char(Span::new(".")).is_err());
     }
 }

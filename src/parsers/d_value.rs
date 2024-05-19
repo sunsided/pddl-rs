@@ -1,10 +1,11 @@
 //! Provides parsers for d-values.
 
+use nom::branch::alt;
+use nom::combinator::map;
+
 use crate::parsers::parse_number;
 use crate::parsers::{parse_f_exp, ParseResult, Span};
 use crate::types::DurationValue;
-use nom::branch::alt;
-use nom::combinator::map;
 
 /// Parses a d-value.
 ///
@@ -37,5 +38,22 @@ impl crate::parsers::Parser for DurationValue {
     /// See [`parse_d_value`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_d_value(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::UnwrapValue;
+    use crate::{DurationValue, FExp, FHead, Parser};
+
+    #[test]
+    fn test_parse() {
+        assert!(DurationValue::parse("1.23").is_value(DurationValue::new_number(1.23)));
+
+        assert!(
+            DurationValue::parse("fun-sym").is_value(DurationValue::new_f_exp(FExp::new_function(
+                FHead::Simple("fun-sym".into())
+            )))
+        );
     }
 }

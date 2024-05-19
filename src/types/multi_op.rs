@@ -14,8 +14,8 @@ pub enum MultiOp {
 }
 
 pub mod names {
-    pub const MULTIPLICATION: &'static str = "*";
-    pub const ADDITION: &'static str = "+";
+    pub const MULTIPLICATION: &str = "*";
+    pub const ADDITION: &str = "+";
 }
 
 impl Display for MultiOp {

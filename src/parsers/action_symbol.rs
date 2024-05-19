@@ -1,8 +1,9 @@
 //! Provides parsers for action symbols.
 
+use nom::combinator::map;
+
 use crate::parsers::{parse_name, ParseResult, Span};
 use crate::types::ActionSymbol;
-use nom::combinator::map;
 
 /// Parses an action symbol, i.e. `<name>`.
 ///
@@ -40,5 +41,16 @@ impl crate::parsers::Parser for ActionSymbol {
     /// See [`parse_action_symbol`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_action_symbol(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{ActionSymbol, Parser};
+
+    #[test]
+    fn test_parse() {
+        let (_, action_symbol) = ActionSymbol::parse("abcde").unwrap();
+        assert_eq!(action_symbol, "abcde".into());
     }
 }

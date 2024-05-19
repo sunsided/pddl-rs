@@ -37,10 +37,11 @@ impl crate::parsers::Parser for FAssignDa {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Parser;
 
     #[test]
     fn it_works() {
         let input = "(increase (distance-travelled) 5)";
-        let (_, _effect) = parse_f_assign_da(Span::new(input)).unwrap();
+        let (_, _effect) = FAssignDa::parse(Span::new(input)).unwrap();
     }
 }

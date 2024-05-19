@@ -1,10 +1,11 @@
 //! Provides the [`empty_or`] parser combinator.
 
-use crate::parsers::{ParseResult, Span};
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
 use nom::error::ParseError;
+
+use crate::parsers::{ParseResult, Span};
 
 /// Parser combinator that takes a parser `inner` and produces a parser that
 /// consumes `()` and returns [`None`] or the result of `inner` and produces [`Some(O)`](Some).
@@ -33,9 +34,11 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::parsers::Match;
     use nom::character::complete::alpha1;
+
+    use crate::parsers::Match;
+
+    use super::*;
 
     #[test]
     fn empty_or_works() {

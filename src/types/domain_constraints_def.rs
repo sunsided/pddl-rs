@@ -44,8 +44,8 @@ impl Deref for DomainConstraintsDef {
     }
 }
 
-impl Into<ConGD> for DomainConstraintsDef {
-    fn into(self) -> ConGD {
-        self.0
+impl From<DomainConstraintsDef> for ConGD {
+    fn from(val: DomainConstraintsDef) -> Self {
+        val.0
     }
 }

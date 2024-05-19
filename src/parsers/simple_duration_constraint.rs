@@ -1,13 +1,14 @@
 //! Provides parsers for simple duration constraints.
 
-use crate::parsers::{parens, prefix_expr, ParseResult, Span};
-use crate::parsers::{parse_d_op, parse_d_value, parse_time_specifier};
-use crate::types::SimpleDurationConstraint;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
+
+use crate::parsers::{parens, prefix_expr, ParseResult, Span};
+use crate::parsers::{parse_d_op, parse_d_value, parse_time_specifier};
+use crate::types::SimpleDurationConstraint;
 
 /// Parses a simple duration constraint.
 ///
@@ -68,5 +69,30 @@ impl crate::parsers::Parser for SimpleDurationConstraint {
     /// See [`parse_simple_duration_constraint`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_simple_duration_constraint(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::preamble::*;
+    use crate::{DOp, DurationValue, SimpleDurationConstraint, TimeSpecifier};
+
+    #[test]
+    fn test_parse() {
+        let input = "(>= ?duration 1.23)";
+        assert!(
+            SimpleDurationConstraint::parse(input).is_value(SimpleDurationConstraint::new_op(
+                DOp::GreaterOrEqual,
+                DurationValue::new_number(1.23)
+            ))
+        );
+
+        let input = "(at end (<= ?duration 1.23))";
+        assert!(
+            SimpleDurationConstraint::parse(input).is_value(SimpleDurationConstraint::new_at(
+                TimeSpecifier::End,
+                SimpleDurationConstraint::Op(DOp::LessThanOrEqual, DurationValue::new_number(1.23))
+            ))
+        );
     }
 }

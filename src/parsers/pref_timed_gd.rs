@@ -1,12 +1,13 @@
 //! Provides parsers for (preferred) timed goal definitions.
 
-use crate::parsers::{parse_pref_name, parse_timed_gd};
-use crate::parsers::{prefix_expr, ParseResult, Span};
-use crate::types::PrefTimedGD;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::{map, opt};
 use nom::sequence::{terminated, tuple};
+
+use crate::parsers::{parse_pref_name, parse_timed_gd};
+use crate::parsers::{prefix_expr, ParseResult, Span};
+use crate::types::PrefTimedGD;
 
 /// Parser for (preferred) timed goal definitions.
 ///
@@ -83,5 +84,58 @@ impl crate::parsers::Parser for PrefTimedGD {
     /// See [`parse_pref_timed_gd`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_pref_timed_gd(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::preamble::*;
+    use crate::{
+        AtomicFormula, GoalDefinition, Interval, PrefTimedGD, Term, TimeSpecifier, TimedGD,
+    };
+
+    #[test]
+    fn test_parse() {
+        assert!(
+            PrefTimedGD::parse("(at start (= x y))").is_value(PrefTimedGD::Required(
+                TimedGD::new_at(
+                    TimeSpecifier::Start,
+                    GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                        Term::Name("x".into()),
+                        Term::Name("y".into())
+                    ))
+                )
+            ))
+        );
+
+        assert!(
+            PrefTimedGD::parse("(preference (over all (= x y)))").is_value(
+                PrefTimedGD::Preference(
+                    None,
+                    TimedGD::new_over(
+                        Interval::All,
+                        GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                            Term::Name("x".into()),
+                            Term::Name("y".into())
+                        ))
+                    )
+                )
+            )
+        );
+
+        assert!(
+            PrefTimedGD::parse("(preference pref-name (over all (= x y)))").is_value(
+                PrefTimedGD::Preference(
+                    Some("pref-name".into()),
+                    TimedGD::new_over(
+                        Interval::All,
+                        GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                            Term::Name("x".into()),
+                            Term::Name("y".into())
+                        ))
+                    )
+                )
+            )
+        );
     }
 }

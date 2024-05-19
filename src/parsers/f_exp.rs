@@ -1,12 +1,13 @@
 //! Provides parsers for f-exps.
 
-use crate::parsers::{parens, parse_number, space_separated_list1, ParseResult, Span};
-use crate::parsers::{parse_binary_op, parse_f_head, parse_multi_op};
-use crate::types::FExp;
 use nom::branch::alt;
 use nom::character::complete::{char, multispace0, multispace1};
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
+
+use crate::parsers::{parens, parse_number, space_separated_list1, ParseResult, Span};
+use crate::parsers::{parse_binary_op, parse_f_head, parse_multi_op};
+use crate::types::FExp;
 
 /// Parses an f-exp.
 ///
@@ -86,5 +87,38 @@ impl crate::parsers::Parser for FExp {
     /// See [`parse_f_exp`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_f_exp(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::UnwrapValue;
+    use crate::{BinaryOp, FExp, FHead, FunctionSymbol, MultiOp, Parser};
+
+    #[test]
+    fn test_parse() {
+        assert!(FExp::parse("1.23").is_value(FExp::new_number(1.23)));
+
+        assert!(FExp::parse("(+ 1.23 2.34)").is_value(FExp::new_binary_op(
+            BinaryOp::Addition,
+            FExp::new_number(1.23),
+            FExp::new_number(2.34)
+        )));
+
+        assert!(
+            FExp::parse("(+ 1.23 2.34 3.45)").is_value(FExp::new_multi_op(
+                MultiOp::Addition,
+                FExp::new_number(1.23),
+                [FExp::new_number(2.34), FExp::new_number(3.45)]
+            ))
+        );
+
+        assert!(FExp::parse("(- 1.23)").is_value(FExp::new_negative(FExp::new_number(1.23))));
+
+        assert!(
+            FExp::parse("fun-sym").is_value(FExp::new_function(FHead::new(
+                FunctionSymbol::from_str("fun-sym")
+            )))
+        );
     }
 }

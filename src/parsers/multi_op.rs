@@ -1,10 +1,11 @@
 //! Provides parsers for multi-operand operations.
 
-use crate::parsers::{ParseResult, Span};
-use crate::types::{multi_op::names, MultiOp};
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
+
+use crate::parsers::{ParseResult, Span};
+use crate::types::{multi_op::names, MultiOp};
 
 /// Parses a multi-operand operation, i.e. `* | +`.
 ///
@@ -28,5 +29,17 @@ impl crate::parsers::Parser for MultiOp {
     /// See [`parse_multi_op`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_multi_op(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::UnwrapValue;
+    use crate::{MultiOp, Parser};
+
+    #[test]
+    fn test_parse() {
+        assert!(MultiOp::parse("*").is_value(MultiOp::Multiplication));
+        assert!(MultiOp::parse("+").is_value(MultiOp::Addition));
     }
 }

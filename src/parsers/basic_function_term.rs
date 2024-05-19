@@ -66,3 +66,23 @@ impl crate::parsers::Parser for BasicFunctionTerm {
         parse_basic_function_term(input)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{BasicFunctionTerm, Parser};
+
+    #[test]
+    fn test_parse() {
+        let (_, value) = BasicFunctionTerm::parse("abcde").unwrap();
+        assert_eq!(value, BasicFunctionTerm::new("abcde".into(), []));
+
+        let (_, value) = BasicFunctionTerm::parse("(abcde)").unwrap();
+        assert_eq!(value, BasicFunctionTerm::new("abcde".into(), []));
+
+        let (_, value) = BasicFunctionTerm::parse("(abcde x y z)").unwrap();
+        assert_eq!(
+            value,
+            BasicFunctionTerm::new("abcde".into(), ["x".into(), "y".into(), "z".into()])
+        );
+    }
+}

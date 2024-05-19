@@ -1,10 +1,11 @@
 //! Provides parsers for durative operations.
 
-use crate::parsers::{ParseResult, Span};
-use crate::types::{d_op::names, DOp};
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
+
+use crate::parsers::{ParseResult, Span};
+use crate::types::{d_op::names, DOp};
 
 /// Parses a durative operation, i.e. `<= | >= | =`.
 ///
@@ -47,5 +48,18 @@ impl crate::parsers::Parser for DOp {
     /// See [`parse_d_op`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_d_op(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::UnwrapValue;
+    use crate::{DOp, Parser};
+
+    #[test]
+    fn test_parse() {
+        assert!(DOp::parse("<=").is_value(DOp::LessThanOrEqual));
+        assert!(DOp::parse(">=").is_value(DOp::GreaterOrEqual));
+        assert!(DOp::parse("=").is_value(DOp::Equal));
     }
 }

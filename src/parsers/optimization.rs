@@ -30,3 +30,15 @@ impl crate::parsers::Parser for Optimization {
         parse_optimization(input)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::preamble::*;
+    use crate::Optimization;
+
+    #[test]
+    fn test_parse() {
+        assert!(Optimization::parse("minimize").is_value(Optimization::Minimize));
+        assert!(Optimization::parse("maximize").is_value(Optimization::Maximize));
+    }
+}

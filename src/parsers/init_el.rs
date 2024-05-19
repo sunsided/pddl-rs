@@ -1,13 +1,14 @@
 //! Provides parsers for initial state list elements.
 
-use crate::parsers::{
-    literal, parse_basic_function_term, parse_name, parse_number, prefix_expr, ParseResult, Span,
-};
-use crate::types::InitElement;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
+
+use crate::parsers::{
+    literal, parse_basic_function_term, parse_name, parse_number, prefix_expr, ParseResult, Span,
+};
+use crate::types::InitElement;
 
 /// Parses initial state list elements.
 ///
@@ -94,5 +95,45 @@ impl crate::parsers::Parser for InitElement {
     /// See [`parse_init_el`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_init_el(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::UnwrapValue;
+    use crate::{AtomicFormula, BasicFunctionTerm, InitElement, Name, NameLiteral, Number, Parser};
+
+    #[test]
+    fn test_parse() {
+        assert!(InitElement::parse("(train-not-in-use train1)").is_value(
+            InitElement::new_literal(NameLiteral::new(AtomicFormula::new_predicate(
+                "train-not-in-use".into(),
+                ["train1".into()]
+            )))
+        ));
+
+        assert!(
+            InitElement::parse("(at 10 (train-not-in-use train2))").is_value(InitElement::new_at(
+                Number::from(10),
+                NameLiteral::new(AtomicFormula::new_predicate(
+                    "train-not-in-use".into(),
+                    ["train2".into()]
+                ))
+            ))
+        );
+
+        assert!(
+            InitElement::parse("(= (battery rover) 100)").is_value(InitElement::new_is_value(
+                BasicFunctionTerm::new("battery".into(), ["rover".into()]),
+                Number::from(100)
+            ))
+        );
+
+        assert!(InitElement::parse("(= (location rover) base)").is_value(
+            InitElement::new_is_object(
+                BasicFunctionTerm::new("location".into(), ["rover".into()]),
+                Name::from("base")
+            )
+        ));
     }
 }

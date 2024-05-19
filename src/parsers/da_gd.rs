@@ -120,6 +120,11 @@ impl crate::parsers::Parser for DurativeActionGoalDefinition {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parsers::UnwrapValue;
+    use crate::{
+        AtomicFormula, GoalDefinition, Interval, Parser, PrefTimedGD, Term, TimeSpecifier, TimedGD,
+        Typed, TypedList, Variable,
+    };
 
     #[test]
     fn complex_works() {
@@ -130,6 +135,71 @@ mod tests {
                 (over all (can-move ?from-waypoint ?to-waypoint))
                 (at start (at ?rover ?from-waypoint))
                 (at start (> (battery-amount ?rover) 8)))"#;
-        let (_, _gd) = parse_da_gd(Span::new(input)).unwrap();
+        let (_, _gd) = DurativeActionGoalDefinition::parse(Span::new(input)).unwrap();
+    }
+
+    #[test]
+    fn test_at_start() {
+        assert!(
+            DurativeActionGoalDefinition::parse("(at start (= x y))").is_value(
+                DurativeActionGoalDefinition::Timed(PrefTimedGD::Required(TimedGD::new_at(
+                    TimeSpecifier::Start,
+                    GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                        Term::Name("x".into()),
+                        Term::Name("y".into())
+                    ))
+                )))
+            )
+        );
+    }
+
+    #[test]
+    fn test_and_empty() {
+        assert!(DurativeActionGoalDefinition::parse("(and )")
+            .is_value(DurativeActionGoalDefinition::new_and([])));
+    }
+
+    #[test]
+    fn test_and() {
+        assert!(
+            DurativeActionGoalDefinition::parse("(and (at start (= x y)) (over all (= a b)))")
+                .is_value(DurativeActionGoalDefinition::new_and([
+                    DurativeActionGoalDefinition::Timed(PrefTimedGD::Required(TimedGD::new_at(
+                        TimeSpecifier::Start,
+                        GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                            Term::Name("x".into()),
+                            Term::Name("y".into())
+                        ))
+                    ))),
+                    DurativeActionGoalDefinition::Timed(PrefTimedGD::Required(TimedGD::new_over(
+                        Interval::All,
+                        GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                            Term::Name("a".into()),
+                            Term::Name("b".into())
+                        ))
+                    )))
+                ]))
+        );
+    }
+
+    #[test]
+    fn test_forall() {
+        assert!(
+            DurativeActionGoalDefinition::parse("(forall (?a ?b) (at start (= a b)))").is_value(
+                DurativeActionGoalDefinition::new_forall(
+                    TypedList::from_iter([
+                        Typed::new_object(Variable::from_str("a")),
+                        Typed::new_object(Variable::from_str("b")),
+                    ]),
+                    DurativeActionGoalDefinition::Timed(PrefTimedGD::Required(TimedGD::new_at(
+                        TimeSpecifier::Start,
+                        GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                            Term::Name("a".into()),
+                            Term::Name("b".into())
+                        ))
+                    )))
+                )
+            )
+        );
     }
 }

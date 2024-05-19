@@ -1,11 +1,12 @@
 //! Provides parsers for assignment operations.
 
-use crate::parsers::{ParseResult, Span};
-use crate::types::assign_op::names;
-use crate::types::AssignOp;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
+
+use crate::parsers::{ParseResult, Span};
+use crate::types::assign_op::names;
+use crate::types::AssignOp;
 
 /// Parses an assignment operation, i.e. `assign | scale-up | scale-down | increase | decrease`.
 ///
@@ -47,5 +48,19 @@ impl crate::parsers::Parser for AssignOp {
     ///```
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_assign_op(input)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{AssignOp, Parser};
+
+    #[test]
+    fn test_parse() {
+        let (_, assign_op) = AssignOp::parse("assign").unwrap();
+        assert_eq!(assign_op, AssignOp::Assign);
+
+        let (_, assign_op) = AssignOp::parse("scale-up").unwrap();
+        assert_eq!(assign_op, AssignOp::ScaleUp);
     }
 }
