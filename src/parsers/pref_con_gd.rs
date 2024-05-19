@@ -141,7 +141,7 @@ mod tests {
             Term::Name("x".into()),
             Term::Name("y".into()),
         ));
-        ///
+
         // (not (= x z))
         let gd_b = GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
             AtomicFormula::new_equality(Term::Name("x".into()), Term::Name("z".into())),

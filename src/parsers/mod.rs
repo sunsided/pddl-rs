@@ -202,3 +202,26 @@ pub use typed_list::typed_list;
 pub(crate) use utilities::{
     parens, prefix_expr, space_separated_list0, space_separated_list1, ws, ws2,
 };
+
+#[cfg(test)]
+mod tests {
+    use crate::{BasicFunctionTerm, Parser};
+
+    #[test]
+    fn test_parse() {
+        let (_, value) = BasicFunctionTerm::parse("abcde").unwrap();
+        assert_eq!(value, BasicFunctionTerm::new("abcde".into(), []));
+    }
+
+    #[test]
+    fn test_parse_span() {
+        let (_, value) = BasicFunctionTerm::parse_span("abcde".into()).unwrap();
+        assert_eq!(value, BasicFunctionTerm::new("abcde".into(), []));
+    }
+
+    #[test]
+    fn test_from_str() {
+        let value = BasicFunctionTerm::from_str("abcde").unwrap();
+        assert_eq!(value, BasicFunctionTerm::new("abcde".into(), []));
+    }
+}

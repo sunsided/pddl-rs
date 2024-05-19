@@ -143,3 +143,58 @@ impl crate::parsers::Parser for MetricFExp {
         parse_metric_f_exp(input)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::preamble::*;
+    use crate::{BinaryOp, FunctionSymbol, MetricFExp, MultiOp, Name, PreferenceName};
+
+    #[test]
+    fn test_parse() {
+        assert!(MetricFExp::parse("1.23").is_value(MetricFExp::new_number(1.23)));
+
+        assert!(MetricFExp::parse("(- total-time)")
+            .is_value(MetricFExp::new_negative(MetricFExp::TotalTime)));
+
+        assert!(
+            MetricFExp::parse("(+ 1.23 2.34)").is_value(MetricFExp::new_binary_op(
+                BinaryOp::Addition,
+                MetricFExp::new_number(1.23),
+                MetricFExp::new_number(2.34)
+            ))
+        );
+
+        assert!(
+            MetricFExp::parse("(+ 1.23 2.34 3.45)").is_value(MetricFExp::new_multi_op(
+                MultiOp::Addition,
+                MetricFExp::new_number(1.23),
+                [MetricFExp::new_number(2.34), MetricFExp::new_number(3.45)]
+            ))
+        );
+
+        assert!(MetricFExp::parse("(is-violated preference)").is_value(
+            MetricFExp::new_is_violated(PreferenceName::from("preference"))
+        ));
+
+        assert!(
+            MetricFExp::parse("fun-sym").is_value(MetricFExp::new_function(
+                FunctionSymbol::from_str("fun-sym"),
+                []
+            ))
+        );
+
+        assert!(
+            MetricFExp::parse("(fun-sym)").is_value(MetricFExp::new_function(
+                FunctionSymbol::from_str("fun-sym"),
+                []
+            ))
+        );
+
+        assert!(
+            MetricFExp::parse("(fun-sym a b c)").is_value(MetricFExp::new_function(
+                FunctionSymbol::from_str("fun-sym"),
+                [Name::new("a"), Name::new("b"), Name::new("c")]
+            ))
+        );
+    }
+}
