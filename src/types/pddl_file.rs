@@ -53,7 +53,7 @@ impl PddlFile {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "parser"))]
 mod tests {
     use crate::parsers::Parser;
     use crate::{Domain, PddlFile, Problem};
