@@ -1,8 +1,8 @@
 //! Visitor traits for traversing PDDL structures.
 //!
-//! These traits are currently provisional; the API may change in future releases.
-
-#![allow(dead_code)]
+//! **Provisional API.** These traits may change between minor releases
+//! until they have settled. They are exposed primarily to let external
+//! code contribute `Visitor<T, RcDoc>` impls for the `pretty` feature.
 
 /// A visitor.
 pub trait Visitor<T, O> {

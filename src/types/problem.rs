@@ -13,6 +13,8 @@ use crate::{PreconditionGoalDefinitions, PrefConGDs};
 ///
 /// ## Example
 /// ```
+/// # #[cfg(feature = "parser")]
+/// # fn main() {
 /// # use pddl::{Name, Parser, Problem};
 /// let input = r#"(define (problem get-paid)
 ///         (:domain briefcase-world)
@@ -29,6 +31,9 @@ use crate::{PreconditionGoalDefinitions, PrefConGDs};
 /// assert!(problem.requirements().is_empty());
 /// assert_eq!(problem.init().len(), 9);
 /// assert_eq!(problem.goals().len(), 3);
+/// # }
+/// # #[cfg(not(feature = "parser"))]
+/// # fn main() {}
 /// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct Problem {

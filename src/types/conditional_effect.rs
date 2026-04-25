@@ -54,7 +54,7 @@ impl FromIterator<PEffect> for ConditionalEffect {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "parser"))]
 mod tests {
     use super::*;
     use crate::parsers::Span;

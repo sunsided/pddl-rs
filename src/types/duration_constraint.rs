@@ -63,7 +63,7 @@ impl FromIterator<SimpleDurationConstraint> for DurationConstraint {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "parser"))]
 mod tests {
     use super::*;
     use crate::parsers::Span;

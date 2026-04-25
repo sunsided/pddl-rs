@@ -6,6 +6,9 @@
 //!
 //! * `parser` - Enables parsing of PDDL types through the [`Parser`] trait.
 //! * `interning` - Enables string interning for [`Name`] types to reduce memory footprint.
+//! * `pretty` - Enables pretty-printing of PDDL types via the
+//!   [`Pretty`] extension trait. The feature provides round-trip-safe
+//!   rendering: `parse → pretty() → parse` preserves AST equality.
 //!
 //! ## Example
 //!
@@ -13,6 +16,8 @@
 //! parse them:
 //!
 //! ```
+//! # #[cfg(feature = "parser")]
+//! # fn main() {
 //! use pddl::{Parser, Domain, Problem};
 //!
 //! const BRIEFCASE_WORLD: &'static str = r#"
@@ -71,6 +76,9 @@
 //! assert!(problem.requirements().is_empty());
 //! assert_eq!(problem.init().len(), 9);
 //! assert_eq!(problem.goals().len(), 3);
+//! # }
+//! # #[cfg(not(feature = "parser"))]
+//! # fn main() {}
 //! ```
 
 // only enables the `doc_cfg` feature when
@@ -81,7 +89,7 @@
 #[cfg(feature = "parser")]
 pub mod parsers;
 mod types;
-pub(crate) mod visitor;
+pub mod visitor;
 
 // re-export Parser trait.
 #[cfg_attr(docsrs, doc(cfg(feature = "parser")))]
@@ -90,3 +98,11 @@ pub use parsers::Parser;
 
 // re-export types
 pub use types::*;
+
+#[cfg_attr(docsrs, doc(cfg(feature = "pretty")))]
+#[cfg(feature = "pretty")]
+pub mod pretty_print;
+
+#[cfg_attr(docsrs, doc(cfg(feature = "pretty")))]
+#[cfg(feature = "pretty")]
+pub use pretty_print::{Pretty, PrettyPrinted, PrettyRenderer};

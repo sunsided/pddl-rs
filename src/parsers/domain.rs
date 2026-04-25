@@ -7,13 +7,13 @@ use nom::Parser;
 
 use crate::parsers::{
     parse_constants_def, parse_domain_constraints_def, parse_functions_def, parse_predicates_def,
-    parse_require_def, parse_structure_def, ParseResult, Span,
+    parse_require_def, parse_structure_def, parse_timeless_def, ParseResult, Span,
 };
 use crate::parsers::{parse_name, parse_types_def, prefix_expr, space_separated_list1, ws2};
 use crate::types::{
     Constants, Domain, Functions, PredicateDefinitions, Requirements, StructureDefs,
 };
-use crate::types::{DomainConstraintsDef, Types};
+use crate::types::{DomainConstraintsDef, Timeless, Types};
 
 /// Parses a domain definition.
 ///
@@ -79,6 +79,8 @@ pub fn parse_domain<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Domain> 
                 opt(preceded(multispace1, parse_functions_def)),
                 // :constraints
                 opt(preceded(multispace1, parse_domain_constraints_def)),
+                // :timeless (PDDL 1.2)
+                opt(preceded(multispace1, parse_timeless_def)),
                 opt(preceded(
                     multispace1,
                     map(
@@ -97,6 +99,7 @@ pub fn parse_domain<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Domain> 
             predicates,
             functions,
             constraints,
+            timeless,
             structure,
         )| {
             Domain::builder(name, structure.unwrap_or(StructureDefs::default()))
@@ -107,6 +110,7 @@ pub fn parse_domain<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Domain> 
                 .with_predicates(predicates.unwrap_or(PredicateDefinitions::default()))
                 .with_functions(functions.unwrap_or(Functions::default()))
                 .with_constraints(constraints.unwrap_or(DomainConstraintsDef::default()))
+                .with_timeless(timeless.unwrap_or(Timeless::default()))
         },
     )
     .parse(input.into())

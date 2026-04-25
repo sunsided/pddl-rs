@@ -56,27 +56,63 @@ tasks:
     cmds:
       - "{{.CARGO}} build"
 
+  test:
+    desc: Run all test suites
+    cmds:
+      - task: test:all-features
+      - task: test:default-features
+      - task: test:no-features
+      - task: test:docs
+
   test:all-features:
     desc: Test the crate with all features
     aliases:
-      - test
       - test:all
     cmds:
-      - "{{.CARGO}} test --all-features"
+      - |
+        if command -v cargo-nextest > /dev/null 2>&1; then
+          {{.CARGO}} nextest run --all-features
+        else
+          {{.CARGO}} test --all-features
+        fi
 
   test:default-features:
     desc: Test the crate with default features
     aliases:
       - test:default
     cmds:
-      - "{{.CARGO}} test"
+      - |
+        if command -v cargo-nextest > /dev/null 2>&1; then
+          {{.CARGO}} nextest run
+        else
+          {{.CARGO}} test
+        fi
 
   test:no-features:
     desc: Test the crate without default features
     aliases:
       - test:no-default-features
     cmds:
-      - "{{.CARGO}} test --no-default-features"
+      - |
+        if command -v cargo-nextest > /dev/null 2>&1; then
+          {{.CARGO}} nextest run --no-default-features
+        else
+          {{.CARGO}} test --no-default-features
+        fi
+
+  test:docs:
+    desc: Run doctests
+    aliases:
+      - test:doc
+    cmds:
+      - "{{.CARGO}} test --doc"
+
+  example:pretty:
+    desc: Run the pretty_print example
+    aliases:
+      - example
+    cmds:
+      - "{{.CARGO}} run --example pretty_print --features pretty"
 
   fuzz:build:
     desc: Build fuzz targets with default fuzz features
