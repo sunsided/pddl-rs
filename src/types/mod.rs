@@ -1,5 +1,4 @@
 //! Type definitions.
-
 mod action_definition;
 mod action_symbols;
 pub(crate) mod assign_op;

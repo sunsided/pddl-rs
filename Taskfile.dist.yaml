@@ -147,6 +147,20 @@ tasks:
       - test:all-features
       - test:no-features
 
+  doc:
+    desc: Build Rust documentation
+    aliases:
+      - docs
+    cmds:
+      - "{{.CARGO}} doc --no-deps"
+
+  doc:open:
+    desc: Build and open Rust documentation
+    aliases:
+      - docs:open
+    cmds:
+      - "{{.CARGO}} doc --no-deps --open"
+
   clean:
     desc: Remove Cargo build artifacts
     cmds:

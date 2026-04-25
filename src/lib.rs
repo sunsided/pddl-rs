@@ -109,6 +109,198 @@
 //! # #[cfg(not(feature = "parser"))]
 //! # fn main() {}
 //! ```
+//!
+//! ## PDDL Type System Guide
+//!
+//! This crate provides a comprehensive type system that models the PDDL 3.1 specification.
+//! The type names may look unwieldy at first glance, but they follow a deliberate design principle:
+//!
+//! **Every type name maps directly to a BNF non-terminal from the PDDL 3.1 spec.**
+//!
+//! For example, the BNF rule `<c-effect>` becomes [`CEffect`], `<da-gd>` becomes
+//! [`DurativeActionGoalDefinition`], and `<con-GD>` becomes [`ConGD`]. This 1:1 mapping
+//! makes it trivial to cross-reference the spec while reading or writing code.
+//!
+//! ### BNF Naming Convention
+//!
+//! The PDDL 3.1 specification defines its grammar using BNF (Backus-Naur Form). Each
+//! non-terminal in the BNF is written as `<something>`. This crate uses those names
+//! directly, with minor transformations:
+//!
+//! | BNF Non-Terminal | Rust Type | Notes |
+//! |------------------|-----------|-------|
+//! | `<gd>` | [`GoalDefinition`] | Goal definition (the core logical formula type) |
+//! | `<pre-GD>` | [`PreconditionGoalDefinition`] | Precondition-specific wrapper |
+//! | `<precondition>` | [`PreconditionGoalDefinitions`] | Collection of preconditions |
+//! | `<da-gd>` | [`DurativeActionGoalDefinition`] | Durative action goals (timed) |
+//! | `<con-GD>` | [`ConGD`] | Constraint goals (temporal constraints) |
+//! | `<con2-GD>` | [`Con2GD`] | Inner constraint goal (goal or nested con-GD) |
+//! | `<pref-con-GD>` | [`PrefConGD`] | Preference constraint goals |
+//! | `<c-effect>` | [`CEffect`] | Conditional effect |
+//! | `<p-effect>` | [`PEffect`] | Primitive effect |
+//! | `<effect>` | [`Effects`] | Collection of effects (the `(and ...)` block) |
+//! | `<da-effect>` | [`DurativeActionEffect`] | Durative action effect |
+//! | `<f-exp>` | [`FExp`] | Fluent/numeric expression |
+//! | `<f-comp>` | [`FComp`] | Fluent comparison |
+//! | `<f-head>` | [`FHead`] | Fluent head (function reference) |
+//! | `<atomic formula (skeleton)>` | [`AtomicFormulaSkeleton`] | Predicate declaration with typed variables |
+//!
+//! When you see a type with an abbreviated name, look for the corresponding BNF rule
+//! in the spec — it will almost certainly match.
+//!
+//! ### Type Groups
+//!
+//! #### Atoms & Formulas
+//!
+//! The building blocks of PDDL logical expressions:
+//!
+//! - [`AtomicFormula<T>`] — An atomic formula parameterized by its term type `T`.
+//!   Can be either an equality (`(= x y)`) or a predicate application (`(on a b)`).
+//!   See [`EqualityAtomicFormula`] and [`PredicateAtomicFormula`].
+//! - [`AtomicFormulaSkeleton`] — A predicate declaration with typed variables, used
+//!   in `(:predicates ...)` blocks. Think of it as a "template" for [`AtomicFormula`].
+//! - [`Literal<T>`] — A possibly-negated [`AtomicFormula<T>`]. Represents `(not (on a b))`.
+//! - [`Predicate`] — A named predicate (wraps a [`Name`]).
+//!
+//! **Generic parameter `T`**: [`AtomicFormula<T>`] and [`Literal<T>`] are generic.
+//! - `AtomicFormula<Name>` — Used in problem initial states (concrete objects only).
+//! - `AtomicFormula<Term>` — Used in action goals/preconditions (may contain [`Variable`]s).
+//!
+//! #### Goals & Preconditions
+//!
+//! This is where the naming proliferation is most apparent. Each variant serves a
+//! distinct purpose in the PDDL spec:
+//!
+//! - [`GoalDefinition`] (`<gd>`) — The core logical formula type. Supports `and`, `or`,
+//!   `not`, `imply`, `exists`, `forall`, atomic formulas, literals, and fluent comparisons.
+//!   Used in action preconditions, goal definitions, and effect conditions.
+//!
+//! - [`PreconditionGoalDefinition`] (`<pre-GD>`) — A simplified variant used specifically
+//!   for action preconditions. Contains either a [`PreferenceGD`] or a `forall` quantifier.
+//!   Multiple are collected in [`PreconditionGoalDefinitions`].
+//!
+//! - [`GoalDef`] — A thin wrapper around [`PreconditionGoalDefinitions`] used by
+//!   [`Problem`] for the `(:goal ...)` section.
+//!
+//! - [`DurativeActionGoalDefinition`] (`<da-gd>`) — Goals for durative actions. Uses
+//!   [`TimedGD`] (time-qualified goals like `(at start (on a b))`) instead of plain
+//!   [`GoalDefinition`].
+//!
+//! - [`ConGD`] (`<con-GD>`) — Temporal constraint goals for problem-level constraints.
+//!   Supports `always`, `sometime`, `within`, `at-most-once`, `sometime-after`,
+//!   `sometime-before`, `always-within`, `hold-during`, `hold-after`. Used by
+//!   [`ProblemConstraintsDef`].
+//!
+//! - [`Con2GD`] (`<con2-GD>`) — An inner component of [`ConGD`], representing either
+//!   a plain [`GoalDefinition`] or a nested [`ConGD`].
+//!
+//! - [`PrefConGD`] (`<pref-con-GD>`) — Constraint goals with optional preference names.
+//!   Used in [`ProblemConstraintsDef`].
+//!
+//! - [`PreferenceGD`] — Either a plain [`GoalDefinition`] or a named [`Preference`].
+//!   Used in [`PreconditionGoalDefinition`].
+//!
+//! #### Effects
+//!
+//! The effects hierarchy mirrors the BNF structure:
+//!
+//! ```text
+//! Effects (Vec<CEffect>)        ← the (and ...) block
+//! └── CEffect                   ← one effect element
+//!       ├── Effect(PEffect)     ← primitive effect
+//!       ├── Forall(ForallCEffect)  ← universal quantification over effects
+//!       └── When(WhenCEffect)   ← conditional effect (when <cond> <effect>)
+//!             └── ConditionalEffect
+//!                   ├── PEffect ← primitive effect (same as above)
+//!                   ├── Forall...
+//!                   └── When...
+//! ```
+//!
+//! - [`PEffect`] (`<p-effect>`) — A primitive effect: setting/negating an atomic formula,
+//!   or assigning a numeric/object fluent.
+//! - [`CEffect`] (`<c-effect>`) — A potentially conditional effect. Wraps [`PEffect`],
+//!   [`ForallCEffect`], or [`WhenCEffect`].
+//! - [`Effects`] (`<effect>`) — A collection of [`CEffect`] values, representing the
+//!   `(and ...)` block in PDDL.
+//! - [`DurativeActionEffect`] (`<da-effect>`) — Effects for durative actions, using
+//!   [`TimedEffect`] (time-qualified effects like `(at end (on a b))`).
+//!
+//! #### Numeric & Fluents
+//!
+//! Types for numeric reasoning in PDDL:
+//!
+//! - [`FExp`] (`<f-exp>`) — A fluent expression: a number, function call, negation,
+//!   binary operation (`+`, `-`, `*`, `/`), or multi-operand operation.
+//! - [`FHead`] (`<f-head>`) — A function head: either a bare function symbol or a
+//!   [`FunctionTerm`] (function applied to arguments).
+//! - [`FComp`] (`<f-comp>`) — A fluent comparison: `<`, `<=`, `>`, `>=`, `=` applied
+//!   to two [`FExp`] values.
+//! - [`FExpT`] (`<f-exp-t>`) — Time-qualified fluent expression (for durative actions).
+//! - [`FExpDa`] (`<f-exp-da>`) — Durative-action-specific fluent expression.
+//! - [`FHead`] variants: [`BasicFunctionTerm`], [`FunctionTerm`].
+//! - [`AssignOp`] / [`AssignOpT`] — Assignment operators (`assign`, `scale-up`, etc.).
+//!
+//! #### Terms
+//!
+//! The fundamental building blocks that appear in formulas:
+//!
+//! - [`Term`] — A term: either a [`Name`] (concrete object), [`Variable`], or
+//!   [`FunctionTerm`] (fluent application).
+//! - [`Name`] — A named constant/object.
+//! - [`Variable`] — A logical variable (e.g., `?x`).
+//! - [`TypedList<T>`] — A list of items with shared type annotations, e.g.,
+//!   `(?x ?y - robot obj1 obj2 - package)`.
+//!
+//! ### Common Confusion Points
+//!
+//! | Confused Pair | Difference |
+//! |---------------|------------|
+//! | [`AtomicFormulaSkeleton`] vs [`AtomicFormula`] | Skeleton declares a predicate's signature (used in `:predicates`); Formula applies it to concrete terms (used in goals/init). |
+//! | [`PEffect`] vs [`CEffect`] vs [`Effects`] | `PEffect` is a single primitive effect; `CEffect` may add conditions/quantifiers; `Effects` is the `(and ...)` collection. |
+//! | [`GoalDefinition`] vs [`PreconditionGoalDefinition`] | `GoalDefinition` is the full logical formula; `PreconditionGoalDefinition` is a simplified wrapper used only in action preconditions. |
+//! | [`GoalDefinition`] vs [`DurativeActionGoalDefinition`] | `GoalDefinition` is timeless; `DurativeActionGoalDefinition` uses [`TimedGD`] for time-qualified goals `(at start ...)`. |
+//! | [`ConGD`] vs [`GoalDefinition`] | `ConGD` is for problem-level temporal constraints (`always`, `sometime`); `GoalDefinition` is the standard logical formula. |
+//! | [`GoalDef`] vs [`GoalDefinition`] | `GoalDef` wraps [`PreconditionGoalDefinitions`] for the problem's `(:goal ...)`; `GoalDefinition` is the individual formula. |
+//! | [`PreferenceGD`] vs [`PrefConGD`] | `PreferenceGD` is for action-level preferences; `PrefConGD` is for problem-level constraint preferences. |
+//! | [`Effects`] vs [`ConditionalEffect`] | `Effects` is a flat collection of [`CEffect`]; `ConditionalEffect` is recursive (used inside `when` clauses). |
+//! | [`FExp`] vs [`FHead`] | `FExp` is any numeric expression; `FHead` is specifically a function reference (with or without args). |
+//! | [`Literal<T>`] vs [`AtomicFormula<T>`] | `Literal` can be negated; `AtomicFormula` is always positive. |
+//!
+//! ### PDDL Snippet → Rust Type Mapping
+//!
+//! ```text
+//! ;; PDDL domain definition
+//! (define (domain blocksworld)
+//!   (:predicates (on ?x ?y)      ← AtomicFormulaSkeleton
+//!                (clear ?x))      ← AtomicFormulaSkeleton
+//!
+//!   (:action pick-up
+//!     :parameters (?x)            ← TypedList<Variable>
+//!     :precondition (and          ← PreconditionGoalDefinitions
+//!       (clear ?x)                ← GoalDefinition::AtomicFormula
+//!       (handempty))              ← GoalDefinition::AtomicFormula
+//!     :effect (and                ← Effects
+//!       (not (clear ?x))          ← CEffect::Effect(PEffect::NotAtomicFormula)
+//!       (holding ?x)))            ← CEffect::Effect(PEffect::AtomicFormula)
+//!
+//!   (:goal (and                   ← GoalDef → PreconditionGoalDefinitions
+//!     (on a b)                    ← GoalDefinition::AtomicFormula
+//!     (on b c)))                  ← GoalDefinition::AtomicFormula
+//! )
+//!
+//! ;; PDDL problem initial state
+//! (define (problem bw-1)
+//!   (:init
+//!     (on a b)                    ← InitElement::AtomicFormula (Literal<Name>)
+//!     (clear a)                   ← InitElement::AtomicFormula
+//!     (= (total-cost) 0))         ← InitElement::FAssign (numeric fluent)
+//! )
+//! ```
+//!
+//! ### Navigating Further
+//!
+//! Each type has its own documentation with detailed examples and PDDL requirement annotations.
+//! Use your IDE's "Go to Definition" or hover documentation to explore individual types.
 
 // only enables the `doc_cfg` feature when
 // the `docsrs` configuration attribute is defined
