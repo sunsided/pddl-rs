@@ -75,7 +75,9 @@ impl Visitor<PreconditionGoalDefinition, RcDoc<'static>> for PrettyRenderer {
 
 impl Visitor<PreconditionGoalDefinitions, RcDoc<'static>> for PrettyRenderer {
     fn visit(&self, value: &PreconditionGoalDefinitions) -> RcDoc<'static> {
-        if value.len() == 1 {
+        if value.is_empty() {
+            RcDoc::text("(and)")
+        } else if value.len() == 1 {
             value[0].accept(self)
         } else {
             self.sexpr("and", value.iter().map(|gd| self.visit(gd)))

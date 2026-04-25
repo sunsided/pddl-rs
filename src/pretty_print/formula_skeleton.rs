@@ -26,7 +26,9 @@ impl Visitor<AtomicFormulaSkeleton, RcDoc<'static>> for PrettyRenderer {
 impl Visitor<AtomicFunctionSkeleton, RcDoc<'static>> for PrettyRenderer {
     fn visit(&self, value: &AtomicFunctionSkeleton) -> RcDoc<'static> {
         if value.variables().is_empty() {
-            return value.symbol().accept(self);
+            return RcDoc::text("(")
+                .append(value.symbol().accept(self))
+                .append(")");
         }
         RcDoc::text("(")
             .append(value.symbol().accept(self))

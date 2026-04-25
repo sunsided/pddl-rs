@@ -99,11 +99,11 @@ impl Visitor<GoalDef, RcDoc<'static>> for PrettyRenderer {
 
 impl Visitor<MetricSpec, RcDoc<'static>> for PrettyRenderer {
     fn visit(&self, value: &MetricSpec) -> RcDoc<'static> {
-        RcDoc::text("(")
-            .append(value.optimization().accept(self))
-            .append(" ")
+        value
+            .optimization()
+            .accept(self)
+            .append(RcDoc::softline())
             .append(value.expression().accept(self))
-            .append(")")
     }
 }
 
@@ -111,10 +111,10 @@ impl Visitor<LengthSpec, RcDoc<'static>> for PrettyRenderer {
     fn visit(&self, value: &LengthSpec) -> RcDoc<'static> {
         let mut doc = RcDoc::text("(:length");
         if let Some(s) = value.serial() {
-            doc = doc.append(RcDoc::text(format!(" :serial {s}")));
+            doc = doc.append(RcDoc::text(format!(" (:serial {s})")));
         }
         if let Some(p) = value.parallel() {
-            doc = doc.append(RcDoc::text(format!(" :parallel {p}")));
+            doc = doc.append(RcDoc::text(format!(" (:parallel {p})")));
         }
         doc.append(")")
     }
@@ -139,12 +139,12 @@ mod tests {
             crate::Optimization::Minimize,
             crate::MetricFExp::new_total_time(),
         );
-        assert_eq!(prettify!(ms, 30), "(minimize total-time)");
+        assert_eq!(prettify!(ms, 30), "minimize total-time");
     }
 
     #[test]
     fn length_spec_works() {
         let ls = crate::LengthSpec::new_serial(10);
-        assert_eq!(prettify!(ls, 30), "(:length :serial 10)");
+        assert_eq!(prettify!(ls, 30), "(:length (:serial 10))");
     }
 }

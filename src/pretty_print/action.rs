@@ -33,6 +33,11 @@ impl Visitor<ActionDefinition, RcDoc<'static>> for PrettyRenderer {
                 .append(self.keyword_line("effect"))
                 .append(RcDoc::text(" "))
                 .append(effect.accept(self));
+        } else {
+            doc = doc
+                .append(RcDoc::hardline())
+                .append(self.keyword_line("effect"))
+                .append(RcDoc::text(" (and)"));
         }
 
         doc.append(")")

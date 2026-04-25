@@ -70,24 +70,27 @@ impl Visitor<ConditionalEffect, RcDoc<'static>> for PrettyRenderer {
     fn visit(&self, value: &ConditionalEffect) -> RcDoc<'static> {
         match value {
             ConditionalEffect::Single(pe) => pe.accept(self),
-            ConditionalEffect::All(pes) => RcDoc::text("(and")
-                .append(RcDoc::softline())
-                .append(RcDoc::intersperse(
-                    pes.iter().map(|pe| pe.accept(self)),
-                    RcDoc::softline(),
-                ))
-                .nest(4)
-                .group()
-                .append(")"),
+            ConditionalEffect::All(pes) => {
+                if pes.is_empty() {
+                    RcDoc::text("(and)")
+                } else {
+                    RcDoc::text("(and")
+                        .append(RcDoc::softline())
+                        .append(RcDoc::intersperse(
+                            pes.iter().map(|pe| pe.accept(self)),
+                            RcDoc::softline(),
+                        ))
+                        .nest(4)
+                        .group()
+                        .append(")")
+                }
+            }
         }
     }
 }
 
 impl Visitor<Effects, RcDoc<'static>> for PrettyRenderer {
     fn visit(&self, value: &Effects) -> RcDoc<'static> {
-        if value.is_empty() {
-            return RcDoc::nil();
-        }
         RcDoc::text("(and")
             .append(RcDoc::softline())
             .append(RcDoc::intersperse(
