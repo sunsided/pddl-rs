@@ -43,9 +43,6 @@ impl crate::parsers::Parser for DOp {
     /// assert_eq!(value, DOp::LessThanOrEqual);
     ///```
     ///
-    /// ## See also.
-    /// See [`parse_binary_op`].
-    ///
     /// ## See also
     /// See [`parse_d_op`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {

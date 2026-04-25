@@ -54,7 +54,7 @@ impl Number {
     /// * `value` - A finite value to construct the instance from.
     ///
     /// ## Returns
-    /// A new [`Number`] instance if successful or [`NumberError::NotFinite`] if the
+    /// A new [`Number`] instance if successful or an error if the
     /// input was not a finite number.
     pub fn try_new(value: UnderlyingType) -> Result<Self, NumberError> {
         if !value.is_finite() {

@@ -6,7 +6,7 @@ use std::fmt::{Display, Formatter};
 /// A binary operation.
 ///
 /// ## Usage
-/// Used by [`FExp`](crate::Fexp), [`FExpDa`](crate::FExpDa) and [`Optimization`](crate::Optimization).
+/// Used by [`FExp`](crate::FExp), [`FExpDa`](crate::FExpDa) and [`Optimization`](crate::Optimization).
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum BinaryOp {
     Multiplication,

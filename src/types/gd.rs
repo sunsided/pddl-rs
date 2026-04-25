@@ -6,7 +6,7 @@ use crate::types::{AtomicFormula, FComp, Term, TypedVariables};
 /// A goal definition.
 ///
 /// ## Usage
-/// Used by [`GD`] itself, as well as [`PreferenceGD`](crate::PreferenceGD), [`CEffect`](crate::CEffect),
+/// Used by [`GoalDefinition`] itself, as well as [`PreferenceGD`](crate::PreferenceGD), [`CEffect`](crate::CEffect),
 /// [`TimedGD`](crate::TimedGD), [`DerivedPredicate`](crate::DerivedPredicate) and
 /// [`Con2GD`](crate::Con2GD).
 #[derive(Debug, Clone, PartialEq)]

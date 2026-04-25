@@ -203,7 +203,7 @@ impl Domain {
 
     /// Returns the optional function definitions.
     /// ## Requirements
-    /// Requires [Fluents](Requirement::Fluents).
+    /// Requires [Fluents](crate::Requirement::Fluents).
     pub const fn functions(&self) -> &Functions {
         &self.functions
     }

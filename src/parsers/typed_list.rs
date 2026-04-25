@@ -11,7 +11,7 @@ use crate::parsers::{
 };
 use crate::types::{Typed, TypedList};
 
-/// Parser combinator that parses a typed list, i.e. `x* | x⁺ - <type> <typed-list (x)>.
+/// Parser combinator that parses a typed list, i.e. `x* | x⁺ - <type> <typed-list (x)>`.
 ///
 /// ## Example
 /// ```
