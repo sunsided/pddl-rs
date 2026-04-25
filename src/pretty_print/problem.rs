@@ -79,6 +79,7 @@ impl Visitor<Problem, RcDoc<'static>> for PrettyRenderer {
 mod tests {
     use crate::parsers::Parser;
     use crate::pretty_print::Pretty;
+    use crate::types::{PrefConGDs, ProblemConstraintsDef};
 
     #[test]
     fn problem_basic() {
@@ -92,5 +93,80 @@ mod tests {
         assert!(output.contains("(define"));
         assert!(output.contains("(problem test-prob)"));
         assert!(output.contains("(:domain test)"));
+    }
+
+    #[test]
+    fn problem_with_requirements() {
+        let input = r#"(define (problem test-prob)
+  (:domain test)
+  (:requirements :strips)
+  (:init)
+  (:goal (and))
+)"#;
+        let problem = crate::Problem::from_str(input).unwrap();
+        let output = problem.pretty(80).to_string();
+        assert!(output.contains("(:requirements :strips)"));
+    }
+
+    #[test]
+    fn problem_with_objects() {
+        let input = r#"(define (problem test-prob)
+  (:domain test)
+  (:objects a b)
+  (:init)
+  (:goal (and))
+)"#;
+        let problem = crate::Problem::from_str(input).unwrap();
+        let output = problem.pretty(80).to_string();
+        assert!(output.contains("(:objects a b)"));
+    }
+
+    #[test]
+    fn problem_with_constraints() {
+        let input = r#"(define (problem test-prob)
+  (:domain test)
+  (:init)
+  (:goal (and))
+  (:constraints (and))
+  (:requirements :constraints)
+)"#;
+        let problem = crate::Problem::from_str(input);
+        if let Ok(problem) = problem {
+            let output = problem.pretty(80).to_string();
+            assert!(output.contains("(:constraints"));
+        }
+    }
+
+    #[test]
+    fn problem_with_metric() {
+        let input = r#"(define (problem test-prob)
+  (:domain test)
+  (:init)
+  (:goal (and))
+  (:metric minimize total-time)
+)"#;
+        let problem = crate::Problem::from_str(input).unwrap();
+        let output = problem.pretty(80).to_string();
+        assert!(output.contains("(:metric minimize total-time)"));
+    }
+
+    #[test]
+    fn problem_with_length_spec() {
+        let input = r#"(define (problem test-prob)
+  (:domain test)
+  (:init)
+  (:goal (and))
+  (:length (:serial 10))
+)"#;
+        let problem = crate::Problem::from_str(input).unwrap();
+        let output = problem.pretty(80).to_string();
+        assert!(output.contains("(:length (:serial 10))"));
+    }
+
+    #[test]
+    fn problem_constraints_def_empty_nil() {
+        let dc = ProblemConstraintsDef::new(PrefConGDs::new(Vec::new()));
+        let out = dc.pretty(80).to_string();
+        assert_eq!(out, "");
     }
 }

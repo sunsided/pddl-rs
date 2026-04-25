@@ -58,7 +58,7 @@ mod tests {
     use super::*;
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
-    use crate::{FunctionSymbol, Name, Variable};
+    use crate::{BasicFunctionTerm, FunctionSymbol, FunctionTerm, Name, Variable};
 
     #[test]
     fn term_name_works() {
@@ -82,5 +82,36 @@ mod tests {
             ],
         );
         assert_eq!(prettify!(ft, 20), "(f a ?x)");
+    }
+
+    #[test]
+    fn term_function_works() {
+        let ft = FunctionTerm::new(
+            FunctionSymbol::from("g"),
+            vec![Term::new_name(Name::new("x"))],
+        );
+        let t = Term::new_function(ft);
+        assert_eq!(prettify!(t, 20), "(g x)");
+    }
+
+    #[test]
+    fn function_term_empty_terms_works() {
+        let ft = FunctionTerm::new(FunctionSymbol::from("f"), Vec::<Term>::new());
+        assert_eq!(prettify!(ft, 20), "f");
+    }
+
+    #[test]
+    fn basic_function_term_empty_works() {
+        let bft = BasicFunctionTerm::new(FunctionSymbol::from("x"), Vec::<Name>::new());
+        assert_eq!(prettify!(bft, 20), "x");
+    }
+
+    #[test]
+    fn basic_function_term_non_empty_works() {
+        let bft = BasicFunctionTerm::new(
+            FunctionSymbol::from("x"),
+            vec![Name::new("a"), Name::new("b")],
+        );
+        assert_eq!(prettify!(bft, 20), "(x a b)");
     }
 }

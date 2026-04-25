@@ -142,4 +142,52 @@ mod tests {
         let x = Literal::<Term>::new_not(af);
         assert_eq!(prettify!(x, 20), "(not (at B))");
     }
+
+    #[test]
+    fn literal_name_atomic_works() {
+        use crate::AtomicFormula as NameAtomicFormula;
+        let af = NameAtomicFormula::new_predicate(
+            Predicate::new_string("p"),
+            vec![Name::new("x"), Name::new("y")],
+        );
+        let lit = Literal::<Name>::new(af);
+        assert_eq!(prettify!(lit, 20), "(p x y)");
+    }
+
+    #[test]
+    fn literal_name_not_atomic_works() {
+        use crate::AtomicFormula as NameAtomicFormula;
+        let af = NameAtomicFormula::new_predicate(Predicate::new_string("p"), vec![Name::new("x")]);
+        let lit = Literal::<Name>::new_not(af);
+        assert_eq!(prettify!(lit, 20), "(not (p x))");
+    }
+
+    #[test]
+    fn atomic_formula_name_equality_works() {
+        let eq = AtomicFormula::<Name>::new_equality(Name::new("x"), Name::new("y"));
+        assert_eq!(prettify!(eq, 20), "(= x y)");
+    }
+
+    #[test]
+    fn atomic_formula_name_predicate_empty_works() {
+        let pred =
+            AtomicFormula::<Name>::new_predicate(Predicate::new_string("p"), Vec::<Name>::new());
+        assert_eq!(prettify!(pred, 20), "(p)");
+    }
+
+    #[test]
+    fn atomic_formula_name_predicate_non_empty_works() {
+        let pred = AtomicFormula::<Name>::new_predicate(
+            Predicate::new_string("p"),
+            vec![Name::new("x"), Name::new("y")],
+        );
+        assert_eq!(prettify!(pred, 20), "(p x y)");
+    }
+
+    #[test]
+    fn atomic_formula_term_empty_args_works() {
+        let pred =
+            AtomicFormula::<Term>::new_predicate(Predicate::new_string("p"), Vec::<Term>::new());
+        assert_eq!(prettify!(pred, 20), "(p)");
+    }
 }

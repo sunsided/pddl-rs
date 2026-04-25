@@ -125,6 +125,7 @@ mod tests {
     use super::*;
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
+    use crate::{Literal, PreconditionGoalDefinitions, ToTyped};
 
     #[test]
     fn requirements_works() {
@@ -146,5 +147,127 @@ mod tests {
     fn length_spec_works() {
         let ls = crate::LengthSpec::new_serial(10);
         assert_eq!(prettify!(ls, 30), "(:length (:serial 10))");
+    }
+
+    #[test]
+    fn types_works() {
+        use crate::TypedNames;
+        let t = Types::new(TypedNames::from_iter([
+            crate::Name::new("block").to_typed(crate::Type::OBJECT)
+        ]));
+        assert_eq!(prettify!(t, 20), "block");
+    }
+
+    #[test]
+    fn constants_works() {
+        use crate::TypedNames;
+        let c = Constants::new(TypedNames::from_iter([
+            crate::Name::new("c1").to_typed(crate::Type::OBJECT)
+        ]));
+        assert_eq!(prettify!(c, 20), "c1");
+    }
+
+    #[test]
+    fn functions_works() {
+        use crate::{AtomicFunctionSkeleton, FunctionSymbol, FunctionType, FunctionTyped};
+        let ft = FunctionTyped::new(
+            AtomicFunctionSkeleton::new(FunctionSymbol::from("fuel"), vec![].into()),
+            FunctionType::NUMBER,
+        );
+        let f = Functions::from_iter([ft]);
+        // FunctionTypedList renders AtomicFunctionSkeleton as (symbol)
+        assert_eq!(prettify!(f, 20), "(fuel)");
+    }
+
+    #[test]
+    fn objects_works() {
+        let o = Objects::new([crate::Name::new("o1").to_typed(crate::Type::OBJECT)]);
+        assert_eq!(prettify!(o, 20), "o1");
+    }
+
+    #[test]
+    fn init_elements_multi_works() {
+        let lit1 = crate::AtomicFormula::new_predicate(
+            crate::Predicate::new_string("block"),
+            vec![crate::Name::new("a")],
+        );
+        let lit2 = crate::AtomicFormula::new_predicate(
+            crate::Predicate::new_string("block"),
+            vec![crate::Name::new("b")],
+        );
+        let ie = InitElements::new(vec![
+            InitElement::Literal(Literal::new(lit1)),
+            InitElement::Literal(Literal::new(lit2)),
+        ]);
+        let out = prettify!(ie, 40);
+        assert!(out.contains("(block a)"));
+        assert!(out.contains("(block b)"));
+    }
+
+    #[test]
+    fn init_element_literal_works() {
+        let af = crate::AtomicFormula::new_predicate(
+            crate::Predicate::new_string("block"),
+            vec![crate::Name::new("a")],
+        );
+        let ie = InitElement::Literal(Literal::new(af));
+        assert_eq!(prettify!(ie, 20), "(block a)");
+    }
+
+    #[test]
+    fn init_element_at_works() {
+        let af = crate::AtomicFormula::new_predicate(
+            crate::Predicate::new_string("block"),
+            vec![crate::Name::new("a")],
+        );
+        let ie = InitElement::At(crate::Number::from(10), Literal::new(af));
+        assert_eq!(prettify!(ie, 30), "(at 10 (block a))");
+    }
+
+    #[test]
+    fn init_element_is_value_works() {
+        use crate::{FunctionSymbol, Name, Number};
+        let term = crate::BasicFunctionTerm::new(FunctionSymbol::from("x"), Vec::<Name>::new());
+        let ie = InitElement::IsValue(term, Number::from(42));
+        assert_eq!(prettify!(ie, 20), "(= x 42)");
+    }
+
+    #[test]
+    fn init_element_is_object_works() {
+        use crate::{FunctionSymbol, Name};
+        let term = crate::BasicFunctionTerm::new(FunctionSymbol::from("x"), Vec::<Name>::new());
+        let ie = InitElement::IsObject(term, Name::new("obj1"));
+        assert_eq!(prettify!(ie, 20), "(= x obj1)");
+    }
+
+    #[test]
+    fn goal_def_works() {
+        let gd = crate::GoalDefinition::new_and(Vec::<crate::GoalDefinition>::new());
+        let pre_gd =
+            crate::PreconditionGoalDefinition::new_preference(crate::PreferenceGD::from_gd(gd));
+        let gdef = GoalDef::new(PreconditionGoalDefinitions::new(vec![pre_gd]));
+        assert_eq!(prettify!(gdef, 20), "(and)");
+    }
+
+    #[test]
+    fn length_spec_both_works() {
+        let ls = crate::LengthSpec::new(Some(10), Some(5));
+        assert_eq!(prettify!(ls, 40), "(:length (:serial 10) (:parallel 5))");
+    }
+
+    #[test]
+    fn length_spec_parallel_works() {
+        let ls = crate::LengthSpec::new_parallel(5);
+        assert_eq!(prettify!(ls, 30), "(:length (:parallel 5))");
+    }
+
+    #[test]
+    fn predicate_definitions_works() {
+        use crate::AtomicFormulaSkeleton;
+        let preds = PredicateDefinitions::new(vec![AtomicFormulaSkeleton::new(
+            crate::Predicate::new_string("at"),
+            vec![].into(),
+        )]);
+        assert_eq!(prettify!(preds, 20), "(at)");
     }
 }

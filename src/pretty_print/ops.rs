@@ -107,4 +107,59 @@ mod tests {
         assert_eq!(prettify!(TimeSpecifier::Start, 10), "start");
         assert_eq!(prettify!(TimeSpecifier::End, 10), "end");
     }
+
+    #[test]
+    fn assign_op_t_works() {
+        assert_eq!(prettify!(AssignOpT::Increase, 10), "increase");
+        assert_eq!(prettify!(AssignOpT::Decrease, 10), "decrease");
+    }
+
+    #[test]
+    fn binary_comp_all_variants() {
+        assert_eq!(prettify!(BinaryComp::GreaterThan, 10), ">");
+        assert_eq!(prettify!(BinaryComp::LessThan, 10), "<");
+        assert_eq!(prettify!(BinaryComp::Equal, 10), "=");
+        assert_eq!(prettify!(BinaryComp::GreaterOrEqual, 10), ">=");
+        assert_eq!(prettify!(BinaryComp::LessThanOrEqual, 10), "<=");
+    }
+
+    #[test]
+    fn d_op_all_variants() {
+        assert_eq!(prettify!(DOp::Equal, 10), "=");
+        assert_eq!(prettify!(DOp::GreaterOrEqual, 10), ">=");
+        assert_eq!(prettify!(DOp::LessThanOrEqual, 10), "<=");
+    }
+
+    #[test]
+    fn multi_op_works() {
+        assert_eq!(prettify!(MultiOp::Addition, 10), "+");
+        assert_eq!(prettify!(MultiOp::Multiplication, 10), "*");
+    }
+
+    #[test]
+    fn optimization_works() {
+        assert_eq!(prettify!(Optimization::Minimize, 10), "minimize");
+        assert_eq!(prettify!(Optimization::Maximize, 10), "maximize");
+    }
+
+    #[test]
+    fn interval_works() {
+        assert_eq!(prettify!(Interval::All, 10), "all");
+    }
+
+    #[test]
+    fn requirement_more_variants() {
+        assert_eq!(
+            prettify!(Requirement::NegativePreconditions, 10),
+            ":negative-preconditions"
+        );
+        assert_eq!(
+            prettify!(Requirement::DisjunctivePreconditions, 10),
+            ":disjunctive-preconditions"
+        );
+        assert_eq!(
+            prettify!(Requirement::DurativeActions, 10),
+            ":durative-actions"
+        );
+    }
 }

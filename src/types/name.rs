@@ -180,7 +180,7 @@ impl PartialEq<String> for Name {
     }
 }
 
-impl<'a> Display for Name {
+impl Display for Name {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }

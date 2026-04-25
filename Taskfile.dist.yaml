@@ -80,6 +80,8 @@ tasks:
 
   example:pretty:
     desc: Run the pretty_print example
+    aliases:
+      - example
     cmds:
       - "{{.CARGO}} run --example pretty_print --features pretty"
 

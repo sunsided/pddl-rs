@@ -2,7 +2,7 @@
 //!
 //! Run with: `cargo run --example pretty_print --features pretty`
 
-use pddl::{Name, Pretty, Type, Variable};
+use pddl::{Name, Parser, Pretty, Type, Variable};
 
 fn main() {
     let name = Name::new("location");
@@ -20,4 +20,18 @@ fn main() {
         println!("-- width = {width}");
         println!("{}", either.pretty(width));
     }
+
+    println!("\n== durative action (width 80) ==");
+    let durative_action = r#"(define (domain rover)
+  (:requirements :strips :typing :durative-actions)
+  (:types location rover)
+  (:predicates (at ?r - rover ?l - location))
+  (:durative-action navigate
+    :parameters (?r - rover ?from ?to - location)
+    :duration (= ?duration 10)
+    :condition (and (at start (at ?r ?from)))
+    :effect (and (at end (at ?r ?to)) (at end (not (at ?r ?from)))))
+)"#;
+    let domain = pddl::Domain::from_str(durative_action).unwrap();
+    println!("{}", domain.pretty(80));
 }

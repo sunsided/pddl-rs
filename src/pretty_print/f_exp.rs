@@ -204,7 +204,10 @@ mod tests {
     use super::*;
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
-    use crate::{AssignOp, FunctionSymbol, Name, Number, PreferenceName, Variable};
+    use crate::{
+        AssignOp, BinaryComp, BinaryOp, FunctionSymbol, MultiOp, Name, Number, PreferenceName,
+        Variable,
+    };
 
     #[test]
     fn fexp_number_works() {
@@ -308,5 +311,178 @@ mod tests {
     fn metric_fexp_is_violated_works() {
         let m = MetricFExp::new_is_violated(PreferenceName::new_string("p1"));
         assert_eq!(prettify!(m, 20), "(is-violated p1)");
+    }
+
+    #[test]
+    fn fexp_multi_op_addition_works() {
+        let a = FExp::new_number(Number::from(1));
+        let b = FExp::new_number(Number::from(2));
+        let c = FExp::new_number(Number::from(3));
+        let e = FExp::new_multi_op(MultiOp::Addition, a, [b, c]);
+        assert_eq!(prettify!(e, 20), "(+ 1 2 3)");
+    }
+
+    #[test]
+    fn fexp_multi_op_multiplication_works() {
+        let a = FExp::new_number(Number::from(2));
+        let b = FExp::new_number(Number::from(3));
+        let c = FExp::new_number(Number::from(4));
+        let e = FExp::new_multi_op(MultiOp::Multiplication, a, [b, c]);
+        assert_eq!(prettify!(e, 20), "(* 2 3 4)");
+    }
+
+    #[test]
+    fn fexp_binary_op_subtraction_works() {
+        let a = FExp::new_number(Number::from(5));
+        let b = FExp::new_number(Number::from(3));
+        let e = FExp::new_binary_op(BinaryOp::Subtraction, a, b);
+        assert_eq!(prettify!(e, 10), "(- 5 3)");
+    }
+
+    #[test]
+    fn fexp_binary_op_division_works() {
+        let a = FExp::new_number(Number::from(10));
+        let b = FExp::new_number(Number::from(2));
+        let e = FExp::new_binary_op(BinaryOp::Division, a, b);
+        assert_eq!(prettify!(e, 10), "(/ 10 2)");
+    }
+
+    #[test]
+    fn fexp_binary_op_multiplication_works() {
+        let a = FExp::new_number(Number::from(3));
+        let b = FExp::new_number(Number::from(4));
+        let e = FExp::new_binary_op(BinaryOp::Multiplication, a, b);
+        assert_eq!(prettify!(e, 10), "(* 3 4)");
+    }
+
+    #[test]
+    fn fexp_da_negative_works() {
+        let inner = FExpDa::new_f_exp(FExp::new_number(Number::from(5)));
+        let e = FExpDa::new_negative(inner);
+        assert_eq!(prettify!(e, 10), "(- 5)");
+    }
+
+    #[test]
+    fn fexp_da_binary_op_subtraction_works() {
+        let a = FExpDa::new_f_exp(FExp::new_number(Number::from(5)));
+        let b = FExpDa::new_f_exp(FExp::new_number(Number::from(3)));
+        let e = FExpDa::new_binary_op(BinaryOp::Subtraction, a, b);
+        assert_eq!(prettify!(e, 10), "(- 5 3)");
+    }
+
+    #[test]
+    fn fexp_da_binary_op_division_works() {
+        let a = FExpDa::new_f_exp(FExp::new_number(Number::from(10)));
+        let b = FExpDa::new_f_exp(FExp::new_number(Number::from(2)));
+        let e = FExpDa::new_binary_op(BinaryOp::Division, a, b);
+        assert_eq!(prettify!(e, 10), "(/ 10 2)");
+    }
+
+    #[test]
+    fn fexp_da_binary_op_multiplication_works() {
+        let a = FExpDa::new_f_exp(FExp::new_number(Number::from(3)));
+        let b = FExpDa::new_f_exp(FExp::new_number(Number::from(4)));
+        let e = FExpDa::new_binary_op(BinaryOp::Multiplication, a, b);
+        assert_eq!(prettify!(e, 10), "(* 3 4)");
+    }
+
+    #[test]
+    fn fexp_da_multi_op_addition_works() {
+        let a = FExpDa::new_f_exp(FExp::new_number(Number::from(1)));
+        let b = FExpDa::new_f_exp(FExp::new_number(Number::from(2)));
+        let c = FExpDa::new_f_exp(FExp::new_number(Number::from(3)));
+        let e = FExpDa::new_multi_op(MultiOp::Addition, a, [b, c]);
+        assert_eq!(prettify!(e, 20), "(+ 1 2 3)");
+    }
+
+    #[test]
+    fn fexp_da_multi_op_multiplication_works() {
+        let a = FExpDa::new_f_exp(FExp::new_number(Number::from(2)));
+        let b = FExpDa::new_f_exp(FExp::new_number(Number::from(3)));
+        let c = FExpDa::new_f_exp(FExp::new_number(Number::from(4)));
+        let e = FExpDa::new_multi_op(MultiOp::Multiplication, a, [b, c]);
+        assert_eq!(prettify!(e, 20), "(* 2 3 4)");
+    }
+
+    #[test]
+    fn fexp_da_assign_works() {
+        use crate::FHead;
+        let head = FHead::Simple(FunctionSymbol::from("x"));
+        let expr = FExpDa::new_f_exp(FExp::new_number(Number::from(10)));
+        let e = FExpDa::Assign(AssignOp::Increase, head, Box::new(expr));
+        assert_eq!(prettify!(e, 20), "(increase x 10)");
+    }
+
+    #[test]
+    fn fcomp_less_than_works() {
+        let a = FExp::new_number(Number::from(3));
+        let b = FExp::new_number(Number::from(4));
+        let fc = FComp::new(BinaryComp::LessThan, a, b);
+        assert_eq!(prettify!(fc, 10), "(< 3 4)");
+    }
+
+    #[test]
+    fn fcomp_equal_works() {
+        let a = FExp::new_number(Number::from(3));
+        let b = FExp::new_number(Number::from(4));
+        let fc = FComp::new(BinaryComp::Equal, a, b);
+        assert_eq!(prettify!(fc, 10), "(= 3 4)");
+    }
+
+    #[test]
+    fn fcomp_greater_or_equal_works() {
+        let a = FExp::new_number(Number::from(3));
+        let b = FExp::new_number(Number::from(4));
+        let fc = FComp::new(BinaryComp::GreaterOrEqual, a, b);
+        assert_eq!(prettify!(fc, 10), "(>= 3 4)");
+    }
+
+    #[test]
+    fn fcomp_less_than_or_equal_works() {
+        let a = FExp::new_number(Number::from(3));
+        let b = FExp::new_number(Number::from(4));
+        let fc = FComp::new(BinaryComp::LessThanOrEqual, a, b);
+        assert_eq!(prettify!(fc, 10), "(<= 3 4)");
+    }
+
+    #[test]
+    fn metric_fexp_negative_works() {
+        let inner = MetricFExp::new_number(Number::from(5));
+        let m = MetricFExp::new_negative(inner);
+        assert_eq!(prettify!(m, 10), "(- 5)");
+    }
+
+    #[test]
+    fn metric_fexp_binary_op_subtraction_works() {
+        let a = MetricFExp::new_number(Number::from(5));
+        let b = MetricFExp::new_number(Number::from(3));
+        let m = MetricFExp::new_binary_op(BinaryOp::Subtraction, a, b);
+        assert_eq!(prettify!(m, 10), "(- 5 3)");
+    }
+
+    #[test]
+    fn metric_fexp_binary_op_multiplication_works() {
+        let a = MetricFExp::new_number(Number::from(3));
+        let b = MetricFExp::new_number(Number::from(4));
+        let m = MetricFExp::new_binary_op(BinaryOp::Multiplication, a, b);
+        assert_eq!(prettify!(m, 10), "(* 3 4)");
+    }
+
+    #[test]
+    fn metric_fexp_multi_op_addition_works() {
+        let a = MetricFExp::new_number(Number::from(1));
+        let b = MetricFExp::new_number(Number::from(2));
+        let c = MetricFExp::new_number(Number::from(3));
+        let m = MetricFExp::new_multi_op(MultiOp::Addition, a, [b, c]);
+        assert_eq!(prettify!(m, 20), "(+ 1 2 3)");
+    }
+
+    #[test]
+    fn metric_fexp_multi_op_multiplication_works() {
+        let a = MetricFExp::new_number(Number::from(2));
+        let b = MetricFExp::new_number(Number::from(3));
+        let c = MetricFExp::new_number(Number::from(4));
+        let m = MetricFExp::new_multi_op(MultiOp::Multiplication, a, [b, c]);
+        assert_eq!(prettify!(m, 20), "(* 2 3 4)");
     }
 }

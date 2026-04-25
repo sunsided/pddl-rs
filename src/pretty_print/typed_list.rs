@@ -188,4 +188,98 @@ mod tests {
         ]);
         assert_eq!(prettify!(list, 30), "?x ?y - object ?z - letter");
     }
+
+    #[test]
+    fn typed_list_empty_works() {
+        let list = TypedList::<Name>::new(vec![]);
+        assert_eq!(prettify!(list, 20), "");
+    }
+
+    #[test]
+    fn function_typed_number_default() {
+        use crate::{FunctionSymbol, FunctionTyped};
+        let ft = FunctionTyped::new(FunctionSymbol::from("fuel"), crate::FunctionType::NUMBER);
+        assert_eq!(prettify!(ft, 10), "fuel");
+    }
+
+    #[test]
+    fn function_typed_explicit_type() {
+        use crate::{FunctionSymbol, FunctionTyped};
+        let ft = FunctionTyped::new(
+            FunctionSymbol::from("loc"),
+            crate::FunctionType::new(crate::Type::new_exactly("location")),
+        );
+        assert_eq!(prettify!(ft, 20), "loc - location");
+    }
+
+    #[test]
+    fn function_typed_list_empty_works() {
+        let list = crate::FunctionTypedList::<crate::AtomicFunctionSkeleton>::new(vec![]);
+        assert_eq!(prettify!(list, 20), "");
+    }
+
+    #[test]
+    fn function_typed_list_same_type() {
+        use crate::{AtomicFunctionSkeleton, FunctionSymbol, FunctionTyped};
+        let list = crate::FunctionTypedList::new(vec![
+            FunctionTyped::new(
+                AtomicFunctionSkeleton::new(FunctionSymbol::from("x"), vec![].into()),
+                crate::FunctionType::NUMBER,
+            ),
+            FunctionTyped::new(
+                AtomicFunctionSkeleton::new(FunctionSymbol::from("y"), vec![].into()),
+                crate::FunctionType::NUMBER,
+            ),
+        ]);
+        // Both are number-typed, so type annotation is omitted
+        assert_eq!(prettify!(list, 20), "(x) (y)");
+    }
+
+    #[test]
+    fn function_typed_list_interleaved() {
+        use crate::{AtomicFunctionSkeleton, FunctionSymbol, FunctionTyped};
+        let list = crate::FunctionTypedList::new(vec![
+            FunctionTyped::new(
+                AtomicFunctionSkeleton::new(FunctionSymbol::from("x"), vec![].into()),
+                crate::FunctionType::NUMBER,
+            ),
+            FunctionTyped::new(
+                AtomicFunctionSkeleton::new(FunctionSymbol::from("y"), vec![].into()),
+                crate::FunctionType::new(crate::Type::new_exactly("location")),
+            ),
+        ]);
+        assert_eq!(prettify!(list, 30), "(x) - number (y) - location");
+    }
+
+    #[test]
+    fn function_typed_list_number_at_end() {
+        use crate::{AtomicFunctionSkeleton, FunctionSymbol, FunctionTyped};
+        let list = crate::FunctionTypedList::new(vec![
+            FunctionTyped::new(
+                AtomicFunctionSkeleton::new(FunctionSymbol::from("x"), vec![].into()),
+                crate::FunctionType::new(crate::Type::new_exactly("location")),
+            ),
+            FunctionTyped::new(
+                AtomicFunctionSkeleton::new(FunctionSymbol::from("y"), vec![].into()),
+                crate::FunctionType::NUMBER,
+            ),
+        ]);
+        assert_eq!(prettify!(list, 30), "(x) - location (y)");
+    }
+
+    #[test]
+    fn function_typed_list_number_at_start() {
+        use crate::{AtomicFunctionSkeleton, FunctionSymbol, FunctionTyped};
+        let list = crate::FunctionTypedList::new(vec![
+            FunctionTyped::new(
+                AtomicFunctionSkeleton::new(FunctionSymbol::from("x"), vec![].into()),
+                crate::FunctionType::NUMBER,
+            ),
+            FunctionTyped::new(
+                AtomicFunctionSkeleton::new(FunctionSymbol::from("y"), vec![].into()),
+                crate::FunctionType::new(crate::Type::new_exactly("location")),
+            ),
+        ]);
+        assert_eq!(prettify!(list, 30), "(x) - number (y) - location");
+    }
 }

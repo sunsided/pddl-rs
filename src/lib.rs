@@ -6,10 +6,9 @@
 //!
 //! * `parser` - Enables parsing of PDDL types through the [`Parser`] trait.
 //! * `interning` - Enables string interning for [`Name`] types to reduce memory footprint.
-//! * `pretty` - Enables pretty-printing of a subset of PDDL types via the
-//!   [`Pretty`] extension trait. Currently supports `Name`, `Variable`,
-//!   `FunctionSymbol`, `PrimitiveType`, and `Type`. **Provisional feature;
-//!   coverage will expand in future releases.**
+//! * `pretty` - Enables pretty-printing of PDDL types via the
+//!   [`Pretty`] extension trait. The feature provides round-trip-safe
+//!   rendering: `parse → pretty() → parse` preserves AST equality.
 //!
 //! ## Example
 //!

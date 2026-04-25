@@ -146,13 +146,13 @@ impl IntoIterator for Type {
     }
 }
 
-impl<'a> Display for PrimitiveType {
+impl Display for PrimitiveType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
-impl<'a> Display for Type {
+impl Display for Type {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Type::Exactly(x) => write!(f, "{}", x),

@@ -152,3 +152,45 @@ macro_rules! prettify {
 
 #[cfg(test)]
 pub(crate) use prettify;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Name;
+
+    #[test]
+    fn to_pretty_works() {
+        let renderer = PrettyRenderer;
+        let doc = RcDoc::text("hello");
+        assert_eq!(renderer.to_pretty(doc, 80), "hello");
+    }
+
+    #[test]
+    fn sexpr_nested_works() {
+        let renderer = PrettyRenderer;
+        let doc = renderer.sexpr_nested("head", [RcDoc::text("a"), RcDoc::text("b")]);
+        let out = renderer.to_pretty(doc, 80);
+        assert!(out.starts_with("(head"));
+        assert!(out.contains('\n'));
+    }
+
+    #[test]
+    fn list_works() {
+        let renderer = PrettyRenderer;
+        let doc = renderer.list([RcDoc::text("a"), RcDoc::text("b")], RcDoc::text(", "));
+        assert_eq!(renderer.to_pretty(doc, 80), "a, b");
+    }
+
+    #[test]
+    fn pretty_display_works() {
+        let out = Name::new("x").pretty(10).to_string();
+        assert_eq!(out, "x");
+    }
+
+    #[test]
+    fn keyword_line_works() {
+        let renderer = PrettyRenderer;
+        let doc = renderer.keyword_line("foo");
+        assert_eq!(renderer.to_pretty(doc, 80), ":foo");
+    }
+}

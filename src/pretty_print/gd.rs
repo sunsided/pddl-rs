@@ -191,7 +191,9 @@ mod tests {
     use super::*;
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
-    use crate::{AtomicFormula, BinaryComp, FComp, FExp, Name, Number, Predicate, Term, Variable};
+    use crate::{
+        AtomicFormula, BinaryComp, FComp, FExp, Literal, Name, Number, Predicate, Term, Variable,
+    };
 
     fn make_simple_gd() -> GoalDefinition {
         let af: AtomicFormula<Term> = AtomicFormula::new_predicate(
@@ -356,5 +358,194 @@ mod tests {
         let con2 = Con2GD::new_goal(gd);
         let con = ConGD::new_hold_during(Number::from(5), Number::from(15), con2);
         assert_eq!(prettify!(con, 40), "(hold-during 5 15 (at ?r loc1))");
+    }
+
+    #[test]
+    fn goal_literal_works() {
+        let af: AtomicFormula<Term> = AtomicFormula::new_predicate(
+            Predicate::new_string("at"),
+            vec![Term::new_name(Name::new("x"))],
+        );
+        let lit = Literal::new(af);
+        let gd = GoalDefinition::new_literal(lit);
+        assert_eq!(prettify!(gd, 20), "(at x)");
+    }
+
+    #[test]
+    fn goal_or_empty_works() {
+        let gd = GoalDefinition::new_or(Vec::<GoalDefinition>::new());
+        assert_eq!(prettify!(gd, 20), "(or)");
+    }
+
+    #[test]
+    fn goal_exists_works() {
+        use crate::{ToTyped, Type, TypedVariables, Variable};
+        let vars: TypedVariables = vec![Variable::new_string("x").to_typed(Type::OBJECT)].into();
+        let inner = make_simple_gd();
+        let gd = GoalDefinition::new_exists(vars, inner);
+        assert_eq!(prettify!(gd, 40), "(exists (?x) (at ?r loc1))");
+    }
+
+    #[test]
+    fn goal_forall_works() {
+        use crate::{ToTyped, Type, TypedVariables, Variable};
+        let vars: TypedVariables = vec![Variable::new_string("x").to_typed(Type::OBJECT)].into();
+        let inner = make_simple_gd();
+        let gd = GoalDefinition::new_forall(vars, inner);
+        assert_eq!(prettify!(gd, 40), "(forall (?x) (at ?r loc1))");
+    }
+
+    #[test]
+    fn precondition_goal_definition_preference_works() {
+        use crate::PreferenceGD;
+        let gd = make_simple_gd();
+        let pref_gd = PreferenceGD::from_gd(gd);
+        let pre_gd = PreconditionGoalDefinition::new_preference(pref_gd);
+        assert_eq!(prettify!(pre_gd, 40), "(at ?r loc1)");
+    }
+
+    #[test]
+    fn precondition_goal_definition_forall_works() {
+        use crate::{ToTyped, Type, TypedVariables, Variable};
+        let vars: TypedVariables = vec![Variable::new_string("x").to_typed(Type::OBJECT)].into();
+        let inner = PreconditionGoalDefinitions::default();
+        let pre_gd = PreconditionGoalDefinition::new_forall(vars, inner);
+        // The visitor renders as "forall (?x)" with the body being empty PreconditionGoalDefinitions rendering as (and)
+        let out = prettify!(pre_gd, 40);
+        assert!(out.contains("forall"));
+        assert!(out.contains("?x"));
+    }
+
+    #[test]
+    fn precondition_goal_definitions_empty_works() {
+        let pgds = PreconditionGoalDefinitions::default();
+        assert_eq!(prettify!(pgds, 20), "(and)");
+    }
+
+    #[test]
+    fn precondition_goal_definitions_single_works() {
+        let gd = make_simple_gd();
+        let pre_gd = PreconditionGoalDefinition::new_preference(PreferenceGD::from_gd(gd));
+        let pgds = PreconditionGoalDefinitions::new(vec![pre_gd]);
+        assert_eq!(prettify!(pgds, 40), "(at ?r loc1)");
+    }
+
+    #[test]
+    fn precondition_goal_definitions_multi_works() {
+        let gd1 = make_simple_gd();
+        let gd2 = make_simple_gd();
+        let pgds = PreconditionGoalDefinitions::new(vec![
+            PreconditionGoalDefinition::new_preference(PreferenceGD::from_gd(gd1)),
+            PreconditionGoalDefinition::new_preference(PreferenceGD::from_gd(gd2)),
+        ]);
+        assert_eq!(prettify!(pgds, 40), "(and (at ?r loc1) (at ?r loc1))");
+    }
+
+    #[test]
+    fn pref_con_gd_forall_works() {
+        use crate::{ToTyped, Type, TypedVariables, Variable};
+        let vars: TypedVariables = vec![Variable::new_string("x").to_typed(Type::OBJECT)].into();
+        let _inner = ConGD::new_and(Vec::new());
+        let pgds = PrefConGDs::new(vec![PrefConGD::new_goal(ConGD::new_always(
+            Con2GD::new_goal(make_simple_gd()),
+        ))]);
+        let pgd = PrefConGD::new_forall(vars, pgds);
+        assert_eq!(prettify!(pgd, 40), "(forall (?x) (always (at ?r loc1)))");
+    }
+
+    #[test]
+    fn pref_con_gd_preference_with_name_works() {
+        use crate::PreferenceName;
+        let gd = make_simple_gd();
+        let con = ConGD::new_at_end(gd);
+        let pcgd = PrefConGD::new_preference(Some(PreferenceName::new_string("p1")), con);
+        assert_eq!(prettify!(pcgd, 40), "(preference p1 (at end (at ?r loc1)))");
+    }
+
+    #[test]
+    fn pref_con_gd_preference_no_name_works() {
+        let gd = make_simple_gd();
+        let con = ConGD::new_at_end(gd);
+        let pcgd = PrefConGD::new_preference(None, con);
+        assert_eq!(prettify!(pcgd, 40), "(preference (at end (at ?r loc1)))");
+    }
+
+    #[test]
+    fn pref_con_gds_multi_works() {
+        let gd1 = make_simple_gd();
+        let gd2 = make_simple_gd();
+        let pgds = PrefConGDs::new(vec![
+            PrefConGD::new_goal(ConGD::new_at_end(gd1)),
+            PrefConGD::new_goal(ConGD::new_at_end(gd2)),
+        ]);
+        let out = prettify!(pgds, 40);
+        assert!(out.contains("(at end"));
+    }
+
+    #[test]
+    fn con_gd_sometime_works() {
+        let gd = make_simple_gd();
+        let con2 = Con2GD::new_goal(gd);
+        let con = ConGD::new_sometime(con2);
+        assert_eq!(prettify!(con, 40), "(sometime (at ?r loc1))");
+    }
+
+    #[test]
+    fn con_gd_at_most_once_works() {
+        let gd = make_simple_gd();
+        let con2 = Con2GD::new_goal(gd);
+        let con = ConGD::new_at_most_once(con2);
+        assert_eq!(prettify!(con, 40), "(at-most-once (at ?r loc1))");
+    }
+
+    #[test]
+    fn con_gd_sometime_before_works() {
+        let gd1 = make_simple_gd();
+        let gd2 = make_simple_gd();
+        let con = ConGD::new_sometime_before(Con2GD::new_goal(gd1), Con2GD::new_goal(gd2));
+        assert_eq!(
+            prettify!(con, 40),
+            "(sometime-before (at ?r loc1) (at ?r\n        loc1))"
+        );
+    }
+
+    #[test]
+    fn con_gd_always_within_works() {
+        let gd1 = make_simple_gd();
+        let gd2 = make_simple_gd();
+        let con = ConGD::new_always_within(
+            Number::from(10),
+            Con2GD::new_goal(gd1),
+            Con2GD::new_goal(gd2),
+        );
+        assert_eq!(
+            prettify!(con, 40),
+            "(always-within 10 (at ?r loc1) (at ?r\n        loc1))"
+        );
+    }
+
+    #[test]
+    fn con_gd_hold_after_works() {
+        let gd = make_simple_gd();
+        let con2 = Con2GD::new_goal(gd);
+        let con = ConGD::new_hold_after(Number::from(15), con2);
+        assert_eq!(prettify!(con, 40), "(hold-after 15 (at ?r loc1))");
+    }
+
+    #[test]
+    fn con_gd_forall_works() {
+        use crate::{ToTyped, Type, TypedVariables, Variable};
+        let vars: TypedVariables = vec![Variable::new_string("x").to_typed(Type::OBJECT)].into();
+        let inner = ConGD::new_at_end(make_simple_gd());
+        let con = ConGD::new_forall(vars, inner);
+        assert_eq!(prettify!(con, 40), "(forall (?x) (at end (at ?r loc1)))");
+    }
+
+    #[test]
+    fn con2_gd_nested_works() {
+        let gd = make_simple_gd();
+        let con = ConGD::new_at_end(gd);
+        let con2 = Con2GD::new_nested(con);
+        assert_eq!(prettify!(con2, 40), "(at end (at ?r loc1))");
     }
 }
