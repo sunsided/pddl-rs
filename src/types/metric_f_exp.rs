@@ -96,3 +96,80 @@ impl MetricFluentExpression {
 #[deprecated(since = "0.2.0", note = "Use `MetricFluentExpression` instead")]
 #[allow(dead_code)]
 pub type MetricFExp = MetricFluentExpression;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[allow(deprecated)]
+    fn deprecated_new_constructors() {
+        let _ = MetricFluentExpression::new_number(42);
+        let _ = MetricFluentExpression::new_total_time();
+
+        let pref = PreferenceName::new("p");
+        let _ = MetricFluentExpression::new_is_violated(pref);
+
+        let sym = FunctionSymbol::new(Name::new("cost"));
+        let _ = MetricFluentExpression::new_function(sym, vec![Name::new("x")]);
+
+        let lhs = MetricFluentExpression::number(1);
+        let rhs = MetricFluentExpression::number(2);
+        let _ = MetricFluentExpression::new_binary_op(BinaryOp::Addition, lhs.clone(), rhs.clone());
+        let _ =
+            MetricFluentExpression::new_multi_op(MultiOp::Addition, lhs.clone(), vec![rhs.clone()]);
+        let _ = MetricFluentExpression::new_negative(lhs);
+    }
+
+    #[test]
+    fn binary_op_constructor() {
+        let lhs = MetricFluentExpression::number(1);
+        let rhs = MetricFluentExpression::number(2);
+        let expr = MetricFluentExpression::binary_op(BinaryOp::Addition, lhs, rhs);
+        assert!(matches!(expr, MetricFluentExpression::BinaryOp(_, _, _)));
+    }
+
+    #[test]
+    fn multi_op_constructor() {
+        let lhs = MetricFluentExpression::number(1);
+        let rhs = vec![
+            MetricFluentExpression::number(2),
+            MetricFluentExpression::number(3),
+        ];
+        let expr = MetricFluentExpression::multi_op(MultiOp::Addition, lhs, rhs);
+        assert!(matches!(expr, MetricFluentExpression::MultiOp(_, _, _)));
+    }
+
+    #[test]
+    fn negative_constructor() {
+        let inner = MetricFluentExpression::number(5);
+        let expr = MetricFluentExpression::negative(inner);
+        assert!(matches!(expr, MetricFluentExpression::Negative(_)));
+    }
+
+    #[test]
+    fn number_constructor() {
+        let expr = MetricFluentExpression::number(42);
+        assert!(matches!(expr, MetricFluentExpression::Number(_)));
+    }
+
+    #[test]
+    fn function_constructor() {
+        let sym = FunctionSymbol::new(Name::new("cost"));
+        let expr = MetricFluentExpression::function(sym, vec![Name::new("x")]);
+        assert!(matches!(expr, MetricFluentExpression::Function(_, _)));
+    }
+
+    #[test]
+    fn total_time_constructor() {
+        let expr = MetricFluentExpression::total_time();
+        assert!(matches!(expr, MetricFluentExpression::TotalTime));
+    }
+
+    #[test]
+    fn is_violated_constructor() {
+        let pref = PreferenceName::new("p");
+        let expr = MetricFluentExpression::is_violated(pref);
+        assert!(matches!(expr, MetricFluentExpression::IsViolated(_)));
+    }
+}

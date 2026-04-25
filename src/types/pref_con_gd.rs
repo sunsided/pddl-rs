@@ -331,4 +331,93 @@ mod tests {
         fn _assert_alias(_: PrefConGD) {}
         fn _assert_aliases(_: PrefConGDs) {}
     }
+
+    #[test]
+    #[allow(deprecated)]
+    fn deprecated_new_constructors() {
+        let inner = ConstraintGoalDefinition::default();
+        let _ = PreferenceConstraintGoalDefinitions::new_goal(inner.clone());
+        let _ = PreferenceConstraintGoalDefinitions::new_preference(None, inner.clone());
+        let _ = PreferenceConstraintGoalDefinitions::new_forall(
+            crate::types::TypedVariables::default(),
+            PreferenceConstraintGoalDefinitions::default(),
+        );
+
+        // PreferenceConstraintGoalDefinition
+        let _ = PreferenceConstraintGoalDefinition::new_goal(inner.clone());
+        let _ = PreferenceConstraintGoalDefinition::new_preference(None, inner.clone());
+        let _ = PreferenceConstraintGoalDefinition::new_forall(
+            crate::types::TypedVariables::default(),
+            PreferenceConstraintGoalDefinitions::default(),
+        );
+    }
+
+    #[test]
+    fn pre_con_gds_deref() {
+        let inner = ConstraintGoalDefinition::default();
+        let goal = PreferenceConstraintGoalDefinition::goal(inner);
+        let list = PreferenceConstraintGoalDefinitions::new(vec![goal.clone()]);
+        let slice: &[PreferenceConstraintGoalDefinition] = &list;
+        assert_eq!(slice.len(), 1);
+        assert_eq!(&slice[0], &goal);
+    }
+
+    #[test]
+    fn pre_con_gds_as_ref() {
+        let inner = ConstraintGoalDefinition::default();
+        let goal = PreferenceConstraintGoalDefinition::goal(inner);
+        let list = PreferenceConstraintGoalDefinitions::new(vec![goal]);
+        let slice: &[PreferenceConstraintGoalDefinition] = list.as_ref();
+        assert_eq!(slice.len(), 1);
+    }
+
+    #[test]
+    fn pre_con_gds_into_iter() {
+        let inner = ConstraintGoalDefinition::default();
+        let goal = PreferenceConstraintGoalDefinition::goal(inner.clone());
+        let list = PreferenceConstraintGoalDefinitions::new(vec![goal.clone()]);
+        let collected: Vec<_> = list.into_iter().collect();
+        assert_eq!(collected, vec![goal]);
+    }
+
+    #[test]
+    fn pre_con_gds_into_vec() {
+        let inner = ConstraintGoalDefinition::default();
+        let goal = PreferenceConstraintGoalDefinition::goal(inner.clone());
+        let list = PreferenceConstraintGoalDefinitions::new(vec![goal.clone()]);
+        let vec: Vec<PreferenceConstraintGoalDefinition> = list.into();
+        assert_eq!(vec, vec![goal]);
+    }
+
+    #[test]
+    fn pre_con_gds_from_iterator() {
+        let inner = ConstraintGoalDefinition::default();
+        let goal = PreferenceConstraintGoalDefinition::goal(inner.clone());
+        let from_iter: PreferenceConstraintGoalDefinitions =
+            vec![goal.clone()].into_iter().collect();
+        assert_eq!(from_iter.len(), 1);
+        assert_eq!(from_iter.try_get_single(), Some(goal));
+    }
+
+    #[test]
+    fn pre_con_gds_len() {
+        let list = PreferenceConstraintGoalDefinitions::default();
+        assert_eq!(list.len(), 0);
+
+        let inner = ConstraintGoalDefinition::default();
+        let goal = PreferenceConstraintGoalDefinition::goal(inner);
+        let list = PreferenceConstraintGoalDefinitions::new(vec![goal]);
+        assert_eq!(list.len(), 1);
+    }
+
+    #[test]
+    fn pre_con_gds_iter() {
+        let inner1 = ConstraintGoalDefinition::default();
+        let inner2 = ConstraintGoalDefinition::And(vec![]);
+        let goal1 = PreferenceConstraintGoalDefinition::goal(inner1);
+        let goal2 = PreferenceConstraintGoalDefinition::goal(inner2);
+        let list = PreferenceConstraintGoalDefinitions::new(vec![goal1.clone(), goal2.clone()]);
+        let collected: Vec<_> = list.iter().cloned().collect();
+        assert_eq!(collected, vec![goal1, goal2]);
+    }
 }

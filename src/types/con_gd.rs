@@ -311,4 +311,91 @@ mod tests {
             ConstraintGoalDefinitionInner::Nested(_)
         ));
     }
+
+    #[test]
+    #[allow(deprecated)]
+    fn deprecated_new_constructors() {
+        let inner = ConstraintGoalDefinitionInner::goal(GoalDefinition::and(Vec::new()));
+        let num = Number::from(5);
+
+        let _ = ConstraintGoalDefinition::new_and(vec![ConstraintGoalDefinition::default()]);
+        let _ = ConstraintGoalDefinition::new_forall(
+            TypedVariables::default(),
+            ConstraintGoalDefinition::default(),
+        );
+        let _ = ConstraintGoalDefinition::new_at_end(GoalDefinition::and(Vec::new()));
+        let _ = ConstraintGoalDefinition::new_always(inner.clone());
+        let _ = ConstraintGoalDefinition::new_sometime(inner.clone());
+        let _ = ConstraintGoalDefinition::new_within(num, inner.clone());
+        let _ = ConstraintGoalDefinition::new_at_most_once(inner.clone());
+        let _ = ConstraintGoalDefinition::new_sometime_after(inner.clone(), inner.clone());
+        let _ = ConstraintGoalDefinition::new_sometime_before(inner.clone(), inner.clone());
+        let _ = ConstraintGoalDefinition::new_always_within(num, inner.clone(), inner.clone());
+        let _ = ConstraintGoalDefinition::new_hold_during(
+            Number::from(0),
+            Number::from(10),
+            inner.clone(),
+        );
+        let _ = ConstraintGoalDefinition::new_hold_after(num, inner.clone());
+
+        // ConstraintGoalDefinitionInner
+        let _ = ConstraintGoalDefinitionInner::new_nested(ConstraintGoalDefinition::default());
+        let _ = ConstraintGoalDefinitionInner::new_goal(GoalDefinition::and(Vec::new()));
+    }
+
+    #[test]
+    fn is_empty_non_empty_variants() {
+        use crate::types::{AtomicFormula, Predicate, Term};
+
+        let term = Term::new_name(crate::types::Name::new("x"));
+        let atomic = AtomicFormula::predicate(Predicate::string("at"), vec![term]);
+        let gd = GoalDefinition::AtomicFormula(atomic);
+        let inner = ConstraintGoalDefinitionInner::goal(gd.clone());
+
+        let always = ConstraintGoalDefinition::always(inner.clone());
+        assert!(!always.is_empty());
+
+        let sometime = ConstraintGoalDefinition::sometime(inner.clone());
+        assert!(!sometime.is_empty());
+
+        let within = ConstraintGoalDefinition::within(Number::from(5), inner.clone());
+        assert!(!within.is_empty());
+
+        let at_most_once = ConstraintGoalDefinition::at_most_once(inner.clone());
+        assert!(!at_most_once.is_empty());
+
+        let sometime_after = ConstraintGoalDefinition::sometime_after(inner.clone(), inner.clone());
+        assert!(!sometime_after.is_empty());
+
+        let sometime_before =
+            ConstraintGoalDefinition::sometime_before(inner.clone(), inner.clone());
+        assert!(!sometime_before.is_empty());
+
+        let always_within =
+            ConstraintGoalDefinition::always_within(Number::from(5), inner.clone(), inner.clone());
+        assert!(!always_within.is_empty());
+
+        let hold_during =
+            ConstraintGoalDefinition::hold_during(Number::from(0), Number::from(10), inner.clone());
+        assert!(!hold_during.is_empty());
+
+        let hold_after = ConstraintGoalDefinition::hold_after(Number::from(5), inner);
+        assert!(!hold_after.is_empty());
+
+        let at_end = ConstraintGoalDefinition::at_end(gd);
+        assert!(!at_end.is_empty());
+
+        let nested_inner = ConstraintGoalDefinitionInner::nested(ConstraintGoalDefinition::at_end(
+            GoalDefinition::and(vec![GoalDefinition::AtomicFormula(
+                AtomicFormula::predicate(
+                    Predicate::string("on"),
+                    vec![
+                        Term::new_name(crate::types::Name::new("a")),
+                        Term::new_name(crate::types::Name::new("b")),
+                    ],
+                ),
+            )]),
+        ));
+        assert!(!nested_inner.is_empty());
+    }
 }

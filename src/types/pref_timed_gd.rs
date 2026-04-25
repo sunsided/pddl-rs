@@ -52,3 +52,79 @@ impl From<(Option<PreferenceName>, TimedGoalDefinition)> for PreferenceTimedGoal
 /// Alias for [`PreferenceTimedGoalDefinition`]; matches BNF `<pref-timed-GD>`.
 #[deprecated(since = "0.2.0", note = "Use `PreferenceTimedGoalDefinition` instead")]
 pub type PrefTimedGD = PreferenceTimedGoalDefinition;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::{
+        AtomicFormula, GoalDefinition, Predicate, Term, TimeSpecifier, TimedGoalDefinition,
+    };
+
+    fn make_timed_gd() -> TimedGoalDefinition {
+        let af = AtomicFormula::predicate(Predicate::string("at"), Vec::<Term>::new());
+        let gd = GoalDefinition::AtomicFormula(af);
+        TimedGoalDefinition::at(TimeSpecifier::Start, gd)
+    }
+
+    #[test]
+    fn required_constructor() {
+        let timed_gd = make_timed_gd();
+        let pref = PreferenceTimedGoalDefinition::required(timed_gd.clone());
+        assert_eq!(pref, PreferenceTimedGoalDefinition::Required(timed_gd));
+    }
+
+    #[test]
+    fn preference_with_name() {
+        let timed_gd = make_timed_gd();
+        let name = PreferenceName::new("pref1");
+        let pref = PreferenceTimedGoalDefinition::preference(Some(name.clone()), timed_gd.clone());
+        assert_eq!(
+            pref,
+            PreferenceTimedGoalDefinition::Preference(Some(name), timed_gd)
+        );
+    }
+
+    #[test]
+    fn preference_without_name() {
+        let timed_gd = make_timed_gd();
+        let pref = PreferenceTimedGoalDefinition::preference(None, timed_gd.clone());
+        assert_eq!(
+            pref,
+            PreferenceTimedGoalDefinition::Preference(None, timed_gd)
+        );
+    }
+
+    #[test]
+    fn from_timed_gd() {
+        let timed_gd = make_timed_gd();
+        let from_gd: PreferenceTimedGoalDefinition = timed_gd.clone().into();
+        assert_eq!(from_gd, PreferenceTimedGoalDefinition::Required(timed_gd));
+    }
+
+    #[test]
+    fn from_tuple() {
+        let timed_gd = make_timed_gd();
+        let name = PreferenceName::new("pref1");
+        let from_tuple: PreferenceTimedGoalDefinition =
+            (Some(name.clone()), timed_gd.clone()).into();
+        assert_eq!(
+            from_tuple,
+            PreferenceTimedGoalDefinition::Preference(Some(name), timed_gd)
+        );
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn deprecated_new_constructors() {
+        let timed_gd = make_timed_gd();
+        let _ = PreferenceTimedGoalDefinition::new_required(timed_gd.clone());
+        let _ =
+            PreferenceTimedGoalDefinition::new_preference(Some(PreferenceName::new("p")), timed_gd);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn deprecated_alias() {
+        fn _assert_alias(_: PrefTimedGD) {}
+    }
+}

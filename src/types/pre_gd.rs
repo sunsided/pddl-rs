@@ -192,3 +192,161 @@ impl From<Preference> for PreconditionGoalDefinition {
         PreconditionGoalDefinition::preference(PreferenceGoalDefinition::from_preference(value))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::{GoalDefinition, PreferenceGoalDefinition};
+
+    fn make_preference_goal() -> PreferenceGoalDefinition {
+        let gd = GoalDefinition::and(Vec::new());
+        PreferenceGoalDefinition::from_gd(gd)
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn deprecated_new_constructors() {
+        let pref = make_preference_goal();
+        let _ = PreconditionGoalDefinitions::new_preference(pref.clone());
+        let _ = PreconditionGoalDefinitions::new_forall(
+            TypedVariables::default(),
+            PreconditionGoalDefinitions::default(),
+        );
+    }
+
+    #[test]
+    fn pre_gd_from_preference_goal() {
+        let pref = make_preference_goal();
+        let from_pref: PreconditionGoalDefinition = pref.clone().into();
+        assert_eq!(from_pref, PreconditionGoalDefinition::preference(pref));
+    }
+
+    #[test]
+    fn pre_gd_from_preference() {
+        let gd = GoalDefinition::and(Vec::new());
+        let pref = crate::Preference::new(None, gd);
+        let from_pref: PreconditionGoalDefinition = pref.into();
+        assert!(matches!(
+            from_pref,
+            PreconditionGoalDefinition::Preference(_)
+        ));
+    }
+
+    #[test]
+    fn pre_gds_from_option_some() {
+        let pref = make_preference_goal();
+        let single = PreconditionGoalDefinition::preference(pref);
+        let from_some: PreconditionGoalDefinitions = Some(single.clone()).into();
+        assert_eq!(from_some.len(), 1);
+        assert_eq!(from_some.try_get_single(), Some(single));
+    }
+
+    #[test]
+    fn pre_gds_from_option_none() {
+        let from_none: PreconditionGoalDefinitions =
+            Option::<PreconditionGoalDefinition>::None.into();
+        assert!(from_none.is_empty());
+    }
+
+    #[test]
+    fn pre_gds_from_option_list_some() {
+        let list = PreconditionGoalDefinitions::default();
+        let from_some: PreconditionGoalDefinitions = Some(list).into();
+        assert!(from_some.is_empty());
+    }
+
+    #[test]
+    fn pre_gds_from_option_list_none() {
+        let from_none: PreconditionGoalDefinitions =
+            Option::<PreconditionGoalDefinitions>::None.into();
+        assert!(from_none.is_empty());
+    }
+
+    #[test]
+    fn pre_gds_deref() {
+        let pref = make_preference_goal();
+        let single = PreconditionGoalDefinition::preference(pref);
+        let list = PreconditionGoalDefinitions::new(vec![single.clone()]);
+        let slice: &[PreconditionGoalDefinition] = &list;
+        assert_eq!(slice.len(), 1);
+        assert_eq!(&slice[0], &single);
+    }
+
+    #[test]
+    fn pre_gds_as_ref() {
+        let pref = make_preference_goal();
+        let single = PreconditionGoalDefinition::preference(pref);
+        let list = PreconditionGoalDefinitions::new(vec![single]);
+        let slice: &[PreconditionGoalDefinition] = list.as_ref();
+        assert_eq!(slice.len(), 1);
+    }
+
+    #[test]
+    fn pre_gds_into_iter() {
+        let pref = make_preference_goal();
+        let single = PreconditionGoalDefinition::preference(pref.clone());
+        let list = PreconditionGoalDefinitions::new(vec![single.clone()]);
+        let collected: Vec<_> = list.into_iter().collect();
+        assert_eq!(collected, vec![single]);
+    }
+
+    #[test]
+    fn pre_gds_into_vec() {
+        let pref = make_preference_goal();
+        let single = PreconditionGoalDefinition::preference(pref.clone());
+        let list = PreconditionGoalDefinitions::new(vec![single.clone()]);
+        let vec: Vec<PreconditionGoalDefinition> = list.into();
+        assert_eq!(vec, vec![single]);
+    }
+
+    #[test]
+    fn pre_gds_try_get_single() {
+        let pref = make_preference_goal();
+        let single = PreconditionGoalDefinition::preference(pref.clone());
+        let list = PreconditionGoalDefinitions::new(vec![single.clone()]);
+        assert_eq!(list.try_get_single(), Some(single.clone()));
+
+        let empty = PreconditionGoalDefinitions::default();
+        assert!(empty.try_get_single().is_none());
+
+        let multi = PreconditionGoalDefinitions::new(vec![single.clone(), single]);
+        assert!(multi.try_get_single().is_none());
+    }
+
+    #[test]
+    fn pre_gds_try_into() {
+        let pref = make_preference_goal();
+        let single = PreconditionGoalDefinition::preference(pref.clone());
+        let list = PreconditionGoalDefinitions::new(vec![single.clone()]);
+        let result: Result<PreconditionGoalDefinition, ()> = list.try_into();
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), single);
+    }
+
+    #[test]
+    fn pre_gd_and() {
+        let pref = make_preference_goal();
+        let items = vec![
+            PreconditionGoalDefinition::preference(pref.clone()),
+            PreconditionGoalDefinition::preference(pref),
+        ];
+        let result: PreconditionGoalDefinitions = PreconditionGoalDefinition::and(items);
+        assert_eq!(result.len(), 2);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn pre_gd_and_deprecated() {
+        let pref = make_preference_goal();
+        let _ =
+            PreconditionGoalDefinition::new_and(vec![PreconditionGoalDefinition::preference(pref)]);
+    }
+
+    #[test]
+    fn pre_gd_forall() {
+        let vars = TypedVariables::default();
+        let gds = PreconditionGoalDefinitions::default();
+        let forall = PreconditionGoalDefinition::r#forall(vars.clone(), gds.clone());
+        assert!(matches!(forall, PreconditionGoalDefinition::Forall(_, _)));
+    }
+}

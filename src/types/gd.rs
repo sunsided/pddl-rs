@@ -186,3 +186,116 @@ impl GoalDefinition {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::{
+        AtomicFormula, BinaryComparison, FluentComparison, FluentExpression, Number, Predicate,
+        Term,
+    };
+
+    #[test]
+    #[allow(deprecated)]
+    fn deprecated_new_constructors() {
+        let af = AtomicFormula::predicate(Predicate::string("at"), Vec::<Term>::new());
+        let _ = GoalDefinition::new_atomic_formula(af.clone());
+
+        let literal = TermLiteral::new_not(AtomicFormula::predicate(
+            Predicate::string("x"),
+            Vec::<Term>::new(),
+        ));
+        let _ = GoalDefinition::new_literal(literal.clone());
+
+        let _ = GoalDefinition::new_and(vec![GoalDefinition::AtomicFormula(af.clone())]);
+        let _ = GoalDefinition::new_or(vec![GoalDefinition::AtomicFormula(af.clone())]);
+        let _ = GoalDefinition::new_not(GoalDefinition::AtomicFormula(af.clone()));
+
+        let _ = GoalDefinition::new_imply_tuple((
+            GoalDefinition::AtomicFormula(af.clone()),
+            GoalDefinition::AtomicFormula(af.clone()),
+        ));
+        let _ = GoalDefinition::new_imply(
+            GoalDefinition::AtomicFormula(af.clone()),
+            GoalDefinition::AtomicFormula(af.clone()),
+        );
+
+        let vars = TypedVariables::default();
+        let _ = GoalDefinition::new_exists_tuple((
+            vars.clone(),
+            GoalDefinition::AtomicFormula(af.clone()),
+        ));
+        let _ = GoalDefinition::new_exists(vars.clone(), GoalDefinition::AtomicFormula(af.clone()));
+        let _ = GoalDefinition::new_forall_tuple((
+            vars.clone(),
+            GoalDefinition::AtomicFormula(af.clone()),
+        ));
+        let _ = GoalDefinition::new_forall(vars, GoalDefinition::AtomicFormula(af.clone()));
+
+        let f_comp = FluentComparison::new(
+            BinaryComparison::GreaterThan,
+            FluentExpression::number(Number::from(1)),
+            FluentExpression::number(Number::from(0)),
+        );
+        let _ = GoalDefinition::new_f_comp(f_comp);
+    }
+
+    #[test]
+    fn not_trait() {
+        let gd = GoalDefinition::AtomicFormula(AtomicFormula::predicate(
+            Predicate::string("clear"),
+            Vec::<Term>::new(),
+        ));
+        let negated = !gd;
+        assert!(matches!(negated, GoalDefinition::Not(_)));
+    }
+
+    #[test]
+    fn is_empty_non_empty_variants() {
+        let af = AtomicFormula::predicate(Predicate::string("at"), Vec::<Term>::new());
+        assert!(!GoalDefinition::AtomicFormula(af).is_empty());
+
+        let literal = TermLiteral::new(AtomicFormula::predicate(
+            Predicate::string("x"),
+            Vec::<Term>::new(),
+        ));
+        assert!(!GoalDefinition::Literal(literal).is_empty());
+
+        let gd = GoalDefinition::AtomicFormula(AtomicFormula::predicate(
+            Predicate::string("on"),
+            Vec::<Term>::new(),
+        ));
+        assert!(!GoalDefinition::Not(Box::new(gd.clone())).is_empty());
+        assert!(!GoalDefinition::Imply(Box::new(gd.clone()), Box::new(gd.clone())).is_empty());
+        assert!(
+            !GoalDefinition::Exists(TypedVariables::default(), Box::new(gd.clone())).is_empty()
+        );
+        assert!(
+            !GoalDefinition::ForAll(TypedVariables::default(), Box::new(gd.clone())).is_empty()
+        );
+
+        let f_comp = FluentComparison::new(
+            BinaryComparison::GreaterThan,
+            FluentExpression::number(Number::from(1)),
+            FluentExpression::number(Number::from(0)),
+        );
+        assert!(!GoalDefinition::FluentComparison(f_comp).is_empty());
+    }
+
+    #[test]
+    fn is_empty_recursive() {
+        let empty_and = GoalDefinition::and(Vec::new());
+        assert!(empty_and.is_empty());
+
+        let empty_or = GoalDefinition::or(Vec::new());
+        assert!(empty_or.is_empty());
+
+        let nested_empty = GoalDefinition::Not(Box::new(GoalDefinition::and(Vec::new())));
+        assert!(nested_empty.is_empty());
+
+        let non_empty_and = GoalDefinition::and(vec![GoalDefinition::AtomicFormula(
+            AtomicFormula::predicate(Predicate::string("at"), Vec::<Term>::new()),
+        )]);
+        assert!(!non_empty_and.is_empty());
+    }
+}
