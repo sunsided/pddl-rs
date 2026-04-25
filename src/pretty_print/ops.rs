@@ -17,62 +17,62 @@ impl sealed::Sealed for Interval {}
 impl sealed::Sealed for TimeSpecifier {}
 impl sealed::Sealed for Requirement {}
 
-impl<'a> Visitor<AssignOp, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &AssignOp) -> RcDoc<'a> {
+impl Visitor<AssignOp, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &AssignOp) -> RcDoc<'static> {
         RcDoc::text(value.to_string())
     }
 }
 
-impl<'a> Visitor<AssignOpT, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &AssignOpT) -> RcDoc<'a> {
+impl Visitor<AssignOpT, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &AssignOpT) -> RcDoc<'static> {
         RcDoc::text(value.to_string())
     }
 }
 
-impl<'a> Visitor<BinaryOp, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &BinaryOp) -> RcDoc<'a> {
+impl Visitor<BinaryOp, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &BinaryOp) -> RcDoc<'static> {
         RcDoc::text(value.to_string())
     }
 }
 
-impl<'a> Visitor<BinaryComp, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &BinaryComp) -> RcDoc<'a> {
+impl Visitor<BinaryComp, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &BinaryComp) -> RcDoc<'static> {
         RcDoc::text(value.to_string())
     }
 }
 
-impl<'a> Visitor<DOp, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &DOp) -> RcDoc<'a> {
+impl Visitor<DOp, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &DOp) -> RcDoc<'static> {
         RcDoc::text(value.to_string())
     }
 }
 
-impl<'a> Visitor<MultiOp, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &MultiOp) -> RcDoc<'a> {
+impl Visitor<MultiOp, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &MultiOp) -> RcDoc<'static> {
         RcDoc::text(value.to_string())
     }
 }
 
-impl<'a> Visitor<Optimization, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Optimization) -> RcDoc<'a> {
+impl Visitor<Optimization, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Optimization) -> RcDoc<'static> {
         RcDoc::text(value.to_string())
     }
 }
 
-impl<'a> Visitor<Interval, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Interval) -> RcDoc<'a> {
+impl Visitor<Interval, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Interval) -> RcDoc<'static> {
         RcDoc::text(value.to_string())
     }
 }
 
-impl<'a> Visitor<TimeSpecifier, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &TimeSpecifier) -> RcDoc<'a> {
+impl Visitor<TimeSpecifier, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &TimeSpecifier) -> RcDoc<'static> {
         RcDoc::text(value.to_string())
     }
 }
 
-impl<'a> Visitor<Requirement, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Requirement) -> RcDoc<'a> {
+impl Visitor<Requirement, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Requirement) -> RcDoc<'static> {
         RcDoc::text(value.to_string())
     }
 }

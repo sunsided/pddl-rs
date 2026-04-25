@@ -16,8 +16,8 @@ impl sealed::Sealed for PrefConGDs {}
 impl sealed::Sealed for ConGD {}
 impl sealed::Sealed for Con2GD {}
 
-impl<'a> Visitor<GoalDefinition, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &GoalDefinition) -> RcDoc<'a> {
+impl Visitor<GoalDefinition, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &GoalDefinition) -> RcDoc<'static> {
         match value {
             GoalDefinition::AtomicFormula(af) => af.accept(self),
             GoalDefinition::Literal(lit) => lit.accept(self),
@@ -58,8 +58,8 @@ impl<'a> Visitor<GoalDefinition, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<PreconditionGoalDefinition, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &PreconditionGoalDefinition) -> RcDoc<'a> {
+impl Visitor<PreconditionGoalDefinition, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &PreconditionGoalDefinition) -> RcDoc<'static> {
         match value {
             PreconditionGoalDefinition::Preference(pref_gd) => self.visit(pref_gd),
             PreconditionGoalDefinition::Forall(vars, gds) => self.sexpr(
@@ -73,14 +73,18 @@ impl<'a> Visitor<PreconditionGoalDefinition, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<PreconditionGoalDefinitions, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &PreconditionGoalDefinitions) -> RcDoc<'a> {
-        RcDoc::intersperse(value.iter().map(|gd| self.visit(gd)), RcDoc::softline())
+impl Visitor<PreconditionGoalDefinitions, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &PreconditionGoalDefinitions) -> RcDoc<'static> {
+        if value.len() == 1 {
+            value[0].accept(self)
+        } else {
+            self.sexpr("and", value.iter().map(|gd| self.visit(gd)))
+        }
     }
 }
 
-impl<'a> Visitor<PreferenceGD, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &PreferenceGD) -> RcDoc<'a> {
+impl Visitor<PreferenceGD, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &PreferenceGD) -> RcDoc<'static> {
         match value {
             PreferenceGD::Goal(gd) => self.visit(gd),
             PreferenceGD::Preference(pref) => self.visit(pref),
@@ -88,9 +92,9 @@ impl<'a> Visitor<PreferenceGD, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<Preference, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Preference) -> RcDoc<'a> {
-        let children: Vec<RcDoc<'a>> = match value.name() {
+impl Visitor<Preference, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Preference) -> RcDoc<'static> {
+        let children: Vec<RcDoc<'static>> = match value.name() {
             Some(name) => {
                 vec![name.accept(self), self.visit(value.goal())]
             }
@@ -102,8 +106,8 @@ impl<'a> Visitor<Preference, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<PrefConGD, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &PrefConGD) -> RcDoc<'a> {
+impl Visitor<PrefConGD, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &PrefConGD) -> RcDoc<'static> {
         match value {
             PrefConGD::Goal(gd) => self.visit(gd),
             PrefConGD::Forall(vars, gds) => self.sexpr(
@@ -114,7 +118,7 @@ impl<'a> Visitor<PrefConGD, RcDoc<'a>> for PrettyRenderer {
                 ],
             ),
             PrefConGD::Preference(name, gd) => {
-                let children: Vec<RcDoc<'a>> = match name {
+                let children: Vec<RcDoc<'static>> = match name {
                     Some(n) => vec![n.accept(self), self.visit(gd)],
                     None => vec![self.visit(gd)],
                 };
@@ -124,14 +128,14 @@ impl<'a> Visitor<PrefConGD, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<PrefConGDs, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &PrefConGDs) -> RcDoc<'a> {
+impl Visitor<PrefConGDs, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &PrefConGDs) -> RcDoc<'static> {
         RcDoc::intersperse(value.iter().map(|gd| self.visit(gd)), RcDoc::softline())
     }
 }
 
-impl<'a> Visitor<ConGD, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &ConGD) -> RcDoc<'a> {
+impl Visitor<ConGD, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &ConGD) -> RcDoc<'static> {
         match value {
             ConGD::And(items) => {
                 if items.is_empty() {
@@ -171,8 +175,8 @@ impl<'a> Visitor<ConGD, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<Con2GD, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Con2GD) -> RcDoc<'a> {
+impl Visitor<Con2GD, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Con2GD) -> RcDoc<'static> {
         match value {
             Con2GD::Goal(gd) => self.visit(gd),
             Con2GD::Nested(gd) => self.visit(&**gd),

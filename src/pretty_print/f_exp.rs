@@ -13,8 +13,8 @@ impl sealed::Sealed for FExpDa {}
 impl sealed::Sealed for FAssignDa {}
 impl sealed::Sealed for MetricFExp {}
 
-impl<'a> Visitor<FExp, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &FExp) -> RcDoc<'a> {
+impl Visitor<FExp, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &FExp) -> RcDoc<'static> {
         match value {
             FExp::Number(n) => n.accept(self),
             FExp::Function(head) => head.accept(self),
@@ -48,8 +48,8 @@ impl<'a> Visitor<FExp, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<FHead, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &FHead) -> RcDoc<'a> {
+impl Visitor<FHead, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &FHead) -> RcDoc<'static> {
         match value {
             FHead::Simple(sym) => sym.accept(self),
             FHead::WithTerms(sym, terms) => RcDoc::text("(")
@@ -66,8 +66,8 @@ impl<'a> Visitor<FHead, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<FComp, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &FComp) -> RcDoc<'a> {
+impl Visitor<FComp, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &FComp) -> RcDoc<'static> {
         let op_str = match value.comparison() {
             BinaryComp::GreaterThan => ">",
             BinaryComp::LessThan => "<",
@@ -82,8 +82,8 @@ impl<'a> Visitor<FComp, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<FExpT, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &FExpT) -> RcDoc<'a> {
+impl Visitor<FExpT, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &FExpT) -> RcDoc<'static> {
         match value {
             FExpT::Now => RcDoc::text("now"),
             FExpT::Scaled(e) => self.visit(e),
@@ -91,8 +91,8 @@ impl<'a> Visitor<FExpT, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<FExpDa, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &FExpDa) -> RcDoc<'a> {
+impl Visitor<FExpDa, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &FExpDa) -> RcDoc<'static> {
         match value {
             FExpDa::Duration => RcDoc::text("#t"),
             FExpDa::FExp(e) => self.visit(e),
@@ -129,8 +129,8 @@ impl<'a> Visitor<FExpDa, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<FAssignDa, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &FAssignDa) -> RcDoc<'a> {
+impl Visitor<FAssignDa, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &FAssignDa) -> RcDoc<'static> {
         self.sexpr(
             value.operation().as_str(),
             [
@@ -141,8 +141,8 @@ impl<'a> Visitor<FAssignDa, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<MetricFExp, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &MetricFExp) -> RcDoc<'a> {
+impl Visitor<MetricFExp, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &MetricFExp) -> RcDoc<'static> {
         match value {
             MetricFExp::Number(n) => n.accept(self),
             MetricFExp::Function(sym, names) => {

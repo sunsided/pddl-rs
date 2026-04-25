@@ -6,8 +6,8 @@ use pretty::RcDoc;
 impl sealed::Sealed for Problem {}
 impl sealed::Sealed for ProblemConstraintsDef {}
 
-impl<'a> Visitor<ProblemConstraintsDef, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &ProblemConstraintsDef) -> RcDoc<'a> {
+impl Visitor<ProblemConstraintsDef, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &ProblemConstraintsDef) -> RcDoc<'static> {
         if value.value().is_empty() {
             return RcDoc::nil();
         }
@@ -15,8 +15,8 @@ impl<'a> Visitor<ProblemConstraintsDef, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<Problem, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Problem) -> RcDoc<'a> {
+impl Visitor<Problem, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Problem) -> RcDoc<'static> {
         let mut doc = RcDoc::text("(")
             .append(RcDoc::text("define"))
             .append(RcDoc::hardline())

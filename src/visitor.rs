@@ -4,8 +4,6 @@
 //! until they have settled. They are exposed primarily to let external
 //! code contribute `Visitor<T, RcDoc>` impls for the `pretty` feature.
 
-#![allow(dead_code)]
-
 /// A visitor.
 pub trait Visitor<T, O> {
     fn visit(&self, value: &T) -> O;

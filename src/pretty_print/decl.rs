@@ -20,26 +20,26 @@ impl sealed::Sealed for MetricSpec {}
 impl sealed::Sealed for LengthSpec {}
 impl sealed::Sealed for InitElement {}
 
-impl<'a> Visitor<Requirements, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Requirements) -> RcDoc<'a> {
+impl Visitor<Requirements, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Requirements) -> RcDoc<'static> {
         RcDoc::intersperse(value.iter().map(|r| r.accept(self)), RcDoc::softline())
     }
 }
 
-impl<'a> Visitor<Types, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Types) -> RcDoc<'a> {
+impl Visitor<Types, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Types) -> RcDoc<'static> {
         value.values().accept(self)
     }
 }
 
-impl<'a> Visitor<Constants, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Constants) -> RcDoc<'a> {
+impl Visitor<Constants, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Constants) -> RcDoc<'static> {
         value.deref().accept(self)
     }
 }
 
-impl<'a> Visitor<PredicateDefinitions, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &PredicateDefinitions) -> RcDoc<'a> {
+impl Visitor<PredicateDefinitions, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &PredicateDefinitions) -> RcDoc<'static> {
         RcDoc::intersperse(
             value.values().iter().map(|p| p.accept(self)),
             RcDoc::softline(),
@@ -47,20 +47,20 @@ impl<'a> Visitor<PredicateDefinitions, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<Functions, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Functions) -> RcDoc<'a> {
+impl Visitor<Functions, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Functions) -> RcDoc<'static> {
         value.values().accept(self)
     }
 }
 
-impl<'a> Visitor<Objects, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Objects) -> RcDoc<'a> {
+impl Visitor<Objects, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Objects) -> RcDoc<'static> {
         value.values().accept(self)
     }
 }
 
-impl<'a> Visitor<InitElements, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &InitElements) -> RcDoc<'a> {
+impl Visitor<InitElements, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &InitElements) -> RcDoc<'static> {
         RcDoc::intersperse(
             value.values().iter().map(|ie| ie.accept(self)),
             RcDoc::softline(),
@@ -68,8 +68,8 @@ impl<'a> Visitor<InitElements, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<InitElement, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &InitElement) -> RcDoc<'a> {
+impl Visitor<InitElement, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &InitElement) -> RcDoc<'static> {
         match value {
             InitElement::Literal(lit) => lit.accept(self),
             InitElement::At(n, lit) => RcDoc::text("(at ")
@@ -91,14 +91,14 @@ impl<'a> Visitor<InitElement, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<GoalDef, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &GoalDef) -> RcDoc<'a> {
+impl Visitor<GoalDef, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &GoalDef) -> RcDoc<'static> {
         value.deref().accept(self)
     }
 }
 
-impl<'a> Visitor<MetricSpec, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &MetricSpec) -> RcDoc<'a> {
+impl Visitor<MetricSpec, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &MetricSpec) -> RcDoc<'static> {
         RcDoc::text("(")
             .append(value.optimization().accept(self))
             .append(" ")
@@ -107,8 +107,8 @@ impl<'a> Visitor<MetricSpec, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<LengthSpec, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &LengthSpec) -> RcDoc<'a> {
+impl Visitor<LengthSpec, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &LengthSpec) -> RcDoc<'static> {
         let mut doc = RcDoc::text("(:length");
         if let Some(s) = value.serial() {
             doc = doc.append(RcDoc::text(format!(" :serial {s}")));

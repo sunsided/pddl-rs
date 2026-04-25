@@ -10,12 +10,12 @@ impl<T> sealed::Sealed for TypedList<T> where T: sealed::Sealed {}
 impl<T> sealed::Sealed for FunctionTyped<T> where T: sealed::Sealed {}
 impl<T> sealed::Sealed for FunctionTypedList<T> where T: sealed::Sealed {}
 
-impl<'a, T> Visitor<Typed<T>, RcDoc<'a>> for PrettyRenderer
+impl<T> Visitor<Typed<T>, RcDoc<'static>> for PrettyRenderer
 where
     T: sealed::Sealed,
-    PrettyRenderer: Visitor<T, RcDoc<'a>>,
+    PrettyRenderer: Visitor<T, RcDoc<'static>>,
 {
-    fn visit(&self, value: &Typed<T>) -> RcDoc<'a> {
+    fn visit(&self, value: &Typed<T>) -> RcDoc<'static> {
         let value_doc = value.value().accept(self);
         if value.type_().eq(&Type::OBJECT) {
             value_doc
@@ -27,12 +27,12 @@ where
     }
 }
 
-impl<'a, T> Visitor<TypedList<T>, RcDoc<'a>> for PrettyRenderer
+impl<T> Visitor<TypedList<T>, RcDoc<'static>> for PrettyRenderer
 where
     T: sealed::Sealed + Clone + PartialEq,
-    PrettyRenderer: Visitor<T, RcDoc<'a>>,
+    PrettyRenderer: Visitor<T, RcDoc<'static>>,
 {
-    fn visit(&self, list: &TypedList<T>) -> RcDoc<'a> {
+    fn visit(&self, list: &TypedList<T>) -> RcDoc<'static> {
         if list.is_empty() {
             return RcDoc::nil();
         }
@@ -67,12 +67,12 @@ where
     }
 }
 
-impl<'a, T> Visitor<FunctionTyped<T>, RcDoc<'a>> for PrettyRenderer
+impl<T> Visitor<FunctionTyped<T>, RcDoc<'static>> for PrettyRenderer
 where
     T: sealed::Sealed,
-    PrettyRenderer: Visitor<T, RcDoc<'a>>,
+    PrettyRenderer: Visitor<T, RcDoc<'static>>,
 {
-    fn visit(&self, value: &FunctionTyped<T>) -> RcDoc<'a> {
+    fn visit(&self, value: &FunctionTyped<T>) -> RcDoc<'static> {
         let value_doc = value.value_ref().accept(self);
         let ft: &Type = value.type_ref().deref();
         if ft.eq(&Type::NUMBER) {
@@ -83,12 +83,12 @@ where
     }
 }
 
-impl<'a, T> Visitor<FunctionTypedList<T>, RcDoc<'a>> for PrettyRenderer
+impl<T> Visitor<FunctionTypedList<T>, RcDoc<'static>> for PrettyRenderer
 where
     T: sealed::Sealed + Clone + PartialEq,
-    PrettyRenderer: Visitor<T, RcDoc<'a>>,
+    PrettyRenderer: Visitor<T, RcDoc<'static>>,
 {
-    fn visit(&self, list: &FunctionTypedList<T>) -> RcDoc<'a> {
+    fn visit(&self, list: &FunctionTypedList<T>) -> RcDoc<'static> {
         if list.is_empty() {
             return RcDoc::nil();
         }

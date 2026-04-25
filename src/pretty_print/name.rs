@@ -7,20 +7,20 @@ impl sealed::Sealed for Name {}
 impl sealed::Sealed for Variable {}
 impl sealed::Sealed for FunctionSymbol {}
 
-impl<'a> Visitor<Name, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Name) -> RcDoc<'a> {
+impl Visitor<Name, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Name) -> RcDoc<'static> {
         RcDoc::text(value.to_string())
     }
 }
 
-impl<'a> Visitor<Variable, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Variable) -> RcDoc<'a> {
+impl Visitor<Variable, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Variable) -> RcDoc<'static> {
         RcDoc::text(value.to_string())
     }
 }
 
-impl<'a> Visitor<FunctionSymbol, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &FunctionSymbol) -> RcDoc<'a> {
+impl Visitor<FunctionSymbol, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &FunctionSymbol) -> RcDoc<'static> {
         RcDoc::text(value.to_string())
     }
 }

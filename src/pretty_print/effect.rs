@@ -10,8 +10,8 @@ impl sealed::Sealed for WhenCEffect {}
 impl sealed::Sealed for ConditionalEffect {}
 impl sealed::Sealed for Effects {}
 
-impl<'a> Visitor<PEffect, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &PEffect) -> RcDoc<'a> {
+impl Visitor<PEffect, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &PEffect) -> RcDoc<'static> {
         match value {
             PEffect::AtomicFormula(af) => af.accept(self),
             PEffect::NotAtomicFormula(af) => {
@@ -36,8 +36,8 @@ impl<'a> Visitor<PEffect, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<CEffect, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &CEffect) -> RcDoc<'a> {
+impl Visitor<CEffect, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &CEffect) -> RcDoc<'static> {
         match value {
             CEffect::Effect(pe) => pe.accept(self),
             CEffect::Forall(fc) => fc.accept(self),
@@ -46,8 +46,8 @@ impl<'a> Visitor<CEffect, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<ForallCEffect, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &ForallCEffect) -> RcDoc<'a> {
+impl Visitor<ForallCEffect, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &ForallCEffect) -> RcDoc<'static> {
         RcDoc::text("(forall (")
             .append(value.variables.accept(self))
             .append(") ")
@@ -56,8 +56,8 @@ impl<'a> Visitor<ForallCEffect, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<WhenCEffect, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &WhenCEffect) -> RcDoc<'a> {
+impl Visitor<WhenCEffect, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &WhenCEffect) -> RcDoc<'static> {
         RcDoc::text("(when ")
             .append(value.condition.accept(self))
             .append(" ")
@@ -66,47 +66,37 @@ impl<'a> Visitor<WhenCEffect, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<ConditionalEffect, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &ConditionalEffect) -> RcDoc<'a> {
+impl Visitor<ConditionalEffect, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &ConditionalEffect) -> RcDoc<'static> {
         match value {
             ConditionalEffect::Single(pe) => pe.accept(self),
-            ConditionalEffect::All(pes) => {
-                if pes.len() == 1 {
-                    pes[0].accept(self)
-                } else {
-                    RcDoc::text("(and")
-                        .append(RcDoc::softline())
-                        .append(RcDoc::intersperse(
-                            pes.iter().map(|pe| pe.accept(self)),
-                            RcDoc::softline(),
-                        ))
-                        .nest(4)
-                        .group()
-                        .append(")")
-                }
-            }
-        }
-    }
-}
-
-impl<'a> Visitor<Effects, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Effects) -> RcDoc<'a> {
-        if value.is_empty() {
-            return RcDoc::nil();
-        }
-        if value.len() == 1 {
-            value[0].accept(self)
-        } else {
-            RcDoc::text("(and")
+            ConditionalEffect::All(pes) => RcDoc::text("(and")
                 .append(RcDoc::softline())
                 .append(RcDoc::intersperse(
-                    value.iter().map(|ce| ce.accept(self)),
+                    pes.iter().map(|pe| pe.accept(self)),
                     RcDoc::softline(),
                 ))
                 .nest(4)
                 .group()
-                .append(")")
+                .append(")"),
         }
+    }
+}
+
+impl Visitor<Effects, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Effects) -> RcDoc<'static> {
+        if value.is_empty() {
+            return RcDoc::nil();
+        }
+        RcDoc::text("(and")
+            .append(RcDoc::softline())
+            .append(RcDoc::intersperse(
+                value.iter().map(|ce| ce.accept(self)),
+                RcDoc::softline(),
+            ))
+            .nest(4)
+            .group()
+            .append(")")
     }
 }
 
@@ -159,6 +149,6 @@ mod tests {
         let pe = PEffect::new(af);
         let ce = CEffect::new_p_effect(pe);
         let effects = Effects::new(ce);
-        assert_eq!(prettify!(effects, 30), "(at B)");
+        assert_eq!(prettify!(effects, 30), "(and (at B))");
     }
 }

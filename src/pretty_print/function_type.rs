@@ -6,8 +6,8 @@ use std::ops::Deref;
 
 impl sealed::Sealed for FunctionType {}
 
-impl<'a> Visitor<FunctionType, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &FunctionType) -> RcDoc<'a> {
+impl Visitor<FunctionType, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &FunctionType) -> RcDoc<'static> {
         let t: &crate::types::Type = value.deref();
         t.accept(self)
     }

@@ -27,15 +27,15 @@ mod sealed {
 }
 
 pub trait PrettyVisit: sealed::Sealed {
-    fn to_doc<'a>(&'a self, r: &PrettyRenderer) -> RcDoc<'a>;
+    fn to_doc(&self, r: &PrettyRenderer) -> RcDoc<'static>;
 }
 
 impl<T> PrettyVisit for T
 where
     T: sealed::Sealed,
-    PrettyRenderer: for<'a> Visitor<T, RcDoc<'a>>,
+    PrettyRenderer: Visitor<T, RcDoc<'static>>,
 {
-    fn to_doc<'a>(&'a self, r: &PrettyRenderer) -> RcDoc<'a> {
+    fn to_doc(&self, r: &PrettyRenderer) -> RcDoc<'static> {
         self.accept(r)
     }
 }
@@ -58,17 +58,17 @@ impl<T: PrettyVisit> fmt::Display for PrettyPrinted<'_, T> {
 pub struct PrettyRenderer;
 
 impl PrettyRenderer {
-    pub fn to_pretty(&self, doc: RcDoc<'_>, width: usize) -> String {
+    pub fn to_pretty(&self, doc: RcDoc<'static>, width: usize) -> String {
         let mut w = Vec::new();
         doc.render(width, &mut w).unwrap();
         String::from_utf8(w).unwrap()
     }
 
-    pub fn sexpr<'a>(
+    pub fn sexpr(
         &self,
         head: &'static str,
-        children: impl IntoIterator<Item = RcDoc<'a>>,
-    ) -> RcDoc<'a> {
+        children: impl IntoIterator<Item = RcDoc<'static>>,
+    ) -> RcDoc<'static> {
         RcDoc::text("(")
             .append(RcDoc::text(head))
             .append(RcDoc::softline())
@@ -78,11 +78,11 @@ impl PrettyRenderer {
             .append(")")
     }
 
-    pub fn sexpr_nested<'a>(
+    pub fn sexpr_nested(
         &self,
         head: &'static str,
-        children: impl IntoIterator<Item = RcDoc<'a>>,
-    ) -> RcDoc<'a> {
+        children: impl IntoIterator<Item = RcDoc<'static>>,
+    ) -> RcDoc<'static> {
         RcDoc::text("(")
             .append(RcDoc::text(head))
             .append(
@@ -94,11 +94,11 @@ impl PrettyRenderer {
             .append(")")
     }
 
-    pub fn section<'a>(
+    pub fn section(
         &self,
         keyword: &'static str,
-        body: impl IntoIterator<Item = RcDoc<'a>>,
-    ) -> RcDoc<'a> {
+        body: impl IntoIterator<Item = RcDoc<'static>>,
+    ) -> RcDoc<'static> {
         RcDoc::text("(")
             .append(RcDoc::text(":"))
             .append(RcDoc::text(keyword))
@@ -113,11 +113,11 @@ impl PrettyRenderer {
         RcDoc::text(":").append(RcDoc::text(name))
     }
 
-    pub fn list<'a>(
+    pub fn list(
         &self,
-        items: impl IntoIterator<Item = RcDoc<'a>>,
-        sep: RcDoc<'a>,
-    ) -> RcDoc<'a> {
+        items: impl IntoIterator<Item = RcDoc<'static>>,
+        sep: RcDoc<'static>,
+    ) -> RcDoc<'static> {
         RcDoc::intersperse(items, sep)
     }
 }

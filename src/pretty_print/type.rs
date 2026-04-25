@@ -6,14 +6,14 @@ use pretty::RcDoc;
 impl sealed::Sealed for PrimitiveType {}
 impl sealed::Sealed for Type {}
 
-impl<'a> Visitor<PrimitiveType, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &PrimitiveType) -> RcDoc<'a> {
+impl Visitor<PrimitiveType, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &PrimitiveType) -> RcDoc<'static> {
         RcDoc::text(value.to_string())
     }
 }
 
-impl<'a> Visitor<Type, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Type) -> RcDoc<'a> {
+impl Visitor<Type, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Type) -> RcDoc<'static> {
         match value {
             Type::Exactly(t) => RcDoc::text(t.to_string()),
             Type::EitherOf(ts) => RcDoc::text("(either")

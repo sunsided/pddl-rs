@@ -6,8 +6,8 @@ use pretty::RcDoc;
 impl sealed::Sealed for Domain {}
 impl sealed::Sealed for DomainConstraintsDef {}
 
-impl<'a> Visitor<DomainConstraintsDef, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &DomainConstraintsDef) -> RcDoc<'a> {
+impl Visitor<DomainConstraintsDef, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &DomainConstraintsDef) -> RcDoc<'static> {
         if value.value().is_empty() {
             return RcDoc::nil();
         }
@@ -15,8 +15,8 @@ impl<'a> Visitor<DomainConstraintsDef, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<Domain, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Domain) -> RcDoc<'a> {
+impl Visitor<Domain, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Domain) -> RcDoc<'static> {
         let mut doc = RcDoc::text("(")
             .append(RcDoc::text("define"))
             .append(RcDoc::hardline())
@@ -85,6 +85,12 @@ impl<'a> Visitor<Domain, RcDoc<'a>> for PrettyRenderer {
             doc = doc
                 .append(RcDoc::hardline())
                 .append(self.section("constraints", [value.constraints().accept(self)]));
+        }
+
+        if !value.structure().is_empty() {
+            doc = doc
+                .append(RcDoc::hardline())
+                .append(value.structure().accept(self));
         }
 
         doc.append(RcDoc::hardline()).append(")").nest(2).group()

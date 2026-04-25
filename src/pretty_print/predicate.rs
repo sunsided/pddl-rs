@@ -10,26 +10,26 @@ impl sealed::Sealed for ActionSymbol {}
 impl sealed::Sealed for DurativeActionSymbol {}
 impl sealed::Sealed for PreferenceName {}
 
-impl<'a> Visitor<Predicate, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Predicate) -> RcDoc<'a> {
+impl Visitor<Predicate, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Predicate) -> RcDoc<'static> {
         value.deref().accept(self)
     }
 }
 
-impl<'a> Visitor<ActionSymbol, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &ActionSymbol) -> RcDoc<'a> {
+impl Visitor<ActionSymbol, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &ActionSymbol) -> RcDoc<'static> {
         value.deref().accept(self)
     }
 }
 
-impl<'a> Visitor<DurativeActionSymbol, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &DurativeActionSymbol) -> RcDoc<'a> {
+impl Visitor<DurativeActionSymbol, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &DurativeActionSymbol) -> RcDoc<'static> {
         value.deref().accept(self)
     }
 }
 
-impl<'a> Visitor<PreferenceName, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &PreferenceName) -> RcDoc<'a> {
+impl Visitor<PreferenceName, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &PreferenceName) -> RcDoc<'static> {
         value.deref().accept(self)
     }
 }

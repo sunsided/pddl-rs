@@ -11,8 +11,8 @@ impl sealed::Sealed for PredicateAtomicFormula<Term> {}
 impl sealed::Sealed for Literal<Name> {}
 impl sealed::Sealed for Literal<Term> {}
 
-impl<'a> Visitor<AtomicFormula<Term>, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &AtomicFormula<Term>) -> RcDoc<'a> {
+impl Visitor<AtomicFormula<Term>, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &AtomicFormula<Term>) -> RcDoc<'static> {
         match value {
             AtomicFormula::Equality(eq) => eq.accept(self),
             AtomicFormula::Predicate(pred) => pred.accept(self),
@@ -20,8 +20,8 @@ impl<'a> Visitor<AtomicFormula<Term>, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<EqualityAtomicFormula<Term>, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &EqualityAtomicFormula<Term>) -> RcDoc<'a> {
+impl Visitor<EqualityAtomicFormula<Term>, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &EqualityAtomicFormula<Term>) -> RcDoc<'static> {
         RcDoc::text("(= ")
             .append(value.first().accept(self))
             .append(" ")
@@ -30,8 +30,8 @@ impl<'a> Visitor<EqualityAtomicFormula<Term>, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<PredicateAtomicFormula<Term>, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &PredicateAtomicFormula<Term>) -> RcDoc<'a> {
+impl Visitor<PredicateAtomicFormula<Term>, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &PredicateAtomicFormula<Term>) -> RcDoc<'static> {
         if value.values().is_empty() {
             return RcDoc::text("(")
                 .append(value.predicate().accept(self))
@@ -50,8 +50,8 @@ impl<'a> Visitor<PredicateAtomicFormula<Term>, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<Literal<Term>, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Literal<Term>) -> RcDoc<'a> {
+impl Visitor<Literal<Term>, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Literal<Term>) -> RcDoc<'static> {
         match value {
             Literal::AtomicFormula(af) => af.accept(self),
             Literal::NotAtomicFormula(af) => {
@@ -61,8 +61,8 @@ impl<'a> Visitor<Literal<Term>, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<Literal<Name>, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Literal<Name>) -> RcDoc<'a> {
+impl Visitor<Literal<Name>, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Literal<Name>) -> RcDoc<'static> {
         match value {
             Literal::AtomicFormula(af) => af.accept(self),
             Literal::NotAtomicFormula(af) => {
@@ -72,8 +72,8 @@ impl<'a> Visitor<Literal<Name>, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<AtomicFormula<Name>, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &AtomicFormula<Name>) -> RcDoc<'a> {
+impl Visitor<AtomicFormula<Name>, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &AtomicFormula<Name>) -> RcDoc<'static> {
         match value {
             AtomicFormula::Equality(eq) => RcDoc::text("(= ")
                 .append(eq.first().accept(self))

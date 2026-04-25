@@ -5,8 +5,8 @@ use pretty::RcDoc;
 
 impl sealed::Sealed for Number {}
 
-impl<'a> Visitor<Number, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Number) -> RcDoc<'a> {
+impl Visitor<Number, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Number) -> RcDoc<'static> {
         RcDoc::text(format!("{}", **value))
     }
 }

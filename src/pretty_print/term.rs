@@ -7,8 +7,8 @@ impl sealed::Sealed for Term {}
 impl sealed::Sealed for FunctionTerm {}
 impl sealed::Sealed for BasicFunctionTerm {}
 
-impl<'a> Visitor<Term, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &Term) -> RcDoc<'a> {
+impl Visitor<Term, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &Term) -> RcDoc<'static> {
         match value {
             Term::Name(n) => n.accept(self),
             Term::Variable(v) => v.accept(self),
@@ -17,8 +17,8 @@ impl<'a> Visitor<Term, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<FunctionTerm, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &FunctionTerm) -> RcDoc<'a> {
+impl Visitor<FunctionTerm, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &FunctionTerm) -> RcDoc<'static> {
         if value.terms().is_empty() {
             return value.symbol().accept(self);
         }
@@ -35,8 +35,8 @@ impl<'a> Visitor<FunctionTerm, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<BasicFunctionTerm, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &BasicFunctionTerm) -> RcDoc<'a> {
+impl Visitor<BasicFunctionTerm, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &BasicFunctionTerm) -> RcDoc<'static> {
         if value.names().is_empty() {
             return value.symbol().accept(self);
         }

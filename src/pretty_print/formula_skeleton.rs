@@ -6,8 +6,8 @@ use pretty::RcDoc;
 impl sealed::Sealed for AtomicFormulaSkeleton {}
 impl sealed::Sealed for AtomicFunctionSkeleton {}
 
-impl<'a> Visitor<AtomicFormulaSkeleton, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &AtomicFormulaSkeleton) -> RcDoc<'a> {
+impl Visitor<AtomicFormulaSkeleton, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &AtomicFormulaSkeleton) -> RcDoc<'static> {
         if value.variables().is_empty() {
             return RcDoc::text("(")
                 .append(value.predicate().accept(self))
@@ -23,8 +23,8 @@ impl<'a> Visitor<AtomicFormulaSkeleton, RcDoc<'a>> for PrettyRenderer {
     }
 }
 
-impl<'a> Visitor<AtomicFunctionSkeleton, RcDoc<'a>> for PrettyRenderer {
-    fn visit(&self, value: &AtomicFunctionSkeleton) -> RcDoc<'a> {
+impl Visitor<AtomicFunctionSkeleton, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &AtomicFunctionSkeleton) -> RcDoc<'static> {
         if value.variables().is_empty() {
             return value.symbol().accept(self);
         }
