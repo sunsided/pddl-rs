@@ -35,7 +35,11 @@ impl FluentExpression {
         Self::BinaryOp(op, Box::new(lhs), Box::new(rhs))
     }
 
-    pub fn new_multi_op<I: IntoIterator<Item = FluentExpression>>(op: MultiOp, lhs: FluentExpression, rhs: I) -> Self {
+    pub fn new_multi_op<I: IntoIterator<Item = FluentExpression>>(
+        op: MultiOp,
+        lhs: FluentExpression,
+        rhs: I,
+    ) -> Self {
         Self::MultiOp(op, Box::new(lhs), rhs.into_iter().collect())
     }
 

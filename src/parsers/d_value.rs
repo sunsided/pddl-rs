@@ -52,9 +52,9 @@ mod tests {
         assert!(DurationValue::parse("1.23").is_value(DurationValue::new_number(1.23)));
 
         assert!(
-            DurationValue::parse("fun-sym").is_value(DurationValue::new_f_exp(FluentExpression::new_function(
-                FunctionHead::Simple("fun-sym".into())
-            )))
+            DurationValue::parse("fun-sym").is_value(DurationValue::new_f_exp(
+                FluentExpression::new_function(FunctionHead::Simple("fun-sym".into()))
+            ))
         );
     }
 }

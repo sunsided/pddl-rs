@@ -89,7 +89,10 @@ mod tests {
         assert!(
             SimpleDurationConstraint::parse(input).is_value(SimpleDurationConstraint::new_at(
                 TimeSpecifier::End,
-                SimpleDurationConstraint::Op(DurationOperator::LessThanOrEqual, DurationValue::new_number(1.23))
+                SimpleDurationConstraint::Op(
+                    DurationOperator::LessThanOrEqual,
+                    DurationValue::new_number(1.23)
+                )
             ))
         );
     }

@@ -116,8 +116,8 @@ mod tests {
     use super::*;
     use crate::parsers::UnwrapValue;
     use crate::{
-        AssignOp, AtomicFormula, EqualityAtomicFormula, FluentExpression, FunctionHead, FunctionSymbol, FunctionTerm,
-        Parser, Term,
+        AssignOp, AtomicFormula, EqualityAtomicFormula, FluentExpression, FunctionHead,
+        FunctionSymbol, FunctionTerm, Parser, Term,
     };
 
     #[test]
@@ -139,50 +139,54 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        assert!(PrimitiveEffect::parse("(= x y)").is_value(PrimitiveEffect::AtomicFormula(
-            AtomicFormula::Equality(EqualityAtomicFormula::new(
-                Term::Name("x".into()),
-                Term::Name("y".into())
-            ))
-        )));
-
         assert!(
-            PrimitiveEffect::parse("(not (= ?a B))").is_value(PrimitiveEffect::NotAtomicFormula(
+            PrimitiveEffect::parse("(= x y)").is_value(PrimitiveEffect::AtomicFormula(
                 AtomicFormula::Equality(EqualityAtomicFormula::new(
-                    Term::Variable("a".into()),
-                    Term::Name("B".into())
+                    Term::Name("x".into()),
+                    Term::Name("y".into())
                 ))
             ))
         );
 
-        assert!(
-            PrimitiveEffect::parse("(assign fun-sym 1.23)").is_value(PrimitiveEffect::new_numeric_fluent(
+        assert!(PrimitiveEffect::parse("(not (= ?a B))").is_value(
+            PrimitiveEffect::NotAtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new(
+                Term::Variable("a".into()),
+                Term::Name("B".into())
+            )))
+        ));
+
+        assert!(PrimitiveEffect::parse("(assign fun-sym 1.23)").is_value(
+            PrimitiveEffect::new_numeric_fluent(
                 AssignOp::Assign,
                 FunctionHead::new(FunctionSymbol::new_string("fun-sym")),
                 FluentExpression::new_number(1.23)
-            ))
-        );
+            )
+        ));
 
-        assert!(
-            PrimitiveEffect::parse("(assign fun-sym 1.23)").is_value(PrimitiveEffect::new_numeric_fluent(
+        assert!(PrimitiveEffect::parse("(assign fun-sym 1.23)").is_value(
+            PrimitiveEffect::new_numeric_fluent(
                 AssignOp::Assign,
                 FunctionHead::new(FunctionSymbol::new_string("fun-sym")),
                 FluentExpression::new_number(1.23)
-            ))
+            )
+        ));
+
+        assert!(
+            PrimitiveEffect::parse("(assign (fun-sym) undefined)").is_value(
+                PrimitiveEffect::new_object_fluent(
+                    FunctionTerm::new(FunctionSymbol::new_string("fun-sym"), []),
+                    None
+                )
+            )
         );
 
-        assert!(PrimitiveEffect::parse("(assign (fun-sym) undefined)").is_value(
-            PrimitiveEffect::new_object_fluent(
-                FunctionTerm::new(FunctionSymbol::new_string("fun-sym"), []),
-                None
+        assert!(
+            PrimitiveEffect::parse("(assign (fun-sym) something)").is_value(
+                PrimitiveEffect::new_object_fluent(
+                    FunctionTerm::new(FunctionSymbol::new_string("fun-sym"), []),
+                    Some(Term::Name("something".into()))
+                )
             )
-        ));
-
-        assert!(PrimitiveEffect::parse("(assign (fun-sym) something)").is_value(
-            PrimitiveEffect::new_object_fluent(
-                FunctionTerm::new(FunctionSymbol::new_string("fun-sym"), []),
-                Some(Term::Name("something".into()))
-            )
-        ));
+        );
     }
 }

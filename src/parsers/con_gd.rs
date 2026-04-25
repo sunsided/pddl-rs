@@ -4,7 +4,7 @@ use crate::parsers::{
     parens, parse_gd, parse_number, parse_variable, prefix_expr, space_separated_list0, typed_list,
     ParseResult, Span,
 };
-use crate::types::{ConstraintGoalDefinitionInner, ConstraintGoalDefinition};
+use crate::types::{ConstraintGoalDefinition, ConstraintGoalDefinitionInner};
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
@@ -175,11 +175,20 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Constrai
         |(vars, gd)| ConstraintGoalDefinition::new_forall(vars, gd),
     );
 
-    let at_end = map(prefix_expr("at end", parse_gd), ConstraintGoalDefinition::new_at_end);
+    let at_end = map(
+        prefix_expr("at end", parse_gd),
+        ConstraintGoalDefinition::new_at_end,
+    );
 
-    let always = map(prefix_expr("always", parse_con2_gd), ConstraintGoalDefinition::new_always);
+    let always = map(
+        prefix_expr("always", parse_con2_gd),
+        ConstraintGoalDefinition::new_always,
+    );
 
-    let sometime = map(prefix_expr("sometime", parse_con2_gd), ConstraintGoalDefinition::new_sometime);
+    let sometime = map(
+        prefix_expr("sometime", parse_con2_gd),
+        ConstraintGoalDefinition::new_sometime,
+    );
 
     let within = map(
         prefix_expr(
@@ -259,7 +268,9 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Constrai
     .parse(input.into())
 }
 
-fn parse_con2_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConstraintGoalDefinitionInner> {
+fn parse_con2_gd<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, ConstraintGoalDefinitionInner> {
     let gd = map(parse_gd, ConstraintGoalDefinitionInner::new_goal);
 
     // TODO: Add crate feature to allow this to be forbidden if unsupported by the application.
@@ -288,7 +299,10 @@ impl crate::parsers::Parser for ConstraintGoalDefinitionInner {
 #[cfg(test)]
 mod tests {
     use crate::parsers::preamble::*;
-    use crate::{AtomicFormula, ConstraintGoalDefinitionInner, ConstraintGoalDefinition, GoalDefinition, Number, Term};
+    use crate::{
+        AtomicFormula, ConstraintGoalDefinition, ConstraintGoalDefinitionInner, GoalDefinition,
+        Number, Term,
+    };
 
     #[test]
     fn test_parse() {
@@ -298,17 +312,27 @@ mod tests {
         ));
 
         let input = "(within 10 (at-most-once (= x y)))";
-        assert!(ConstraintGoalDefinition::parse(input).is_value(ConstraintGoalDefinition::new_within(
-            Number::from(10),
-            ConstraintGoalDefinitionInner::new_nested(ConstraintGoalDefinition::new_at_most_once(ConstraintGoalDefinitionInner::new_goal(gd.clone())))
-        )));
+        assert!(ConstraintGoalDefinition::parse(input).is_value(
+            ConstraintGoalDefinition::new_within(
+                Number::from(10),
+                ConstraintGoalDefinitionInner::new_nested(
+                    ConstraintGoalDefinition::new_at_most_once(
+                        ConstraintGoalDefinitionInner::new_goal(gd.clone())
+                    )
+                )
+            )
+        ));
 
         let input = "(within 10 (at-most-once (= x y)))";
-        assert!(
-            ConstraintGoalDefinitionInner::parse(input).is_value(ConstraintGoalDefinitionInner::Nested(Box::new(ConstraintGoalDefinition::new_within(
+        assert!(ConstraintGoalDefinitionInner::parse(input).is_value(
+            ConstraintGoalDefinitionInner::Nested(Box::new(ConstraintGoalDefinition::new_within(
                 Number::from(10),
-                ConstraintGoalDefinitionInner::new_nested(ConstraintGoalDefinition::new_at_most_once(ConstraintGoalDefinitionInner::new_goal(gd)))
-            ))))
-        );
+                ConstraintGoalDefinitionInner::new_nested(
+                    ConstraintGoalDefinition::new_at_most_once(
+                        ConstraintGoalDefinitionInner::new_goal(gd)
+                    )
+                )
+            )))
+        ));
     }
 }

@@ -243,8 +243,9 @@ mod tests {
     #[test]
     fn goal_def_works() {
         let gd = crate::GoalDefinition::new_and(Vec::<crate::GoalDefinition>::new());
-        let pre_gd =
-            crate::PreconditionGoalDefinition::new_preference(crate::PreferenceGD::from_gd(gd));
+        let pre_gd = crate::PreconditionGoalDefinition::new_preference(
+            crate::PreferenceGoalDefinition::from_gd(gd),
+        );
         let gdef = ProblemGoalDefinition::new(PreconditionGoalDefinitions::new(vec![pre_gd]));
         assert_eq!(prettify!(gdef, 20), "(and)");
     }

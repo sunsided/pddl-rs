@@ -1,5 +1,8 @@
 use crate::pretty_print::{sealed, PrettyRenderer};
-use crate::types::{ConditionalEffect, EffectCondition, Effects, ForallConditionalEffect, PrimitiveEffect, WhenConditionalEffect};
+use crate::types::{
+    ConditionalEffect, EffectCondition, Effects, ForallConditionalEffect, PrimitiveEffect,
+    WhenConditionalEffect,
+};
 use crate::visitor::{Accept, Visitor};
 use pretty::RcDoc;
 
@@ -109,8 +112,8 @@ mod tests {
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
     use crate::{
-        AtomicFormula, ConditionalEffect, EffectCondition, FunctionSymbol, GoalDefinition, Name, PrimitiveEffect, Predicate,
-        Term,
+        AtomicFormula, ConditionalEffect, EffectCondition, FunctionSymbol, GoalDefinition, Name,
+        Predicate, PrimitiveEffect, Term,
     };
 
     #[test]

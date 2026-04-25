@@ -6,7 +6,7 @@ use crate::types::{AtomicFormula, FluentComparison, Term, TypedVariables};
 /// A goal definition.
 ///
 /// ## Usage
-/// Used by [`GoalDefinition`] itself, as well as [`PreferenceGD`](crate::PreferenceGD), [`ConditionalEffect`](crate::ConditionalEffect),
+/// Used by [`GoalDefinition`] itself, as well as [`PreferenceGoalDefinition`](crate::PreferenceGoalDefinition), [`ConditionalEffect`](crate::ConditionalEffect),
 /// [`TimedGoalDefinition`](crate::TimedGoalDefinition), [`DerivedPredicate`](crate::DerivedPredicate) and
 /// [`ConstraintGoalDefinitionInner`](crate::ConstraintGoalDefinitionInner).
 #[derive(Debug, Clone, PartialEq)]

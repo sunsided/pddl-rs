@@ -7,7 +7,9 @@ use nom::sequence::preceded;
 use nom::Parser;
 
 use crate::parsers::{parens, prefix_expr, typed_list, ParseResult, Span};
-use crate::parsers::{parse_effect_condition, parse_effect, parse_gd, parse_p_effect, parse_variable};
+use crate::parsers::{
+    parse_effect, parse_effect_condition, parse_gd, parse_p_effect, parse_variable,
+};
 use crate::types::ConditionalEffect;
 use crate::{ForallConditionalEffect, WhenConditionalEffect};
 
@@ -126,7 +128,9 @@ pub fn parse_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Condit
 ///     )
 /// ));
 /// ```
-pub fn parse_forall_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ForallConditionalEffect> {
+pub fn parse_forall_c_effect<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, ForallConditionalEffect> {
     map(
         prefix_expr(
             "forall",
@@ -186,9 +190,14 @@ pub fn parse_forall_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a,
 /// ));
 /// ```
 #[allow(deprecated)]
-pub fn parse_when_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, WhenConditionalEffect> {
+pub fn parse_when_c_effect<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, WhenConditionalEffect> {
     map(
-        prefix_expr("when", (parse_gd, preceded(multispace1, parse_effect_condition))),
+        prefix_expr(
+            "when",
+            (parse_gd, preceded(multispace1, parse_effect_condition)),
+        ),
         WhenConditionalEffect::from,
     )
     .parse(input.into())
@@ -307,8 +316,8 @@ impl crate::parsers::Parser for WhenConditionalEffect {
 #[allow(deprecated)]
 mod tests {
     use crate::{
-        ConditionalEffect, EffectCondition, Effects, ForallConditionalEffect, GoalDefinition, PrimitiveEffect, Parser, Typed,
-        TypedList, Variable, WhenConditionalEffect,
+        ConditionalEffect, EffectCondition, Effects, ForallConditionalEffect, GoalDefinition,
+        Parser, PrimitiveEffect, Typed, TypedList, Variable, WhenConditionalEffect,
     };
 
     #[test]
@@ -322,7 +331,9 @@ mod tests {
         let (_, value) = ConditionalEffect::parse("(not (= ?a B))").unwrap();
         assert_eq!(
             value,
-            ConditionalEffect::new_primitive_effect(PrimitiveEffect::from_str("(not (= ?a B))").unwrap())
+            ConditionalEffect::new_primitive_effect(
+                PrimitiveEffect::from_str("(not (= ?a B))").unwrap()
+            )
         );
 
         let (_, value) = ConditionalEffect::parse("(forall (?a ?b) (= ?a ?b))").unwrap();

@@ -16,7 +16,7 @@ use nom::Parser;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_action_def, parse_da_def, preamble::*};
-/// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, ConditionalEffect, Effects, GoalDefinition, Literal, PrimitiveEffect, Predicate, Preference, PreferenceGD, PreconditionGoalDefinition, Term, Variable};
+/// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, ConditionalEffect, Effects, GoalDefinition, Literal, PrimitiveEffect, Predicate, Preference, PreferenceGoalDefinition, PreconditionGoalDefinition, Term, Variable};
 /// let input = r#"(:durative-action move
 ///         :parameters
 ///             (?r - rover

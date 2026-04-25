@@ -16,10 +16,10 @@ use crate::PreconditionGoalDefinitions;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::{parse_pre_gd, preamble::*};
-/// # use pddl::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Preference, PreferenceName, PreferenceGD, PreconditionGoalDefinitions, PreconditionGoalDefinition, Term, Variable, Type, Typed, TypedList};
+/// # use pddl::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Preference, PreferenceName, PreferenceGoalDefinition, PreconditionGoalDefinitions, PreconditionGoalDefinition, Term, Variable, Type, Typed, TypedList};
 /// assert!(parse_pre_gd(Span::new("(= x y)")).is_value(
 ///     PreconditionGoalDefinitions::new_preference(
-///         PreferenceGD::Goal(
+///         PreferenceGoalDefinition::Goal(
 ///             GoalDefinition::AtomicFormula(
 ///                 AtomicFormula::new_equality(
 ///                     Term::Name("x".into()),
@@ -32,7 +32,7 @@ use crate::PreconditionGoalDefinitions;
 ///
 /// assert!(parse_pre_gd(Span::new("(and (= x y) (= a b))")).is_value(
 ///     PreconditionGoalDefinitions::from_iter([
-///         PreconditionGoalDefinition::Preference(PreferenceGD::Goal(
+///         PreconditionGoalDefinition::Preference(PreferenceGoalDefinition::Goal(
 ///             GoalDefinition::AtomicFormula(
 ///                 AtomicFormula::new_equality(
 ///                     Term::Name("x".into()),
@@ -40,7 +40,7 @@ use crate::PreconditionGoalDefinitions;
 ///                 )
 ///             )
 ///         )),
-///         PreconditionGoalDefinition::Preference(PreferenceGD::Goal(
+///         PreconditionGoalDefinition::Preference(PreferenceGoalDefinition::Goal(
 ///             GoalDefinition::AtomicFormula(
 ///                 AtomicFormula::new_equality(
 ///                     Term::Name("a".into()),
@@ -57,7 +57,7 @@ use crate::PreconditionGoalDefinitions;
 ///             Typed::new(Variable::new_string("a"), Type::OBJECT),
 ///             Typed::new(Variable::new_string("b"), Type::OBJECT),
 ///         ]),
-///         PreconditionGoalDefinition::new_preference(PreferenceGD::Goal(
+///         PreconditionGoalDefinition::new_preference(PreferenceGoalDefinition::Goal(
 ///             GoalDefinition::AtomicFormula(
 ///                 AtomicFormula::new_equality(
 ///                     Term::Name("a".into()),
@@ -110,14 +110,14 @@ mod tests {
     use crate::parsers::preamble::*;
     use crate::{
         AtomicFormula, GoalDefinition, PreconditionGoalDefinition, PreconditionGoalDefinitions,
-        PreferenceGD, Term, Type, Typed, TypedList, Variable,
+        PreferenceGoalDefinition, Term, Type, Typed, TypedList, Variable,
     };
 
     #[test]
     fn test_parse() {
         assert!(
             PreconditionGoalDefinitions::parse(Span::new("(= x y)")).is_value(
-                PreconditionGoalDefinitions::new_preference(PreferenceGD::Goal(
+                PreconditionGoalDefinitions::new_preference(PreferenceGoalDefinition::Goal(
                     GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
                         Term::Name("x".into()),
                         Term::Name("y".into())
@@ -129,13 +129,13 @@ mod tests {
         assert!(
             PreconditionGoalDefinitions::parse(Span::new("(and (= x y) (= a b))")).is_value(
                 PreconditionGoalDefinitions::from_iter([
-                    PreconditionGoalDefinition::Preference(PreferenceGD::Goal(
+                    PreconditionGoalDefinition::Preference(PreferenceGoalDefinition::Goal(
                         GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
                             Term::Name("x".into()),
                             Term::Name("y".into())
                         ))
                     )),
-                    PreconditionGoalDefinition::Preference(PreferenceGD::Goal(
+                    PreconditionGoalDefinition::Preference(PreferenceGoalDefinition::Goal(
                         GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
                             Term::Name("a".into()),
                             Term::Name("b".into())
@@ -152,7 +152,7 @@ mod tests {
                         Typed::new(Variable::new_string("a"), Type::OBJECT),
                         Typed::new(Variable::new_string("b"), Type::OBJECT),
                     ]),
-                    PreconditionGoalDefinition::new_preference(PreferenceGD::Goal(
+                    PreconditionGoalDefinition::new_preference(PreferenceGoalDefinition::Goal(
                         GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
                             Term::Name("a".into()),
                             Term::Name("b".into())

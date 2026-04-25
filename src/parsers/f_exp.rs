@@ -100,26 +100,35 @@ mod tests {
     fn test_parse() {
         assert!(FluentExpression::parse("1.23").is_value(FluentExpression::new_number(1.23)));
 
-        assert!(FluentExpression::parse("(+ 1.23 2.34)").is_value(FluentExpression::new_binary_op(
-            BinaryOp::Addition,
-            FluentExpression::new_number(1.23),
-            FluentExpression::new_number(2.34)
-        )));
+        assert!(FluentExpression::parse("(+ 1.23 2.34)").is_value(
+            FluentExpression::new_binary_op(
+                BinaryOp::Addition,
+                FluentExpression::new_number(1.23),
+                FluentExpression::new_number(2.34)
+            )
+        ));
 
-        assert!(
-            FluentExpression::parse("(+ 1.23 2.34 3.45)").is_value(FluentExpression::new_multi_op(
+        assert!(FluentExpression::parse("(+ 1.23 2.34 3.45)").is_value(
+            FluentExpression::new_multi_op(
                 MultiOp::Addition,
                 FluentExpression::new_number(1.23),
-                [FluentExpression::new_number(2.34), FluentExpression::new_number(3.45)]
+                [
+                    FluentExpression::new_number(2.34),
+                    FluentExpression::new_number(3.45)
+                ]
+            )
+        ));
+
+        assert!(
+            FluentExpression::parse("(- 1.23)").is_value(FluentExpression::new_negative(
+                FluentExpression::new_number(1.23)
             ))
         );
 
-        assert!(FluentExpression::parse("(- 1.23)").is_value(FluentExpression::new_negative(FluentExpression::new_number(1.23))));
-
         assert!(
-            FluentExpression::parse("fun-sym").is_value(FluentExpression::new_function(FunctionHead::new(
-                FunctionSymbol::new_string("fun-sym")
-            )))
+            FluentExpression::parse("fun-sym").is_value(FluentExpression::new_function(
+                FunctionHead::new(FunctionSymbol::new_string("fun-sym"))
+            ))
         );
     }
 }

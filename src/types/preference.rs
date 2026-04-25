@@ -8,7 +8,7 @@ use crate::types::{GoalDefinition, PreferenceName};
 /// Requires [Preferences](crate::Requirement::Preferences).
 ///
 /// ## Usage
-/// Used by [`PreferenceGD`](crate::PreferenceGD).
+/// Used by [`PreferenceGoalDefinition`](crate::PreferenceGoalDefinition).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Preference(Option<PreferenceName>, GoalDefinition); // TODO: A similar type is used for PrefConGD
 

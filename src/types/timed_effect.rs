@@ -1,6 +1,9 @@
 //! Contains the [`TimedEffect`] type.
 
-use crate::types::{EffectCondition, TimedAssignOperator, DurativeActionFunctionAssignment, TimedFluentExpression, FunctionHead, TimeSpecifier};
+use crate::types::{
+    DurativeActionFunctionAssignment, EffectCondition, FunctionHead, TimeSpecifier,
+    TimedAssignOperator, TimedFluentExpression,
+};
 
 /// A timed effect, either conditional, continuous or derived from a fluent, e.g. [`DurativeActionEffect`](crate::types::DurativeActionEffect).
 ///
@@ -40,7 +43,11 @@ impl TimedEffect {
         Self::NumericFluent(at, action)
     }
 
-    pub const fn new_continuous(operation: TimedAssignOperator, f_head: FunctionHead, f_exp_t: TimedFluentExpression) -> Self {
+    pub const fn new_continuous(
+        operation: TimedAssignOperator,
+        f_head: FunctionHead,
+        f_exp_t: TimedFluentExpression,
+    ) -> Self {
         Self::ContinuousEffect(operation, f_head, f_exp_t)
     }
 }

@@ -6,7 +6,7 @@ use std::ops::Deref;
 /// A name of a preference.
 ///
 /// ## Usage
-/// Used by [`PrefGD`](crate::PreferenceGD), [`PrefTimedGD`](crate::PrefTimedGD),
+/// Used by [`PrefGD`](crate::PreferenceGoalDefinition), [`PrefTimedGD`](crate::PrefTimedGD),
 /// [`PrefConGD`](crate::PrefConGD) and [`MetricFluentExpression`](crate::MetricFluentExpression).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct PreferenceName(Name);

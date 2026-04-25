@@ -42,14 +42,19 @@ impl crate::parsers::Parser for ProblemConstraintsDef {
 #[cfg(test)]
 mod tests {
     use crate::parsers::preamble::*;
-    use crate::{ConstraintGoalDefinition, PreferenceConstraintGoalDefinitions, ProblemConstraintsDef};
+    use crate::{
+        ConstraintGoalDefinition, PreferenceConstraintGoalDefinitions, ProblemConstraintsDef,
+    };
 
     #[test]
     fn test_parse() {
         let input = "(:constraints (preference test (and)))";
         assert!(
             ProblemConstraintsDef::parse(input).is_value(ProblemConstraintsDef::new(
-                PreferenceConstraintGoalDefinitions::new_preference(Some("test".into()), ConstraintGoalDefinition::new_and([]))
+                PreferenceConstraintGoalDefinitions::new_preference(
+                    Some("test".into()),
+                    ConstraintGoalDefinition::new_and([])
+                )
             ))
         );
     }

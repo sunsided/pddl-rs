@@ -183,8 +183,10 @@ mod tests {
 
     #[test]
     fn simple_duration_constraint_op() {
-        let sdc =
-            SimpleDurationConstraint::new_op(DurationOperator::Equal, DurationValue::new_number(10));
+        let sdc = SimpleDurationConstraint::new_op(
+            DurationOperator::Equal,
+            DurationValue::new_number(10),
+        );
         assert_eq!(prettify!(sdc, 30), "(= ?duration 10)");
     }
 
@@ -197,24 +199,30 @@ mod tests {
 
     #[test]
     fn simple_duration_constraint_at() {
-        let inner =
-            SimpleDurationConstraint::new_op(DurationOperator::Equal, DurationValue::new_number(10));
+        let inner = SimpleDurationConstraint::new_op(
+            DurationOperator::Equal,
+            DurationValue::new_number(10),
+        );
         let sdc = SimpleDurationConstraint::new_at(crate::TimeSpecifier::Start, inner);
         assert_eq!(prettify!(sdc, 30), "(at start (= ?duration 10))");
     }
 
     #[test]
     fn duration_constraint_single() {
-        let sdc =
-            SimpleDurationConstraint::new_op(DurationOperator::Equal, DurationValue::new_number(10));
+        let sdc = SimpleDurationConstraint::new_op(
+            DurationOperator::Equal,
+            DurationValue::new_number(10),
+        );
         let dc = DurationConstraint::new(sdc);
         assert_eq!(prettify!(dc, 30), "(= ?duration 10)");
     }
 
     #[test]
     fn duration_constraint_all() {
-        let sdc1 =
-            SimpleDurationConstraint::new_op(DurationOperator::Equal, DurationValue::new_number(10));
+        let sdc1 = SimpleDurationConstraint::new_op(
+            DurationOperator::Equal,
+            DurationValue::new_number(10),
+        );
         let sdc2 = SimpleDurationConstraint::new_op(
             DurationOperator::GreaterOrEqual,
             DurationValue::new_number(5),
@@ -254,7 +262,10 @@ mod tests {
         use crate::PreferenceName;
         let gd = crate::GoalDefinition::new_and(Vec::<crate::GoalDefinition>::new());
         let tgd = TimedGoalDefinition::new_at(crate::TimeSpecifier::Start, gd);
-        let ptgd = PreferenceTimedGoalDefinition::new_preference(Some(PreferenceName::new_string("p1")), tgd);
+        let ptgd = PreferenceTimedGoalDefinition::new_preference(
+            Some(PreferenceName::new_string("p1")),
+            tgd,
+        );
         assert_eq!(prettify!(ptgd, 40), "(preference p1 (at start (and)))");
     }
 
@@ -276,9 +287,14 @@ mod tests {
 
     #[test]
     fn timed_effect_numeric_fluent() {
-        use crate::{AssignOp, FluentExpression, DurativeActionFluentExpression, FunctionHead, FunctionSymbol, Number, DurativeActionFunctionAssignment};
+        use crate::{
+            AssignOp, DurativeActionFluentExpression, DurativeActionFunctionAssignment,
+            FluentExpression, FunctionHead, FunctionSymbol, Number,
+        };
         let head = FunctionHead::Simple(FunctionSymbol::from("x"));
-        let expr = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(Number::from(5)));
+        let expr = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(
+            Number::from(5),
+        ));
         let fassign = DurativeActionFunctionAssignment::new(AssignOp::Increase, head, expr);
         let te = TimedEffect::new_fluent(crate::TimeSpecifier::End, fassign);
         assert_eq!(prettify!(te, 30), "(at end (increase x 5))");
@@ -286,10 +302,17 @@ mod tests {
 
     #[test]
     fn timed_effect_continuous() {
-        use crate::{TimedAssignOperator, FluentExpression, FunctionHead, FunctionSymbol, Number, TimedFluentExpression};
+        use crate::{
+            FluentExpression, FunctionHead, FunctionSymbol, Number, TimedAssignOperator,
+            TimedFluentExpression,
+        };
         let head = FunctionHead::Simple(FunctionSymbol::from("x"));
         let exp = FluentExpression::new_number(Number::from(1));
-        let te = TimedEffect::new_continuous(TimedAssignOperator::Increase, head, TimedFluentExpression::Scaled(exp));
+        let te = TimedEffect::new_continuous(
+            TimedAssignOperator::Increase,
+            head,
+            TimedFluentExpression::Scaled(exp),
+        );
         assert_eq!(prettify!(te, 30), "(increase x 1)");
     }
 
@@ -365,10 +388,9 @@ mod tests {
         let ce = EffectCondition::new_and(Vec::new());
         let te = TimedEffect::new_conditional(crate::TimeSpecifier::Start, ce);
         let dae = DurativeActionEffect::new_when(
-            DurativeActionGoalDefinition::new_timed(PreferenceTimedGoalDefinition::new_required(TimedGoalDefinition::new_at(
-                crate::TimeSpecifier::Start,
-                gd,
-            ))),
+            DurativeActionGoalDefinition::new_timed(PreferenceTimedGoalDefinition::new_required(
+                TimedGoalDefinition::new_at(crate::TimeSpecifier::Start, gd),
+            )),
             te,
         );
         assert_eq!(prettify!(dae, 40), "(at (at start (and)) (at start (and)))");

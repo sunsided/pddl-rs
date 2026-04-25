@@ -7,14 +7,14 @@ use crate::types::{GoalDefinition, Preference};
 /// ## Usage
 /// Used by [`PreconditionGoalDefinition`](crate::PreconditionGoalDefinition).
 #[derive(Debug, Clone, PartialEq)]
-pub enum PreferenceGD {
+pub enum PreferenceGoalDefinition {
     Goal(GoalDefinition),
     /// ## Requirements
     /// Requires [Preferences](crate::Requirement::Preferences).
     Preference(Preference),
 }
 
-impl PreferenceGD {
+impl PreferenceGoalDefinition {
     pub const fn from_gd(gd: GoalDefinition) -> Self {
         Self::Goal(gd)
     }
@@ -24,14 +24,18 @@ impl PreferenceGD {
     }
 }
 
-impl From<GoalDefinition> for PreferenceGD {
+impl From<GoalDefinition> for PreferenceGoalDefinition {
     fn from(value: GoalDefinition) -> Self {
-        PreferenceGD::from_gd(value)
+        PreferenceGoalDefinition::from_gd(value)
     }
 }
 
-impl From<Preference> for PreferenceGD {
+impl From<Preference> for PreferenceGoalDefinition {
     fn from(value: Preference) -> Self {
-        PreferenceGD::from_preference(value)
+        PreferenceGoalDefinition::from_preference(value)
     }
 }
+
+/// Alias for [`PreferenceGoalDefinition`]; matches BNF `<pref-GD>`.
+#[deprecated(since = "0.2.0", note = "Use `PreferenceGoalDefinition` instead")]
+pub type PreferenceGD = PreferenceGoalDefinition;

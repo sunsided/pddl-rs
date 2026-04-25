@@ -205,8 +205,8 @@ impl crate::parsers::Parser for GoalDefinition {
 mod tests {
     use crate::parsers::UnwrapValue;
     use crate::{
-        AtomicFormula, BinaryComparison, BinaryOp, FluentComparison, FluentExpression, GoalDefinition, Parser, Term,
-        TypedList, Variable,
+        AtomicFormula, BinaryComparison, BinaryOp, FluentComparison, FluentExpression,
+        GoalDefinition, Parser, Term, TypedList, Variable,
     };
 
     #[test]

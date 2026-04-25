@@ -159,7 +159,8 @@ pub use predicate_definitions::PredicateDefinitions;
 pub use pref_con_gd::{
     PrefConGD, PrefConGDs, PreferenceConstraintGoalDefinition, PreferenceConstraintGoalDefinitions,
 };
-pub use pref_gd::PreferenceGD;
+#[allow(deprecated)]
+pub use pref_gd::{PreferenceGD, PreferenceGoalDefinition};
 pub use pref_name::PreferenceName;
 #[allow(deprecated)]
 pub use pref_timed_gd::{PrefTimedGD, PreferenceTimedGoalDefinition};

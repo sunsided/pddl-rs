@@ -37,9 +37,13 @@ use crate::types::DurativeActionFluentExpression;
 ///     )
 /// ));
 ///```
-pub fn parse_f_exp_da<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DurativeActionFluentExpression> {
+pub fn parse_f_exp_da<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, DurativeActionFluentExpression> {
     // :duration-inequalities
-    let duration = map(tag("?duration"), |_| DurativeActionFluentExpression::new_duration());
+    let duration = map(tag("?duration"), |_| {
+        DurativeActionFluentExpression::new_duration()
+    });
 
     let binary_op = map(
         parens((
@@ -81,26 +85,34 @@ impl crate::parsers::Parser for DurativeActionFluentExpression {
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{BinaryOp, FluentExpression, DurativeActionFluentExpression, MultiOp, Parser};
+    use crate::{BinaryOp, DurativeActionFluentExpression, FluentExpression, MultiOp, Parser};
 
     #[test]
     fn test_parse() {
-        assert!(DurativeActionFluentExpression::parse("?duration").is_value(DurativeActionFluentExpression::Duration));
+        assert!(DurativeActionFluentExpression::parse("?duration")
+            .is_value(DurativeActionFluentExpression::Duration));
 
         assert!(
-            DurativeActionFluentExpression::parse("(+ 1.23 2.34)").is_value(DurativeActionFluentExpression::new_binary_op(
-                BinaryOp::Addition,
-                DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(1.23)),
-                DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(2.34))
-            ))
+            DurativeActionFluentExpression::parse("(+ 1.23 2.34)").is_value(
+                DurativeActionFluentExpression::new_binary_op(
+                    BinaryOp::Addition,
+                    DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(1.23)),
+                    DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(2.34))
+                )
+            )
         );
 
         assert!(
-            DurativeActionFluentExpression::parse("(+ 1.23 2.34 3.45)").is_value(DurativeActionFluentExpression::new_multi_op(
-                MultiOp::Addition,
-                DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(1.23)),
-                [FluentExpression::new_number(2.34).into(), FluentExpression::new_number(3.45).into()]
-            ))
+            DurativeActionFluentExpression::parse("(+ 1.23 2.34 3.45)").is_value(
+                DurativeActionFluentExpression::new_multi_op(
+                    MultiOp::Addition,
+                    DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(1.23)),
+                    [
+                        FluentExpression::new_number(2.34).into(),
+                        FluentExpression::new_number(3.45).into()
+                    ]
+                )
+            )
         );
     }
 }

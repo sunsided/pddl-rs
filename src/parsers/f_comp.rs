@@ -60,19 +60,21 @@ mod tests {
     #[test]
     fn test_parse() {
         assert!(
-            FluentComparison::parse("(= (+ 1.23 2.34) (+ 1.23 2.34))").is_value(FluentComparison::new(
-                BinaryComparison::Equal,
-                FluentExpression::new_binary_op(
-                    BinaryOp::Addition,
-                    FluentExpression::new_number(1.23),
-                    FluentExpression::new_number(2.34),
-                ),
-                FluentExpression::new_binary_op(
-                    BinaryOp::Addition,
-                    FluentExpression::new_number(1.23),
-                    FluentExpression::new_number(2.34),
+            FluentComparison::parse("(= (+ 1.23 2.34) (+ 1.23 2.34))").is_value(
+                FluentComparison::new(
+                    BinaryComparison::Equal,
+                    FluentExpression::new_binary_op(
+                        BinaryOp::Addition,
+                        FluentExpression::new_number(1.23),
+                        FluentExpression::new_number(2.34),
+                    ),
+                    FluentExpression::new_binary_op(
+                        BinaryOp::Addition,
+                        FluentExpression::new_number(1.23),
+                        FluentExpression::new_number(2.34),
+                    )
                 )
-            ))
+            )
         );
     }
 }

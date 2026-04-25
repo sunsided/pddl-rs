@@ -109,8 +109,9 @@ mod tests {
     use super::*;
     use crate::parsers::UnwrapValue;
     use crate::{
-        AssignOp, TimedAssignOperator, AtomicFormula, EffectCondition, EqualityAtomicFormula, DurativeActionFunctionAssignment,
-        DurativeActionFluentExpression, TimedFluentExpression, FunctionHead, PrimitiveEffect, Parser, Term, TimeSpecifier,
+        AssignOp, AtomicFormula, DurativeActionFluentExpression, DurativeActionFunctionAssignment,
+        EffectCondition, EqualityAtomicFormula, FunctionHead, Parser, PrimitiveEffect, Term,
+        TimeSpecifier, TimedAssignOperator, TimedFluentExpression,
     };
 
     #[test]

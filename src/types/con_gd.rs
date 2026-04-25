@@ -25,7 +25,11 @@ pub enum ConstraintGoalDefinition {
     AtMostOnce(ConstraintGoalDefinitionInner),
     SometimeAfter(ConstraintGoalDefinitionInner, ConstraintGoalDefinitionInner),
     SometimeBefore(ConstraintGoalDefinitionInner, ConstraintGoalDefinitionInner),
-    AlwaysWithin(Number, ConstraintGoalDefinitionInner, ConstraintGoalDefinitionInner),
+    AlwaysWithin(
+        Number,
+        ConstraintGoalDefinitionInner,
+        ConstraintGoalDefinitionInner,
+    ),
     HoldDuring(Number, Number, ConstraintGoalDefinitionInner),
     HoldAfter(Number, ConstraintGoalDefinitionInner),
 }
@@ -88,19 +92,33 @@ impl ConstraintGoalDefinition {
         Self::AtMostOnce(gd)
     }
 
-    pub const fn new_sometime_after(first: ConstraintGoalDefinitionInner, then: ConstraintGoalDefinitionInner) -> Self {
+    pub const fn new_sometime_after(
+        first: ConstraintGoalDefinitionInner,
+        then: ConstraintGoalDefinitionInner,
+    ) -> Self {
         Self::SometimeAfter(first, then)
     }
 
-    pub const fn new_sometime_before(later: ConstraintGoalDefinitionInner, earlier: ConstraintGoalDefinitionInner) -> Self {
+    pub const fn new_sometime_before(
+        later: ConstraintGoalDefinitionInner,
+        earlier: ConstraintGoalDefinitionInner,
+    ) -> Self {
         Self::SometimeBefore(later, earlier)
     }
 
-    pub const fn new_always_within(number: Number, first: ConstraintGoalDefinitionInner, second: ConstraintGoalDefinitionInner) -> Self {
+    pub const fn new_always_within(
+        number: Number,
+        first: ConstraintGoalDefinitionInner,
+        second: ConstraintGoalDefinitionInner,
+    ) -> Self {
         Self::AlwaysWithin(number, first, second)
     }
 
-    pub const fn new_hold_during(begin: Number, end: Number, gd: ConstraintGoalDefinitionInner) -> Self {
+    pub const fn new_hold_during(
+        begin: Number,
+        end: Number,
+        gd: ConstraintGoalDefinitionInner,
+    ) -> Self {
         Self::HoldDuring(begin, end, gd)
     }
 

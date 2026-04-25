@@ -1,8 +1,8 @@
 //! Contains the [`Domain`] type.
 
 use crate::types::{
-    ConstraintGoalDefinition, Constants, DomainConstraintsDef, Functions, PredicateDefinitions, Requirements,
-    StructureDefs, Timeless,
+    Constants, ConstraintGoalDefinition, DomainConstraintsDef, Functions, PredicateDefinitions,
+    Requirements, StructureDefs, Timeless,
 };
 use crate::types::{Name, Types};
 

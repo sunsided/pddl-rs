@@ -71,32 +71,34 @@ impl crate::parsers::Parser for EffectCondition {
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{AtomicFormula, EffectCondition, EqualityAtomicFormula, PrimitiveEffect, Parser, Term};
+    use crate::{
+        AtomicFormula, EffectCondition, EqualityAtomicFormula, Parser, PrimitiveEffect, Term,
+    };
 
     #[test]
     fn test_parse() {
         assert!(
             EffectCondition::parse("(= x y)").is_value(EffectCondition::Single(
-                PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new(
-                    Term::Name("x".into()),
-                    Term::Name("y".into())
-                )))
+                PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
+                    EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
+                ))
             ))
         );
 
         assert!(
-            EffectCondition::parse("(and (= x y) (not (= ?a B)))").is_value(
-                EffectCondition::All(vec![
-                    PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new(
-                        Term::Name("x".into()),
-                        Term::Name("y".into())
-                    ))),
-                    PrimitiveEffect::NotAtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new(
-                        Term::Variable("a".into()),
-                        Term::Name("B".into())
-                    )))
-                ])
-            )
+            EffectCondition::parse("(and (= x y) (not (= ?a B)))").is_value(EffectCondition::All(
+                vec![
+                    PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
+                        EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
+                    )),
+                    PrimitiveEffect::NotAtomicFormula(AtomicFormula::Equality(
+                        EqualityAtomicFormula::new(
+                            Term::Variable("a".into()),
+                            Term::Name("B".into())
+                        )
+                    ))
+                ]
+            ))
         );
     }
 }

@@ -14,7 +14,7 @@ use crate::types::ActionDefinition;
 ///
 /// ## Example
 /// ```
-/// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, ConditionalEffect, Effects, GoalDefinition, Name, PrimitiveEffect, Predicate, PreferenceGD, PreconditionGoalDefinitions, PreconditionGoalDefinition, Term, ToTyped, TypedList, Variable};
+/// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, ConditionalEffect, Effects, GoalDefinition, Name, PrimitiveEffect, Predicate, PreferenceGoalDefinition, PreconditionGoalDefinitions, PreconditionGoalDefinition, Term, ToTyped, TypedList, Variable};
 /// # use pddl::parsers::{parse_action_def, Span, UnwrapValue};
 /// let input = r#"(:action take-out
 ///                     :parameters (?x - physob)
@@ -31,7 +31,7 @@ use crate::types::ActionDefinition;
 ///             Variable::new_string("x").to_typed("physob")
 ///         ]),
 ///         PreconditionGoalDefinitions::from(
-///             PreconditionGoalDefinition::Preference(PreferenceGD::from_gd(
+///             PreconditionGoalDefinition::Preference(PreferenceGoalDefinition::from_gd(
 ///                 GoalDefinition::new_not(
 ///                     GoalDefinition::AtomicFormula(
 ///                         AtomicFormula::new_equality(
@@ -94,7 +94,7 @@ impl crate::parsers::Parser for ActionDefinition {
     ///
     /// ## Example
     /// ```
-    /// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, ConditionalEffect, Effects, GoalDefinition, Name, PrimitiveEffect, Predicate, PreferenceGD, PreconditionGoalDefinitions, PreconditionGoalDefinition, Term, ToTyped, TypedList, Variable, Parser};
+    /// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, ConditionalEffect, Effects, GoalDefinition, Name, PrimitiveEffect, Predicate, PreferenceGoalDefinition, PreconditionGoalDefinitions, PreconditionGoalDefinition, Term, ToTyped, TypedList, Variable, Parser};
     /// # use pddl::parsers::{parse_action_def, Span, UnwrapValue};
     /// let input = r#"(:action take-out
     ///                     :parameters (?x - physob)

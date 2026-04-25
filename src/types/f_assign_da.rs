@@ -16,7 +16,11 @@ use crate::types::{AssignOp, DurativeActionFluentExpression, FunctionHead};
 pub struct DurativeActionFunctionAssignment(AssignOp, FunctionHead, DurativeActionFluentExpression);
 
 impl DurativeActionFunctionAssignment {
-    pub const fn new(comp: AssignOp, head: FunctionHead, exp: DurativeActionFluentExpression) -> Self {
+    pub const fn new(
+        comp: AssignOp,
+        head: FunctionHead,
+        exp: DurativeActionFluentExpression,
+    ) -> Self {
         Self(comp, head, exp)
     }
 
@@ -36,12 +40,17 @@ impl DurativeActionFunctionAssignment {
     }
 }
 
-impl From<(AssignOp, FunctionHead, DurativeActionFluentExpression)> for DurativeActionFunctionAssignment {
+impl From<(AssignOp, FunctionHead, DurativeActionFluentExpression)>
+    for DurativeActionFunctionAssignment
+{
     fn from(value: (AssignOp, FunctionHead, DurativeActionFluentExpression)) -> Self {
         DurativeActionFunctionAssignment::new(value.0, value.1, value.2)
     }
 }
 
 /// Alias for [`DurativeActionFunctionAssignment`]; matches BNF `<f-assign-da>`.
-#[deprecated(since = "0.2.0", note = "Use `DurativeActionFunctionAssignment` instead")]
+#[deprecated(
+    since = "0.2.0",
+    note = "Use `DurativeActionFunctionAssignment` instead"
+)]
 pub type FAssignDa = DurativeActionFunctionAssignment;

@@ -79,15 +79,15 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        assert!(
-            TimedGoalDefinition::parse("(at start (= x y))").is_value(TimedGoalDefinition::new_at(
+        assert!(TimedGoalDefinition::parse("(at start (= x y))").is_value(
+            TimedGoalDefinition::new_at(
                 TimeSpecifier::Start,
                 GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
                     Term::Name("x".into()),
                     Term::Name("y".into())
                 ))
-            ))
-        );
+            )
+        ));
 
         assert!(
             parse_timed_gd("(over all (= x y))").is_value(TimedGoalDefinition::new_over(

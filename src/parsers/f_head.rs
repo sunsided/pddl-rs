@@ -60,11 +60,11 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        assert!(FunctionHead::parse("fun-sym").is_value(FunctionHead::new(FunctionSymbol::new_string("fun-sym"))));
+        assert!(FunctionHead::parse("fun-sym")
+            .is_value(FunctionHead::new(FunctionSymbol::new_string("fun-sym"))));
 
-        assert!(
-            FunctionHead::parse("(fun-sym)").is_value(FunctionHead::new(FunctionSymbol::new_string("fun-sym")))
-        );
+        assert!(FunctionHead::parse("(fun-sym)")
+            .is_value(FunctionHead::new(FunctionSymbol::new_string("fun-sym"))));
 
         assert!(
             FunctionHead::parse("(fun-sym term)").is_value(FunctionHead::new_with_terms(

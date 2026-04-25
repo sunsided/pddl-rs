@@ -1,7 +1,7 @@
 //! Contains precondition goal definitions.
 
 use crate::types::TypedVariables;
-use crate::types::{Preference, PreferenceGD};
+use crate::types::{Preference, PreferenceGoalDefinition};
 use std::ops::Deref;
 
 /// Zero, one or many precondition goal definitions.
@@ -18,7 +18,7 @@ impl PreconditionGoalDefinitions {
     }
 
     /// Constructs a list containing a single [`PreconditionGoalDefinition::Preference`] variant.
-    pub fn new_preference(pref: PreferenceGD) -> Self {
+    pub fn new_preference(pref: PreferenceGoalDefinition) -> Self {
         PreconditionGoalDefinition::new_preference(pref).into()
     }
 
@@ -127,9 +127,9 @@ impl TryInto<PreconditionGoalDefinition> for PreconditionGoalDefinitions {
 #[derive(Debug, Clone, PartialEq)]
 pub enum PreconditionGoalDefinition {
     /// ## Requirements
-    /// None per se: this branch may expand into [`PreferenceGD::Goal`](PreferenceGD::Goal),
+    /// None per se: this branch may expand into [`PreferenceGoalDefinition::Goal`](PreferenceGoalDefinition::Goal),
     /// which has no requirements.
-    Preference(PreferenceGD),
+    Preference(PreferenceGoalDefinition),
     /// ## Requirements
     /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
     Forall(TypedVariables, PreconditionGoalDefinitions),
@@ -144,7 +144,7 @@ impl PreconditionGoalDefinition {
     }
 
     /// Constructs a new [`Preference`](Self::Preference) variant.
-    pub const fn new_preference(pref: PreferenceGD) -> Self {
+    pub const fn new_preference(pref: PreferenceGoalDefinition) -> Self {
         Self::Preference(pref)
     }
 
@@ -154,14 +154,14 @@ impl PreconditionGoalDefinition {
     }
 }
 
-impl From<PreferenceGD> for PreconditionGoalDefinition {
-    fn from(value: PreferenceGD) -> Self {
+impl From<PreferenceGoalDefinition> for PreconditionGoalDefinition {
+    fn from(value: PreferenceGoalDefinition) -> Self {
         PreconditionGoalDefinition::new_preference(value)
     }
 }
 
 impl From<Preference> for PreconditionGoalDefinition {
     fn from(value: Preference) -> Self {
-        PreconditionGoalDefinition::new_preference(PreferenceGD::from_preference(value))
+        PreconditionGoalDefinition::new_preference(PreferenceGoalDefinition::from_preference(value))
     }
 }

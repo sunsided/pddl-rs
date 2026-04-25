@@ -1,8 +1,8 @@
 //! Contains the [`Problem`] type.
 
 use crate::types::{
-    ProblemGoalDefinition, InitElements, LengthSpec, MetricSpec, Name, Objects, ProblemConstraintsDef,
-    Requirements,
+    InitElements, LengthSpec, MetricSpec, Name, Objects, ProblemConstraintsDef,
+    ProblemGoalDefinition, Requirements,
 };
 use crate::{PreconditionGoalDefinitions, PreferenceConstraintGoalDefinitions};
 

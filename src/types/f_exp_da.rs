@@ -8,8 +8,16 @@ use crate::types::{AssignOp, BinaryOp, FluentExpression, FunctionHead, MultiOp};
 #[derive(Debug, Clone, PartialEq)]
 pub enum DurativeActionFluentExpression {
     Assign(AssignOp, FunctionHead, Box<DurativeActionFluentExpression>),
-    BinaryOp(BinaryOp, Box<DurativeActionFluentExpression>, Box<DurativeActionFluentExpression>),
-    MultiOp(MultiOp, Box<DurativeActionFluentExpression>, Vec<DurativeActionFluentExpression>),
+    BinaryOp(
+        BinaryOp,
+        Box<DurativeActionFluentExpression>,
+        Box<DurativeActionFluentExpression>,
+    ),
+    MultiOp(
+        MultiOp,
+        Box<DurativeActionFluentExpression>,
+        Vec<DurativeActionFluentExpression>,
+    ),
     Negative(Box<DurativeActionFluentExpression>),
     /// ## Requirements
     /// Requires [Duration Inequalities](crate::Requirement::DurationInequalities).
@@ -22,11 +30,19 @@ impl DurativeActionFluentExpression {
         Self::Duration
     }
 
-    pub fn new_binary_op(op: BinaryOp, lhs: DurativeActionFluentExpression, rhs: DurativeActionFluentExpression) -> Self {
+    pub fn new_binary_op(
+        op: BinaryOp,
+        lhs: DurativeActionFluentExpression,
+        rhs: DurativeActionFluentExpression,
+    ) -> Self {
         Self::BinaryOp(op, Box::new(lhs), Box::new(rhs))
     }
 
-    pub fn new_multi_op<I: IntoIterator<Item = DurativeActionFluentExpression>>(op: MultiOp, lhs: DurativeActionFluentExpression, rhs: I) -> Self {
+    pub fn new_multi_op<I: IntoIterator<Item = DurativeActionFluentExpression>>(
+        op: MultiOp,
+        lhs: DurativeActionFluentExpression,
+        rhs: I,
+    ) -> Self {
         Self::MultiOp(op, Box::new(lhs), rhs.into_iter().collect())
     }
 

@@ -29,7 +29,11 @@ impl PrimitiveEffect {
         Self::NotAtomicFormula(atomic_formula)
     }
 
-    pub const fn new_numeric_fluent(op: AssignOp, head: FunctionHead, exp: FluentExpression) -> Self {
+    pub const fn new_numeric_fluent(
+        op: AssignOp,
+        head: FunctionHead,
+        exp: FluentExpression,
+    ) -> Self {
         Self::AssignNumericFluent(op, head, exp)
     }
 

@@ -15,7 +15,9 @@ use nom::Parser;
 /// # use pddl::parsers::parse_f_assign_da;
 /// assert!(parse_f_assign_da("(assign fun-sym ?duration)").is_ok());
 ///```
-pub fn parse_f_assign_da<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DurativeActionFunctionAssignment> {
+pub fn parse_f_assign_da<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, DurativeActionFunctionAssignment> {
     map(
         parens((
             parse_assign_op,

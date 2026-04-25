@@ -46,7 +46,10 @@ mod tests {
     #[test]
     fn test_parse() {
         let input = "(:constraints (and))";
-        assert!(DomainConstraintsDef::parse(input)
-            .is_value(DomainConstraintsDef::new(ConstraintGoalDefinition::new_and([]))));
+        assert!(
+            DomainConstraintsDef::parse(input).is_value(DomainConstraintsDef::new(
+                ConstraintGoalDefinition::new_and([])
+            ))
+        );
     }
 }

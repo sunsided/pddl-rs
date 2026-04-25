@@ -69,28 +69,35 @@ impl crate::parsers::Parser for TimedFluentExpression {
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{FluentExpression, TimedFluentExpression, FunctionHead, FunctionSymbol, Parser, Term, Variable};
+    use crate::{
+        FluentExpression, FunctionHead, FunctionSymbol, Parser, Term, TimedFluentExpression,
+        Variable,
+    };
 
     #[test]
     fn test_parse() {
         assert!(TimedFluentExpression::parse("#t").is_value(TimedFluentExpression::Now));
 
         assert!(
-            TimedFluentExpression::parse("(* (fuel ?tank) #t)").is_value(TimedFluentExpression::new_scaled(FluentExpression::new_function(
-                FunctionHead::new_with_terms(
-                    FunctionSymbol::new_string("fuel"),
-                    [Term::Variable(Variable::new_string("tank"))]
-                )
-            )))
+            TimedFluentExpression::parse("(* (fuel ?tank) #t)").is_value(
+                TimedFluentExpression::new_scaled(FluentExpression::new_function(
+                    FunctionHead::new_with_terms(
+                        FunctionSymbol::new_string("fuel"),
+                        [Term::Variable(Variable::new_string("tank"))]
+                    )
+                ))
+            )
         );
 
         assert!(
-            TimedFluentExpression::parse("(* #t (fuel ?tank))").is_value(TimedFluentExpression::new_scaled(FluentExpression::new_function(
-                FunctionHead::new_with_terms(
-                    FunctionSymbol::new_string("fuel"),
-                    [Term::Variable(Variable::new_string("tank"))]
-                )
-            )))
+            TimedFluentExpression::parse("(* #t (fuel ?tank))").is_value(
+                TimedFluentExpression::new_scaled(FluentExpression::new_function(
+                    FunctionHead::new_with_terms(
+                        FunctionSymbol::new_string("fuel"),
+                        [Term::Variable(Variable::new_string("tank"))]
+                    )
+                ))
+            )
         );
     }
 }

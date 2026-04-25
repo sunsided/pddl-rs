@@ -123,7 +123,7 @@ mod tests {
     use super::*;
     use crate::parsers::UnwrapValue;
     use crate::{
-        AtomicFormula, EffectCondition, EqualityAtomicFormula, PrimitiveEffect, Parser, Term,
+        AtomicFormula, EffectCondition, EqualityAtomicFormula, Parser, PrimitiveEffect, Term,
         TimeSpecifier, TimedEffect, Typed, TypedList, Variable,
     };
 
@@ -179,12 +179,12 @@ mod tests {
                 DurativeActionEffect::new_and([
                     DurativeActionEffect::Timed(TimedEffect::new_conditional(
                         TimeSpecifier::Start,
-                        EffectCondition::new(PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
-                            EqualityAtomicFormula::new(
+                        EffectCondition::new(PrimitiveEffect::AtomicFormula(
+                            AtomicFormula::Equality(EqualityAtomicFormula::new(
                                 Term::Name("x".into()),
                                 Term::Name("y".into())
-                            )
-                        )))
+                            ))
+                        ))
                     )),
                     DurativeActionEffect::new_and([])
                 ])
@@ -203,12 +203,12 @@ mod tests {
                     ]),
                     DurativeActionEffect::Timed(TimedEffect::new_conditional(
                         TimeSpecifier::Start,
-                        EffectCondition::new(PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
-                            EqualityAtomicFormula::new(
+                        EffectCondition::new(PrimitiveEffect::AtomicFormula(
+                            AtomicFormula::Equality(EqualityAtomicFormula::new(
                                 Term::Name("a".into()),
                                 Term::Name("b".into())
-                            )
-                        )))
+                            ))
+                        ))
                     ))
                 )
             )

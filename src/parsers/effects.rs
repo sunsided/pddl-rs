@@ -69,16 +69,18 @@ impl crate::parsers::Parser for Effects {
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{AtomicFormula, ConditionalEffect, Effects, EqualityAtomicFormula, PrimitiveEffect, Parser, Term};
+    use crate::{
+        AtomicFormula, ConditionalEffect, Effects, EqualityAtomicFormula, Parser, PrimitiveEffect,
+        Term,
+    };
 
     #[test]
     fn test_parse() {
         assert!(
             Effects::parse("(= x y)").is_value(Effects::new(ConditionalEffect::Effect(
-                PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new(
-                    Term::Name("x".into()),
-                    Term::Name("y".into())
-                )))
+                PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
+                    EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
+                ))
             )))
         );
         assert!(
@@ -86,9 +88,12 @@ mod tests {
                 ConditionalEffect::Effect(PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
                     EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
                 ))),
-                ConditionalEffect::Effect(PrimitiveEffect::NotAtomicFormula(AtomicFormula::Equality(
-                    EqualityAtomicFormula::new(Term::Variable("a".into()), Term::Name("B".into()))
-                )))
+                ConditionalEffect::Effect(PrimitiveEffect::NotAtomicFormula(
+                    AtomicFormula::Equality(EqualityAtomicFormula::new(
+                        Term::Variable("a".into()),
+                        Term::Name("B".into())
+                    ))
+                ))
             ]))
         );
     }

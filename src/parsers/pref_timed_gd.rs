@@ -61,7 +61,9 @@ use crate::types::PreferenceTimedGoalDefinition;
 ///     )
 /// ));
 /// ```
-pub fn parse_pref_timed_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PreferenceTimedGoalDefinition> {
+pub fn parse_pref_timed_gd<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, PreferenceTimedGoalDefinition> {
     let required = map(parse_timed_gd, PreferenceTimedGoalDefinition::from);
 
     // :preferences
@@ -92,21 +94,22 @@ impl crate::parsers::Parser for PreferenceTimedGoalDefinition {
 mod tests {
     use crate::parsers::preamble::*;
     use crate::{
-        AtomicFormula, GoalDefinition, Interval, PreferenceTimedGoalDefinition, Term, TimeSpecifier, TimedGoalDefinition,
+        AtomicFormula, GoalDefinition, Interval, PreferenceTimedGoalDefinition, Term,
+        TimeSpecifier, TimedGoalDefinition,
     };
 
     #[test]
     fn test_parse() {
         assert!(
-            PreferenceTimedGoalDefinition::parse("(at start (= x y))").is_value(PreferenceTimedGoalDefinition::Required(
-                TimedGoalDefinition::new_at(
+            PreferenceTimedGoalDefinition::parse("(at start (= x y))").is_value(
+                PreferenceTimedGoalDefinition::Required(TimedGoalDefinition::new_at(
                     TimeSpecifier::Start,
                     GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
                         Term::Name("x".into()),
                         Term::Name("y".into())
                     ))
-                )
-            ))
+                ))
+            )
         );
 
         assert!(
@@ -125,8 +128,8 @@ mod tests {
         );
 
         assert!(
-            PreferenceTimedGoalDefinition::parse("(preference pref-name (over all (= x y)))").is_value(
-                PreferenceTimedGoalDefinition::Preference(
+            PreferenceTimedGoalDefinition::parse("(preference pref-name (over all (= x y)))")
+                .is_value(PreferenceTimedGoalDefinition::Preference(
                     Some("pref-name".into()),
                     TimedGoalDefinition::new_over(
                         Interval::All,
@@ -135,8 +138,7 @@ mod tests {
                             Term::Name("y".into())
                         ))
                     )
-                )
-            )
+                ))
         );
     }
 }
