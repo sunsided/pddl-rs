@@ -87,6 +87,12 @@ impl Visitor<Domain, RcDoc<'static>> for PrettyRenderer {
                 .append(self.section("constraints", [value.constraints().accept(self)]));
         }
 
+        if !value.timeless().is_empty() {
+            doc = doc
+                .append(RcDoc::hardline())
+                .append(value.timeless().accept(self));
+        }
+
         if !value.structure().is_empty() {
             doc = doc
                 .append(RcDoc::hardline())

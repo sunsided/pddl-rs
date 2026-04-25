@@ -212,6 +212,12 @@ impl Domain {
     pub const fn structure(&self) -> &StructureDefs {
         &self.structure
     }
+
+    /// Returns the timeless predicate definitions.
+    /// This is a PDDL 1.2 construct.
+    pub const fn timeless(&self) -> &Timeless {
+        &self.timeless
+    }
 }
 
 impl AsRef<Requirements> for Domain {
