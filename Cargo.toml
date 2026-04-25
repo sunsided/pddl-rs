@@ -15,7 +15,7 @@ rust-version = "1.80.0"
 # Features
 
 [features]
-default = ["parser", "interning", "pretty"]
+default = ["parser", "interning"]
 ## Enables parsing of PDDL types through the `Parser` trait (nom-based).
 parser = ["dep:nom", "dep:nom_locate", "dep:thiserror"]
 ## Enables string interning for `Name` types to reduce memory footprint.

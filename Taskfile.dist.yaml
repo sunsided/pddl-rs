@@ -78,6 +78,11 @@ tasks:
     cmds:
       - "{{.CARGO}} test --no-default-features"
 
+  example:pretty:
+    desc: Run the pretty_print example
+    cmds:
+      - "{{.CARGO}} run --example pretty_print --features pretty"
+
   fuzz:build:
     desc: Build fuzz targets with default fuzz features
     cmds:

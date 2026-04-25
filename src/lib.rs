@@ -6,6 +6,10 @@
 //!
 //! * `parser` - Enables parsing of PDDL types through the [`Parser`] trait.
 //! * `interning` - Enables string interning for [`Name`] types to reduce memory footprint.
+//! * `pretty` - Enables pretty-printing of a subset of PDDL types via the
+//!   [`Pretty`] extension trait. Currently supports `Name`, `Variable`,
+//!   `FunctionSymbol`, `PrimitiveType`, and `Type`. **Provisional feature;
+//!   coverage will expand in future releases.**
 //!
 //! ## Example
 //!
@@ -81,7 +85,7 @@
 #[cfg(feature = "parser")]
 pub mod parsers;
 mod types;
-pub(crate) mod visitor;
+pub mod visitor;
 
 // re-export Parser trait.
 #[cfg_attr(docsrs, doc(cfg(feature = "parser")))]
@@ -93,4 +97,8 @@ pub use types::*;
 
 #[cfg_attr(docsrs, doc(cfg(feature = "pretty")))]
 #[cfg(feature = "pretty")]
-pub(crate) mod pretty_print;
+pub mod pretty_print;
+
+#[cfg_attr(docsrs, doc(cfg(feature = "pretty")))]
+#[cfg(feature = "pretty")]
+pub use pretty_print::{Pretty, PrettyPrinted, PrettyRenderer};
