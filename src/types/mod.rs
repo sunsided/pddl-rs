@@ -84,18 +84,25 @@ mod pddl_file;
 pub use action_definition::ActionDefinition;
 pub use action_symbols::ActionSymbol;
 pub use assign_op::AssignOp;
-pub use assign_op_t::AssignOpT;
+#[allow(deprecated)]
+pub use assign_op_t::{AssignOpT, TimedAssignOperator};
 pub use atomic_formula::{AtomicFormula, EqualityAtomicFormula, PredicateAtomicFormula};
 pub use atomic_formula_skeleton::AtomicFormulaSkeleton;
 pub use atomic_function_skeleton::AtomicFunctionSkeleton;
 pub use basic_function_term::BasicFunctionTerm;
-pub use binary_comp::BinaryComp;
+pub use binary_comp::BinaryComparison;
 pub use binary_op::BinaryOp;
-pub use c_effect::{CEffect, ForallCEffect, WhenCEffect};
-pub use con_gd::{Con2GD, ConGD};
-pub use conditional_effect::ConditionalEffect;
+#[allow(deprecated)]
+pub use c_effect::{
+    CEffect, ConditionalEffect, ForallCEffect, ForallConditionalEffect, WhenCEffect,
+    WhenConditionalEffect,
+};
+#[allow(deprecated)]
+pub use con_gd::{Con2GD, ConGD, ConstraintGoalDefinition, ConstraintGoalDefinitionInner};
+pub use conditional_effect::EffectCondition;
 pub use constants::Constants;
-pub use d_op::DOp;
+#[allow(deprecated)]
+pub use d_op::{DOp, DurationOperator};
 pub use d_value::DurationValue;
 pub use da_def::DurativeActionDefinition;
 pub use da_effect::DurativeActionEffect;
@@ -106,12 +113,18 @@ pub use domain::Domain;
 pub use domain_constraints_def::DomainConstraintsDef;
 pub use duration_constraint::DurationConstraint;
 pub use effects::Effects;
-pub use f_assign_da::FAssignDa;
-pub use f_comp::FComp;
-pub use f_exp::FExp;
-pub use f_exp_da::FExpDa;
-pub use f_exp_t::FExpT;
-pub use f_head::FHead;
+#[allow(deprecated)]
+pub use f_assign_da::{DurativeActionFunctionAssignment, FAssignDa};
+#[allow(deprecated)]
+pub use f_comp::{FComp, FluentComparison};
+#[allow(deprecated)]
+pub use f_exp::{FExp, FluentExpression};
+#[allow(deprecated)]
+pub use f_exp_da::{DurativeActionFluentExpression, FExpDa};
+#[allow(deprecated)]
+pub use f_exp_t::{FExpT, TimedFluentExpression};
+#[allow(deprecated)]
+pub use f_head::{FHead, FunctionHead};
 pub use function_symbols::FunctionSymbol;
 pub use function_term::FunctionTerm;
 pub use function_type::FunctionType;
@@ -119,28 +132,37 @@ pub use function_typed::FunctionTyped;
 pub use function_typed_list::FunctionTypedList;
 pub use functions::Functions;
 pub use gd::GoalDefinition;
-pub use goal_def::GoalDef;
+#[allow(deprecated)]
+pub use goal_def::{GoalDef, ProblemGoalDefinition};
 pub use init_el::InitElement;
 pub use init_els::InitElements;
 pub use interval::Interval;
 pub use length_spec::LengthSpec;
 pub use literal::Literal;
+#[allow(deprecated)]
 pub use metric_f_exp::MetricFExp;
+pub use metric_f_exp::MetricFluentExpression;
 pub use metric_spec::MetricSpec;
 pub use multi_op::MultiOp;
 pub use name::Name;
 pub use number::Number;
 pub use objects::Objects;
 pub use optimization::Optimization;
+#[allow(deprecated)]
 pub use p_effect::PEffect;
+pub use p_effect::PrimitiveEffect;
 pub use pddl_file::PddlFile;
 pub use pre_gd::{PreconditionGoalDefinition, PreconditionGoalDefinitions};
 pub use predicate::Predicate;
 pub use predicate_definitions::PredicateDefinitions;
-pub use pref_con_gd::{PrefConGD, PrefConGDs};
+#[allow(deprecated)]
+pub use pref_con_gd::{
+    PrefConGD, PrefConGDs, PreferenceConstraintGoalDefinition, PreferenceConstraintGoalDefinitions,
+};
 pub use pref_gd::PreferenceGD;
 pub use pref_name::PreferenceName;
-pub use pref_timed_gd::PrefTimedGD;
+#[allow(deprecated)]
+pub use pref_timed_gd::{PrefTimedGD, PreferenceTimedGoalDefinition};
 pub use preference::Preference;
 pub use problem::Problem;
 pub use problem_constraints_def::ProblemConstraintsDef;
@@ -153,7 +175,8 @@ pub use structure_defs::StructureDefs;
 pub use term::Term;
 pub use time_specifier::TimeSpecifier;
 pub use timed_effect::TimedEffect;
-pub use timed_gd::TimedGD;
+#[allow(deprecated)]
+pub use timed_gd::{TimedGD, TimedGoalDefinition};
 pub use timeless::Timeless;
 pub use typed::{ToTyped, Typed};
 pub use typed_list::TypedList;

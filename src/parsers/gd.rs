@@ -17,7 +17,7 @@ use crate::types::GoalDefinition;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::{parse_gd, preamble::*};
-/// # use pddl::{AtomicFormula, BinaryComp, BinaryOp, EqualityAtomicFormula, FComp, FExp, GoalDefinition, Literal, Term, Variable};
+/// # use pddl::{AtomicFormula, BinaryComparison, BinaryOp, EqualityAtomicFormula, FluentComparison, FluentExpression, GoalDefinition, Literal, Term, Variable};
 /// # use pddl::TypedList;
 /// // Atomic formula
 /// assert!(parse_gd("(= x y)").is_value(
@@ -117,17 +117,17 @@ use crate::types::GoalDefinition;
 ///
 /// assert!(parse_gd("(= (+ 1.23 2.34) (+ 1.23 2.34))").is_value(
 ///     GoalDefinition::new_f_comp(
-///         FComp::new(
-///             BinaryComp::Equal,
-///             FExp::new_binary_op(
+///         FluentComparison::new(
+///             BinaryComparison::Equal,
+///             FluentExpression::new_binary_op(
 ///                 BinaryOp::Addition,
-///                 FExp::new_number(1.23),
-///                 FExp::new_number(2.34),
+///                 FluentExpression::new_number(1.23),
+///                 FluentExpression::new_number(2.34),
 ///             ),
-///             FExp::new_binary_op(
+///             FluentExpression::new_binary_op(
 ///                 BinaryOp::Addition,
-///                 FExp::new_number(1.23),
-///                 FExp::new_number(2.34),
+///                 FluentExpression::new_number(1.23),
+///                 FluentExpression::new_number(2.34),
 ///             )
 ///         )
 ///     )
@@ -205,8 +205,8 @@ impl crate::parsers::Parser for GoalDefinition {
 mod tests {
     use crate::parsers::UnwrapValue;
     use crate::{
-        AtomicFormula, BinaryComp, BinaryOp, FComp, FExp, GoalDefinition, Parser, Term, TypedList,
-        Variable,
+        AtomicFormula, BinaryComparison, BinaryOp, FluentComparison, FluentExpression, GoalDefinition, Parser, Term,
+        TypedList, Variable,
     };
 
     #[test]
@@ -308,17 +308,17 @@ mod tests {
 
         assert!(
             GoalDefinition::parse("(= (+ 1.23 2.34) (+ 1.23 2.34))").is_value(
-                GoalDefinition::new_f_comp(FComp::new(
-                    BinaryComp::Equal,
-                    FExp::new_binary_op(
+                GoalDefinition::new_f_comp(FluentComparison::new(
+                    BinaryComparison::Equal,
+                    FluentExpression::new_binary_op(
                         BinaryOp::Addition,
-                        FExp::new_number(1.23),
-                        FExp::new_number(2.34),
+                        FluentExpression::new_number(1.23),
+                        FluentExpression::new_number(2.34),
                     ),
-                    FExp::new_binary_op(
+                    FluentExpression::new_binary_op(
                         BinaryOp::Addition,
-                        FExp::new_number(1.23),
-                        FExp::new_number(2.34),
+                        FluentExpression::new_number(1.23),
+                        FluentExpression::new_number(2.34),
                     )
                 ))
             )

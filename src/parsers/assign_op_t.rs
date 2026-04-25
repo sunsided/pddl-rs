@@ -7,35 +7,35 @@ use nom::Parser;
 
 use crate::parsers::{ParseResult, Span};
 use crate::types::assign_op_t::names;
-use crate::types::AssignOpT;
+use crate::types::TimedAssignOperator;
 
 /// Parses an assignment operation, i.e. `increase | decrease`.
 ///
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_assign_op_t, Span, UnwrapValue};
-/// # use pddl::{AssignOpT};
-/// assert!(parse_assign_op_t(Span::new("increase")).is_value(AssignOpT::Increase));
-/// assert!(parse_assign_op_t(Span::new("decrease")).is_value(AssignOpT::Decrease));
+/// # use pddl::{TimedAssignOperator};
+/// assert!(parse_assign_op_t(Span::new("increase")).is_value(TimedAssignOperator::Increase));
+/// assert!(parse_assign_op_t(Span::new("decrease")).is_value(TimedAssignOperator::Decrease));
 ///```
-pub fn parse_assign_op_t<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, AssignOpT> {
+pub fn parse_assign_op_t<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedAssignOperator> {
     map(
         alt((tag(names::INCREASE), tag(names::DECREASE))),
-        |x: Span| AssignOpT::try_from(*x.fragment()).expect("unhandled variant"),
+        |x: Span| TimedAssignOperator::try_from(*x.fragment()).expect("unhandled variant"),
     )
     .parse(input.into())
 }
 
-impl crate::parsers::Parser for AssignOpT {
-    type Item = AssignOpT;
+impl crate::parsers::Parser for TimedAssignOperator {
+    type Item = TimedAssignOperator;
 
     /// Parses an assignment operation.
     ///
     /// ## Example
     /// ```
-    /// # use pddl::{AssignOpT, Parser};
-    /// let (_, value) = AssignOpT::parse("increase").unwrap();
-    /// assert_eq!(value, AssignOpT::Increase);
+    /// # use pddl::{TimedAssignOperator, Parser};
+    /// let (_, value) = TimedAssignOperator::parse("increase").unwrap();
+    /// assert_eq!(value, TimedAssignOperator::Increase);
     ///```
     ///
     /// ## See also
@@ -47,11 +47,11 @@ impl crate::parsers::Parser for AssignOpT {
 
 #[cfg(test)]
 mod tests {
-    use crate::{AssignOpT, Parser};
+    use crate::{Parser, TimedAssignOperator};
 
     #[test]
     fn test_parse() {
-        let (_, value) = AssignOpT::parse("increase").unwrap();
-        assert_eq!(value, AssignOpT::Increase);
+        let (_, value) = TimedAssignOperator::parse("increase").unwrap();
+        assert_eq!(value, TimedAssignOperator::Increase);
     }
 }

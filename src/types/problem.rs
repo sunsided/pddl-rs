@@ -1,10 +1,10 @@
 //! Contains the [`Problem`] type.
 
 use crate::types::{
-    GoalDef, InitElements, LengthSpec, MetricSpec, Name, Objects, ProblemConstraintsDef,
+    ProblemGoalDefinition, InitElements, LengthSpec, MetricSpec, Name, Objects, ProblemConstraintsDef,
     Requirements,
 };
-use crate::{PreconditionGoalDefinitions, PrefConGDs};
+use crate::{PreconditionGoalDefinitions, PreferenceConstraintGoalDefinitions};
 
 /// A domain-specific problem declaration.
 ///
@@ -48,7 +48,7 @@ pub struct Problem {
     /// The initial state definition.
     init: InitElements,
     /// The goal definition.
-    goal: GoalDef,
+    goal: ProblemGoalDefinition,
     /// The optional list of constraints.
     ///
     /// ## Requirements
@@ -74,7 +74,7 @@ impl Problem {
         requires: Requirements,
         objects: Objects,
         init: InitElements,
-        goal: GoalDef,
+        goal: ProblemGoalDefinition,
         constraints: ProblemConstraintsDef,
         metric_spec: Option<MetricSpec>,
         length_spec: Option<LengthSpec>,
@@ -97,7 +97,7 @@ impl Problem {
         problem_name: P,
         domain_name: D,
         init: InitElements,
-        goal: GoalDef,
+        goal: ProblemGoalDefinition,
     ) -> Self {
         Self {
             name: problem_name.into(),
@@ -175,7 +175,7 @@ impl Problem {
     /// Returns the optional constraints of the problem.
     /// ## Requirements
     /// Requires [Constraints](crate::Requirement::Constraints).
-    pub const fn constraints(&self) -> &PrefConGDs {
+    pub const fn constraints(&self) -> &PreferenceConstraintGoalDefinitions {
         self.constraints.value()
     }
 

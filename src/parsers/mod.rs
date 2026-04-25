@@ -132,7 +132,8 @@ pub use binary_op::parse_binary_op;
 pub use c_effect::{parse_c_effect, parse_forall_c_effect, parse_when_c_effect};
 pub use comments::ignore_eol_comment;
 pub use con_gd::parse_con_gd;
-pub use cond_effect::parse_cond_effect;
+#[allow(deprecated)]
+pub use cond_effect::{parse_cond_effect, parse_effect_condition};
 pub use constants_def::parse_constants_def;
 pub use d_op::parse_d_op;
 pub use d_value::parse_d_value;
@@ -186,7 +187,8 @@ pub use simple_duration_constraint::parse_simple_duration_constraint;
 pub use structure_def::parse_structure_def;
 pub use term::parse_term;
 pub use time_specifier::parse_time_specifier;
-pub use timed_effect::parse_timed_effect;
+#[allow(deprecated)]
+pub use timed_effect::{parse_timed_eff, parse_timed_effect};
 pub use timed_gd::parse_timed_gd;
 pub use timeless_def::parse_timeless_def;
 pub use types_def::parse_types_def;

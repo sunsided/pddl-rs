@@ -7,7 +7,7 @@ use std::ops::Deref;
 ///
 /// ## Usage
 /// Used by [`Literal`](crate::Literal), [`GoalDefinition`](crate::GoalDefinition) and
-/// [`PEffect`](crate::PEffect).
+/// [`PrimitiveEffect`](crate::PrimitiveEffect).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum AtomicFormula<T> {
     Equality(EqualityAtomicFormula<T>),

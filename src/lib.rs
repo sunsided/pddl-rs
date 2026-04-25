@@ -137,7 +137,7 @@
 //! | `<con2-GD>` | [`Con2GD`] | Inner constraint goal (goal or nested con-GD) |
 //! | `<pref-con-GD>` | [`PrefConGD`] | Preference constraint goals |
 //! | `<c-effect>` | [`CEffect`] | Conditional effect |
-//! | `<p-effect>` | [`PEffect`] | Primitive effect |
+//! | `<p-effect>` | [`PrimitiveEffect`] | Primitive effect |
 //! | `<effect>` | [`Effects`] | Collection of effects (the `(and ...)` block) |
 //! | `<da-effect>` | [`DurativeActionEffect`] | Durative action effect |
 //! | `<f-exp>` | [`FExp`] | Fluent/numeric expression |
@@ -207,18 +207,18 @@
 //! ```text
 //! Effects (Vec<CEffect>)        ← the (and ...) block
 //! └── CEffect                   ← one effect element
-//!       ├── Effect(PEffect)     ← primitive effect
+//!       ├── Effect(PrimitiveEffect)     ← primitive effect
 //!       ├── Forall(ForallCEffect)  ← universal quantification over effects
 //!       └── When(WhenCEffect)   ← conditional effect (when <cond> <effect>)
 //!             └── ConditionalEffect
-//!                   ├── PEffect ← primitive effect (same as above)
+//!                   ├── PrimitiveEffect ← primitive effect (same as above)
 //!                   ├── Forall...
 //!                   └── When...
 //! ```
 //!
-//! - [`PEffect`] (`<p-effect>`) — A primitive effect: setting/negating an atomic formula,
+//! - [`PrimitiveEffect`] (`<p-effect>`) — A primitive effect: setting/negating an atomic formula,
 //!   or assigning a numeric/object fluent.
-//! - [`CEffect`] (`<c-effect>`) — A potentially conditional effect. Wraps [`PEffect`],
+//! - [`CEffect`] (`<c-effect>`) — A potentially conditional effect. Wraps [`PrimitiveEffect`],
 //!   [`ForallCEffect`], or [`WhenCEffect`].
 //! - [`Effects`] (`<effect>`) — A collection of [`CEffect`] values, representing the
 //!   `(and ...)` block in PDDL.
@@ -256,7 +256,7 @@
 //! | Confused Pair | Difference |
 //! |---------------|------------|
 //! | [`AtomicFormulaSkeleton`] vs [`AtomicFormula`] | Skeleton declares a predicate's signature (used in `:predicates`); Formula applies it to concrete terms (used in goals/init). |
-//! | [`PEffect`] vs [`CEffect`] vs [`Effects`] | `PEffect` is a single primitive effect; `CEffect` may add conditions/quantifiers; `Effects` is the `(and ...)` collection. |
+//! | [`PrimitiveEffect`] vs [`CEffect`] vs [`Effects`] | `PrimitiveEffect` is a single primitive effect; `CEffect` may add conditions/quantifiers; `Effects` is the `(and ...)` collection. |
 //! | [`GoalDefinition`] vs [`PreconditionGoalDefinition`] | `GoalDefinition` is the full logical formula; `PreconditionGoalDefinition` is a simplified wrapper used only in action preconditions. |
 //! | [`GoalDefinition`] vs [`DurativeActionGoalDefinition`] | `GoalDefinition` is timeless; `DurativeActionGoalDefinition` uses [`TimedGD`] for time-qualified goals `(at start ...)`. |
 //! | [`ConGD`] vs [`GoalDefinition`] | `ConGD` is for problem-level temporal constraints (`always`, `sometime`); `GoalDefinition` is the standard logical formula. |
@@ -280,8 +280,8 @@
 //!       (clear ?x)                ← GoalDefinition::AtomicFormula
 //!       (handempty))              ← GoalDefinition::AtomicFormula
 //!     :effect (and                ← Effects
-//!       (not (clear ?x))          ← CEffect::Effect(PEffect::NotAtomicFormula)
-//!       (holding ?x)))            ← CEffect::Effect(PEffect::AtomicFormula)
+//!       (not (clear ?x))          ← CEffect::Effect(PrimitiveEffect::NotAtomicFormula)
+//!       (holding ?x)))            ← CEffect::Effect(PrimitiveEffect::AtomicFormula)
 //!
 //!   (:goal (and                   ← GoalDef → PreconditionGoalDefinitions
 //!     (on a b)                    ← GoalDefinition::AtomicFormula

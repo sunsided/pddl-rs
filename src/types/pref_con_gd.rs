@@ -1,9 +1,9 @@
-//! Contains the type [`PrefConGD`].
+//! Contains the types [`PreferenceConstraintGoalDefinition`] and [`PreferenceConstraintGoalDefinitions`].
 
-use crate::types::{ConGD, PreferenceName, TypedVariables};
+use crate::types::{ConstraintGoalDefinition, PreferenceName, TypedVariables};
 use std::ops::Deref;
 
-/// A list of [`PrefConGD`] values. This represents the `(and ...)` variant
+/// A list of [`PreferenceConstraintGoalDefinition`] values. This represents the `(and ...)` variant
 /// of the PDDL definition, modeling cases of zero, one or many values.
 ///
 /// ## Requirements
@@ -12,33 +12,38 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`ProblemConstraintsDef`](crate::ProblemConstraintsDef).
 #[derive(Debug, Clone, PartialEq, Default)]
-pub struct PrefConGDs(Vec<PrefConGD>);
+#[doc(alias = "pref-con-GD")]
+pub struct PreferenceConstraintGoalDefinitions(Vec<PreferenceConstraintGoalDefinition>);
 
-impl PrefConGDs {
+impl PreferenceConstraintGoalDefinitions {
     /// Constructs a new instance from the provided vector of values.
-    pub const fn new(gds: Vec<PrefConGD>) -> Self {
+    pub const fn new(gds: Vec<PreferenceConstraintGoalDefinition>) -> Self {
         Self(gds)
     }
 
-    /// Constructs a list containing a single [`PrefConGD::Goal`] variant.
-    pub fn new_goal(gd: ConGD) -> Self {
-        Self::new(vec![PrefConGD::new_goal(gd)])
+    /// Constructs a list containing a single [`PreferenceConstraintGoalDefinition::Goal`] variant.
+    pub fn new_goal(gd: ConstraintGoalDefinition) -> Self {
+        Self::new(vec![PreferenceConstraintGoalDefinition::new_goal(gd)])
     }
 
-    /// Constructs a list containing a single [`PrefConGD::Preference`] variant.
+    /// Constructs a list containing a single [`PreferenceConstraintGoalDefinition::Preference`] variant.
     ///
     /// ## Requirements
     /// Requires [Preferences](crate::Requirement::Preferences).
-    pub fn new_preference(name: Option<PreferenceName>, gd: ConGD) -> Self {
-        Self::new(vec![PrefConGD::new_preference(name, gd)])
+    pub fn new_preference(name: Option<PreferenceName>, gd: ConstraintGoalDefinition) -> Self {
+        Self::new(vec![PreferenceConstraintGoalDefinition::new_preference(
+            name, gd,
+        )])
     }
 
-    /// Constructs a list containing a single [`PrefConGD::Forall`] variant.
+    /// Constructs a list containing a single [`PreferenceConstraintGoalDefinition::Forall`] variant.
     ///
     /// ## Requirements
     /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
-    pub fn new_forall(variables: TypedVariables, gd: PrefConGDs) -> Self {
-        Self::new(vec![PrefConGD::new_forall(variables, gd)])
+    pub fn new_forall(variables: TypedVariables, gd: PreferenceConstraintGoalDefinitions) -> Self {
+        Self::new(vec![PreferenceConstraintGoalDefinition::new_forall(
+            variables, gd,
+        )])
     }
 
     /// Returns `true` if the list contains no elements.
@@ -55,13 +60,13 @@ impl PrefConGDs {
     /// Returns an iterator over the list.
     ///
     /// The iterator yields all items from start to end.
-    pub fn iter(&self) -> std::slice::Iter<'_, PrefConGD> {
+    pub fn iter(&self) -> std::slice::Iter<'_, PreferenceConstraintGoalDefinition> {
         self.0.iter()
     }
 
     /// Get the only element of this list if the list has
     /// exactly one element. Returns [`None`] in all other cases.
-    pub fn try_get_single(self) -> Option<PrefConGD> {
+    pub fn try_get_single(self) -> Option<PreferenceConstraintGoalDefinition> {
         if self.len() == 1 {
             self.into_iter().next()
         } else {
@@ -70,78 +75,78 @@ impl PrefConGDs {
     }
 }
 
-impl Deref for PrefConGDs {
-    type Target = [PrefConGD];
+impl Deref for PreferenceConstraintGoalDefinitions {
+    type Target = [PreferenceConstraintGoalDefinition];
 
     fn deref(&self) -> &Self::Target {
         self.0.as_slice()
     }
 }
 
-impl AsRef<[PrefConGD]> for PrefConGDs {
-    fn as_ref(&self) -> &[PrefConGD] {
+impl AsRef<[PreferenceConstraintGoalDefinition]> for PreferenceConstraintGoalDefinitions {
+    fn as_ref(&self) -> &[PreferenceConstraintGoalDefinition] {
         self.0.as_slice()
     }
 }
 
-impl IntoIterator for PrefConGDs {
-    type Item = PrefConGD;
-    type IntoIter = std::vec::IntoIter<PrefConGD>;
+impl IntoIterator for PreferenceConstraintGoalDefinitions {
+    type Item = PreferenceConstraintGoalDefinition;
+    type IntoIter = std::vec::IntoIter<PreferenceConstraintGoalDefinition>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
     }
 }
 
-impl From<PrefConGDs> for Vec<PrefConGD> {
-    fn from(value: PrefConGDs) -> Self {
+impl From<PreferenceConstraintGoalDefinitions> for Vec<PreferenceConstraintGoalDefinition> {
+    fn from(value: PreferenceConstraintGoalDefinitions) -> Self {
         value.0
     }
 }
 
-impl From<PrefConGD> for PrefConGDs {
-    fn from(value: PrefConGD) -> Self {
-        PrefConGDs::new(vec![value])
+impl From<PreferenceConstraintGoalDefinition> for PreferenceConstraintGoalDefinitions {
+    fn from(value: PreferenceConstraintGoalDefinition) -> Self {
+        PreferenceConstraintGoalDefinitions::new(vec![value])
     }
 }
 
-impl From<Vec<PrefConGD>> for PrefConGDs {
-    fn from(value: Vec<PrefConGD>) -> Self {
-        PrefConGDs::new(value)
+impl From<Vec<PreferenceConstraintGoalDefinition>> for PreferenceConstraintGoalDefinitions {
+    fn from(value: Vec<PreferenceConstraintGoalDefinition>) -> Self {
+        PreferenceConstraintGoalDefinitions::new(value)
     }
 }
 
-impl FromIterator<PrefConGD> for PrefConGDs {
-    fn from_iter<T: IntoIterator<Item = PrefConGD>>(iter: T) -> Self {
-        PrefConGDs::new(iter.into_iter().collect())
+impl FromIterator<PreferenceConstraintGoalDefinition> for PreferenceConstraintGoalDefinitions {
+    fn from_iter<T: IntoIterator<Item = PreferenceConstraintGoalDefinition>>(iter: T) -> Self {
+        PreferenceConstraintGoalDefinitions::new(iter.into_iter().collect())
     }
 }
 
-impl From<Option<PrefConGD>> for PrefConGDs {
-    fn from(value: Option<PrefConGD>) -> Self {
+impl From<Option<PreferenceConstraintGoalDefinition>> for PreferenceConstraintGoalDefinitions {
+    fn from(value: Option<PreferenceConstraintGoalDefinition>) -> Self {
         match value {
-            None => PrefConGDs::default(),
+            None => PreferenceConstraintGoalDefinitions::default(),
             Some(value) => value.into(),
         }
     }
 }
 
-impl From<Option<PrefConGDs>> for PrefConGDs {
-    fn from(value: Option<PrefConGDs>) -> Self {
+impl From<Option<PreferenceConstraintGoalDefinitions>> for PreferenceConstraintGoalDefinitions {
+    fn from(value: Option<PreferenceConstraintGoalDefinitions>) -> Self {
         value.unwrap_or_default()
     }
 }
 
-impl From<ConGD> for PrefConGDs {
-    fn from(value: ConGD) -> Self {
-        PrefConGDs::new_goal(value)
+impl From<ConstraintGoalDefinition> for PreferenceConstraintGoalDefinitions {
+    fn from(value: ConstraintGoalDefinition) -> Self {
+        PreferenceConstraintGoalDefinitions::new_goal(value)
     }
 }
 
-impl TryInto<PrefConGD> for PrefConGDs {
+impl TryInto<PreferenceConstraintGoalDefinition> for PreferenceConstraintGoalDefinitions {
     type Error = ();
 
-    fn try_into(self) -> Result<PrefConGD, Self::Error> {
+    fn try_into(self) -> Result<PreferenceConstraintGoalDefinition, Self::Error> {
         self.try_get_single().ok_or(())
     }
 }
@@ -150,40 +155,58 @@ impl TryInto<PrefConGD> for PrefConGDs {
 /// Requires [Constraints](crate::Requirement::Constraints).
 ///
 /// ## Usage
-/// Used by [`PrefConGD`] itself, as well as [`ProblemConstraintsDef`](crate::ProblemConstraintsDef).
+/// Used by [`PreferenceConstraintGoalDefinitions`] itself, as well as [`ProblemConstraintsDef`](crate::ProblemConstraintsDef).
 #[derive(Debug, Clone, PartialEq)]
-pub enum PrefConGD {
-    Goal(ConGD),
+#[doc(alias = "pref-con-GD")]
+pub enum PreferenceConstraintGoalDefinition {
+    Goal(ConstraintGoalDefinition),
     /// ## Requirements
     /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
-    Forall(TypedVariables, PrefConGDs),
+    Forall(TypedVariables, PreferenceConstraintGoalDefinitions),
     /// ## Requirements
     /// Requires [Preferences](crate::Requirement::Preferences).
-    Preference(Option<PreferenceName>, ConGD),
+    Preference(Option<PreferenceName>, ConstraintGoalDefinition),
 }
 
-impl PrefConGD {
-    pub const fn new_goal(gd: ConGD) -> Self {
+impl PreferenceConstraintGoalDefinition {
+    pub const fn new_goal(gd: ConstraintGoalDefinition) -> Self {
         Self::Goal(gd)
     }
 
     /// ## Requirements
     /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
-    pub fn new_forall(variables: TypedVariables, gd: PrefConGDs) -> Self {
+    pub fn new_forall(variables: TypedVariables, gd: PreferenceConstraintGoalDefinitions) -> Self {
         Self::Forall(variables, gd)
     }
 
     /// ## Requirements
     /// Requires [Preferences](crate::Requirement::Preferences).
-    pub const fn new_preference(name: Option<PreferenceName>, gd: ConGD) -> Self {
+    pub const fn new_preference(
+        name: Option<PreferenceName>,
+        gd: ConstraintGoalDefinition,
+    ) -> Self {
         Self::Preference(name, gd)
     }
 
     pub fn is_empty(&self) -> bool {
         match self {
-            PrefConGD::Forall(_, x) => x.is_empty(),
-            PrefConGD::Preference(_, x) => x.is_empty(),
-            PrefConGD::Goal(x) => x.is_empty(),
+            PreferenceConstraintGoalDefinition::Forall(_, x) => x.is_empty(),
+            PreferenceConstraintGoalDefinition::Preference(_, x) => x.is_empty(),
+            PreferenceConstraintGoalDefinition::Goal(x) => x.is_empty(),
         }
     }
 }
+
+/// Alias for [`PreferenceConstraintGoalDefinition`]; matches BNF `<pref-con-GD>`.
+#[deprecated(
+    since = "0.2.0",
+    note = "Use `PreferenceConstraintGoalDefinition` instead"
+)]
+pub type PrefConGD = PreferenceConstraintGoalDefinition;
+
+/// Alias for [`PreferenceConstraintGoalDefinitions`]; matches BNF `<pref-con-GD>` (list form).
+#[deprecated(
+    since = "0.2.0",
+    note = "Use `PreferenceConstraintGoalDefinitions` instead"
+)]
+pub type PrefConGDs = PreferenceConstraintGoalDefinitions;

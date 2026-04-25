@@ -79,7 +79,7 @@ impl Visitor<Problem, RcDoc<'static>> for PrettyRenderer {
 mod tests {
     use crate::parsers::Parser;
     use crate::pretty_print::Pretty;
-    use crate::types::{PrefConGDs, ProblemConstraintsDef};
+    use crate::types::{PreferenceConstraintGoalDefinitions, ProblemConstraintsDef};
 
     #[test]
     fn problem_basic() {
@@ -165,7 +165,7 @@ mod tests {
 
     #[test]
     fn problem_constraints_def_empty_nil() {
-        let dc = ProblemConstraintsDef::new(PrefConGDs::new(Vec::new()));
+        let dc = ProblemConstraintsDef::new(PreferenceConstraintGoalDefinitions::new(Vec::new()));
         let out = dc.pretty(80).to_string();
         assert_eq!(out, "");
     }

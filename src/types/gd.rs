@@ -1,14 +1,14 @@
 //! Contains goal definitions via the [`GoalDefinition`] type.
 
 use crate::types::TermLiteral;
-use crate::types::{AtomicFormula, FComp, Term, TypedVariables};
+use crate::types::{AtomicFormula, FluentComparison, Term, TypedVariables};
 
 /// A goal definition.
 ///
 /// ## Usage
-/// Used by [`GoalDefinition`] itself, as well as [`PreferenceGD`](crate::PreferenceGD), [`CEffect`](crate::CEffect),
-/// [`TimedGD`](crate::TimedGD), [`DerivedPredicate`](crate::DerivedPredicate) and
-/// [`Con2GD`](crate::Con2GD).
+/// Used by [`GoalDefinition`] itself, as well as [`PreferenceGD`](crate::PreferenceGD), [`ConditionalEffect`](crate::ConditionalEffect),
+/// [`TimedGoalDefinition`](crate::TimedGoalDefinition), [`DerivedPredicate`](crate::DerivedPredicate) and
+/// [`ConstraintGoalDefinitionInner`](crate::ConstraintGoalDefinitionInner).
 #[derive(Debug, Clone, PartialEq)]
 pub enum GoalDefinition {
     AtomicFormula(AtomicFormula<Term>),
@@ -33,7 +33,7 @@ pub enum GoalDefinition {
     ForAll(TypedVariables, Box<GoalDefinition>),
     /// ## Requirements
     /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
-    FComp(FComp),
+    FluentComparison(FluentComparison),
 }
 
 impl GoalDefinition {
@@ -95,8 +95,8 @@ impl GoalDefinition {
     }
 
     #[inline(always)]
-    pub const fn new_f_comp(f_comp: FComp) -> Self {
-        Self::FComp(f_comp)
+    pub const fn new_f_comp(f_comp: FluentComparison) -> Self {
+        Self::FluentComparison(f_comp)
     }
 
     pub fn is_empty(&self) -> bool {
@@ -109,7 +109,7 @@ impl GoalDefinition {
             GoalDefinition::Imply(x, y) => x.is_empty() && y.is_empty(),
             GoalDefinition::Exists(_, x) => x.is_empty(),
             GoalDefinition::ForAll(_, x) => x.is_empty(),
-            GoalDefinition::FComp(_) => false,
+            GoalDefinition::FluentComparison(_) => false,
         }
     }
 }

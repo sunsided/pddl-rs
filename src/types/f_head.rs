@@ -1,4 +1,4 @@
-//! Contains function declarations via the [`FHead`] type.
+//! Contains function declarations via the [`FunctionHead`] type.
 
 use crate::types::{FunctionSymbol, Term};
 
@@ -8,15 +8,16 @@ use crate::types::{FunctionSymbol, Term};
 /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
 ///
 /// ## Usage
-/// Used by [`FExp`](crate::FExp), [`PEffect`](crate::PEffect), [`TimedEffect`](crate::TimedEffect)
-/// and [`FAssignDa`](crate::FAssignDa).
+/// Used by [`FluentExpression`](crate::FluentExpression), [`PrimitiveEffect`](crate::PrimitiveEffect), [`TimedEffect`](crate::TimedEffect)
+/// and [`DurativeActionFunctionAssignment`](crate::DurativeActionFunctionAssignment).
+#[doc(alias("f-head"))]
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum FHead {
+pub enum FunctionHead {
     Simple(FunctionSymbol), // TODO: Unify with `WithTerms`?
     WithTerms(FunctionSymbol, Vec<Term>),
 }
 
-impl FHead {
+impl FunctionHead {
     pub const fn new(symbol: FunctionSymbol) -> Self {
         Self::Simple(symbol)
     }
@@ -25,3 +26,7 @@ impl FHead {
         Self::WithTerms(symbol, terms.into_iter().collect())
     }
 }
+
+/// Alias for [`FunctionHead`]; matches BNF `<f-head>`.
+#[deprecated(since = "0.2.0", note = "Use `FunctionHead` instead")]
+pub type FHead = FunctionHead;

@@ -1,6 +1,6 @@
 //! Contains effects via the [`Effects`] type.
 
-use crate::types::CEffect;
+use crate::types::ConditionalEffect;
 use std::ops::Deref;
 
 /// An effect. Occurs e.g. in a [`ActionDefinition`](crate::types::ActionDefinition).
@@ -11,16 +11,16 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`ActionDefinition`](crate::ActionDefinition).
 #[derive(Debug, Clone, PartialEq, Default)]
-pub struct Effects(Vec<CEffect>);
+pub struct Effects(Vec<ConditionalEffect>);
 
 impl Effects {
     /// Constructs a new instance from the value.
-    pub fn new(effect: CEffect) -> Self {
+    pub fn new(effect: ConditionalEffect) -> Self {
         Self(vec![effect])
     }
 
     /// Constructs a new instance from the provided vector of values.
-    pub fn new_and(effects: Vec<CEffect>) -> Self {
+    pub fn new_and(effects: Vec<ConditionalEffect>) -> Self {
         Self(effects)
     }
 
@@ -38,13 +38,13 @@ impl Effects {
     /// Returns an iterator over the list.
     ///
     /// The iterator yields all items from start to end.
-    pub fn iter(&self) -> std::slice::Iter<'_, CEffect> {
+    pub fn iter(&self) -> std::slice::Iter<'_, ConditionalEffect> {
         self.0.iter()
     }
 
     /// Get the only element of this list if the list has
     /// exactly one element. Returns [`None`] in all other cases.
-    pub fn try_get_single(self) -> Option<CEffect> {
+    pub fn try_get_single(self) -> Option<ConditionalEffect> {
         if self.len() == 1 {
             self.into_iter().next()
         } else {
@@ -54,7 +54,7 @@ impl Effects {
 }
 
 impl IntoIterator for Effects {
-    type Item = CEffect;
+    type Item = ConditionalEffect;
     type IntoIter = std::vec::IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -63,41 +63,41 @@ impl IntoIterator for Effects {
 }
 
 impl Deref for Effects {
-    type Target = [CEffect];
+    type Target = [ConditionalEffect];
 
     fn deref(&self) -> &Self::Target {
         self.0.as_slice()
     }
 }
 
-impl AsRef<[CEffect]> for Effects {
-    fn as_ref(&self) -> &[CEffect] {
+impl AsRef<[ConditionalEffect]> for Effects {
+    fn as_ref(&self) -> &[ConditionalEffect] {
         self.0.as_slice()
     }
 }
 
-impl From<CEffect> for Effects {
-    fn from(value: CEffect) -> Self {
+impl From<ConditionalEffect> for Effects {
+    fn from(value: ConditionalEffect) -> Self {
         Effects::new(value)
     }
 }
 
-impl From<Vec<CEffect>> for Effects {
-    fn from(value: Vec<CEffect>) -> Self {
+impl From<Vec<ConditionalEffect>> for Effects {
+    fn from(value: Vec<ConditionalEffect>) -> Self {
         Effects::new_and(value)
     }
 }
 
-impl FromIterator<CEffect> for Effects {
-    fn from_iter<T: IntoIterator<Item = CEffect>>(iter: T) -> Self {
+impl FromIterator<ConditionalEffect> for Effects {
+    fn from_iter<T: IntoIterator<Item = ConditionalEffect>>(iter: T) -> Self {
         Effects::new_and(iter.into_iter().collect())
     }
 }
 
-impl TryInto<CEffect> for Effects {
+impl TryInto<ConditionalEffect> for Effects {
     type Error = ();
 
-    fn try_into(self) -> Result<CEffect, Self::Error> {
+    fn try_into(self) -> Result<ConditionalEffect, Self::Error> {
         self.try_get_single().ok_or(())
     }
 }

@@ -9,7 +9,7 @@ use crate::types::FunctionSymbol;
 /// Requires [Object Fluents](crate::Requirement::ObjectFluents).
 ///
 /// ## Usage
-/// Used by [`Term`], and [`PEffect`](crate::PEffect).
+/// Used by [`Term`], and [`PrimitiveEffect`](crate::PrimitiveEffect).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FunctionTerm(FunctionSymbol, Vec<Term>);
 

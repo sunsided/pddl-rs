@@ -1,6 +1,6 @@
 //! Contains the [`TimedEffect`] type.
 
-use crate::types::{AssignOpT, ConditionalEffect, FAssignDa, FExpT, FHead, TimeSpecifier};
+use crate::types::{EffectCondition, TimedAssignOperator, DurativeActionFunctionAssignment, TimedFluentExpression, FunctionHead, TimeSpecifier};
 
 /// A timed effect, either conditional, continuous or derived from a fluent, e.g. [`DurativeActionEffect`](crate::types::DurativeActionEffect).
 ///
@@ -11,7 +11,7 @@ use crate::types::{AssignOpT, ConditionalEffect, FAssignDa, FExpT, FHead, TimeSp
 /// ## Notes
 ///
 /// Temporal expressions, such as `at start` and `at end` are available, however, `over all`
-/// is typically not used because it’s not common to express a boolean effect which is true
+/// is typically not used because it's not common to express a boolean effect which is true
 /// over the duration of the action.
 ///
 /// Instead you would set it to true at the start, using an `at start` and set it to false at
@@ -21,44 +21,44 @@ use crate::types::{AssignOpT, ConditionalEffect, FAssignDa, FExpT, FHead, TimeSp
 /// Used by [`DurativeActionEffect`](crate::DurativeActionEffect).
 #[derive(Debug, Clone, PartialEq)]
 pub enum TimedEffect {
-    Conditional(TimeSpecifier, ConditionalEffect),
+    Conditional(TimeSpecifier, EffectCondition),
     /// ## Requirements
     /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
-    NumericFluent(TimeSpecifier, FAssignDa),
+    NumericFluent(TimeSpecifier, DurativeActionFunctionAssignment),
     /// ## Requirements
     /// Requires [Continuous Effects](crate::Requirement::ContinuousEffects) and
     /// [Numeric Fluents](crate::Requirement::NumericFluents).
-    ContinuousEffect(AssignOpT, FHead, FExpT),
+    ContinuousEffect(TimedAssignOperator, FunctionHead, TimedFluentExpression),
 }
 
 impl TimedEffect {
-    pub const fn new_conditional(at: TimeSpecifier, effect: ConditionalEffect) -> Self {
+    pub const fn new_conditional(at: TimeSpecifier, effect: EffectCondition) -> Self {
         Self::Conditional(at, effect)
     }
 
-    pub const fn new_fluent(at: TimeSpecifier, action: FAssignDa) -> Self {
+    pub const fn new_fluent(at: TimeSpecifier, action: DurativeActionFunctionAssignment) -> Self {
         Self::NumericFluent(at, action)
     }
 
-    pub const fn new_continuous(operation: AssignOpT, f_head: FHead, f_exp_t: FExpT) -> Self {
+    pub const fn new_continuous(operation: TimedAssignOperator, f_head: FunctionHead, f_exp_t: TimedFluentExpression) -> Self {
         Self::ContinuousEffect(operation, f_head, f_exp_t)
     }
 }
 
-impl From<(TimeSpecifier, ConditionalEffect)> for TimedEffect {
-    fn from(value: (TimeSpecifier, ConditionalEffect)) -> Self {
+impl From<(TimeSpecifier, EffectCondition)> for TimedEffect {
+    fn from(value: (TimeSpecifier, EffectCondition)) -> Self {
         TimedEffect::Conditional(value.0, value.1)
     }
 }
 
-impl From<(TimeSpecifier, FAssignDa)> for TimedEffect {
-    fn from(value: (TimeSpecifier, FAssignDa)) -> Self {
+impl From<(TimeSpecifier, DurativeActionFunctionAssignment)> for TimedEffect {
+    fn from(value: (TimeSpecifier, DurativeActionFunctionAssignment)) -> Self {
         TimedEffect::NumericFluent(value.0, value.1)
     }
 }
 
-impl From<(AssignOpT, FHead, FExpT)> for TimedEffect {
-    fn from(value: (AssignOpT, FHead, FExpT)) -> Self {
+impl From<(TimedAssignOperator, FunctionHead, TimedFluentExpression)> for TimedEffect {
+    fn from(value: (TimedAssignOperator, FunctionHead, TimedFluentExpression)) -> Self {
         TimedEffect::ContinuousEffect(value.0, value.1, value.2)
     }
 }

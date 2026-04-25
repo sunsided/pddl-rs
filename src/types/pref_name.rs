@@ -7,7 +7,7 @@ use std::ops::Deref;
 ///
 /// ## Usage
 /// Used by [`PrefGD`](crate::PreferenceGD), [`PrefTimedGD`](crate::PrefTimedGD),
-/// [`PrefConGD`](crate::PrefConGD) and [`MetricFExp`](crate::MetricFExp).
+/// [`PrefConGD`](crate::PrefConGD) and [`MetricFluentExpression`](crate::MetricFluentExpression).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct PreferenceName(Name);
 

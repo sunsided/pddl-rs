@@ -1,16 +1,16 @@
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{
-    AssignOp, AssignOpT, BinaryComp, BinaryOp, DOp, Interval, MultiOp, Optimization, Requirement,
-    TimeSpecifier,
+    AssignOp, BinaryComparison, BinaryOp, DurationOperator, Interval, MultiOp, Optimization,
+    Requirement, TimeSpecifier, TimedAssignOperator,
 };
 use crate::visitor::Visitor;
 use pretty::RcDoc;
 
 impl sealed::Sealed for AssignOp {}
-impl sealed::Sealed for AssignOpT {}
+impl sealed::Sealed for TimedAssignOperator {}
 impl sealed::Sealed for BinaryOp {}
-impl sealed::Sealed for BinaryComp {}
-impl sealed::Sealed for DOp {}
+impl sealed::Sealed for BinaryComparison {}
+impl sealed::Sealed for DurationOperator {}
 impl sealed::Sealed for MultiOp {}
 impl sealed::Sealed for Optimization {}
 impl sealed::Sealed for Interval {}
@@ -23,8 +23,8 @@ impl Visitor<AssignOp, RcDoc<'static>> for PrettyRenderer {
     }
 }
 
-impl Visitor<AssignOpT, RcDoc<'static>> for PrettyRenderer {
-    fn visit(&self, value: &AssignOpT) -> RcDoc<'static> {
+impl Visitor<TimedAssignOperator, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &TimedAssignOperator) -> RcDoc<'static> {
         RcDoc::text(value.to_string())
     }
 }
@@ -35,14 +35,14 @@ impl Visitor<BinaryOp, RcDoc<'static>> for PrettyRenderer {
     }
 }
 
-impl Visitor<BinaryComp, RcDoc<'static>> for PrettyRenderer {
-    fn visit(&self, value: &BinaryComp) -> RcDoc<'static> {
+impl Visitor<BinaryComparison, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &BinaryComparison) -> RcDoc<'static> {
         RcDoc::text(value.to_string())
     }
 }
 
-impl Visitor<DOp, RcDoc<'static>> for PrettyRenderer {
-    fn visit(&self, value: &DOp) -> RcDoc<'static> {
+impl Visitor<DurationOperator, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &DurationOperator) -> RcDoc<'static> {
         RcDoc::text(value.to_string())
     }
 }
@@ -110,24 +110,24 @@ mod tests {
 
     #[test]
     fn assign_op_t_works() {
-        assert_eq!(prettify!(AssignOpT::Increase, 10), "increase");
-        assert_eq!(prettify!(AssignOpT::Decrease, 10), "decrease");
+        assert_eq!(prettify!(TimedAssignOperator::Increase, 10), "increase");
+        assert_eq!(prettify!(TimedAssignOperator::Decrease, 10), "decrease");
     }
 
     #[test]
     fn binary_comp_all_variants() {
-        assert_eq!(prettify!(BinaryComp::GreaterThan, 10), ">");
-        assert_eq!(prettify!(BinaryComp::LessThan, 10), "<");
-        assert_eq!(prettify!(BinaryComp::Equal, 10), "=");
-        assert_eq!(prettify!(BinaryComp::GreaterOrEqual, 10), ">=");
-        assert_eq!(prettify!(BinaryComp::LessThanOrEqual, 10), "<=");
+        assert_eq!(prettify!(BinaryComparison::GreaterThan, 10), ">");
+        assert_eq!(prettify!(BinaryComparison::LessThan, 10), "<");
+        assert_eq!(prettify!(BinaryComparison::Equal, 10), "=");
+        assert_eq!(prettify!(BinaryComparison::GreaterOrEqual, 10), ">=");
+        assert_eq!(prettify!(BinaryComparison::LessThanOrEqual, 10), "<=");
     }
 
     #[test]
     fn d_op_all_variants() {
-        assert_eq!(prettify!(DOp::Equal, 10), "=");
-        assert_eq!(prettify!(DOp::GreaterOrEqual, 10), ">=");
-        assert_eq!(prettify!(DOp::LessThanOrEqual, 10), "<=");
+        assert_eq!(prettify!(DurationOperator::Equal, 10), "=");
+        assert_eq!(prettify!(DurationOperator::GreaterOrEqual, 10), ">=");
+        assert_eq!(prettify!(DurationOperator::LessThanOrEqual, 10), "<=");
     }
 
     #[test]

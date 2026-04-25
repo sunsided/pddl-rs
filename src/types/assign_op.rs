@@ -6,7 +6,7 @@ use std::fmt::{Display, Formatter};
 /// An assignment operation.
 ///
 /// ## Usage
-/// Used by [`PEffect`](crate::PEffect), [`TimedEffect`](crate::TimedEffect) and
+/// Used by [`PrimitiveEffect`](crate::PrimitiveEffect), [`TimedEffect`](crate::TimedEffect) and
 /// [`FAssignDa`](crate::FAssignDa).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum AssignOp {

@@ -6,7 +6,7 @@ use crate::types::Variable;
 ///
 /// ## Usage
 /// Used by [`GoalDefinition`](crate::GoalDefinition), [`FunctionTerm`](FunctionTerm),
-/// [`FHead`](crate::FHead), [`PEffect`](crate::PEffect) and [`InitElement`](crate::InitElement).
+/// [`FHead`](crate::FHead), [`PrimitiveEffect`](crate::PrimitiveEffect) and [`InitElement`](crate::InitElement).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Term {
     Name(Name),

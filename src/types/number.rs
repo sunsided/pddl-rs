@@ -27,7 +27,7 @@ type UnderlyingType = f32;
 ///
 /// ## Usage
 /// Used by [`InitElement`](crate::InitElement), [`ConGD`](crate::ConGD),
-/// [`MetricFExp`](crate::MetricFExp) and [`DurationValue`](crate::DurationValue).
+/// [`MetricFluentExpression`](crate::MetricFluentExpression) and [`DurationValue`](crate::DurationValue).
 #[derive(Debug, Copy, Clone, Default)]
 pub struct Number(UnderlyingType);
 

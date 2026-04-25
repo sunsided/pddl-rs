@@ -73,14 +73,14 @@ impl crate::parsers::Parser for SimpleDurationConstraint {
 #[cfg(test)]
 mod tests {
     use crate::parsers::preamble::*;
-    use crate::{DOp, DurationValue, SimpleDurationConstraint, TimeSpecifier};
+    use crate::{DurationOperator, DurationValue, SimpleDurationConstraint, TimeSpecifier};
 
     #[test]
     fn test_parse() {
         let input = "(>= ?duration 1.23)";
         assert!(
             SimpleDurationConstraint::parse(input).is_value(SimpleDurationConstraint::new_op(
-                DOp::GreaterOrEqual,
+                DurationOperator::GreaterOrEqual,
                 DurationValue::new_number(1.23)
             ))
         );
@@ -89,7 +89,7 @@ mod tests {
         assert!(
             SimpleDurationConstraint::parse(input).is_value(SimpleDurationConstraint::new_at(
                 TimeSpecifier::End,
-                SimpleDurationConstraint::Op(DOp::LessThanOrEqual, DurationValue::new_number(1.23))
+                SimpleDurationConstraint::Op(DurationOperator::LessThanOrEqual, DurationValue::new_number(1.23))
             ))
         );
     }

@@ -107,7 +107,7 @@ fn parse_problem_works() {
                     GoalDefinition::Imply(_, _) => {}
                     GoalDefinition::Exists(_, _) => {}
                     GoalDefinition::ForAll(_, _) => {}
-                    GoalDefinition::FComp(_) => {}
+                    GoalDefinition::FluentComparison(_) => {}
                 },
                 PreferenceGD::Preference(_) => {}
             },

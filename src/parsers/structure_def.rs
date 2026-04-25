@@ -13,7 +13,7 @@ use crate::types::StructureDef;
 ///
 /// ```
 /// # use pddl::parsers::{parse_structure_def, preamble::*};
-/// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effects, GoalDefinition, Literal, PEffect, Predicate, Preference, PreferenceGD, PreconditionGoalDefinitions, StructureDef, Term, Variable};
+/// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, ConditionalEffect, Effects, GoalDefinition, Literal, PrimitiveEffect, Predicate, Preference, PreferenceGD, PreconditionGoalDefinitions, StructureDef, Term, Variable};
 /// # use pddl::{Name, ToTyped, TypedList};
 /// let input = r#"(:action take-out
 ///                     :parameters (?x - physob)
@@ -39,8 +39,8 @@ use crate::types::StructureDef;
 ///                 )
 ///             )
 ///         )),
-///         Some(Effects::new(CEffect::new_p_effect(
-///             PEffect::NotAtomicFormula(
+///         Some(Effects::new(ConditionalEffect::new_primitive_effect(
+///             PrimitiveEffect::NotAtomicFormula(
 ///                 AtomicFormula::new_predicate(
 ///                     Predicate::from("in"),
 ///                     vec![Term::Variable(Variable::from("x"))]
@@ -72,8 +72,8 @@ impl crate::parsers::Parser for StructureDef {
 mod tests {
     use crate::parsers::preamble::*;
     use crate::{
-        ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effects, GoalDefinition, Name,
-        PEffect, PreconditionGoalDefinitions, Predicate, PreferenceGD, StructureDef, Term, ToTyped,
+        ActionDefinition, ActionSymbol, AtomicFormula, ConditionalEffect, Effects, GoalDefinition, Name,
+        PrimitiveEffect, PreconditionGoalDefinitions, Predicate, PreferenceGD, StructureDef, Term, ToTyped,
         TypedList, Variable,
     };
 
@@ -99,8 +99,8 @@ mod tests {
                         )
                     ))
                 )),
-                Some(Effects::new(CEffect::new_p_effect(
-                    PEffect::NotAtomicFormula(AtomicFormula::new_predicate(
+                Some(Effects::new(ConditionalEffect::new_primitive_effect(
+                    PrimitiveEffect::NotAtomicFormula(AtomicFormula::new_predicate(
                         Predicate::from("in"),
                         vec![Term::Variable(Variable::from("x"))]
                     ))

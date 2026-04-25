@@ -1,6 +1,6 @@
 //! Contains the [`SimpleDurationConstraint`] type.
 
-use crate::types::{DOp, DurationValue, TimeSpecifier};
+use crate::types::{DurationOperator, DurationValue, TimeSpecifier};
 
 /// A simple duration constraint.
 ///
@@ -9,13 +9,13 @@ use crate::types::{DOp, DurationValue, TimeSpecifier};
 #[derive(Debug, Clone, PartialEq)]
 pub enum SimpleDurationConstraint {
     /// A comparison operation against a duration value.
-    Op(DOp, DurationValue),
+    Op(DurationOperator, DurationValue),
     /// A specific time at or after which a constraint applies.
     At(TimeSpecifier, Box<SimpleDurationConstraint>),
 }
 
 impl SimpleDurationConstraint {
-    pub const fn new_op(op: DOp, value: DurationValue) -> Self {
+    pub const fn new_op(op: DurationOperator, value: DurationValue) -> Self {
         Self::Op(op, value)
     }
 
@@ -24,8 +24,8 @@ impl SimpleDurationConstraint {
     }
 }
 
-impl From<(DOp, DurationValue)> for SimpleDurationConstraint {
-    fn from(value: (DOp, DurationValue)) -> Self {
+impl From<(DurationOperator, DurationValue)> for SimpleDurationConstraint {
+    fn from(value: (DurationOperator, DurationValue)) -> Self {
         SimpleDurationConstraint::new_op(value.0, value.1)
     }
 }

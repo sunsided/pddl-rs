@@ -11,12 +11,12 @@ use crate::types::DomainConstraintsDef;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_domain_constraints_def, parse_functions_def, preamble::*};
-/// # use pddl::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions, FunctionTypedList, FunctionTyped, AtomicFunctionSkeleton, FunctionSymbol, Functions, ConGD, DomainConstraintsDef};
+/// # use pddl::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions, FunctionTypedList, FunctionTyped, AtomicFunctionSkeleton, FunctionSymbol, Functions, ConstraintGoalDefinition, DomainConstraintsDef};
 /// # use pddl::{Type, Typed, TypedList};
 ///
 /// let input = "(:constraints (and))";
 /// assert!(parse_domain_constraints_def(input).is_value(
-///     DomainConstraintsDef::new(ConGD::new_and([]))
+///     DomainConstraintsDef::new(ConstraintGoalDefinition::new_and([]))
 /// ));
 /// ```
 pub fn parse_domain_constraints_def<'a, T: Into<Span<'a>>>(
@@ -41,12 +41,12 @@ impl crate::parsers::Parser for DomainConstraintsDef {
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{ConGD, DomainConstraintsDef, Parser};
+    use crate::{ConstraintGoalDefinition, DomainConstraintsDef, Parser};
 
     #[test]
     fn test_parse() {
         let input = "(:constraints (and))";
         assert!(DomainConstraintsDef::parse(input)
-            .is_value(DomainConstraintsDef::new(ConGD::new_and([]))));
+            .is_value(DomainConstraintsDef::new(ConstraintGoalDefinition::new_and([]))));
     }
 }

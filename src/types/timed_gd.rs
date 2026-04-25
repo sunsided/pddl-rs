@@ -3,9 +3,10 @@ use crate::types::{GoalDefinition, Interval, TimeSpecifier};
 /// A timed goal definition.
 ///
 /// ## Usage
-/// Used by [`PrefTimedGD`](crate::PrefTimedGD).
+/// Used by [`PreferenceTimedGoalDefinition`](crate::PreferenceTimedGoalDefinition).
+#[doc(alias("timed-GD"))]
 #[derive(Debug, Clone, PartialEq)]
-pub enum TimedGD {
+pub enum TimedGoalDefinition {
     /// ## `at start`
     /// An expression or predicate with `at start` prefixed to it means that the condition
     /// must be true at the start of the action in order for the action to be applied. e.g.
@@ -47,7 +48,7 @@ pub enum TimedGD {
     Over(Interval, GoalDefinition),
 }
 
-impl TimedGD {
+impl TimedGoalDefinition {
     pub const fn new_at(time: TimeSpecifier, gd: GoalDefinition) -> Self {
         Self::At(time, gd)
     }
@@ -57,14 +58,18 @@ impl TimedGD {
     }
 }
 
-impl From<(TimeSpecifier, GoalDefinition)> for TimedGD {
+impl From<(TimeSpecifier, GoalDefinition)> for TimedGoalDefinition {
     fn from(value: (TimeSpecifier, GoalDefinition)) -> Self {
-        TimedGD::At(value.0, value.1)
+        TimedGoalDefinition::At(value.0, value.1)
     }
 }
 
-impl From<(Interval, GoalDefinition)> for TimedGD {
+impl From<(Interval, GoalDefinition)> for TimedGoalDefinition {
     fn from(value: (Interval, GoalDefinition)) -> Self {
-        TimedGD::Over(value.0, value.1)
+        TimedGoalDefinition::Over(value.0, value.1)
     }
 }
+
+/// Alias for [`TimedGoalDefinition`]; matches BNF `<timed-GD>`.
+#[deprecated(since = "0.2.0", note = "Use `TimedGoalDefinition` instead")]
+pub type TimedGD = TimedGoalDefinition;

@@ -1,31 +1,32 @@
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{
-    BinaryComp, BinaryOp, FAssignDa, FComp, FExp, FExpDa, FExpT, FHead, MetricFExp, MultiOp,
+    BinaryComparison, BinaryOp, DurativeActionFluentExpression, DurativeActionFunctionAssignment, FluentComparison,
+    FluentExpression, FunctionHead, MetricFluentExpression, MultiOp, TimedFluentExpression,
 };
 use crate::visitor::{Accept, Visitor};
 use pretty::RcDoc;
 
-impl sealed::Sealed for FExp {}
-impl sealed::Sealed for FHead {}
-impl sealed::Sealed for FComp {}
-impl sealed::Sealed for FExpT {}
-impl sealed::Sealed for FExpDa {}
-impl sealed::Sealed for FAssignDa {}
-impl sealed::Sealed for MetricFExp {}
+impl sealed::Sealed for FluentExpression {}
+impl sealed::Sealed for FunctionHead {}
+impl sealed::Sealed for FluentComparison {}
+impl sealed::Sealed for TimedFluentExpression {}
+impl sealed::Sealed for DurativeActionFluentExpression {}
+impl sealed::Sealed for DurativeActionFunctionAssignment {}
+impl sealed::Sealed for MetricFluentExpression {}
 
-impl Visitor<FExp, RcDoc<'static>> for PrettyRenderer {
-    fn visit(&self, value: &FExp) -> RcDoc<'static> {
+impl Visitor<FluentExpression, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &FluentExpression) -> RcDoc<'static> {
         match value {
-            FExp::Number(n) => n.accept(self),
-            FExp::Function(head) => head.accept(self),
-            FExp::Negative(e) => RcDoc::text("(")
+            FluentExpression::Number(n) => n.accept(self),
+            FluentExpression::Function(head) => head.accept(self),
+            FluentExpression::Negative(e) => RcDoc::text("(")
                 .append("-")
                 .append(RcDoc::softline())
                 .append(self.visit(&**e))
                 .nest(4)
                 .group()
                 .append(")"),
-            FExp::BinaryOp(op, a, b) => {
+            FluentExpression::BinaryOp(op, a, b) => {
                 let op_str = match op {
                     BinaryOp::Addition => "+",
                     BinaryOp::Subtraction => "-",
@@ -34,7 +35,7 @@ impl Visitor<FExp, RcDoc<'static>> for PrettyRenderer {
                 };
                 self.sexpr(op_str, [self.visit(&**a), self.visit(&**b)])
             }
-            FExp::MultiOp(op, first, rest) => {
+            FluentExpression::MultiOp(op, first, rest) => {
                 let op_str = match op {
                     MultiOp::Addition => "+",
                     MultiOp::Multiplication => "*",
@@ -48,11 +49,11 @@ impl Visitor<FExp, RcDoc<'static>> for PrettyRenderer {
     }
 }
 
-impl Visitor<FHead, RcDoc<'static>> for PrettyRenderer {
-    fn visit(&self, value: &FHead) -> RcDoc<'static> {
+impl Visitor<FunctionHead, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &FunctionHead) -> RcDoc<'static> {
         match value {
-            FHead::Simple(sym) => sym.accept(self),
-            FHead::WithTerms(sym, terms) => RcDoc::text("(")
+            FunctionHead::Simple(sym) => sym.accept(self),
+            FunctionHead::WithTerms(sym, terms) => RcDoc::text("(")
                 .append(sym.accept(self))
                 .append(RcDoc::softline())
                 .append(RcDoc::intersperse(
@@ -66,14 +67,14 @@ impl Visitor<FHead, RcDoc<'static>> for PrettyRenderer {
     }
 }
 
-impl Visitor<FComp, RcDoc<'static>> for PrettyRenderer {
-    fn visit(&self, value: &FComp) -> RcDoc<'static> {
+impl Visitor<FluentComparison, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &FluentComparison) -> RcDoc<'static> {
         let op_str = match value.comparison() {
-            BinaryComp::GreaterThan => ">",
-            BinaryComp::LessThan => "<",
-            BinaryComp::Equal => "=",
-            BinaryComp::GreaterOrEqual => ">=",
-            BinaryComp::LessThanOrEqual => "<=",
+            BinaryComparison::GreaterThan => ">",
+            BinaryComparison::LessThan => "<",
+            BinaryComparison::Equal => "=",
+            BinaryComparison::GreaterOrEqual => ">=",
+            BinaryComparison::LessThanOrEqual => "<=",
         };
         self.sexpr(
             op_str,
@@ -82,28 +83,28 @@ impl Visitor<FComp, RcDoc<'static>> for PrettyRenderer {
     }
 }
 
-impl Visitor<FExpT, RcDoc<'static>> for PrettyRenderer {
-    fn visit(&self, value: &FExpT) -> RcDoc<'static> {
+impl Visitor<TimedFluentExpression, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &TimedFluentExpression) -> RcDoc<'static> {
         match value {
-            FExpT::Now => RcDoc::text("now"),
-            FExpT::Scaled(e) => self.visit(e),
+            TimedFluentExpression::Now => RcDoc::text("now"),
+            TimedFluentExpression::Scaled(e) => self.visit(e),
         }
     }
 }
 
-impl Visitor<FExpDa, RcDoc<'static>> for PrettyRenderer {
-    fn visit(&self, value: &FExpDa) -> RcDoc<'static> {
+impl Visitor<DurativeActionFluentExpression, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &DurativeActionFluentExpression) -> RcDoc<'static> {
         match value {
-            FExpDa::Duration => RcDoc::text("#t"),
-            FExpDa::FExp(e) => self.visit(e),
-            FExpDa::Negative(e) => RcDoc::text("(")
+            DurativeActionFluentExpression::Duration => RcDoc::text("#t"),
+            DurativeActionFluentExpression::FluentExpression(e) => self.visit(e),
+            DurativeActionFluentExpression::Negative(e) => RcDoc::text("(")
                 .append("-")
                 .append(RcDoc::softline())
                 .append(self.visit(&**e))
                 .nest(4)
                 .group()
                 .append(")"),
-            FExpDa::BinaryOp(op, a, b) => {
+            DurativeActionFluentExpression::BinaryOp(op, a, b) => {
                 let op_str = match op {
                     BinaryOp::Addition => "+",
                     BinaryOp::Subtraction => "-",
@@ -112,7 +113,7 @@ impl Visitor<FExpDa, RcDoc<'static>> for PrettyRenderer {
                 };
                 self.sexpr(op_str, [self.visit(&**a), self.visit(&**b)])
             }
-            FExpDa::MultiOp(op, first, rest) => {
+            DurativeActionFluentExpression::MultiOp(op, first, rest) => {
                 let op_str = match op {
                     MultiOp::Addition => "+",
                     MultiOp::Multiplication => "*",
@@ -122,15 +123,15 @@ impl Visitor<FExpDa, RcDoc<'static>> for PrettyRenderer {
                     std::iter::once(self.visit(&**first)).chain(rest.iter().map(|e| self.visit(e))),
                 )
             }
-            FExpDa::Assign(op, head, expr) => {
+            DurativeActionFluentExpression::Assign(op, head, expr) => {
                 self.sexpr(op.as_str(), [self.visit(head), self.visit(&**expr)])
             }
         }
     }
 }
 
-impl Visitor<FAssignDa, RcDoc<'static>> for PrettyRenderer {
-    fn visit(&self, value: &FAssignDa) -> RcDoc<'static> {
+impl Visitor<DurativeActionFunctionAssignment, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &DurativeActionFunctionAssignment) -> RcDoc<'static> {
         self.sexpr(
             value.operation().as_str(),
             [
@@ -141,11 +142,11 @@ impl Visitor<FAssignDa, RcDoc<'static>> for PrettyRenderer {
     }
 }
 
-impl Visitor<MetricFExp, RcDoc<'static>> for PrettyRenderer {
-    fn visit(&self, value: &MetricFExp) -> RcDoc<'static> {
+impl Visitor<MetricFluentExpression, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &MetricFluentExpression) -> RcDoc<'static> {
         match value {
-            MetricFExp::Number(n) => n.accept(self),
-            MetricFExp::Function(sym, names) => {
+            MetricFluentExpression::Number(n) => n.accept(self),
+            MetricFluentExpression::Function(sym, names) => {
                 if names.is_empty() {
                     sym.accept(self)
                 } else {
@@ -161,22 +162,22 @@ impl Visitor<MetricFExp, RcDoc<'static>> for PrettyRenderer {
                         .append(")")
                 }
             }
-            MetricFExp::TotalTime => RcDoc::text("total-time"),
-            MetricFExp::IsViolated(pref) => RcDoc::text("(")
+            MetricFluentExpression::TotalTime => RcDoc::text("total-time"),
+            MetricFluentExpression::IsViolated(pref) => RcDoc::text("(")
                 .append("is-violated")
                 .append(RcDoc::softline())
                 .append(pref.accept(self))
                 .nest(4)
                 .group()
                 .append(")"),
-            MetricFExp::Negative(e) => RcDoc::text("(")
+            MetricFluentExpression::Negative(e) => RcDoc::text("(")
                 .append("-")
                 .append(RcDoc::softline())
                 .append(self.visit(&**e))
                 .nest(4)
                 .group()
                 .append(")"),
-            MetricFExp::BinaryOp(op, a, b) => {
+            MetricFluentExpression::BinaryOp(op, a, b) => {
                 let op_str = match op {
                     BinaryOp::Addition => "+",
                     BinaryOp::Subtraction => "-",
@@ -185,7 +186,7 @@ impl Visitor<MetricFExp, RcDoc<'static>> for PrettyRenderer {
                 };
                 self.sexpr(op_str, [self.visit(&**a), self.visit(&**b)])
             }
-            MetricFExp::MultiOp(op, first, rest) => {
+            MetricFluentExpression::MultiOp(op, first, rest) => {
                 let op_str = match op {
                     MultiOp::Addition => "+",
                     MultiOp::Multiplication => "*",
@@ -205,284 +206,284 @@ mod tests {
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
     use crate::{
-        AssignOp, BinaryComp, BinaryOp, FunctionSymbol, MultiOp, Name, Number, PreferenceName,
-        Variable,
+        AssignOp, BinaryComparison, BinaryOp, FunctionSymbol, MultiOp, Name, Number,
+        PreferenceName, Variable,
     };
 
     #[test]
     fn fexp_number_works() {
-        let n = FExp::new_number(Number::from(42));
+        let n = FluentExpression::new_number(Number::from(42));
         assert_eq!(prettify!(n, 10), "42");
     }
 
     #[test]
     fn fexp_simple_function_works() {
-        let head = FHead::Simple(FunctionSymbol::from("fuel"));
-        let e = FExp::new_function(head);
+        let head = FunctionHead::Simple(FunctionSymbol::from("fuel"));
+        let e = FluentExpression::new_function(head);
         assert_eq!(prettify!(e, 10), "fuel");
     }
 
     #[test]
     fn fexp_function_with_terms_works() {
-        let head = FHead::WithTerms(
+        let head = FunctionHead::WithTerms(
             FunctionSymbol::from("fuel"),
             vec![crate::Term::new_variable(Variable::from("r"))],
         );
-        let e = FExp::new_function(head);
+        let e = FluentExpression::new_function(head);
         assert_eq!(prettify!(e, 20), "(fuel ?r)");
     }
 
     #[test]
     fn fexp_negative_works() {
-        let inner = FExp::new_number(Number::from(5));
-        let e = FExp::new_negative(inner);
+        let inner = FluentExpression::new_number(Number::from(5));
+        let e = FluentExpression::new_negative(inner);
         assert_eq!(prettify!(e, 10), "(- 5)");
     }
 
     #[test]
     fn fexp_binary_op_works() {
-        let a = FExp::new_number(Number::from(3));
-        let b = FExp::new_number(Number::from(4));
-        let e = FExp::new_binary_op(BinaryOp::Addition, a, b);
+        let a = FluentExpression::new_number(Number::from(3));
+        let b = FluentExpression::new_number(Number::from(4));
+        let e = FluentExpression::new_binary_op(BinaryOp::Addition, a, b);
         assert_eq!(prettify!(e, 10), "(+ 3 4)");
     }
 
     #[test]
     fn fcomp_works() {
-        let a = FExp::new_number(Number::from(3));
-        let b = FExp::new_number(Number::from(4));
-        let fc = FComp::new(BinaryComp::GreaterThan, a, b);
+        let a = FluentExpression::new_number(Number::from(3));
+        let b = FluentExpression::new_number(Number::from(4));
+        let fc = FluentComparison::new(BinaryComparison::GreaterThan, a, b);
         assert_eq!(prettify!(fc, 10), "(> 3 4)");
     }
 
     #[test]
     fn fexp_t_now_works() {
-        let e = FExpT::Now;
+        let e = TimedFluentExpression::Now;
         assert_eq!(prettify!(e, 10), "now");
     }
 
     #[test]
     fn fexp_t_scaled_works() {
-        let inner = FExp::new_number(Number::from(2));
-        let e = FExpT::Scaled(inner);
+        let inner = FluentExpression::new_number(Number::from(2));
+        let e = TimedFluentExpression::Scaled(inner);
         assert_eq!(prettify!(e, 10), "2");
     }
 
     #[test]
     fn fexp_da_duration_works() {
-        let e = FExpDa::new_duration();
+        let e = DurativeActionFluentExpression::new_duration();
         assert_eq!(prettify!(e, 10), "#t");
     }
 
     #[test]
     fn fexp_da_fexp_works() {
-        let inner = FExp::new_number(Number::from(10));
-        let e = FExpDa::new_f_exp(inner);
+        let inner = FluentExpression::new_number(Number::from(10));
+        let e = DurativeActionFluentExpression::new_f_exp(inner);
         assert_eq!(prettify!(e, 10), "10");
     }
 
     #[test]
     fn f_assign_da_works() {
-        let head = FHead::Simple(FunctionSymbol::from("fuel"));
-        let expr = FExpDa::new_f_exp(FExp::new_number(Number::from(5)));
-        let assign = FAssignDa::new(AssignOp::Assign, head, expr);
+        let head = FunctionHead::Simple(FunctionSymbol::from("fuel"));
+        let expr = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(Number::from(5)));
+        let assign = DurativeActionFunctionAssignment::new(AssignOp::Assign, head, expr);
         assert_eq!(prettify!(assign, 20), "(assign fuel 5)");
     }
 
     #[test]
     fn metric_fexp_number_works() {
-        let m = MetricFExp::new_number(Number::from(10));
+        let m = MetricFluentExpression::new_number(Number::from(10));
         assert_eq!(prettify!(m, 10), "10");
     }
 
     #[test]
     fn metric_fexp_total_time_works() {
-        let m = MetricFExp::new_total_time();
+        let m = MetricFluentExpression::new_total_time();
         assert_eq!(prettify!(m, 10), "total-time");
     }
 
     #[test]
     fn metric_fexp_function_works() {
-        let m = MetricFExp::new_function(FunctionSymbol::from("fuel"), vec![Name::new("r")]);
+        let m = MetricFluentExpression::new_function(FunctionSymbol::from("fuel"), vec![Name::new("r")]);
         assert_eq!(prettify!(m, 20), "(fuel r)");
     }
 
     #[test]
     fn metric_fexp_is_violated_works() {
-        let m = MetricFExp::new_is_violated(PreferenceName::new_string("p1"));
+        let m = MetricFluentExpression::new_is_violated(PreferenceName::new_string("p1"));
         assert_eq!(prettify!(m, 20), "(is-violated p1)");
     }
 
     #[test]
     fn fexp_multi_op_addition_works() {
-        let a = FExp::new_number(Number::from(1));
-        let b = FExp::new_number(Number::from(2));
-        let c = FExp::new_number(Number::from(3));
-        let e = FExp::new_multi_op(MultiOp::Addition, a, [b, c]);
+        let a = FluentExpression::new_number(Number::from(1));
+        let b = FluentExpression::new_number(Number::from(2));
+        let c = FluentExpression::new_number(Number::from(3));
+        let e = FluentExpression::new_multi_op(MultiOp::Addition, a, [b, c]);
         assert_eq!(prettify!(e, 20), "(+ 1 2 3)");
     }
 
     #[test]
     fn fexp_multi_op_multiplication_works() {
-        let a = FExp::new_number(Number::from(2));
-        let b = FExp::new_number(Number::from(3));
-        let c = FExp::new_number(Number::from(4));
-        let e = FExp::new_multi_op(MultiOp::Multiplication, a, [b, c]);
+        let a = FluentExpression::new_number(Number::from(2));
+        let b = FluentExpression::new_number(Number::from(3));
+        let c = FluentExpression::new_number(Number::from(4));
+        let e = FluentExpression::new_multi_op(MultiOp::Multiplication, a, [b, c]);
         assert_eq!(prettify!(e, 20), "(* 2 3 4)");
     }
 
     #[test]
     fn fexp_binary_op_subtraction_works() {
-        let a = FExp::new_number(Number::from(5));
-        let b = FExp::new_number(Number::from(3));
-        let e = FExp::new_binary_op(BinaryOp::Subtraction, a, b);
+        let a = FluentExpression::new_number(Number::from(5));
+        let b = FluentExpression::new_number(Number::from(3));
+        let e = FluentExpression::new_binary_op(BinaryOp::Subtraction, a, b);
         assert_eq!(prettify!(e, 10), "(- 5 3)");
     }
 
     #[test]
     fn fexp_binary_op_division_works() {
-        let a = FExp::new_number(Number::from(10));
-        let b = FExp::new_number(Number::from(2));
-        let e = FExp::new_binary_op(BinaryOp::Division, a, b);
+        let a = FluentExpression::new_number(Number::from(10));
+        let b = FluentExpression::new_number(Number::from(2));
+        let e = FluentExpression::new_binary_op(BinaryOp::Division, a, b);
         assert_eq!(prettify!(e, 10), "(/ 10 2)");
     }
 
     #[test]
     fn fexp_binary_op_multiplication_works() {
-        let a = FExp::new_number(Number::from(3));
-        let b = FExp::new_number(Number::from(4));
-        let e = FExp::new_binary_op(BinaryOp::Multiplication, a, b);
+        let a = FluentExpression::new_number(Number::from(3));
+        let b = FluentExpression::new_number(Number::from(4));
+        let e = FluentExpression::new_binary_op(BinaryOp::Multiplication, a, b);
         assert_eq!(prettify!(e, 10), "(* 3 4)");
     }
 
     #[test]
     fn fexp_da_negative_works() {
-        let inner = FExpDa::new_f_exp(FExp::new_number(Number::from(5)));
-        let e = FExpDa::new_negative(inner);
+        let inner = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(Number::from(5)));
+        let e = DurativeActionFluentExpression::new_negative(inner);
         assert_eq!(prettify!(e, 10), "(- 5)");
     }
 
     #[test]
     fn fexp_da_binary_op_subtraction_works() {
-        let a = FExpDa::new_f_exp(FExp::new_number(Number::from(5)));
-        let b = FExpDa::new_f_exp(FExp::new_number(Number::from(3)));
-        let e = FExpDa::new_binary_op(BinaryOp::Subtraction, a, b);
+        let a = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(Number::from(5)));
+        let b = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(Number::from(3)));
+        let e = DurativeActionFluentExpression::new_binary_op(BinaryOp::Subtraction, a, b);
         assert_eq!(prettify!(e, 10), "(- 5 3)");
     }
 
     #[test]
     fn fexp_da_binary_op_division_works() {
-        let a = FExpDa::new_f_exp(FExp::new_number(Number::from(10)));
-        let b = FExpDa::new_f_exp(FExp::new_number(Number::from(2)));
-        let e = FExpDa::new_binary_op(BinaryOp::Division, a, b);
+        let a = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(Number::from(10)));
+        let b = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(Number::from(2)));
+        let e = DurativeActionFluentExpression::new_binary_op(BinaryOp::Division, a, b);
         assert_eq!(prettify!(e, 10), "(/ 10 2)");
     }
 
     #[test]
     fn fexp_da_binary_op_multiplication_works() {
-        let a = FExpDa::new_f_exp(FExp::new_number(Number::from(3)));
-        let b = FExpDa::new_f_exp(FExp::new_number(Number::from(4)));
-        let e = FExpDa::new_binary_op(BinaryOp::Multiplication, a, b);
+        let a = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(Number::from(3)));
+        let b = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(Number::from(4)));
+        let e = DurativeActionFluentExpression::new_binary_op(BinaryOp::Multiplication, a, b);
         assert_eq!(prettify!(e, 10), "(* 3 4)");
     }
 
     #[test]
     fn fexp_da_multi_op_addition_works() {
-        let a = FExpDa::new_f_exp(FExp::new_number(Number::from(1)));
-        let b = FExpDa::new_f_exp(FExp::new_number(Number::from(2)));
-        let c = FExpDa::new_f_exp(FExp::new_number(Number::from(3)));
-        let e = FExpDa::new_multi_op(MultiOp::Addition, a, [b, c]);
+        let a = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(Number::from(1)));
+        let b = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(Number::from(2)));
+        let c = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(Number::from(3)));
+        let e = DurativeActionFluentExpression::new_multi_op(MultiOp::Addition, a, [b, c]);
         assert_eq!(prettify!(e, 20), "(+ 1 2 3)");
     }
 
     #[test]
     fn fexp_da_multi_op_multiplication_works() {
-        let a = FExpDa::new_f_exp(FExp::new_number(Number::from(2)));
-        let b = FExpDa::new_f_exp(FExp::new_number(Number::from(3)));
-        let c = FExpDa::new_f_exp(FExp::new_number(Number::from(4)));
-        let e = FExpDa::new_multi_op(MultiOp::Multiplication, a, [b, c]);
+        let a = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(Number::from(2)));
+        let b = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(Number::from(3)));
+        let c = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(Number::from(4)));
+        let e = DurativeActionFluentExpression::new_multi_op(MultiOp::Multiplication, a, [b, c]);
         assert_eq!(prettify!(e, 20), "(* 2 3 4)");
     }
 
     #[test]
     fn fexp_da_assign_works() {
-        use crate::FHead;
-        let head = FHead::Simple(FunctionSymbol::from("x"));
-        let expr = FExpDa::new_f_exp(FExp::new_number(Number::from(10)));
-        let e = FExpDa::Assign(AssignOp::Increase, head, Box::new(expr));
+        use crate::FunctionHead;
+        let head = FunctionHead::Simple(FunctionSymbol::from("x"));
+        let expr = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(Number::from(10)));
+        let e = DurativeActionFluentExpression::Assign(AssignOp::Increase, head, Box::new(expr));
         assert_eq!(prettify!(e, 20), "(increase x 10)");
     }
 
     #[test]
     fn fcomp_less_than_works() {
-        let a = FExp::new_number(Number::from(3));
-        let b = FExp::new_number(Number::from(4));
-        let fc = FComp::new(BinaryComp::LessThan, a, b);
+        let a = FluentExpression::new_number(Number::from(3));
+        let b = FluentExpression::new_number(Number::from(4));
+        let fc = FluentComparison::new(BinaryComparison::LessThan, a, b);
         assert_eq!(prettify!(fc, 10), "(< 3 4)");
     }
 
     #[test]
     fn fcomp_equal_works() {
-        let a = FExp::new_number(Number::from(3));
-        let b = FExp::new_number(Number::from(4));
-        let fc = FComp::new(BinaryComp::Equal, a, b);
+        let a = FluentExpression::new_number(Number::from(3));
+        let b = FluentExpression::new_number(Number::from(4));
+        let fc = FluentComparison::new(BinaryComparison::Equal, a, b);
         assert_eq!(prettify!(fc, 10), "(= 3 4)");
     }
 
     #[test]
     fn fcomp_greater_or_equal_works() {
-        let a = FExp::new_number(Number::from(3));
-        let b = FExp::new_number(Number::from(4));
-        let fc = FComp::new(BinaryComp::GreaterOrEqual, a, b);
+        let a = FluentExpression::new_number(Number::from(3));
+        let b = FluentExpression::new_number(Number::from(4));
+        let fc = FluentComparison::new(BinaryComparison::GreaterOrEqual, a, b);
         assert_eq!(prettify!(fc, 10), "(>= 3 4)");
     }
 
     #[test]
     fn fcomp_less_than_or_equal_works() {
-        let a = FExp::new_number(Number::from(3));
-        let b = FExp::new_number(Number::from(4));
-        let fc = FComp::new(BinaryComp::LessThanOrEqual, a, b);
+        let a = FluentExpression::new_number(Number::from(3));
+        let b = FluentExpression::new_number(Number::from(4));
+        let fc = FluentComparison::new(BinaryComparison::LessThanOrEqual, a, b);
         assert_eq!(prettify!(fc, 10), "(<= 3 4)");
     }
 
     #[test]
     fn metric_fexp_negative_works() {
-        let inner = MetricFExp::new_number(Number::from(5));
-        let m = MetricFExp::new_negative(inner);
+        let inner = MetricFluentExpression::new_number(Number::from(5));
+        let m = MetricFluentExpression::new_negative(inner);
         assert_eq!(prettify!(m, 10), "(- 5)");
     }
 
     #[test]
     fn metric_fexp_binary_op_subtraction_works() {
-        let a = MetricFExp::new_number(Number::from(5));
-        let b = MetricFExp::new_number(Number::from(3));
-        let m = MetricFExp::new_binary_op(BinaryOp::Subtraction, a, b);
+        let a = MetricFluentExpression::new_number(Number::from(5));
+        let b = MetricFluentExpression::new_number(Number::from(3));
+        let m = MetricFluentExpression::new_binary_op(BinaryOp::Subtraction, a, b);
         assert_eq!(prettify!(m, 10), "(- 5 3)");
     }
 
     #[test]
     fn metric_fexp_binary_op_multiplication_works() {
-        let a = MetricFExp::new_number(Number::from(3));
-        let b = MetricFExp::new_number(Number::from(4));
-        let m = MetricFExp::new_binary_op(BinaryOp::Multiplication, a, b);
+        let a = MetricFluentExpression::new_number(Number::from(3));
+        let b = MetricFluentExpression::new_number(Number::from(4));
+        let m = MetricFluentExpression::new_binary_op(BinaryOp::Multiplication, a, b);
         assert_eq!(prettify!(m, 10), "(* 3 4)");
     }
 
     #[test]
     fn metric_fexp_multi_op_addition_works() {
-        let a = MetricFExp::new_number(Number::from(1));
-        let b = MetricFExp::new_number(Number::from(2));
-        let c = MetricFExp::new_number(Number::from(3));
-        let m = MetricFExp::new_multi_op(MultiOp::Addition, a, [b, c]);
+        let a = MetricFluentExpression::new_number(Number::from(1));
+        let b = MetricFluentExpression::new_number(Number::from(2));
+        let c = MetricFluentExpression::new_number(Number::from(3));
+        let m = MetricFluentExpression::new_multi_op(MultiOp::Addition, a, [b, c]);
         assert_eq!(prettify!(m, 20), "(+ 1 2 3)");
     }
 
     #[test]
     fn metric_fexp_multi_op_multiplication_works() {
-        let a = MetricFExp::new_number(Number::from(2));
-        let b = MetricFExp::new_number(Number::from(3));
-        let c = MetricFExp::new_number(Number::from(4));
-        let m = MetricFExp::new_multi_op(MultiOp::Multiplication, a, [b, c]);
+        let a = MetricFluentExpression::new_number(Number::from(2));
+        let b = MetricFluentExpression::new_number(Number::from(3));
+        let c = MetricFluentExpression::new_number(Number::from(4));
+        let m = MetricFluentExpression::new_multi_op(MultiOp::Multiplication, a, [b, c]);
         assert_eq!(prettify!(m, 20), "(* 2 3 4)");
     }
 }

@@ -5,7 +5,7 @@ use crate::parsers::{
     space_separated_list0, space_separated_list1, ws, ParseResult, Span,
 };
 use crate::parsers::{parse_binary_op, parse_multi_op};
-use crate::types::MetricFExp;
+use crate::types::MetricFluentExpression;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::character::complete::{char, multispace0, multispace1};
@@ -18,55 +18,55 @@ use nom::Parser;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_metric_f_exp, preamble::*};
-/// # use pddl::{BinaryOp, MetricFExp, FunctionSymbol, MultiOp, Name, PreferenceName};
+/// # use pddl::{BinaryOp, MetricFluentExpression, FunctionSymbol, MultiOp, Name, PreferenceName};
 /// assert!(parse_metric_f_exp("1.23").is_value(
-///     MetricFExp::new_number(1.23)
+///     MetricFluentExpression::new_number(1.23)
 /// ));
 ///
 /// assert!(parse_metric_f_exp("(- total-time)").is_value(
-///     MetricFExp::new_negative(
-///         MetricFExp::TotalTime
+///     MetricFluentExpression::new_negative(
+///         MetricFluentExpression::TotalTime
 ///     )
 /// ));
 ///
 /// assert!(parse_metric_f_exp("(+ 1.23 2.34)").is_value(
-///     MetricFExp::new_binary_op(
+///     MetricFluentExpression::new_binary_op(
 ///         BinaryOp::Addition,
-///         MetricFExp::new_number(1.23),
-///         MetricFExp::new_number(2.34)
+///         MetricFluentExpression::new_number(1.23),
+///         MetricFluentExpression::new_number(2.34)
 ///     )
 /// ));
 ///
 /// assert!(parse_metric_f_exp("(+ 1.23 2.34 3.45)").is_value(
-///     MetricFExp::new_multi_op(
+///     MetricFluentExpression::new_multi_op(
 ///         MultiOp::Addition,
-///         MetricFExp::new_number(1.23),
-///         [MetricFExp::new_number(2.34), MetricFExp::new_number(3.45)]
+///         MetricFluentExpression::new_number(1.23),
+///         [MetricFluentExpression::new_number(2.34), MetricFluentExpression::new_number(3.45)]
 ///     )
 /// ));
 ///
 /// assert!(parse_metric_f_exp("(is-violated preference)").is_value(
-///     MetricFExp::new_is_violated(
+///     MetricFluentExpression::new_is_violated(
 ///         PreferenceName::from("preference")
 ///     )
 /// ));
 ///
 /// assert!(parse_metric_f_exp("fun-sym").is_value(
-///     MetricFExp::new_function(
+///     MetricFluentExpression::new_function(
 ///         FunctionSymbol::new_string("fun-sym"),
 ///         []
 ///     )
 /// ));
 ///
 /// assert!(parse_metric_f_exp("(fun-sym)").is_value(
-///     MetricFExp::new_function(
+///     MetricFluentExpression::new_function(
 ///         FunctionSymbol::new_string("fun-sym"),
 ///         []
 ///     )
 /// ));
 ///
 /// assert!(parse_metric_f_exp("(fun-sym a b c)").is_value(
-///     MetricFExp::new_function(
+///     MetricFluentExpression::new_function(
 ///         FunctionSymbol::new_string("fun-sym"),
 ///         [
 ///             Name::new("a"),
@@ -76,14 +76,14 @@ use nom::Parser;
 ///     )
 /// ));
 ///```
-pub fn parse_metric_f_exp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, MetricFExp> {
+pub fn parse_metric_f_exp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, MetricFluentExpression> {
     let binary_op = map(
         parens((
             parse_binary_op,
             preceded(multispace1, parse_metric_f_exp),
             preceded(multispace1, parse_metric_f_exp),
         )),
-        |(op, lhs, rhs)| MetricFExp::new_binary_op(op, lhs, rhs),
+        |(op, lhs, rhs)| MetricFluentExpression::new_binary_op(op, lhs, rhs),
     );
 
     let multi_op = map(
@@ -92,30 +92,30 @@ pub fn parse_metric_f_exp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Me
             preceded(multispace1, parse_metric_f_exp),
             preceded(multispace1, space_separated_list1(parse_metric_f_exp)),
         )),
-        |(op, lhs, rhs)| MetricFExp::new_multi_op(op, lhs, rhs),
+        |(op, lhs, rhs)| MetricFluentExpression::new_multi_op(op, lhs, rhs),
     );
 
     let negated = map(
         parens(preceded((char('-'), multispace0), parse_metric_f_exp)),
-        MetricFExp::new_negative,
+        MetricFluentExpression::new_negative,
     );
 
-    let number = map(parse_number, MetricFExp::new_number);
+    let number = map(parse_number, MetricFluentExpression::new_number);
 
     let simple_function = map(parse_function_symbol, |sym| {
-        MetricFExp::new_function(sym, [])
+        MetricFluentExpression::new_function(sym, [])
     });
     let complex_function = map(
         parens((parse_function_symbol, ws(space_separated_list0(parse_name)))),
-        |(sym, names)| MetricFExp::new_function(sym, names),
+        |(sym, names)| MetricFluentExpression::new_function(sym, names),
     );
 
-    let total_time = map(tag("total-time"), |_| MetricFExp::new_total_time());
+    let total_time = map(tag("total-time"), |_| MetricFluentExpression::new_total_time());
 
     // :preferences
     let is_violated = map(
         prefix_expr("is-violated", parse_pref_name),
-        MetricFExp::new_is_violated,
+        MetricFluentExpression::new_is_violated,
     );
 
     alt((
@@ -131,8 +131,8 @@ pub fn parse_metric_f_exp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Me
     .parse(input.into())
 }
 
-impl crate::parsers::Parser for MetricFExp {
-    type Item = MetricFExp;
+impl crate::parsers::Parser for MetricFluentExpression {
+    type Item = MetricFluentExpression;
 
     /// See [`parse_metric_f_exp`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
@@ -143,51 +143,51 @@ impl crate::parsers::Parser for MetricFExp {
 #[cfg(test)]
 mod tests {
     use crate::parsers::preamble::*;
-    use crate::{BinaryOp, FunctionSymbol, MetricFExp, MultiOp, Name, PreferenceName};
+    use crate::{BinaryOp, FunctionSymbol, MetricFluentExpression, MultiOp, Name, PreferenceName};
 
     #[test]
     fn test_parse() {
-        assert!(MetricFExp::parse("1.23").is_value(MetricFExp::new_number(1.23)));
+        assert!(MetricFluentExpression::parse("1.23").is_value(MetricFluentExpression::new_number(1.23)));
 
-        assert!(MetricFExp::parse("(- total-time)")
-            .is_value(MetricFExp::new_negative(MetricFExp::TotalTime)));
+        assert!(MetricFluentExpression::parse("(- total-time)")
+            .is_value(MetricFluentExpression::new_negative(MetricFluentExpression::TotalTime)));
 
         assert!(
-            MetricFExp::parse("(+ 1.23 2.34)").is_value(MetricFExp::new_binary_op(
+            MetricFluentExpression::parse("(+ 1.23 2.34)").is_value(MetricFluentExpression::new_binary_op(
                 BinaryOp::Addition,
-                MetricFExp::new_number(1.23),
-                MetricFExp::new_number(2.34)
+                MetricFluentExpression::new_number(1.23),
+                MetricFluentExpression::new_number(2.34)
             ))
         );
 
         assert!(
-            MetricFExp::parse("(+ 1.23 2.34 3.45)").is_value(MetricFExp::new_multi_op(
+            MetricFluentExpression::parse("(+ 1.23 2.34 3.45)").is_value(MetricFluentExpression::new_multi_op(
                 MultiOp::Addition,
-                MetricFExp::new_number(1.23),
-                [MetricFExp::new_number(2.34), MetricFExp::new_number(3.45)]
+                MetricFluentExpression::new_number(1.23),
+                [MetricFluentExpression::new_number(2.34), MetricFluentExpression::new_number(3.45)]
             ))
         );
 
-        assert!(MetricFExp::parse("(is-violated preference)").is_value(
-            MetricFExp::new_is_violated(PreferenceName::from("preference"))
+        assert!(MetricFluentExpression::parse("(is-violated preference)").is_value(
+            MetricFluentExpression::new_is_violated(PreferenceName::from("preference"))
         ));
 
         assert!(
-            MetricFExp::parse("fun-sym").is_value(MetricFExp::new_function(
+            MetricFluentExpression::parse("fun-sym").is_value(MetricFluentExpression::new_function(
                 FunctionSymbol::new_string("fun-sym"),
                 []
             ))
         );
 
         assert!(
-            MetricFExp::parse("(fun-sym)").is_value(MetricFExp::new_function(
+            MetricFluentExpression::parse("(fun-sym)").is_value(MetricFluentExpression::new_function(
                 FunctionSymbol::new_string("fun-sym"),
                 []
             ))
         );
 
         assert!(
-            MetricFExp::parse("(fun-sym a b c)").is_value(MetricFExp::new_function(
+            MetricFluentExpression::parse("(fun-sym a b c)").is_value(MetricFluentExpression::new_function(
                 FunctionSymbol::new_string("fun-sym"),
                 [Name::new("a"), Name::new("b"), Name::new("c")]
             ))

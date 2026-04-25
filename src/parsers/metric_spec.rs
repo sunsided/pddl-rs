@@ -13,11 +13,11 @@ use crate::types::MetricSpec;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_problem_metric_spec, preamble::*};
-/// # use pddl::{MetricFExp, MetricSpec, Optimization};
+/// # use pddl::{MetricFluentExpression, MetricSpec, Optimization};
 /// assert!(parse_problem_metric_spec("(:metric minimize total-time)").is_value(
 ///     MetricSpec::new(
 ///         Optimization::Minimize,
-///         MetricFExp::TotalTime
+///         MetricFluentExpression::TotalTime
 ///     )
 /// ));
 ///```
@@ -48,14 +48,14 @@ impl crate::parsers::Parser for MetricSpec {
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{MetricFExp, MetricSpec, Optimization, Parser};
+    use crate::{MetricFluentExpression, MetricSpec, Optimization, Parser};
 
     #[test]
     fn test_parse() {
         assert!(
             MetricSpec::parse("(:metric minimize total-time)").is_value(MetricSpec::new(
                 Optimization::Minimize,
-                MetricFExp::TotalTime
+                MetricFluentExpression::TotalTime
             ))
         );
     }

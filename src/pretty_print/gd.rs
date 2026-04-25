@@ -1,7 +1,7 @@
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{
-    Con2GD, ConGD, GoalDefinition, PreconditionGoalDefinition, PreconditionGoalDefinitions,
-    PrefConGD, PrefConGDs, Preference, PreferenceGD,
+    ConstraintGoalDefinition, ConstraintGoalDefinitionInner, GoalDefinition, PreconditionGoalDefinition, PreconditionGoalDefinitions,
+    PreferenceConstraintGoalDefinition, PreferenceConstraintGoalDefinitions, Preference, PreferenceGD,
 };
 use crate::visitor::{Accept, Visitor};
 use pretty::RcDoc;
@@ -11,10 +11,10 @@ impl sealed::Sealed for PreconditionGoalDefinition {}
 impl sealed::Sealed for PreconditionGoalDefinitions {}
 impl sealed::Sealed for PreferenceGD {}
 impl sealed::Sealed for Preference {}
-impl sealed::Sealed for PrefConGD {}
-impl sealed::Sealed for PrefConGDs {}
-impl sealed::Sealed for ConGD {}
-impl sealed::Sealed for Con2GD {}
+impl sealed::Sealed for PreferenceConstraintGoalDefinition {}
+impl sealed::Sealed for PreferenceConstraintGoalDefinitions {}
+impl sealed::Sealed for ConstraintGoalDefinition {}
+impl sealed::Sealed for ConstraintGoalDefinitionInner {}
 
 impl Visitor<GoalDefinition, RcDoc<'static>> for PrettyRenderer {
     fn visit(&self, value: &GoalDefinition) -> RcDoc<'static> {
@@ -53,7 +53,7 @@ impl Visitor<GoalDefinition, RcDoc<'static>> for PrettyRenderer {
                     self.visit(&**body),
                 ],
             ),
-            GoalDefinition::FComp(fc) => fc.accept(self),
+            GoalDefinition::FluentComparison(fc) => fc.accept(self),
         }
     }
 }
@@ -108,18 +108,18 @@ impl Visitor<Preference, RcDoc<'static>> for PrettyRenderer {
     }
 }
 
-impl Visitor<PrefConGD, RcDoc<'static>> for PrettyRenderer {
-    fn visit(&self, value: &PrefConGD) -> RcDoc<'static> {
+impl Visitor<PreferenceConstraintGoalDefinition, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &PreferenceConstraintGoalDefinition) -> RcDoc<'static> {
         match value {
-            PrefConGD::Goal(gd) => self.visit(gd),
-            PrefConGD::Forall(vars, gds) => self.sexpr(
+            PreferenceConstraintGoalDefinition::Goal(gd) => self.visit(gd),
+            PreferenceConstraintGoalDefinition::Forall(vars, gds) => self.sexpr(
                 "forall",
                 [
                     RcDoc::text("(").append(vars.accept(self)).append(")"),
                     RcDoc::intersperse(gds.iter().map(|gd| self.visit(gd)), RcDoc::softline()),
                 ],
             ),
-            PrefConGD::Preference(name, gd) => {
+            PreferenceConstraintGoalDefinition::Preference(name, gd) => {
                 let children: Vec<RcDoc<'static>> = match name {
                     Some(n) => vec![n.accept(self), self.visit(gd)],
                     None => vec![self.visit(gd)],
@@ -130,58 +130,58 @@ impl Visitor<PrefConGD, RcDoc<'static>> for PrettyRenderer {
     }
 }
 
-impl Visitor<PrefConGDs, RcDoc<'static>> for PrettyRenderer {
-    fn visit(&self, value: &PrefConGDs) -> RcDoc<'static> {
+impl Visitor<PreferenceConstraintGoalDefinitions, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &PreferenceConstraintGoalDefinitions) -> RcDoc<'static> {
         RcDoc::intersperse(value.iter().map(|gd| self.visit(gd)), RcDoc::softline())
     }
 }
 
-impl Visitor<ConGD, RcDoc<'static>> for PrettyRenderer {
-    fn visit(&self, value: &ConGD) -> RcDoc<'static> {
+impl Visitor<ConstraintGoalDefinition, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &ConstraintGoalDefinition) -> RcDoc<'static> {
         match value {
-            ConGD::And(items) => {
+            ConstraintGoalDefinition::And(items) => {
                 if items.is_empty() {
                     RcDoc::text("(and)")
                 } else {
                     self.sexpr("and", items.iter().map(|gd| self.visit(gd)))
                 }
             }
-            ConGD::Forall(vars, body) => self.sexpr(
+            ConstraintGoalDefinition::Forall(vars, body) => self.sexpr(
                 "forall",
                 [
                     RcDoc::text("(").append(vars.accept(self)).append(")"),
                     self.visit(&**body),
                 ],
             ),
-            ConGD::AtEnd(gd) => self.sexpr("at", [RcDoc::text("end"), self.visit(gd)]),
-            ConGD::Always(gd) => self.sexpr("always", [self.visit(gd)]),
-            ConGD::Sometime(gd) => self.sexpr("sometime", [self.visit(gd)]),
-            ConGD::Within(n, gd) => self.sexpr("within", [n.accept(self), self.visit(gd)]),
-            ConGD::AtMostOnce(gd) => self.sexpr("at-most-once", [self.visit(gd)]),
-            ConGD::SometimeAfter(a, b) => {
+            ConstraintGoalDefinition::AtEnd(gd) => self.sexpr("at", [RcDoc::text("end"), self.visit(gd)]),
+            ConstraintGoalDefinition::Always(gd) => self.sexpr("always", [self.visit(gd)]),
+            ConstraintGoalDefinition::Sometime(gd) => self.sexpr("sometime", [self.visit(gd)]),
+            ConstraintGoalDefinition::Within(n, gd) => self.sexpr("within", [n.accept(self), self.visit(gd)]),
+            ConstraintGoalDefinition::AtMostOnce(gd) => self.sexpr("at-most-once", [self.visit(gd)]),
+            ConstraintGoalDefinition::SometimeAfter(a, b) => {
                 self.sexpr("sometime-after", [self.visit(a), self.visit(b)])
             }
-            ConGD::SometimeBefore(a, b) => {
+            ConstraintGoalDefinition::SometimeBefore(a, b) => {
                 self.sexpr("sometime-before", [self.visit(a), self.visit(b)])
             }
-            ConGD::AlwaysWithin(n, a, b) => self.sexpr(
+            ConstraintGoalDefinition::AlwaysWithin(n, a, b) => self.sexpr(
                 "always-within",
                 [n.accept(self), self.visit(a), self.visit(b)],
             ),
-            ConGD::HoldDuring(s, e, gd) => self.sexpr(
+            ConstraintGoalDefinition::HoldDuring(s, e, gd) => self.sexpr(
                 "hold-during",
                 [s.accept(self), e.accept(self), self.visit(gd)],
             ),
-            ConGD::HoldAfter(n, gd) => self.sexpr("hold-after", [n.accept(self), self.visit(gd)]),
+            ConstraintGoalDefinition::HoldAfter(n, gd) => self.sexpr("hold-after", [n.accept(self), self.visit(gd)]),
         }
     }
 }
 
-impl Visitor<Con2GD, RcDoc<'static>> for PrettyRenderer {
-    fn visit(&self, value: &Con2GD) -> RcDoc<'static> {
+impl Visitor<ConstraintGoalDefinitionInner, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &ConstraintGoalDefinitionInner) -> RcDoc<'static> {
         match value {
-            Con2GD::Goal(gd) => self.visit(gd),
-            Con2GD::Nested(gd) => self.visit(&**gd),
+            ConstraintGoalDefinitionInner::Goal(gd) => self.visit(gd),
+            ConstraintGoalDefinitionInner::Nested(gd) => self.visit(&**gd),
         }
     }
 }
@@ -192,7 +192,8 @@ mod tests {
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
     use crate::{
-        AtomicFormula, BinaryComp, FComp, FExp, Literal, Name, Number, Predicate, Term, Variable,
+        AtomicFormula, BinaryComparison, FluentComparison, FluentExpression, Literal, Name, Number, Predicate, Term,
+        Variable,
     };
 
     fn make_simple_gd() -> GoalDefinition {
@@ -281,9 +282,9 @@ mod tests {
 
     #[test]
     fn goal_fcomp_works() {
-        let a = FExp::new_number(crate::Number::from(3));
-        let b = FExp::new_number(crate::Number::from(4));
-        let fc = FComp::new(BinaryComp::GreaterThan, a, b);
+        let a = FluentExpression::new_number(crate::Number::from(3));
+        let b = FluentExpression::new_number(crate::Number::from(4));
+        let fc = FluentComparison::new(BinaryComparison::GreaterThan, a, b);
         let gd = GoalDefinition::new_f_comp(fc);
         assert_eq!(prettify!(gd, 10), "(> 3 4)");
     }
@@ -314,30 +315,30 @@ mod tests {
     #[test]
     fn con_gd_and_works() {
         let gd = make_simple_gd();
-        let con = ConGD::new_and([ConGD::new_at_end(gd)]);
+        let con = ConstraintGoalDefinition::new_and([ConstraintGoalDefinition::new_at_end(gd)]);
         assert_eq!(prettify!(con, 40), "(and (at end (at ?r loc1)))");
     }
 
     #[test]
     fn con_gd_at_end_works() {
         let gd = make_simple_gd();
-        let con = ConGD::new_at_end(gd);
+        let con = ConstraintGoalDefinition::new_at_end(gd);
         assert_eq!(prettify!(con, 40), "(at end (at ?r loc1))");
     }
 
     #[test]
     fn con_gd_always_works() {
         let gd = make_simple_gd();
-        let con2 = Con2GD::new_goal(gd);
-        let con = ConGD::new_always(con2);
+        let con2 = ConstraintGoalDefinitionInner::new_goal(gd);
+        let con = ConstraintGoalDefinition::new_always(con2);
         assert_eq!(prettify!(con, 40), "(always (at ?r loc1))");
     }
 
     #[test]
     fn con_gd_within_works() {
         let gd = make_simple_gd();
-        let con2 = Con2GD::new_goal(gd);
-        let con = ConGD::new_within(Number::from(10), con2);
+        let con2 = ConstraintGoalDefinitionInner::new_goal(gd);
+        let con = ConstraintGoalDefinition::new_within(Number::from(10), con2);
         assert_eq!(prettify!(con, 40), "(within 10 (at ?r loc1))");
     }
 
@@ -345,7 +346,7 @@ mod tests {
     fn con_gd_sometime_after_works() {
         let gd1 = make_simple_gd();
         let gd2 = make_simple_gd();
-        let con = ConGD::new_sometime_after(Con2GD::new_goal(gd1), Con2GD::new_goal(gd2));
+        let con = ConstraintGoalDefinition::new_sometime_after(ConstraintGoalDefinitionInner::new_goal(gd1), ConstraintGoalDefinitionInner::new_goal(gd2));
         assert_eq!(
             prettify!(con, 40),
             "(sometime-after (at ?r loc1) (at ?r\n        loc1))"
@@ -355,8 +356,8 @@ mod tests {
     #[test]
     fn con_gd_hold_during_works() {
         let gd = make_simple_gd();
-        let con2 = Con2GD::new_goal(gd);
-        let con = ConGD::new_hold_during(Number::from(5), Number::from(15), con2);
+        let con2 = ConstraintGoalDefinitionInner::new_goal(gd);
+        let con = ConstraintGoalDefinition::new_hold_during(Number::from(5), Number::from(15), con2);
         assert_eq!(prettify!(con, 40), "(hold-during 5 15 (at ?r loc1))");
     }
 
@@ -445,11 +446,11 @@ mod tests {
     fn pref_con_gd_forall_works() {
         use crate::{ToTyped, Type, TypedVariables, Variable};
         let vars: TypedVariables = vec![Variable::new_string("x").to_typed(Type::OBJECT)].into();
-        let _inner = ConGD::new_and(Vec::new());
-        let pgds = PrefConGDs::new(vec![PrefConGD::new_goal(ConGD::new_always(
-            Con2GD::new_goal(make_simple_gd()),
+        let _inner = ConstraintGoalDefinition::new_and(Vec::new());
+        let pgds = PreferenceConstraintGoalDefinitions::new(vec![PreferenceConstraintGoalDefinition::new_goal(ConstraintGoalDefinition::new_always(
+            ConstraintGoalDefinitionInner::new_goal(make_simple_gd()),
         ))]);
-        let pgd = PrefConGD::new_forall(vars, pgds);
+        let pgd = PreferenceConstraintGoalDefinition::new_forall(vars, pgds);
         assert_eq!(prettify!(pgd, 40), "(forall (?x) (always (at ?r loc1)))");
     }
 
@@ -457,16 +458,16 @@ mod tests {
     fn pref_con_gd_preference_with_name_works() {
         use crate::PreferenceName;
         let gd = make_simple_gd();
-        let con = ConGD::new_at_end(gd);
-        let pcgd = PrefConGD::new_preference(Some(PreferenceName::new_string("p1")), con);
+        let con = ConstraintGoalDefinition::new_at_end(gd);
+        let pcgd = PreferenceConstraintGoalDefinition::new_preference(Some(PreferenceName::new_string("p1")), con);
         assert_eq!(prettify!(pcgd, 40), "(preference p1 (at end (at ?r loc1)))");
     }
 
     #[test]
     fn pref_con_gd_preference_no_name_works() {
         let gd = make_simple_gd();
-        let con = ConGD::new_at_end(gd);
-        let pcgd = PrefConGD::new_preference(None, con);
+        let con = ConstraintGoalDefinition::new_at_end(gd);
+        let pcgd = PreferenceConstraintGoalDefinition::new_preference(None, con);
         assert_eq!(prettify!(pcgd, 40), "(preference (at end (at ?r loc1)))");
     }
 
@@ -474,9 +475,9 @@ mod tests {
     fn pref_con_gds_multi_works() {
         let gd1 = make_simple_gd();
         let gd2 = make_simple_gd();
-        let pgds = PrefConGDs::new(vec![
-            PrefConGD::new_goal(ConGD::new_at_end(gd1)),
-            PrefConGD::new_goal(ConGD::new_at_end(gd2)),
+        let pgds = PreferenceConstraintGoalDefinitions::new(vec![
+            PreferenceConstraintGoalDefinition::new_goal(ConstraintGoalDefinition::new_at_end(gd1)),
+            PreferenceConstraintGoalDefinition::new_goal(ConstraintGoalDefinition::new_at_end(gd2)),
         ]);
         let out = prettify!(pgds, 40);
         assert!(out.contains("(at end"));
@@ -485,16 +486,16 @@ mod tests {
     #[test]
     fn con_gd_sometime_works() {
         let gd = make_simple_gd();
-        let con2 = Con2GD::new_goal(gd);
-        let con = ConGD::new_sometime(con2);
+        let con2 = ConstraintGoalDefinitionInner::new_goal(gd);
+        let con = ConstraintGoalDefinition::new_sometime(con2);
         assert_eq!(prettify!(con, 40), "(sometime (at ?r loc1))");
     }
 
     #[test]
     fn con_gd_at_most_once_works() {
         let gd = make_simple_gd();
-        let con2 = Con2GD::new_goal(gd);
-        let con = ConGD::new_at_most_once(con2);
+        let con2 = ConstraintGoalDefinitionInner::new_goal(gd);
+        let con = ConstraintGoalDefinition::new_at_most_once(con2);
         assert_eq!(prettify!(con, 40), "(at-most-once (at ?r loc1))");
     }
 
@@ -502,7 +503,7 @@ mod tests {
     fn con_gd_sometime_before_works() {
         let gd1 = make_simple_gd();
         let gd2 = make_simple_gd();
-        let con = ConGD::new_sometime_before(Con2GD::new_goal(gd1), Con2GD::new_goal(gd2));
+        let con = ConstraintGoalDefinition::new_sometime_before(ConstraintGoalDefinitionInner::new_goal(gd1), ConstraintGoalDefinitionInner::new_goal(gd2));
         assert_eq!(
             prettify!(con, 40),
             "(sometime-before (at ?r loc1) (at ?r\n        loc1))"
@@ -513,10 +514,10 @@ mod tests {
     fn con_gd_always_within_works() {
         let gd1 = make_simple_gd();
         let gd2 = make_simple_gd();
-        let con = ConGD::new_always_within(
+        let con = ConstraintGoalDefinition::new_always_within(
             Number::from(10),
-            Con2GD::new_goal(gd1),
-            Con2GD::new_goal(gd2),
+            ConstraintGoalDefinitionInner::new_goal(gd1),
+            ConstraintGoalDefinitionInner::new_goal(gd2),
         );
         assert_eq!(
             prettify!(con, 40),
@@ -527,8 +528,8 @@ mod tests {
     #[test]
     fn con_gd_hold_after_works() {
         let gd = make_simple_gd();
-        let con2 = Con2GD::new_goal(gd);
-        let con = ConGD::new_hold_after(Number::from(15), con2);
+        let con2 = ConstraintGoalDefinitionInner::new_goal(gd);
+        let con = ConstraintGoalDefinition::new_hold_after(Number::from(15), con2);
         assert_eq!(prettify!(con, 40), "(hold-after 15 (at ?r loc1))");
     }
 
@@ -536,16 +537,16 @@ mod tests {
     fn con_gd_forall_works() {
         use crate::{ToTyped, Type, TypedVariables, Variable};
         let vars: TypedVariables = vec![Variable::new_string("x").to_typed(Type::OBJECT)].into();
-        let inner = ConGD::new_at_end(make_simple_gd());
-        let con = ConGD::new_forall(vars, inner);
+        let inner = ConstraintGoalDefinition::new_at_end(make_simple_gd());
+        let con = ConstraintGoalDefinition::new_forall(vars, inner);
         assert_eq!(prettify!(con, 40), "(forall (?x) (at end (at ?r loc1)))");
     }
 
     #[test]
     fn con2_gd_nested_works() {
         let gd = make_simple_gd();
-        let con = ConGD::new_at_end(gd);
-        let con2 = Con2GD::new_nested(con);
+        let con = ConstraintGoalDefinition::new_at_end(gd);
+        let con2 = ConstraintGoalDefinitionInner::new_nested(con);
         assert_eq!(prettify!(con2, 40), "(at end (at ?r loc1))");
     }
 }

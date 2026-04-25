@@ -107,7 +107,7 @@ impl Visitor<Domain, RcDoc<'static>> for PrettyRenderer {
 mod tests {
     use crate::parsers::Parser;
     use crate::pretty_print::Pretty;
-    use crate::types::{ConGD, DomainConstraintsDef};
+    use crate::types::{ConstraintGoalDefinition, DomainConstraintsDef};
 
     #[test]
     fn domain_basic() {
@@ -209,7 +209,7 @@ mod tests {
 
     #[test]
     fn domain_constraints_def_empty_nil() {
-        let dc = DomainConstraintsDef::new(ConGD::default());
+        let dc = DomainConstraintsDef::new(ConstraintGoalDefinition::default());
         let out = dc.pretty(80).to_string();
         assert_eq!(out, "");
     }

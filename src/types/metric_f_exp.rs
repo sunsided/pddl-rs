@@ -1,4 +1,4 @@
-//! Contains the [`MetricFExp`] type.
+//! Contains the [`MetricFluentExpression`] type.
 
 use crate::types::{BinaryOp, FunctionSymbol, MultiOp, Name, Number, PreferenceName};
 
@@ -10,7 +10,7 @@ use crate::types::{BinaryOp, FunctionSymbol, MultiOp, Name, Number, PreferenceNa
 /// ## Usage
 /// Used by [`MetricSpec`](crate::MetricSpec).
 #[derive(Debug, Clone, PartialEq)]
-pub enum MetricFExp {
+pub enum MetricFluentExpression {
     BinaryOp(BinaryOp, Box<Self>, Box<Self>),
     MultiOp(MultiOp, Box<Self>, Vec<Self>),
     Negative(Box<Self>),
@@ -22,7 +22,7 @@ pub enum MetricFExp {
     IsViolated(PreferenceName),
 }
 
-impl MetricFExp {
+impl MetricFluentExpression {
     pub fn new_binary_op(op: BinaryOp, lhs: Self, rhs: Self) -> Self {
         Self::BinaryOp(op, Box::new(lhs), Box::new(rhs))
     }
@@ -56,3 +56,8 @@ impl MetricFExp {
         Self::IsViolated(pref)
     }
 }
+
+/// Alias for [`MetricFluentExpression`]; matches BNF `<metric-f-exp>`.
+#[deprecated(since = "0.2.0", note = "Use `MetricFluentExpression` instead")]
+#[allow(dead_code)]
+pub type MetricFExp = MetricFluentExpression;

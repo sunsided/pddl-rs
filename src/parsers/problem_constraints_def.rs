@@ -11,11 +11,11 @@ use crate::types::ProblemConstraintsDef;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_problem_constraints_def, preamble::*};
-/// # use pddl::{ConGD, ProblemConstraintsDef, PrefConGDs};
+/// # use pddl::{ConstraintGoalDefinition, ProblemConstraintsDef, PreferenceConstraintGoalDefinitions};
 /// let input = "(:constraints (preference test (and)))";
 /// assert!(parse_problem_constraints_def(input).is_value(
 ///     ProblemConstraintsDef::new(
-///         PrefConGDs::new_preference(Some("test".into()), ConGD::new_and([]))
+///         PreferenceConstraintGoalDefinitions::new_preference(Some("test".into()), ConstraintGoalDefinition::new_and([]))
 ///     )
 /// ));
 /// ```
@@ -42,14 +42,14 @@ impl crate::parsers::Parser for ProblemConstraintsDef {
 #[cfg(test)]
 mod tests {
     use crate::parsers::preamble::*;
-    use crate::{ConGD, PrefConGDs, ProblemConstraintsDef};
+    use crate::{ConstraintGoalDefinition, PreferenceConstraintGoalDefinitions, ProblemConstraintsDef};
 
     #[test]
     fn test_parse() {
         let input = "(:constraints (preference test (and)))";
         assert!(
             ProblemConstraintsDef::parse(input).is_value(ProblemConstraintsDef::new(
-                PrefConGDs::new_preference(Some("test".into()), ConGD::new_and([]))
+                PreferenceConstraintGoalDefinitions::new_preference(Some("test".into()), ConstraintGoalDefinition::new_and([]))
             ))
         );
     }

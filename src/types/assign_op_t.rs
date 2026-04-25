@@ -1,4 +1,4 @@
-//! Contains the timed effect assignment operation type [`AssignOpT`].
+//! Contains the timed effect assignment operation type [`TimedAssignOperator`].
 
 use std::fmt::{Display, Formatter};
 
@@ -6,8 +6,9 @@ use std::fmt::{Display, Formatter};
 ///
 /// ## Usage
 /// Used by [`TimedEffect`](crate::TimedEffect).
+#[doc(alias("assign-op-t"))]
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum AssignOpT {
+pub enum TimedAssignOperator {
     Increase,
     Decrease,
 }
@@ -17,16 +18,16 @@ pub mod names {
     pub const DECREASE: &str = "decrease";
 }
 
-impl Display for AssignOpT {
+impl Display for TimedAssignOperator {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            AssignOpT::Increase => write!(f, "{}", names::INCREASE),
-            AssignOpT::Decrease => write!(f, "{}", names::DECREASE),
+            TimedAssignOperator::Increase => write!(f, "{}", names::INCREASE),
+            TimedAssignOperator::Decrease => write!(f, "{}", names::DECREASE),
         }
     }
 }
 
-impl TryFrom<&str> for AssignOpT {
+impl TryFrom<&str> for TimedAssignOperator {
     type Error = ParseError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
@@ -43,3 +44,7 @@ pub enum ParseError {
     #[error("Invalid operation")]
     InvalidOperation,
 }
+
+/// Alias for [`TimedAssignOperator`]; matches BNF `<assign-op-t>`.
+#[deprecated(since = "0.2.0", note = "Use `TimedAssignOperator` instead")]
+pub type AssignOpT = TimedAssignOperator;
