@@ -30,6 +30,8 @@ Documentation comments are assembled from the PDDL papers and [nergmada/planning
 
 See [`tests/briefcase_world.rs`](tests/briefcase_world.rs) for the full example.
 
+### Parsing a Single Problem
+
 ```rust
 use pddl::{Problem, Parser};
 
@@ -50,7 +52,50 @@ fn main() {
     assert_eq!(problem.domain(), "briefcase-world");
     assert!(problem.requirements().is_empty());
     assert_eq!(problem.init().len(), 9);
-    assert_eq!(problem.goal().len(), 3);
+    assert_eq!(problem.goals().len(), 3);
+}
+```
+
+### Parsing a File with Multiple Domains and Problems
+
+PDDL files often contain multiple `(define ...)` blocks — domains and problems
+in any order. Use `PddlFile` to parse them all at once:
+
+```rust
+use pddl::{PddlFile, Parser};
+
+pub const PDDL_FILE: &'static str = r#"
+(define (domain blocks-world)
+    (:requirements :strips)
+    (:predicates (clear ?x) (on ?x ?y) (on-table ?x))
+)
+
+(define (problem blocks-problem-1)
+    (:domain blocks-world)
+    (:init (on-table a) (on b a) (clear b))
+    (:goal (and (on a b)))
+)
+
+(define (problem blocks-problem-2)
+    (:domain blocks-world)
+    (:init (on-table a) (on-table b) (clear a) (clear b))
+    (:goal (and (on b a)))
+)
+"#;
+
+fn main() {
+    let file = PddlFile::from_str(PDDL_FILE).unwrap();
+
+    assert_eq!(file.domain_count(), 1);
+    assert_eq!(file.problem_count(), 2);
+
+    let domain = &file.domains[0];
+    assert_eq!(domain.name(), "blocks-world");
+    assert_eq!(domain.predicates().len(), 3);
+
+    let problem1 = &file.problems[0];
+    assert_eq!(problem1.name(), "blocks-problem-1");
+    assert_eq!(problem1.goals().len(), 1);
 }
 ```
 
