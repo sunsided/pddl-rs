@@ -17,7 +17,7 @@ impl ActionSymbol {
     }
 
     #[inline(always)]
-    pub fn from_str(name: &str) -> Self {
+    pub fn new_string(name: &str) -> Self {
         Self(Name::new(name))
     }
 
@@ -27,7 +27,7 @@ impl ActionSymbol {
     }
 }
 
-impl<'a, T> From<T> for ActionSymbol
+impl<T> From<T> for ActionSymbol
 where
     T: Into<Name>,
 {

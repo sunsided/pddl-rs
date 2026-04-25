@@ -3,6 +3,7 @@
 use crate::parsers::{parse_name, ParseResult, Span};
 use crate::types::FunctionSymbol;
 use nom::combinator::map;
+use nom::Parser;
 
 /// Parses a function symbol, i.e. `<name>`.
 ///
@@ -21,7 +22,7 @@ use nom::combinator::map;
 /// assert!(parse_function_symbol("-1").is_err());
 ///```
 pub fn parse_function_symbol<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FunctionSymbol> {
-    map(parse_name, FunctionSymbol::new)(input.into())
+    map(parse_name, FunctionSymbol::new).parse(input.into())
 }
 
 impl crate::parsers::Parser for FunctionSymbol {

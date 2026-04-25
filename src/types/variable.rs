@@ -23,7 +23,7 @@ impl Variable {
     }
 
     #[inline(always)]
-    pub fn from_str(name: &str) -> Self {
+    pub fn new_string(name: &str) -> Self {
         Self(Name::new(name))
     }
 
@@ -50,7 +50,7 @@ impl ToTyped<Variable> for Variable {
     }
 }
 
-impl<'a, T> From<T> for Variable
+impl<T> From<T> for Variable
 where
     T: Into<Name>,
 {
@@ -95,7 +95,7 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let var = Variable::from_str("x");
+        let var = Variable::new_string("x");
         assert_eq!(format!("{var}"), "?x");
     }
 }

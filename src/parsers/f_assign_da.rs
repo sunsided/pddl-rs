@@ -5,7 +5,8 @@ use crate::parsers::{parse_assign_op, parse_f_exp_da, parse_f_head};
 use crate::types::FAssignDa;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 /// Parses an f-assign-da.
 ///
@@ -16,13 +17,14 @@ use nom::sequence::{preceded, tuple};
 ///```
 pub fn parse_f_assign_da<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FAssignDa> {
     map(
-        parens(tuple((
+        parens((
             parse_assign_op,
             preceded(multispace1, parse_f_head),
             preceded(multispace1, parse_f_exp_da),
-        ))),
+        )),
         FAssignDa::from,
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for FAssignDa {

@@ -3,6 +3,7 @@
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
+use nom::Parser;
 
 use crate::parsers::{ParseResult, Span};
 use crate::types::{multi_op::names, MultiOp};
@@ -20,7 +21,8 @@ pub fn parse_multi_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, MultiO
     map(
         alt((tag(names::MULTIPLICATION), tag(names::ADDITION))),
         |x: Span| MultiOp::try_from(*x.fragment()).expect("unhandled variant"),
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for MultiOp {

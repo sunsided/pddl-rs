@@ -3,7 +3,8 @@
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 use crate::parsers::{
     atomic_formula, literal, parse_f_comp, parse_term, parse_variable, ParseResult, Span,
@@ -91,7 +92,7 @@ use crate::types::GoalDefinition;
 /// // Existential preconditions
 /// assert!(parse_gd("(exists (?x ?y) (not (= ?x ?y)))").is_value(
 ///     GoalDefinition::new_exists(
-///         TypedList::from_iter([Variable::from_str("x").into(), Variable::from_str("y").into()]),
+///         TypedList::from_iter([Variable::new_string("x").into(), Variable::new_string("y").into()]),
 ///         GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Variable("x".into()),
@@ -104,7 +105,7 @@ use crate::types::GoalDefinition;
 /// // Universal preconditions
 /// assert!(parse_gd("(forall (?x ?y) (not (= ?x ?y)))").is_value(
 ///     GoalDefinition::new_forall(
-///         TypedList::from_iter([Variable::from_str("x").into(), Variable::from_str("y").into()]),
+///         TypedList::from_iter([Variable::new_string("x").into(), Variable::new_string("y").into()]),
 ///         GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Variable("x".into()),
@@ -157,7 +158,7 @@ pub fn parse_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, GoalDefiniti
 
     // :disjunctive-preconditions
     let imply = map(
-        prefix_expr("imply", tuple((parse_gd, preceded(multispace1, parse_gd)))),
+        prefix_expr("imply", (parse_gd, preceded(multispace1, parse_gd))),
         GoalDefinition::new_imply_tuple,
     );
 
@@ -165,10 +166,10 @@ pub fn parse_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, GoalDefiniti
     let exists = map(
         prefix_expr(
             "exists",
-            tuple((
+            (
                 parens(typed_list(parse_variable)),
                 preceded(multispace1, parse_gd),
-            )),
+            ),
         ),
         GoalDefinition::new_exists_tuple,
     );
@@ -177,10 +178,10 @@ pub fn parse_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, GoalDefiniti
     let forall = map(
         prefix_expr(
             "forall",
-            tuple((
+            (
                 parens(typed_list(parse_variable)),
                 preceded(multispace1, parse_gd),
-            )),
+            ),
         ),
         GoalDefinition::new_forall_tuple,
     );
@@ -188,7 +189,7 @@ pub fn parse_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, GoalDefiniti
     // :numeric-fluents
     let f_comp = map(parse_f_comp, GoalDefinition::new_f_comp);
 
-    alt((and, or, not, imply, exists, forall, af, literal, f_comp))(input.into())
+    alt((and, or, not, imply, exists, forall, af, literal, f_comp)).parse(input.into())
 }
 
 impl crate::parsers::Parser for GoalDefinition {
@@ -274,8 +275,8 @@ mod tests {
             GoalDefinition::parse("(exists (?x ?y) (not (= ?x ?y)))").is_value(
                 GoalDefinition::new_exists(
                     TypedList::from_iter([
-                        Variable::from_str("x").into(),
-                        Variable::from_str("y").into()
+                        Variable::new_string("x").into(),
+                        Variable::new_string("y").into()
                     ]),
                     GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
                         AtomicFormula::new_equality(
@@ -292,8 +293,8 @@ mod tests {
             GoalDefinition::parse("(forall (?x ?y) (not (= ?x ?y)))").is_value(
                 GoalDefinition::new_forall(
                     TypedList::from_iter([
-                        Variable::from_str("x").into(),
-                        Variable::from_str("y").into()
+                        Variable::new_string("x").into(),
+                        Variable::new_string("y").into()
                     ]),
                     GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
                         AtomicFormula::new_equality(

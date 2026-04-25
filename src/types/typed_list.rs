@@ -196,9 +196,9 @@ mod tests {
     #[test]
     fn object_at_start() {
         let name = TypedList::from_iter([
-            Variable::from_str("x").to_typed(Type::OBJECT),
-            Variable::from_str("y").to_typed(Type::OBJECT),
-            Variable::from_str("z").to_typed(Type::new_exactly("letter")),
+            Variable::new_string("x").to_typed(Type::OBJECT),
+            Variable::new_string("y").to_typed(Type::OBJECT),
+            Variable::new_string("z").to_typed(Type::new_exactly("letter")),
         ]);
         assert_eq!(format!("{name}"), "?x ?y - object ?z - letter");
     }

@@ -3,6 +3,7 @@
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
+use nom::Parser;
 
 use crate::parsers::{ParseResult, Span};
 use crate::types::{d_op::names, DOp};
@@ -26,7 +27,8 @@ pub fn parse_d_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DOp> {
             tag(names::EQUAL),
         )),
         |x: Span| DOp::try_from(*x.fragment()).expect("unhandled variant"),
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for DOp {

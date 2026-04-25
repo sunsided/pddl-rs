@@ -96,7 +96,7 @@ pub trait Parser {
 
     /// Uses the [`Parser::parse`] method to parse the input and, if successful,
     /// discards the unparsed remaining input.
-    fn from_str(input: &str) -> Result<Self::Item, nom::Err<ParseError>> {
+    fn from_str(input: &str) -> Result<Self::Item, nom::Err<ParseError<'_>>> {
         let (_, value) = Self::parse(input)?;
         Ok(value)
     }
@@ -106,7 +106,7 @@ pub trait Parser {
 pub type Span<'a> = nom_locate::LocatedSpan<&'a str>;
 
 /// A parsing error.
-pub type ParseError<'a> = nom_greedyerror::GreedyError<Span<'a>, nom::error::ErrorKind>;
+pub type ParseError<'a> = nom::error::Error<Span<'a>>;
 
 /// A result from a parser.
 pub type ParseResult<'a, T, E = ParseError<'a>> = nom::IResult<Span<'a>, T, E>;

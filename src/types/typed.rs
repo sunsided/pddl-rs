@@ -64,13 +64,13 @@ pub trait ToTyped<T> {
     ) -> Typed<T>;
 }
 
-impl<'a, O> From<O> for Typed<O> {
+impl<O> From<O> for Typed<O> {
     fn from(value: O) -> Self {
         Typed::new_object(value)
     }
 }
 
-impl<'a, O> Deref for Typed<O> {
+impl<O> Deref for Typed<O> {
     type Target = O;
 
     fn deref(&self) -> &Self::Target {

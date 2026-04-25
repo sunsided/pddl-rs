@@ -10,7 +10,8 @@ use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{preceded, terminated, tuple};
+use nom::sequence::{preceded, terminated};
+use nom::Parser;
 
 /// Parses p-effects.
 ///
@@ -39,7 +40,7 @@ use nom::sequence::{preceded, terminated, tuple};
 /// assert!(parse_p_effect("(assign fun-sym 1.23)").is_value(
 ///     PEffect::new_numeric_fluent(
 ///         AssignOp::Assign,
-///         FHead::new(FunctionSymbol::from_str("fun-sym")),
+///         FHead::new(FunctionSymbol::new_string("fun-sym")),
 ///         FExp::new_number(1.23)
 ///     )
 /// ));
@@ -47,21 +48,21 @@ use nom::sequence::{preceded, terminated, tuple};
 /// assert!(parse_p_effect("(assign fun-sym 1.23)").is_value(
 ///     PEffect::new_numeric_fluent(
 ///         AssignOp::Assign,
-///         FHead::new(FunctionSymbol::from_str("fun-sym")),
+///         FHead::new(FunctionSymbol::new_string("fun-sym")),
 ///         FExp::new_number(1.23)
 ///     )
 /// ));
 ///
 /// assert!(parse_p_effect("(assign (fun-sym) undefined)").is_value(
 ///     PEffect::new_object_fluent(
-///         FunctionTerm::new(FunctionSymbol::from_str("fun-sym"), []),
+///         FunctionTerm::new(FunctionSymbol::new_string("fun-sym"), []),
 ///         None
 ///     )
 /// ));
 ///
 /// assert!(parse_p_effect("(assign (fun-sym) something)").is_value(
 ///     PEffect::new_object_fluent(
-///         FunctionTerm::new(FunctionSymbol::from_str("fun-sym"), []),
+///         FunctionTerm::new(FunctionSymbol::new_string("fun-sym"), []),
 ///         Some(Term::Name("something".into()))
 ///     )
 /// ));
@@ -74,11 +75,11 @@ pub fn parse_p_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PEffec
 
     // :numeric-fluents
     let numeric = map(
-        parens(tuple((
+        parens((
             parse_assign_op,
             preceded(multispace1, parse_f_head),
             preceded(multispace1, parse_f_exp),
-        ))),
+        )),
         |(op, head, exp)| PEffect::new_numeric_fluent(op, head, exp),
     );
 
@@ -86,19 +87,19 @@ pub fn parse_p_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PEffec
     let object_undefined = map(
         prefix_expr(
             "assign",
-            terminated(parse_function_term, tuple((multispace1, tag("undefined")))),
+            terminated(parse_function_term, (multispace1, tag("undefined"))),
         ),
         |f_term| PEffect::new_object_fluent(f_term, None),
     );
     let object = map(
         prefix_expr(
             "assign",
-            tuple((parse_function_term, preceded(multispace1, parse_term))),
+            (parse_function_term, preceded(multispace1, parse_term)),
         ),
         |(f_term, term)| PEffect::new_object_fluent(f_term, Some(term)),
     );
 
-    alt((is_not, object_undefined, object, numeric, is))(input.into())
+    alt((is_not, object_undefined, object, numeric, is)).parse(input.into())
 }
 
 impl crate::parsers::Parser for PEffect {
@@ -132,7 +133,7 @@ mod tests {
             PEffect::new_not(af)
         });
 
-        let result = is_not(input.into());
+        let result: Result<(_, _), _> = nom::Parser::parse(&mut is_not, input.into());
         assert!(result.is_ok());
     }
 
@@ -157,7 +158,7 @@ mod tests {
         assert!(
             PEffect::parse("(assign fun-sym 1.23)").is_value(PEffect::new_numeric_fluent(
                 AssignOp::Assign,
-                FHead::new(FunctionSymbol::from_str("fun-sym")),
+                FHead::new(FunctionSymbol::new_string("fun-sym")),
                 FExp::new_number(1.23)
             ))
         );
@@ -165,21 +166,21 @@ mod tests {
         assert!(
             PEffect::parse("(assign fun-sym 1.23)").is_value(PEffect::new_numeric_fluent(
                 AssignOp::Assign,
-                FHead::new(FunctionSymbol::from_str("fun-sym")),
+                FHead::new(FunctionSymbol::new_string("fun-sym")),
                 FExp::new_number(1.23)
             ))
         );
 
         assert!(PEffect::parse("(assign (fun-sym) undefined)").is_value(
             PEffect::new_object_fluent(
-                FunctionTerm::new(FunctionSymbol::from_str("fun-sym"), []),
+                FunctionTerm::new(FunctionSymbol::new_string("fun-sym"), []),
                 None
             )
         ));
 
         assert!(PEffect::parse("(assign (fun-sym) something)").is_value(
             PEffect::new_object_fluent(
-                FunctionTerm::new(FunctionSymbol::from_str("fun-sym"), []),
+                FunctionTerm::new(FunctionSymbol::new_string("fun-sym"), []),
                 Some(Term::Name("something".into()))
             )
         ));

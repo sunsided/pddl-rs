@@ -4,7 +4,8 @@ use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 use crate::parsers::{parens, prefix_expr, ParseResult, Span};
 use crate::parsers::{parse_d_op, parse_d_value, parse_time_specifier};
@@ -39,28 +40,25 @@ pub fn parse_simple_duration_constraint<'a, T: Into<Span<'a>>>(
     input: T,
 ) -> ParseResult<'a, SimpleDurationConstraint> {
     let op = map(
-        parens(tuple((
+        parens((
             parse_d_op,
-            preceded(
-                tuple((multispace1, tag("?duration"), multispace1)),
-                parse_d_value,
-            ),
-        ))),
+            preceded((multispace1, tag("?duration"), multispace1), parse_d_value),
+        )),
         SimpleDurationConstraint::from,
     );
 
     let at = map(
         prefix_expr(
             "at",
-            tuple((
+            (
                 parse_time_specifier,
                 preceded(multispace1, parse_simple_duration_constraint),
-            )),
+            ),
         ),
         SimpleDurationConstraint::from,
     );
 
-    alt((op, at))(input.into())
+    alt((op, at)).parse(input.into())
 }
 
 impl crate::parsers::Parser for SimpleDurationConstraint {

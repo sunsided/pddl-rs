@@ -14,7 +14,7 @@ pub enum AtomicFormula<T> {
     Predicate(PredicateAtomicFormula<T>),
 }
 
-impl<'a, T> AtomicFormula<T> {
+impl<T> AtomicFormula<T> {
     pub const fn new_equality(first: T, second: T) -> Self {
         Self::Equality(EqualityAtomicFormula::new(first, second))
     }
@@ -71,13 +71,13 @@ impl<T> PredicateAtomicFormula<T> {
     }
 }
 
-impl<'a, T> From<EqualityAtomicFormula<T>> for AtomicFormula<T> {
+impl<T> From<EqualityAtomicFormula<T>> for AtomicFormula<T> {
     fn from(value: EqualityAtomicFormula<T>) -> Self {
         AtomicFormula::Equality(value)
     }
 }
 
-impl<'a, T> From<PredicateAtomicFormula<T>> for AtomicFormula<T> {
+impl<T> From<PredicateAtomicFormula<T>> for AtomicFormula<T> {
     fn from(value: PredicateAtomicFormula<T>) -> Self {
         AtomicFormula::Predicate(value)
     }
@@ -89,13 +89,13 @@ impl<T> From<(T, T)> for EqualityAtomicFormula<T> {
     }
 }
 
-impl<'a, T> From<(Predicate, Vec<T>)> for PredicateAtomicFormula<T> {
+impl<T> From<(Predicate, Vec<T>)> for PredicateAtomicFormula<T> {
     fn from(value: (Predicate, Vec<T>)) -> Self {
         PredicateAtomicFormula::new(value.0, value.1)
     }
 }
 
-impl<'a, T> Deref for PredicateAtomicFormula<T> {
+impl<T> Deref for PredicateAtomicFormula<T> {
     type Target = [T];
 
     fn deref(&self) -> &Self::Target {

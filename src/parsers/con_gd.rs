@@ -8,7 +8,8 @@ use crate::types::{Con2GD, ConGD};
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 /// Parses conditional goal definitions.
 ///
@@ -166,10 +167,10 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD> {
     let forall = map(
         prefix_expr(
             "forall",
-            tuple((
+            (
                 parens(typed_list(parse_variable)),
                 preceded(multispace1, parse_con_gd),
-            )),
+            ),
         ),
         |(vars, gd)| ConGD::new_forall(vars, gd),
     );
@@ -183,7 +184,7 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD> {
     let within = map(
         prefix_expr(
             "within",
-            tuple((parse_number, preceded(multispace1, parse_con2_gd))),
+            (parse_number, preceded(multispace1, parse_con2_gd)),
         ),
         |(num, gd)| ConGD::new_within(num, gd),
     );
@@ -196,7 +197,7 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD> {
     let sometime_after = map(
         prefix_expr(
             "sometime-after",
-            tuple((parse_con2_gd, preceded(multispace1, parse_con2_gd))),
+            (parse_con2_gd, preceded(multispace1, parse_con2_gd)),
         ),
         |(a, b)| ConGD::new_sometime_after(a, b),
     );
@@ -204,7 +205,7 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD> {
     let sometime_before = map(
         prefix_expr(
             "sometime-before",
-            tuple((parse_con2_gd, preceded(multispace1, parse_con2_gd))),
+            (parse_con2_gd, preceded(multispace1, parse_con2_gd)),
         ),
         |(a, b)| ConGD::new_sometime_before(a, b),
     );
@@ -212,11 +213,11 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD> {
     let always_within = map(
         prefix_expr(
             "always-within",
-            tuple((
+            (
                 parse_number,
                 preceded(multispace1, parse_con2_gd),
                 preceded(multispace1, parse_con2_gd),
-            )),
+            ),
         ),
         |(num, a, b)| ConGD::new_always_within(num, a, b),
     );
@@ -224,11 +225,11 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD> {
     let hold_during = map(
         prefix_expr(
             "hold-during",
-            tuple((
+            (
                 parse_number,
                 preceded(multispace1, parse_number),
                 preceded(multispace1, parse_con2_gd),
-            )),
+            ),
         ),
         |(t0, t1, gd)| ConGD::new_hold_during(t0, t1, gd),
     );
@@ -236,7 +237,7 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD> {
     let hold_after = map(
         prefix_expr(
             "hold-after",
-            tuple((parse_number, preceded(multispace1, parse_con2_gd))),
+            (parse_number, preceded(multispace1, parse_con2_gd)),
         ),
         |(time, gd)| ConGD::new_hold_after(time, gd),
     );
@@ -254,7 +255,8 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD> {
         always_within,
         hold_during,
         hold_after,
-    ))(input.into())
+    ))
+    .parse(input.into())
 }
 
 fn parse_con2_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Con2GD> {
@@ -262,7 +264,7 @@ fn parse_con2_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Con2GD> {
 
     // TODO: Add crate feature to allow this to be forbidden if unsupported by the application.
     let con_gd = map(parse_con_gd, Con2GD::new_nested);
-    alt((gd, con_gd))(input.into())
+    alt((gd, con_gd)).parse(input.into())
 }
 
 impl crate::parsers::Parser for ConGD {

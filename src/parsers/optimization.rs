@@ -5,6 +5,7 @@ use crate::types::{optimization::names, Optimization};
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
+use nom::Parser;
 
 /// Parses an optimization goal, i.e. `minimize | maximize`.
 ///
@@ -19,7 +20,8 @@ pub fn parse_optimization<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Op
     map(
         alt((tag(names::MINIMIZE), tag(names::MAXIMIZE))),
         |x: Span| Optimization::try_from(*x.fragment()).expect("unhandled variant"),
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for Optimization {

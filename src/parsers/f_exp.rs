@@ -3,7 +3,8 @@
 use nom::branch::alt;
 use nom::character::complete::{char, multispace0, multispace1};
 use nom::combinator::map;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 use crate::parsers::{parens, parse_number, space_separated_list1, ParseResult, Span};
 use crate::parsers::{parse_binary_op, parse_f_head, parse_multi_op};
@@ -41,7 +42,7 @@ use crate::types::FExp;
 ///
 /// assert!(parse_f_exp("fun-sym").is_value(
 ///     FExp::new_function(
-///         FHead::new(FunctionSymbol::from_str("fun-sym"))
+///         FHead::new(FunctionSymbol::new_string("fun-sym"))
 ///     )
 /// ));
 ///```
@@ -51,34 +52,34 @@ pub fn parse_f_exp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExp> {
 
     // :numeric-fluents
     let binary_op = map(
-        parens(tuple((
+        parens((
             parse_binary_op,
             preceded(multispace1, parse_f_exp),
             preceded(multispace1, parse_f_exp),
-        ))),
+        )),
         |(op, lhs, rhs)| FExp::new_binary_op(op, lhs, rhs),
     );
 
     // :numeric-fluents
     let multi_op = map(
-        parens(tuple((
+        parens((
             parse_multi_op,
             preceded(multispace1, parse_f_exp),
             preceded(multispace1, space_separated_list1(parse_f_exp)),
-        ))),
+        )),
         |(op, lhs, rhs)| FExp::new_multi_op(op, lhs, rhs),
     );
 
     // :numeric-fluents
     let negated = map(
-        parens(preceded(tuple((char('-'), multispace0)), parse_f_exp)),
+        parens(preceded((char('-'), multispace0), parse_f_exp)),
         FExp::new_negative,
     );
 
     // :numeric-fluents
     let f_head = map(parse_f_head, FExp::new_function);
 
-    alt((number, binary_op, multi_op, negated, f_head))(input.into())
+    alt((number, binary_op, multi_op, negated, f_head)).parse(input.into())
 }
 
 impl crate::parsers::Parser for FExp {
@@ -117,7 +118,7 @@ mod tests {
 
         assert!(
             FExp::parse("fun-sym").is_value(FExp::new_function(FHead::new(
-                FunctionSymbol::from_str("fun-sym")
+                FunctionSymbol::new_string("fun-sym")
             )))
         );
     }

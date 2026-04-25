@@ -2,7 +2,8 @@
 
 use nom::character::complete::multispace1;
 use nom::combinator::{map, opt};
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 use crate::parsers::{parse_name, prefix_expr, ws2, ParseResult, Span};
 use crate::parsers::{
@@ -40,7 +41,7 @@ pub fn parse_problem<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Problem
     map(
         ws2(prefix_expr(
             "define",
-            tuple((
+            (
                 prefix_expr("problem", parse_name),
                 preceded(multispace1, prefix_expr(":domain", parse_name)),
                 opt(preceded(multispace1, parse_require_def)),
@@ -53,7 +54,7 @@ pub fn parse_problem<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Problem
                 opt(preceded(multispace1, parse_problem_metric_spec)),
                 // Deprecated since PDDL 2.1
                 opt(preceded(multispace1, parse_problem_length_spec)),
-            )),
+            ),
         )),
         |(name, domain, reqs, objects, init, goal, constraints, metric, length)| {
             Problem::new(
@@ -68,7 +69,8 @@ pub fn parse_problem<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Problem
                 length,
             )
         },
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for Problem {

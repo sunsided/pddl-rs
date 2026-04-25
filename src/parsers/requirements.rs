@@ -3,6 +3,7 @@
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
+use nom::Parser;
 
 use crate::parsers::{prefix_expr, space_separated_list1, ParseResult, Span};
 use crate::types::requirement::{names, Requirement};
@@ -22,7 +23,8 @@ pub fn parse_require_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Req
     map(
         prefix_expr(":requirements", space_separated_list1(parse_require_key)),
         Requirements::new,
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 /// Parses a requirement key, i.e. `:strips`.
@@ -81,7 +83,8 @@ pub fn parse_require_key<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Req
             tag(names::ACTION_COSTS),
         )),
         |x: Span| Requirement::try_from(*x.fragment()).expect("unhandled variant"),
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for Requirements {

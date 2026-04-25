@@ -55,7 +55,7 @@ impl PrefConGDs {
     /// Returns an iterator over the list.
     ///
     /// The iterator yields all items from start to end.
-    pub fn iter(&self) -> std::slice::Iter<PrefConGD> {
+    pub fn iter(&self) -> std::slice::Iter<'_, PrefConGD> {
         self.0.iter()
     }
 
@@ -128,10 +128,7 @@ impl From<Option<PrefConGD>> for PrefConGDs {
 
 impl From<Option<PrefConGDs>> for PrefConGDs {
     fn from(value: Option<PrefConGDs>) -> Self {
-        match value {
-            None => PrefConGDs::default(),
-            Some(values) => values,
-        }
+        value.unwrap_or_default()
     }
 }
 

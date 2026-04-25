@@ -76,6 +76,7 @@ mod timeless;
 mod r#type;
 mod typed;
 mod typed_list;
+#[allow(clippy::module_inception)]
 mod types;
 mod variable;
 

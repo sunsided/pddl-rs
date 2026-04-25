@@ -6,7 +6,8 @@ use crate::types::DurativeActionGoalDefinition;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 /// Parser for goal definitions.
 ///
@@ -65,8 +66,8 @@ use nom::sequence::{preceded, tuple};
 /// assert!(parse_da_gd("(forall (?a ?b) (at start (= a b)))").is_value(
 ///     DurativeActionGoalDefinition::new_forall(
 ///         TypedList::from_iter([
-///             Typed::new_object(Variable::from_str("a")),
-///             Typed::new_object(Variable::from_str("b")),
+///             Typed::new_object(Variable::new_string("a")),
+///             Typed::new_object(Variable::new_string("b")),
 ///         ]),
 ///         DurativeActionGoalDefinition::Timed(
 ///             PrefTimedGD::Required(
@@ -97,15 +98,15 @@ pub fn parse_da_gd<'a, T: Into<Span<'a>>>(
     let forall = map(
         prefix_expr(
             "forall",
-            tuple((
+            (
                 parens(typed_list(parse_variable)),
                 preceded(multispace1, parse_da_gd),
-            )),
+            ),
         ),
         |(vars, gd)| DurativeActionGoalDefinition::new_forall(vars, gd),
     );
 
-    alt((forall, and, pref_timed_gd))(input.into())
+    alt((forall, and, pref_timed_gd)).parse(input.into())
 }
 
 impl crate::parsers::Parser for DurativeActionGoalDefinition {
@@ -188,8 +189,8 @@ mod tests {
             DurativeActionGoalDefinition::parse("(forall (?a ?b) (at start (= a b)))").is_value(
                 DurativeActionGoalDefinition::new_forall(
                     TypedList::from_iter([
-                        Typed::new_object(Variable::from_str("a")),
-                        Typed::new_object(Variable::from_str("b")),
+                        Typed::new_object(Variable::new_string("a")),
+                        Typed::new_object(Variable::new_string("b")),
                     ]),
                     DurativeActionGoalDefinition::Timed(PrefTimedGD::Required(TimedGD::new_at(
                         TimeSpecifier::Start,

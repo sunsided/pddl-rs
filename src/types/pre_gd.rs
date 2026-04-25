@@ -41,7 +41,7 @@ impl PreconditionGoalDefinitions {
     /// Returns an iterator over the list.
     ///
     /// The iterator yields all items from start to end.
-    pub fn iter(&self) -> std::slice::Iter<PreconditionGoalDefinition> {
+    pub fn iter(&self) -> std::slice::Iter<'_, PreconditionGoalDefinition> {
         self.0.iter()
     }
 
@@ -102,10 +102,7 @@ impl From<Option<PreconditionGoalDefinition>> for PreconditionGoalDefinitions {
 
 impl From<Option<PreconditionGoalDefinitions>> for PreconditionGoalDefinitions {
     fn from(value: Option<PreconditionGoalDefinitions>) -> Self {
-        match value {
-            None => PreconditionGoalDefinitions::default(),
-            Some(values) => values,
-        }
+        value.unwrap_or_default()
     }
 }
 

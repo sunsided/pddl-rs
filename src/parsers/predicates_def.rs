@@ -1,6 +1,7 @@
 //! Provides parsers for predicate definitions.
 
 use nom::combinator::map;
+use nom::Parser;
 
 use crate::parsers::{parse_atomic_formula_skeleton, ParseResult, Span};
 use crate::parsers::{prefix_expr, space_separated_list1};
@@ -44,7 +45,8 @@ pub fn parse_predicates_def<'a, T: Into<Span<'a>>>(
             space_separated_list1(parse_atomic_formula_skeleton),
         ),
         PredicateDefinitions::new,
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for PredicateDefinitions {

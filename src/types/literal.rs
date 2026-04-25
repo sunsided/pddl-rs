@@ -12,7 +12,7 @@ pub enum Literal<T> {
     NotAtomicFormula(AtomicFormula<T>),
 }
 
-impl<'a, T> Literal<T> {
+impl<T> Literal<T> {
     pub const fn new(atomic_formula: AtomicFormula<T>) -> Self {
         Self::AtomicFormula(atomic_formula)
     }
@@ -26,7 +26,7 @@ impl<'a, T> Literal<T> {
     }
 }
 
-impl<'a, T> From<AtomicFormula<T>> for Literal<T> {
+impl<T> From<AtomicFormula<T>> for Literal<T> {
     fn from(value: AtomicFormula<T>) -> Self {
         Literal::new(value)
     }
@@ -37,11 +37,12 @@ mod tests {
     use super::*;
     use crate::parsers::{atomic_formula, parse_term, Span};
     use crate::Term;
+    use nom::Parser;
 
     #[test]
     fn from_works() {
         let input = "(= x y)";
-        let (_, effect) = atomic_formula(parse_term)(Span::new(input)).unwrap();
+        let (_, effect) = atomic_formula(parse_term).parse(Span::new(input)).unwrap();
 
         let literal: Literal<Term> = effect.into();
         assert_eq!(

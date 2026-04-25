@@ -2,7 +2,8 @@
 
 use nom::character::complete::multispace0;
 use nom::combinator::{map, opt};
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 use crate::parsers::{prefix_expr, ParseResult, Span};
 use crate::types::LengthSpec;
@@ -23,12 +24,13 @@ pub fn parse_problem_length_spec<'a, T: Into<Span<'a>>>(input: T) -> ParseResult
     let parallel = prefix_expr(":parallel", nom::character::complete::u64);
     let length = prefix_expr(
         ":length",
-        tuple((opt(serial), opt(preceded(multispace0, parallel)))),
+        (opt(serial), opt(preceded(multispace0, parallel))),
     );
 
     map(length, |(serial, parallel)| {
         LengthSpec::new(serial, parallel)
-    })(input.into())
+    })
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for LengthSpec {

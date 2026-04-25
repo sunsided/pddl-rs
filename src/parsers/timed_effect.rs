@@ -9,7 +9,8 @@ use crate::types::TimedEffect;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 /// Parses timed effects.
 ///
@@ -55,10 +56,10 @@ pub fn parse_timed_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Ti
     let cond = map(
         prefix_expr(
             "at",
-            tuple((
+            (
                 parse_time_specifier,
                 preceded(multispace1, parse_cond_effect),
-            )),
+            ),
         ),
         TimedEffect::from,
     );
@@ -67,25 +68,25 @@ pub fn parse_timed_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Ti
     let fluent = map(
         prefix_expr(
             "at",
-            tuple((
+            (
                 parse_time_specifier,
                 preceded(multispace1, parse_f_assign_da),
-            )),
+            ),
         ),
         TimedEffect::from,
     );
 
     // :continuous-effects + :numeric-fluents
     let continuous = map(
-        parens(tuple((
+        parens((
             parse_assign_op_t,
             preceded(multispace1, parse_f_head),
             preceded(multispace1, parse_f_exp_t),
-        ))),
+        )),
         TimedEffect::from,
     );
 
-    alt((fluent, cond, continuous))(input.into())
+    alt((fluent, cond, continuous)).parse(input.into())
 }
 
 impl crate::parsers::Parser for TimedEffect {

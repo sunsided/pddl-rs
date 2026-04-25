@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0] - 2024-05-19
+
+[0.1.0]: https://github.com/sunsided/pddl-rs/releases/tag/v0.1.0
+
+### Internal
+
+- [#84](https://github.com/sunsided/pddl-rs/pull/84): Added code coverage tracking and improved test coverage.
+
 ## [0.0.7] - 2023-05-27
 
 ### Added
@@ -43,7 +51,7 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The `Effect::All` and `Effect::Single` variants were removed and the `Effect` type
   was changed to a struct wrapping a vector `Effects`.
 - The `CEffect` variants were changed to wrap `ForallCEffect` and `WhenCEffect` types.
-- The parser now uses [nom-greedyerror](https://github.com/dalance/nom-greedyerror) and 
+- The parser now uses [nom-greedyerror](https://github.com/dalance/nom-greedyerror) and
   [nom_locate](https://github.com/fflorent/nom_locate) to improve error handling.
 - The `Parser` trait now takes an `T: Into<Span<'a>>` argument.
 - All parser methods now take an `T: Into<Span<'a>>` argument.
@@ -72,7 +80,7 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Internal
 
-- The `nom` dependency is now an implicit feature used by the `parser` crate feature. 
+- The `nom` dependency is now an implicit feature used by the `parser` crate feature.
 
 ## [0.0.2] - 2023-04-24
 
@@ -97,10 +105,17 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - 🎉 Initial release.
 
 [0.0.7]: https://github.com/sunsided/pddl-rs/releases/tag/0.0.7
+
 [0.0.6]: https://github.com/sunsided/pddl-rs/releases/tag/0.0.6
+
 [0.0.5]: https://github.com/sunsided/pddl-rs/releases/tag/0.0.5
+
 [0.0.4]: https://github.com/sunsided/pddl-rs/releases/tag/0.0.4
+
 [0.0.3]: https://github.com/sunsided/pddl-rs/releases/tag/0.0.3
+
 [0.0.2]: https://github.com/sunsided/pddl-rs/releases/tag/0.0.2
+
 [0.0.1]: https://github.com/sunsided/pddl-rs/releases/tag/0.0.1
+
 [0.0.0]: https://github.com/sunsided/pddl-rs/releases/tag/0.0.0

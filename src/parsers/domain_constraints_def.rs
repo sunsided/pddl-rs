@@ -1,6 +1,7 @@
 //! Provides parsers for domain constraint definitions.
 
 use nom::combinator::map;
+use nom::Parser;
 
 use crate::parsers::{parse_con_gd, prefix_expr, ParseResult, Span};
 use crate::types::DomainConstraintsDef;
@@ -24,7 +25,8 @@ pub fn parse_domain_constraints_def<'a, T: Into<Span<'a>>>(
     map(
         prefix_expr(":constraints", parse_con_gd),
         DomainConstraintsDef::new,
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for DomainConstraintsDef {

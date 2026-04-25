@@ -2,6 +2,7 @@
 use crate::parsers::{parse_name, ParseResult, Span};
 use crate::types::PreferenceName;
 use nom::combinator::map;
+use nom::Parser;
 
 /// Parses a preference name.
 ///
@@ -11,7 +12,7 @@ use nom::combinator::map;
 /// assert!(parse_pref_name("abcde").is_value("abcde".into()));
 ///```
 pub fn parse_pref_name<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PreferenceName> {
-    map(parse_name, PreferenceName::new)(input.into())
+    map(parse_name, PreferenceName::new).parse(input.into())
 }
 
 impl crate::parsers::Parser for PreferenceName {

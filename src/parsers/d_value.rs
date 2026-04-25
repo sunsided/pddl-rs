@@ -2,6 +2,7 @@
 
 use nom::branch::alt;
 use nom::combinator::map;
+use nom::Parser;
 
 use crate::parsers::parse_number;
 use crate::parsers::{parse_f_exp, ParseResult, Span};
@@ -29,7 +30,7 @@ pub fn parse_d_value<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Duratio
     // :numeric-fluents
     let f_exp = map(parse_f_exp, DurationValue::new_f_exp);
 
-    alt((number, f_exp))(input.into())
+    alt((number, f_exp)).parse(input.into())
 }
 
 impl crate::parsers::Parser for DurationValue {

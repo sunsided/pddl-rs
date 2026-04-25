@@ -3,6 +3,7 @@
 use crate::parsers::{parse_name, ParseResult, Span};
 use crate::types::DurativeActionSymbol;
 use nom::combinator::map;
+use nom::Parser;
 
 /// Parses a durative action symbol, i.e. `<name>`.
 ///
@@ -12,7 +13,7 @@ use nom::combinator::map;
 /// assert!(parse_da_symbol("abcde").is_value("abcde".into()));
 ///```
 pub fn parse_da_symbol<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DurativeActionSymbol> {
-    map(parse_name, DurativeActionSymbol::from)(input.into())
+    map(parse_name, DurativeActionSymbol::from).parse(input.into())
 }
 
 impl crate::parsers::Parser for DurativeActionSymbol {

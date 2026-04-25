@@ -4,7 +4,7 @@ use crate::parsers::{parens, typed_list, ws, ParseResult, Span};
 use crate::parsers::{parse_predicate, parse_variable};
 use crate::types::AtomicFormulaSkeleton;
 use nom::combinator::map;
-use nom::sequence::tuple;
+use nom::Parser;
 
 /// Parses an atomic formula skeleton, i.e. `(<predicate> <typed list (variable)>)`.
 ///
@@ -26,9 +26,10 @@ pub fn parse_atomic_formula_skeleton<'a, T: Into<Span<'a>>>(
     input: T,
 ) -> ParseResult<'a, AtomicFormulaSkeleton> {
     map(
-        parens(tuple((parse_predicate, ws(typed_list(parse_variable))))),
+        parens((parse_predicate, ws(typed_list(parse_variable)))),
         AtomicFormulaSkeleton::from,
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for AtomicFormulaSkeleton {

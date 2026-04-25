@@ -3,7 +3,8 @@
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 use crate::parsers::{parens, space_separated_list0, ParseResult, Span};
 use crate::parsers::{parse_function_symbol, parse_term};
@@ -16,15 +17,15 @@ use crate::types::FHead;
 /// # use pddl::parsers::{parse_f_head, preamble::*};
 /// # use pddl::{FunctionTerm, Variable, FunctionSymbol, Term, FHead};
 /// assert!(parse_f_head("fun-sym").is_value(
-///     FHead::new(FunctionSymbol::from_str("fun-sym"))
+///     FHead::new(FunctionSymbol::new_string("fun-sym"))
 /// ));
 ///
 /// assert!(parse_f_head("(fun-sym)").is_value(
-///     FHead::new(FunctionSymbol::from_str("fun-sym"))
+///     FHead::new(FunctionSymbol::new_string("fun-sym"))
 /// ));
 ///
 /// assert!(parse_f_head("(fun-sym term)").is_value(
-///     FHead::new_with_terms(FunctionSymbol::from_str("fun-sym"), [
+///     FHead::new_with_terms(FunctionSymbol::new_string("fun-sym"), [
 ///         Term::Name("term".into())
 ///     ])
 /// ));
@@ -33,14 +34,14 @@ pub fn parse_f_head<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FHead> {
     let simple = map(parse_function_symbol, FHead::new);
     let simple_parens = map(parens(parse_function_symbol), FHead::new);
     let with_terms = map(
-        parens(tuple((
+        parens((
             parse_function_symbol,
             preceded(multispace1, space_separated_list0(parse_term)),
-        ))),
+        )),
         |(symbol, terms)| FHead::new_with_terms(symbol, terms),
     );
 
-    alt((simple, simple_parens, with_terms))(input.into())
+    alt((simple, simple_parens, with_terms)).parse(input.into())
 }
 
 impl crate::parsers::Parser for FHead {
@@ -59,13 +60,15 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        assert!(FHead::parse("fun-sym").is_value(FHead::new(FunctionSymbol::from_str("fun-sym"))));
+        assert!(FHead::parse("fun-sym").is_value(FHead::new(FunctionSymbol::new_string("fun-sym"))));
 
-        assert!(FHead::parse("(fun-sym)").is_value(FHead::new(FunctionSymbol::from_str("fun-sym"))));
+        assert!(
+            FHead::parse("(fun-sym)").is_value(FHead::new(FunctionSymbol::new_string("fun-sym")))
+        );
 
         assert!(
             FHead::parse("(fun-sym term)").is_value(FHead::new_with_terms(
-                FunctionSymbol::from_str("fun-sym"),
+                FunctionSymbol::new_string("fun-sym"),
                 [Term::Name("term".into())]
             ))
         );

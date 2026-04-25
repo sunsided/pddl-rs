@@ -62,6 +62,7 @@ pub struct Problem {
 
 impl Problem {
     /// Creates a new [`Problem`] instance.
+    #[allow(clippy::too_many_arguments)]
     pub const fn new(
         name: Name,
         domain: Name,

@@ -3,6 +3,7 @@
 use crate::parsers::{parse_name, ParseResult, Span};
 use crate::types::Predicate;
 use nom::combinator::map;
+use nom::Parser;
 
 /// Parses a predicate, i.e. `<name>`.
 ///
@@ -21,7 +22,7 @@ use nom::combinator::map;
 /// assert!(parse_predicate(Span::new("-1")).is_err());
 ///```
 pub fn parse_predicate<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Predicate> {
-    map(parse_name, Predicate::from)(input.into())
+    map(parse_name, Predicate::from).parse(input.into())
 }
 
 impl crate::parsers::Parser for Predicate {
