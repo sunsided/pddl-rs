@@ -52,7 +52,7 @@ impl Type {
     }
 
     pub fn is_empty(&self) -> bool {
-        false
+        self.len() == 0
     }
 }
 

@@ -9,6 +9,30 @@ use crate::parsers::{
 };
 use crate::types::{FunctionType, FunctionTyped, FunctionTypedList};
 
+/// Parses a typed list, i.e. `x* | x⁺ - <type> <typed-list (x)>`.
+///
+/// ## Example
+/// ```
+/// # use nom::Parser;
+/// # use pddl::parsers::{function_typed_list, parse_atomic_function_skeleton, preamble::*};
+/// # use pddl::{AtomicFunctionSkeleton, FunctionSymbol, FunctionTyped, FunctionTypedList, Variable};
+/// # use pddl::{Type, Typed, TypedList};
+/// // Single implicitly typed element.
+/// assert!(function_typed_list(parse_atomic_function_skeleton).parse(
+///     "(battery-amount ?r - rover)".into()
+/// )
+/// .is_value(FunctionTypedList::from_iter([FunctionTyped::new_number(
+///     AtomicFunctionSkeleton::new(
+///         FunctionSymbol::new_string("battery-amount"),
+///         TypedList::from_iter([
+///             Typed::new(
+///                 Variable::from("r"),
+///                 Type::Exactly("rover".into())
+///             )
+///         ])
+///     )
+/// )])));
+/// ```
 pub fn function_typed_list<'a, F, O>(
     inner: F,
 ) -> impl Parser<Span<'a>, Output = FunctionTypedList<O>, Error = ParseError<'a>>
