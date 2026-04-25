@@ -2,6 +2,7 @@
 
 use nom::branch::alt;
 use nom::combinator::map;
+use nom::Parser;
 
 use crate::parsers::{parse_action_def, parse_da_def, parse_derived_predicate, ParseResult, Span};
 use crate::types::StructureDef;
@@ -55,7 +56,7 @@ pub fn parse_structure_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, S
     let durative = map(parse_da_def, StructureDef::new_durative_action);
     // :derived-predicates
     let derived = map(parse_derived_predicate, StructureDef::new_derived);
-    alt((derived, action, durative))(input.into())
+    alt((derived, action, durative)).parse(input.into())
 }
 
 impl crate::parsers::Parser for StructureDef {

@@ -3,6 +3,7 @@
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
+use nom::Parser;
 
 use crate::parsers::{ParseResult, Span};
 use crate::types::{binary_comp::names, BinaryComp};
@@ -29,7 +30,8 @@ pub fn parse_binary_comp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Bin
             tag(names::LESS_THAN),
         )),
         |x: Span| BinaryComp::try_from(*x.fragment()).expect("unhandled variant"),
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for BinaryComp {

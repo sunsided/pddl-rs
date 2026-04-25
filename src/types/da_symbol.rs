@@ -17,7 +17,7 @@ impl DurativeActionSymbol {
     }
 
     #[inline(always)]
-    pub fn from_str(name: &str) -> Self {
+    pub fn new_string(name: &str) -> Self {
         Self(Name::new(name))
     }
 
@@ -27,7 +27,7 @@ impl DurativeActionSymbol {
     }
 }
 
-impl<'a, T> From<T> for DurativeActionSymbol
+impl<T> From<T> for DurativeActionSymbol
 where
     T: Into<Name>,
 {

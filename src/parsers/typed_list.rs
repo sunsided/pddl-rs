@@ -3,10 +3,11 @@
 use nom::character::complete::char;
 use nom::combinator::map;
 use nom::multi::many0;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 use crate::parsers::{
-    parse_type, space_separated_list0, space_separated_list1, ws, ParseResult, Span,
+    parse_type, space_separated_list0, space_separated_list1, ws, ParseError, Span,
 };
 use crate::types::{Typed, TypedList};
 
@@ -15,29 +16,30 @@ use crate::types::{Typed, TypedList};
 /// ## Example
 /// ```
 /// # use nom::character::complete::alpha1;
+/// # use nom::Parser;
 /// # use pddl::parsers::{parse_name, typed_list, preamble::*};
 /// # use pddl::{Name, PrimitiveType, ToTyped, Type, Typed, TypedList};
 /// // Single implicitly typed element.
-/// assert!(typed_list(parse_name)(Span::new("abc")).is_value(TypedList::from_iter([
+/// assert!(typed_list(parse_name).parse(Span::new("abc")).is_value(TypedList::from_iter([
 ///     Name::new("abc").to_typed(Type::OBJECT)
 /// ])));
 ///
 /// // Multiple implicitly typed elements.
-/// assert!(typed_list(parse_name)(Span::new("abc def\nghi")).is_value(TypedList::from_iter([
+/// assert!(typed_list(parse_name).parse(Span::new("abc def\nghi")).is_value(TypedList::from_iter([
 ///     Name::new("abc").to_typed(Type::OBJECT),
 ///     Name::new("def").to_typed(Type::OBJECT),
 ///     Name::new("ghi").to_typed(Type::OBJECT)
 /// ])));
 ///
 /// // Multiple explicitly typed elements.
-/// assert!(typed_list(parse_name)(Span::new("abc def - word kitchen - room")).is_value(TypedList::from_iter([
+/// assert!(typed_list(parse_name).parse(Span::new("abc def - word kitchen - room")).is_value(TypedList::from_iter([
 ///     Name::new("abc").to_typed("word"),
 ///     Name::new("def").to_typed("word"),
 ///     Name::new("kitchen").to_typed("room"),
 /// ])));
 ///
 /// // Mixed
-/// assert!(typed_list(parse_name)(Span::new("abc def - word\ngeorgia - (either state country)\nuvw xyz")).is_value(TypedList::from_iter([
+/// assert!(typed_list(parse_name).parse(Span::new("abc def - word\ngeorgia - (either state country)\nuvw xyz")).is_value(TypedList::from_iter([
 ///     Name::new("abc").to_typed("word"),
 ///     Name::new("def").to_typed("word"),
 ///     Name::new("georgia").to_typed_either(["state", "country"]),
@@ -45,9 +47,11 @@ use crate::types::{Typed, TypedList};
 ///     Name::new("xyz").to_typed(Type::OBJECT)
 /// ])));
 /// ```
-pub fn typed_list<'a, F, O>(inner: F) -> impl FnMut(Span<'a>) -> ParseResult<'a, TypedList<O>>
+pub fn typed_list<'a, F, O>(
+    inner: F,
+) -> impl Parser<Span<'a>, Output = TypedList<O>, Error = ParseError<'a>>
 where
-    F: Clone + FnMut(Span<'a>) -> ParseResult<'a, O>,
+    F: Clone + Parser<Span<'a>, Output = O, Error = ParseError<'a>>,
 {
     // `x*`
     let implicitly_typed = map(inner.clone(), |o| Typed::new_object(o));
@@ -55,10 +59,10 @@ where
 
     // `x⁺ - <type>`
     let explicitly_typed = map(
-        tuple((
+        (
             space_separated_list1(inner.clone()),
             preceded(ws(char('-')), parse_type),
-        )),
+        ),
         |(os, t)| {
             os.into_iter()
                 .map(move |o| Typed::new(o, t.clone()))
@@ -66,12 +70,12 @@ where
         },
     );
 
-    let typed_list_choice = tuple((
+    let typed_list_choice = (
         map(many0(explicitly_typed), |vec| {
             vec.into_iter().flatten().collect::<Vec<_>>()
         }),
         implicitly_typed_list,
-    ));
+    );
 
     map(typed_list_choice, |(mut explicit, mut implicit)| {
         explicit.append(&mut implicit);
@@ -84,47 +88,46 @@ mod tests {
     use crate::parsers::preamble::*;
     use crate::parsers::{parse_name, typed_list};
     use crate::{Name, ToTyped, Type, TypedList};
+    use nom::Parser;
 
     #[test]
     fn test_parse() {
         // Single implicitly typed element.
-        assert!(
-            typed_list(parse_name)(Span::new("abc"))
-                .is_value(TypedList::from_iter([
-                    Name::new("abc").to_typed(Type::OBJECT)
-                ]))
-        );
+        assert!(typed_list(parse_name)
+            .parse(Span::new("abc"))
+            .is_value(TypedList::from_iter([
+                Name::new("abc").to_typed(Type::OBJECT)
+            ])));
 
         // Multiple implicitly typed elements.
-        assert!(
-            typed_list(parse_name)(Span::new("abc def\nghi")).is_value(TypedList::from_iter([
+        assert!(typed_list(parse_name)
+            .parse(Span::new("abc def\nghi"))
+            .is_value(TypedList::from_iter([
                 Name::new("abc").to_typed(Type::OBJECT),
                 Name::new("def").to_typed(Type::OBJECT),
                 Name::new("ghi").to_typed(Type::OBJECT)
-            ]))
-        );
+            ])));
 
         // Multiple explicitly typed elements.
-        assert!(
-            typed_list(parse_name)(Span::new("abc def - word kitchen - room")).is_value(
-                TypedList::from_iter([
-                    Name::new("abc").to_typed("word"),
-                    Name::new("def").to_typed("word"),
-                    Name::new("kitchen").to_typed("room"),
-                ])
-            )
-        );
+        assert!(typed_list(parse_name)
+            .parse(Span::new("abc def - word kitchen - room"))
+            .is_value(TypedList::from_iter([
+                Name::new("abc").to_typed("word"),
+                Name::new("def").to_typed("word"),
+                Name::new("kitchen").to_typed("room"),
+            ])));
 
         // Mixed
-        assert!(typed_list(parse_name)(Span::new(
-            "abc def - word\ngeorgia - (either state country)\nuvw xyz"
-        ))
-        .is_value(TypedList::from_iter([
-            Name::new("abc").to_typed("word"),
-            Name::new("def").to_typed("word"),
-            Name::new("georgia").to_typed_either(["state", "country"]),
-            Name::new("uvw").to_typed(Type::OBJECT),
-            Name::new("xyz").to_typed(Type::OBJECT)
-        ])));
+        assert!(typed_list(parse_name)
+            .parse(Span::new(
+                "abc def - word\ngeorgia - (either state country)\nuvw xyz"
+            ))
+            .is_value(TypedList::from_iter([
+                Name::new("abc").to_typed("word"),
+                Name::new("def").to_typed("word"),
+                Name::new("georgia").to_typed_either(["state", "country"]),
+                Name::new("uvw").to_typed(Type::OBJECT),
+                Name::new("xyz").to_typed(Type::OBJECT)
+            ])));
     }
 }

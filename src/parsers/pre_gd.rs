@@ -3,7 +3,8 @@
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 use crate::parsers::{parens, prefix_expr, space_separated_list0, typed_list, ParseResult, Span};
 use crate::parsers::{parse_pref_gd, parse_variable};
@@ -53,8 +54,8 @@ use crate::PreconditionGoalDefinitions;
 /// assert!(parse_pre_gd(Span::new("(forall (?a ?b) (= a b))")).is_value(
 ///     PreconditionGoalDefinition::new_forall(
 ///         TypedList::from_iter([
-///             Typed::new(Variable::from_str("a"), Type::OBJECT),
-///             Typed::new(Variable::from_str("b"), Type::OBJECT),
+///             Typed::new(Variable::new_string("a"), Type::OBJECT),
+///             Typed::new(Variable::new_string("b"), Type::OBJECT),
 ///         ]),
 ///         PreconditionGoalDefinition::new_preference(PreferenceGD::Goal(
 ///             GoalDefinition::AtomicFormula(
@@ -82,17 +83,17 @@ pub fn parse_pre_gd<'a, T: Into<Span<'a>>>(
     let forall = map(
         prefix_expr(
             "forall",
-            tuple((
+            (
                 parens(typed_list(parse_variable)),
                 preceded(multispace1, parse_pre_gd),
-            )),
+            ),
         ),
         |(vars, gd)| {
             PreconditionGoalDefinitions::from(PreconditionGoalDefinition::new_forall(vars, gd))
         },
     );
 
-    alt((forall, and, pref_gd))(input.into())
+    alt((forall, and, pref_gd)).parse(input.into())
 }
 
 impl crate::parsers::Parser for PreconditionGoalDefinitions {
@@ -148,8 +149,8 @@ mod tests {
             PreconditionGoalDefinitions::parse(Span::new("(forall (?a ?b) (= a b))")).is_value(
                 PreconditionGoalDefinition::new_forall(
                     TypedList::from_iter([
-                        Typed::new(Variable::from_str("a"), Type::OBJECT),
-                        Typed::new(Variable::from_str("b"), Type::OBJECT),
+                        Typed::new(Variable::new_string("a"), Type::OBJECT),
+                        Typed::new(Variable::new_string("b"), Type::OBJECT),
                     ]),
                     PreconditionGoalDefinition::new_preference(PreferenceGD::Goal(
                         GoalDefinition::AtomicFormula(AtomicFormula::new_equality(

@@ -4,7 +4,7 @@ use crate::parsers::{parens, typed_list, ws, ParseResult, Span};
 use crate::parsers::{parse_function_symbol, parse_variable};
 use crate::types::AtomicFunctionSkeleton;
 use nom::combinator::map;
-use nom::sequence::tuple;
+use nom::Parser;
 
 /// Parses an atomic function skeleton, i.e. `(<function-symbol> <typed list (variable)>)`.
 ///
@@ -25,12 +25,10 @@ pub fn parse_atomic_function_skeleton<'a, T: Into<Span<'a>>>(
     input: T,
 ) -> ParseResult<'a, AtomicFunctionSkeleton> {
     map(
-        parens(tuple((
-            parse_function_symbol,
-            ws(typed_list(parse_variable)),
-        ))),
+        parens((parse_function_symbol, ws(typed_list(parse_variable)))),
         AtomicFunctionSkeleton::from,
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for AtomicFunctionSkeleton {

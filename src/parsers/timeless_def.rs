@@ -3,6 +3,7 @@
 use crate::parsers::{literal, parse_name, prefix_expr, space_separated_list1, ParseResult, Span};
 use crate::types::Timeless;
 use nom::combinator::map;
+use nom::Parser;
 
 /// Parser for timeless definitions.
 /// This is a PDDL 1.2 construct.
@@ -38,7 +39,8 @@ pub fn parse_timeless_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Ti
     map(
         prefix_expr(":timeless", space_separated_list1(literal(parse_name))),
         Timeless::from_iter,
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for Timeless {

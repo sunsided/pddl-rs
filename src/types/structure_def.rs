@@ -11,7 +11,7 @@ pub enum StructureDef {
     Action(ActionDefinition),
     /// ## Requirements
     /// Requires [Durative Actions](crate::Requirement::DurativeActions).
-    DurativeAction(DurativeActionDefinition),
+    DurativeAction(Box<DurativeActionDefinition>),
     /// ## Requirements
     /// Requires [Derived Predicates](crate::Requirement::DerivedPredicates).
     Derived(DerivedPredicate),
@@ -21,8 +21,8 @@ impl StructureDef {
     pub const fn new_action(action: ActionDefinition) -> Self {
         Self::Action(action)
     }
-    pub const fn new_durative_action(action: DurativeActionDefinition) -> Self {
-        Self::DurativeAction(action)
+    pub fn new_durative_action(action: DurativeActionDefinition) -> Self {
+        Self::DurativeAction(Box::new(action))
     }
     pub const fn new_derived(predicate: DerivedPredicate) -> Self {
         Self::Derived(predicate)

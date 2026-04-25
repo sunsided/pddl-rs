@@ -1,0 +1,117 @@
+version: "3"
+
+vars:
+  CARGO: cargo
+  FUZZ_CARGO: cargo +nightly
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list-all
+
+  fmt:
+    desc: Apply Rust formatting
+    aliases:
+      - fmt:fix
+    cmds:
+      - "{{.CARGO}} fmt"
+
+  fmt:check:
+    desc: Check Rust formatting
+    cmds:
+      - "{{.CARGO}} fmt -- --check"
+
+  check:
+    desc: Check the crate with default features
+    cmds:
+      - "{{.CARGO}} check"
+
+  check:all-features:
+    desc: Check the crate with all features
+    cmds:
+      - "{{.CARGO}} check --all-features --all-targets"
+
+  check:no-features:
+    desc: Check the crate without default features
+    cmds:
+      - "{{.CARGO}} check --no-default-features"
+
+  lint:
+    desc: Check clippy lints for all targets and features
+    aliases:
+      - lint:check
+    cmds:
+      - "{{.CARGO}} clippy --all-features --all-targets"
+
+  lint:fix:
+    desc: Apply clippy fixes for all targets and features
+    aliases:
+      - clippy
+    cmds:
+      - "{{.CARGO}} clippy --fix --allow-dirty --all-features --all-targets"
+
+  build:
+    desc: Build the crate with default features
+    cmds:
+      - "{{.CARGO}} build"
+
+  test:all-features:
+    desc: Test the crate with all features
+    aliases:
+      - test
+      - test:all
+    cmds:
+      - "{{.CARGO}} test --all-features"
+
+  test:default-features:
+    desc: Test the crate with default features
+    aliases:
+      - test:default
+    cmds:
+      - "{{.CARGO}} test"
+
+  test:no-features:
+    desc: Test the crate without default features
+    aliases:
+      - test:no-default-features
+    cmds:
+      - "{{.CARGO}} test --no-default-features"
+
+  fuzz:build:
+    desc: Build fuzz targets with default fuzz features
+    cmds:
+      - "{{.FUZZ_CARGO}} fuzz build"
+
+  fuzz:build:all-features:
+    desc: Build fuzz targets with all fuzz feature forwards enabled
+    cmds:
+      - "{{.FUZZ_CARGO}} fuzz build --features assertions,unsafe,bytemuck,num-traits,rand_distr,rkyv,serde"
+
+  fuzz:
+    desc: Run the invariants fuzz target
+    cmds:
+      - "{{.FUZZ_CARGO}} fuzz run invariants --features assertions,unsafe,bytemuck,num-traits,rand_distr,rkyv,serde"
+
+  fuzz:smoke:
+    desc: Run the invariants fuzz target briefly
+    env:
+      LSAN_OPTIONS: detect_leaks=0
+    cmds:
+      - "{{.FUZZ_CARGO}} fuzz run invariants -- -runs=256"
+
+  verify:
+    desc: Run formatting checks, static checks, clippy, and the test matrix
+    deps:
+      - fmt:check
+      - check:all-features
+      - check:no-features
+      - lint:check
+      - test
+      - test:all-features
+      - test:no-features
+
+  clean:
+    desc: Remove Cargo build artifacts
+    cmds:
+      - "{{.CARGO}} clean"

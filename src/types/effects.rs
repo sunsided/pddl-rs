@@ -38,7 +38,7 @@ impl Effects {
     /// Returns an iterator over the list.
     ///
     /// The iterator yields all items from start to end.
-    pub fn iter(&self) -> std::slice::Iter<CEffect> {
+    pub fn iter(&self) -> std::slice::Iter<'_, CEffect> {
         self.0.iter()
     }
 

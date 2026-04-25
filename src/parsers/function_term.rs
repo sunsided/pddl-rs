@@ -5,7 +5,8 @@ use crate::parsers::{space_separated_list0, ParseResult, Span};
 use crate::types::FunctionTerm;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
-use nom::sequence::{delimited, tuple};
+use nom::sequence::delimited;
+use nom::Parser;
 
 /// Parses a function terms, i.e. `(<function symbol> <term>*)`.
 ///
@@ -32,11 +33,12 @@ pub fn parse_function_term<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, F
     map(
         delimited(
             tag("("),
-            tuple((parse_function_symbol, space_separated_list0(parse_term))),
+            (parse_function_symbol, space_separated_list0(parse_term)),
             tag(")"),
         ),
         |(symbol, terms)| FunctionTerm::new(symbol, terms),
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for FunctionTerm {

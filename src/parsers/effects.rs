@@ -2,6 +2,7 @@
 
 use nom::branch::alt;
 use nom::combinator::map;
+use nom::Parser;
 
 use crate::parsers::{parse_c_effect, ParseResult, Span};
 use crate::parsers::{prefix_expr, space_separated_list0};
@@ -53,7 +54,7 @@ pub fn parse_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Effects>
         Effects::from,
     );
 
-    alt((all, exactly))(input.into())
+    alt((all, exactly)).parse(input.into())
 }
 
 impl crate::parsers::Parser for Effects {

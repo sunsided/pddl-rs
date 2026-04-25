@@ -2,6 +2,7 @@
 
 use nom::bytes::complete::tag;
 use nom::combinator::map;
+use nom::Parser;
 
 use crate::parsers::{ParseResult, Span};
 use crate::types::interval::names;
@@ -18,7 +19,8 @@ use crate::types::Interval;
 pub fn parse_interval<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Interval> {
     map(tag(names::ALL), |x: Span| {
         Interval::try_from(*x.fragment()).expect("unhandled variant")
-    })(input.into())
+    })
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for Interval {

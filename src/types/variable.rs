@@ -22,7 +22,7 @@ impl Variable {
     }
 
     #[inline(always)]
-    pub fn from_str(name: &str) -> Self {
+    pub fn new_string(name: &str) -> Self {
         Self(Name::new(name))
     }
 
@@ -49,7 +49,7 @@ impl ToTyped<Variable> for Variable {
     }
 }
 
-impl<'a, T> From<T> for Variable
+impl<T> From<T> for Variable
 where
     T: Into<Name>,
 {

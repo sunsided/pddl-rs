@@ -3,6 +3,7 @@
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
+use nom::Parser;
 
 use crate::parsers::{ParseResult, Span};
 use crate::types::assign_op_t::names;
@@ -21,7 +22,8 @@ pub fn parse_assign_op_t<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Ass
     map(
         alt((tag(names::INCREASE), tag(names::DECREASE))),
         |x: Span| AssignOpT::try_from(*x.fragment()).expect("unhandled variant"),
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for AssignOpT {

@@ -18,7 +18,7 @@ impl PreferenceName {
     }
 
     #[inline(always)]
-    pub fn from_str(name: &str) -> Self {
+    pub fn new_string(name: &str) -> Self {
         Self(Name::new(name))
     }
 
@@ -41,7 +41,7 @@ impl Deref for PreferenceName {
     }
 }
 
-impl<'a, T> From<T> for PreferenceName
+impl<T> From<T> for PreferenceName
 where
     T: Into<Name>,
 {

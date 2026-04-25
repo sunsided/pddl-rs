@@ -2,7 +2,8 @@
 
 use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 use crate::parsers::{parens, ParseResult, Span};
 use crate::parsers::{parse_binary_comp, parse_f_exp};
@@ -32,13 +33,14 @@ use crate::types::FComp;
 ///```
 pub fn parse_f_comp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FComp> {
     map(
-        parens(tuple((
+        parens((
             parse_binary_comp,
             preceded(multispace1, parse_f_exp),
             preceded(multispace1, parse_f_exp),
-        ))),
+        )),
         FComp::from,
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for FComp {

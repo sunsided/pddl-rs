@@ -8,7 +8,8 @@ use crate::PrefConGDs;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 /// Parses preferred goal definitions.
 ///
@@ -90,10 +91,10 @@ pub fn parse_pref_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Pre
     let forall = map(
         prefix_expr(
             "forall",
-            tuple((
+            (
                 parens(typed_list(parse_variable)),
                 preceded(multispace1, parse_pref_con_gd),
-            )),
+            ),
         ),
         |(vars, gd)| PrefConGDs::new_forall(vars, gd),
     );
@@ -102,7 +103,7 @@ pub fn parse_pref_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Pre
     let named_preference = map(
         prefix_expr(
             "preference",
-            tuple((parse_pref_name, preceded(multispace1, parse_con_gd))),
+            (parse_pref_name, preceded(multispace1, parse_con_gd)),
         ),
         |(name, gd)| PrefConGDs::new_preference(Some(name), gd),
     );
@@ -114,7 +115,7 @@ pub fn parse_pref_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Pre
 
     let goal = map(parse_con_gd, PrefConGDs::new_goal);
 
-    alt((and, forall, named_preference, unnamed_preference, goal))(input.into())
+    alt((and, forall, named_preference, unnamed_preference, goal)).parse(input.into())
 }
 
 impl crate::parsers::Parser for PrefConGDs {

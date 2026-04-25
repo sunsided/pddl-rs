@@ -3,7 +3,8 @@
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::{map, opt};
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 use crate::parsers::{parse_gd, parse_pref_name};
 use crate::parsers::{prefix_expr, ParseResult, Span};
@@ -62,7 +63,7 @@ pub fn parse_pref_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Prefere
     let pref_named = map(
         prefix_expr(
             "preference",
-            tuple((opt(parse_pref_name), preceded(multispace1, parse_gd))),
+            (opt(parse_pref_name), preceded(multispace1, parse_gd)),
         ),
         |(pref, gd)| PreferenceGD::from_preference(Preference::new(pref, gd)),
     );
@@ -73,7 +74,7 @@ pub fn parse_pref_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Prefere
 
     let gd = map(parse_gd, PreferenceGD::from_gd);
 
-    alt((pref_named, pref_unnamed, gd))(input.into())
+    alt((pref_named, pref_unnamed, gd)).parse(input.into())
 }
 
 impl crate::parsers::Parser for PreferenceGD {

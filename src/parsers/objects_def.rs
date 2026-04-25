@@ -1,6 +1,7 @@
 //! Provides parsers for goal object declarations.
 
 use nom::combinator::map;
+use nom::Parser;
 
 use crate::parsers::{parse_name, prefix_expr, typed_list, ParseResult, Span};
 use crate::types::Objects;
@@ -25,7 +26,8 @@ pub fn parse_problem_objects_declaration<'a, T: Into<Span<'a>>>(
     map(
         prefix_expr(":objects", typed_list(parse_name)),
         Objects::new,
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for Objects {

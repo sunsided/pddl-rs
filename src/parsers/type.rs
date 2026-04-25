@@ -5,6 +5,7 @@ use crate::parsers::{prefix_expr, space_separated_list1};
 use crate::types::{PrimitiveType, Type};
 use nom::error::ErrorKind;
 use nom::error_position;
+use nom::Parser;
 
 /// Parses a primitive type, i.e. `object | <name>`.
 ///
@@ -31,7 +32,7 @@ pub fn parse_type<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Type> {
 
 /// Parses a either type, i.e. `(either a b c)`.
 fn parse_either_type<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Vec<PrimitiveType>> {
-    prefix_expr("either", space_separated_list1(parse_primitive_type))(input.into())
+    prefix_expr("either", space_separated_list1(parse_primitive_type)).parse(input.into())
 }
 
 impl crate::parsers::Parser for Type {

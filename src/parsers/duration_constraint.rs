@@ -3,6 +3,7 @@
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
+use nom::Parser;
 
 use crate::parsers::{parse_simple_duration_constraint, ParseResult, Span};
 use crate::parsers::{prefix_expr, space_separated_list1};
@@ -74,7 +75,7 @@ pub fn parse_duration_constraint<'a, T: Into<Span<'a>>>(
         |cs| Some(DurationConstraint::from_iter(cs)),
     );
 
-    alt((none, simple, and))(input.into())
+    alt((none, simple, and)).parse(input.into())
 }
 
 impl crate::parsers::Parser for DurationConstraint {

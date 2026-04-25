@@ -4,7 +4,8 @@ use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::character::complete::{char, multispace0, multispace1};
 use nom::combinator::map;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 use crate::parsers::{parens, space_separated_list1, ParseResult, Span};
 use crate::parsers::{parse_binary_op, parse_f_exp, parse_multi_op};
@@ -41,31 +42,31 @@ pub fn parse_f_exp_da<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExpDa
     let duration = map(tag("?duration"), |_| FExpDa::new_duration());
 
     let binary_op = map(
-        parens(tuple((
+        parens((
             parse_binary_op,
             preceded(multispace1, parse_f_exp_da),
             preceded(multispace1, parse_f_exp_da),
-        ))),
+        )),
         |(op, lhs, rhs)| FExpDa::new_binary_op(op, lhs, rhs),
     );
 
     let multi_op = map(
-        parens(tuple((
+        parens((
             parse_multi_op,
             preceded(multispace1, parse_f_exp_da),
             preceded(multispace1, space_separated_list1(parse_f_exp_da)),
-        ))),
+        )),
         |(op, lhs, rhs)| FExpDa::new_multi_op(op, lhs, rhs),
     );
 
     let negated = map(
-        parens(preceded(tuple((char('-'), multispace0)), parse_f_exp_da)),
+        parens(preceded((char('-'), multispace0), parse_f_exp_da)),
         FExpDa::new_negative,
     );
 
     let f_exp = map(parse_f_exp, FExpDa::new_f_exp);
 
-    alt((duration, binary_op, multi_op, negated, f_exp))(input.into())
+    alt((duration, binary_op, multi_op, negated, f_exp)).parse(input.into())
 }
 
 impl crate::parsers::Parser for FExpDa {

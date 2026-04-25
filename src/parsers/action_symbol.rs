@@ -1,6 +1,7 @@
 //! Provides parsers for action symbols.
 
 use nom::combinator::map;
+use nom::Parser;
 
 use crate::parsers::{parse_name, ParseResult, Span};
 use crate::types::ActionSymbol;
@@ -22,7 +23,7 @@ use crate::types::ActionSymbol;
 /// assert!(parse_action_symbol(Span::new("-1")).is_err());
 ///```
 pub fn parse_action_symbol<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ActionSymbol> {
-    map(parse_name, ActionSymbol::new)(input.into())
+    map(parse_name, ActionSymbol::new).parse(input.into())
 }
 
 impl crate::parsers::Parser for ActionSymbol {

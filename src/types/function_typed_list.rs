@@ -30,13 +30,13 @@ use std::ops::Deref;
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FunctionTypedList<T>(Vec<FunctionTyped<T>>);
 
-impl<'a, T> Default for FunctionTypedList<T> {
+impl<T> Default for FunctionTypedList<T> {
     fn default() -> Self {
         Self(Vec::default())
     }
 }
 
-impl<'a, T> FunctionTypedList<T> {
+impl<T> FunctionTypedList<T> {
     pub const fn new(list: Vec<FunctionTyped<T>>) -> Self {
         Self(list)
     }
@@ -47,19 +47,19 @@ impl<'a, T> FunctionTypedList<T> {
     }
 }
 
-impl<'a, T> From<Vec<FunctionTyped<T>>> for FunctionTypedList<T> {
+impl<T> From<Vec<FunctionTyped<T>>> for FunctionTypedList<T> {
     fn from(iter: Vec<FunctionTyped<T>>) -> Self {
         FunctionTypedList::new(iter)
     }
 }
 
-impl<'a, T> FromIterator<FunctionTyped<T>> for FunctionTypedList<T> {
+impl<T> FromIterator<FunctionTyped<T>> for FunctionTypedList<T> {
     fn from_iter<I: IntoIterator<Item = FunctionTyped<T>>>(iter: I) -> Self {
         FunctionTypedList::new(iter.into_iter().collect())
     }
 }
 
-impl<'a, T> Deref for FunctionTypedList<T> {
+impl<T> Deref for FunctionTypedList<T> {
     type Target = [FunctionTyped<T>];
 
     fn deref(&self) -> &Self::Target {
@@ -67,7 +67,7 @@ impl<'a, T> Deref for FunctionTypedList<T> {
     }
 }
 
-impl<'a, T> PartialEq<Vec<FunctionTyped<T>>> for FunctionTypedList<T>
+impl<T> PartialEq<Vec<FunctionTyped<T>>> for FunctionTypedList<T>
 where
     T: PartialEq,
 {
@@ -76,7 +76,7 @@ where
     }
 }
 
-impl<'a, T> PartialEq<[FunctionTyped<T>]> for FunctionTypedList<T>
+impl<T> PartialEq<[FunctionTyped<T>]> for FunctionTypedList<T>
 where
     T: PartialEq,
 {

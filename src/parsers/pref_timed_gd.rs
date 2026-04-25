@@ -3,7 +3,8 @@
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::{map, opt};
-use nom::sequence::{terminated, tuple};
+use nom::sequence::terminated;
+use nom::Parser;
 
 use crate::parsers::{parse_pref_name, parse_timed_gd};
 use crate::parsers::{prefix_expr, ParseResult, Span};
@@ -67,15 +68,15 @@ pub fn parse_pref_timed_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, P
     let preference = map(
         prefix_expr(
             "preference",
-            tuple((
+            (
                 opt(terminated(parse_pref_name, multispace1)),
                 parse_timed_gd,
-            )),
+            ),
         ),
         PrefTimedGD::from,
     );
 
-    alt((preference, required))(input.into())
+    alt((preference, required)).parse(input.into())
 }
 
 impl crate::parsers::Parser for PrefTimedGD {
