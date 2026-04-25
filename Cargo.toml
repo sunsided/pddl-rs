@@ -12,6 +12,11 @@ authors = ["Markus Mayer <widemeadows@gmail.com>"]
 edition = "2021"
 rust-version = "1.80.0"
 
+# Features
+# - `parser`: Enables parsing of PDDL types through the `Parser` trait (nom-based).
+# - `interning`: Enables string interning for `Name` types to reduce memory footprint.
+#   This feature is a no-op shim retained for backward compatibility; interning
+#   now uses `std::sync::LazyLock` (available since Rust 1.80) unconditionally.
 [features]
 default = ["parser", "interning"]
 parser = ["dep:nom", "dep:nom_locate", "dep:thiserror"]
