@@ -21,40 +21,63 @@ pub enum DurativeActionEffect {
 }
 
 impl DurativeActionEffect {
-    pub const fn new_timed(effect: TimedEffect) -> Self {
+    #[doc(alias = "new_timed")]
+    pub const fn timed(effect: TimedEffect) -> Self {
         Self::Timed(effect)
     }
-    pub fn new_and<E: IntoIterator<Item = DurativeActionEffect>>(effect: E) -> Self {
+
+    pub fn new_timed(effect: TimedEffect) -> Self {
+        Self::timed(effect)
+    }
+
+    #[doc(alias = "new_and")]
+    pub fn and<E: IntoIterator<Item = DurativeActionEffect>>(effect: E) -> Self {
         Self::All(effect.into_iter().collect())
     }
-    pub fn new_forall(variables: TypedVariables, effect: DurativeActionEffect) -> Self {
+
+    pub fn new_and<E: IntoIterator<Item = DurativeActionEffect>>(effect: E) -> Self {
+        Self::and(effect)
+    }
+
+    #[doc(alias = "new_forall")]
+    pub fn r#forall(variables: TypedVariables, effect: DurativeActionEffect) -> Self {
         Self::Forall(variables, Box::new(effect))
     }
-    pub const fn new_when(gd: DurativeActionGoalDefinition, effect: TimedEffect) -> Self {
+
+    pub fn new_forall(variables: TypedVariables, effect: DurativeActionEffect) -> Self {
+        Self::r#forall(variables, effect)
+    }
+
+    #[doc(alias = "new_when")]
+    pub const fn when(gd: DurativeActionGoalDefinition, effect: TimedEffect) -> Self {
         Self::When(gd, effect)
+    }
+
+    pub fn new_when(gd: DurativeActionGoalDefinition, effect: TimedEffect) -> Self {
+        Self::when(gd, effect)
     }
 }
 
 impl From<TimedEffect> for DurativeActionEffect {
     fn from(value: TimedEffect) -> Self {
-        Self::new_timed(value)
+        Self::timed(value)
     }
 }
 
 impl FromIterator<DurativeActionEffect> for DurativeActionEffect {
     fn from_iter<T: IntoIterator<Item = DurativeActionEffect>>(iter: T) -> Self {
-        Self::new_and(iter)
+        Self::and(iter)
     }
 }
 
 impl From<(TypedVariables, DurativeActionEffect)> for DurativeActionEffect {
     fn from(value: (TypedVariables, DurativeActionEffect)) -> Self {
-        Self::new_forall(value.0, value.1)
+        Self::r#forall(value.0, value.1)
     }
 }
 
 impl From<(DurativeActionGoalDefinition, TimedEffect)> for DurativeActionEffect {
     fn from(value: (DurativeActionGoalDefinition, TimedEffect)) -> Self {
-        Self::new_when(value.0, value.1)
+        Self::when(value.0, value.1)
     }
 }

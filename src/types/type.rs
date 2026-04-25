@@ -45,12 +45,22 @@ impl Type {
     /// The predefined type `number`.
     pub const NUMBER: Type = Type::Exactly(TYPE_NUMBER);
 
-    pub fn new_exactly<S: Into<PrimitiveType>>(t: S) -> Self {
+    #[doc(alias = "new_exactly")]
+    pub fn exactly<S: Into<PrimitiveType>>(t: S) -> Self {
         Self::Exactly(t.into())
     }
 
-    pub fn new_either<T: IntoIterator<Item = P>, P: Into<PrimitiveType>>(iter: T) -> Self {
+    pub fn new_exactly<S: Into<PrimitiveType>>(t: S) -> Self {
+        Self::exactly(t)
+    }
+
+    #[doc(alias = "new_either")]
+    pub fn either<T: IntoIterator<Item = P>, P: Into<PrimitiveType>>(iter: T) -> Self {
         Self::EitherOf(iter.into_iter().map(|x| x.into()).collect())
+    }
+
+    pub fn new_either<T: IntoIterator<Item = P>, P: Into<PrimitiveType>>(iter: T) -> Self {
+        Self::either(iter)
     }
 
     pub fn len(&self) -> usize {
@@ -172,7 +182,7 @@ mod tests {
 
     #[test]
     fn simple_works() {
-        let t = Type::new_exactly("location");
+        let t = Type::exactly("location");
         assert_eq!(format!("{t}"), "location");
     }
 
@@ -197,7 +207,7 @@ mod tests {
 
     #[test]
     fn either_works() {
-        let t = Type::new_either(["location", "memory"]);
+        let t = Type::either(["location", "memory"]);
         assert_eq!(format!("{t}"), "(either location memory)");
     }
 }

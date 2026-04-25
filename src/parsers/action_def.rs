@@ -26,7 +26,7 @@ use crate::types::ActionDefinition;
 ///
 /// assert!(action.is_value(
 ///     ActionDefinition::new(
-///         ActionSymbol::new_string("take-out"),
+///         ActionSymbol::string("take-out"),
 ///         TypedList::from_iter([
 ///             Variable::new_string("x").to_typed("physob")
 ///         ]),
@@ -106,7 +106,7 @@ impl crate::parsers::Parser for ActionDefinition {
     ///
     /// assert_eq!(action,
     ///     ActionDefinition::new(
-    ///         ActionSymbol::new_string("take-out"),
+    ///         ActionSymbol::string("take-out"),
     ///         TypedList::from_iter([
     ///             Variable::new_string("x").to_typed("physob")
     ///         ]),
@@ -143,7 +143,7 @@ mod tests {
         assert_eq!(
             action,
             ActionDefinition::new(
-                ActionSymbol::new_string("take-out"),
+                ActionSymbol::string("take-out"),
                 TypedList::from_iter([Variable::new_string("x").to_typed("physob")]),
                 PreconditionGoalDefinitions::from_str("(not (= ?x B))").unwrap(),
                 Some(Effects::from_str("(not (in ?x))").unwrap())

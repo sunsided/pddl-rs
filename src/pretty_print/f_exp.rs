@@ -213,14 +213,14 @@ mod tests {
 
     #[test]
     fn fexp_number_works() {
-        let n = FluentExpression::new_number(Number::from(42));
+        let n = FluentExpression::number(Number::from(42));
         assert_eq!(prettify!(n, 10), "42");
     }
 
     #[test]
     fn fexp_simple_function_works() {
         let head = FunctionHead::Simple(FunctionSymbol::from("fuel"));
-        let e = FluentExpression::new_function(head);
+        let e = FluentExpression::function(head);
         assert_eq!(prettify!(e, 10), "fuel");
     }
 
@@ -230,29 +230,29 @@ mod tests {
             FunctionSymbol::from("fuel"),
             vec![crate::Term::new_variable(Variable::from("r"))],
         );
-        let e = FluentExpression::new_function(head);
+        let e = FluentExpression::function(head);
         assert_eq!(prettify!(e, 20), "(fuel ?r)");
     }
 
     #[test]
     fn fexp_negative_works() {
-        let inner = FluentExpression::new_number(Number::from(5));
-        let e = FluentExpression::new_negative(inner);
+        let inner = FluentExpression::number(Number::from(5));
+        let e = FluentExpression::negative(inner);
         assert_eq!(prettify!(e, 10), "(- 5)");
     }
 
     #[test]
     fn fexp_binary_op_works() {
-        let a = FluentExpression::new_number(Number::from(3));
-        let b = FluentExpression::new_number(Number::from(4));
-        let e = FluentExpression::new_binary_op(BinaryOp::Addition, a, b);
+        let a = FluentExpression::number(Number::from(3));
+        let b = FluentExpression::number(Number::from(4));
+        let e = FluentExpression::binary_op(BinaryOp::Addition, a, b);
         assert_eq!(prettify!(e, 10), "(+ 3 4)");
     }
 
     #[test]
     fn fcomp_works() {
-        let a = FluentExpression::new_number(Number::from(3));
-        let b = FluentExpression::new_number(Number::from(4));
+        let a = FluentExpression::number(Number::from(3));
+        let b = FluentExpression::number(Number::from(4));
         let fc = FluentComparison::new(BinaryComparison::GreaterThan, a, b);
         assert_eq!(prettify!(fc, 10), "(> 3 4)");
     }
@@ -265,28 +265,28 @@ mod tests {
 
     #[test]
     fn fexp_t_scaled_works() {
-        let inner = FluentExpression::new_number(Number::from(2));
+        let inner = FluentExpression::number(Number::from(2));
         let e = TimedFluentExpression::Scaled(inner);
         assert_eq!(prettify!(e, 10), "2");
     }
 
     #[test]
     fn fexp_da_duration_works() {
-        let e = DurativeActionFluentExpression::new_duration();
+        let e = DurativeActionFluentExpression::duration();
         assert_eq!(prettify!(e, 10), "#t");
     }
 
     #[test]
     fn fexp_da_fexp_works() {
-        let inner = FluentExpression::new_number(Number::from(10));
-        let e = DurativeActionFluentExpression::new_f_exp(inner);
+        let inner = FluentExpression::number(Number::from(10));
+        let e = DurativeActionFluentExpression::fluent_expression(inner);
         assert_eq!(prettify!(e, 10), "10");
     }
 
     #[test]
     fn f_assign_da_works() {
         let head = FunctionHead::Simple(FunctionSymbol::from("fuel"));
-        let expr = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(
+        let expr = DurativeActionFluentExpression::fluent_expression(FluentExpression::number(
             Number::from(5),
         ));
         let assign = DurativeActionFunctionAssignment::new(AssignOp::Assign, head, expr);
@@ -295,145 +295,143 @@ mod tests {
 
     #[test]
     fn metric_fexp_number_works() {
-        let m = MetricFluentExpression::new_number(Number::from(10));
+        let m = MetricFluentExpression::number(Number::from(10));
         assert_eq!(prettify!(m, 10), "10");
     }
 
     #[test]
     fn metric_fexp_total_time_works() {
-        let m = MetricFluentExpression::new_total_time();
+        let m = MetricFluentExpression::total_time();
         assert_eq!(prettify!(m, 10), "total-time");
     }
 
     #[test]
     fn metric_fexp_function_works() {
-        let m = MetricFluentExpression::new_function(
-            FunctionSymbol::from("fuel"),
-            vec![Name::new("r")],
-        );
+        let m =
+            MetricFluentExpression::function(FunctionSymbol::from("fuel"), vec![Name::new("r")]);
         assert_eq!(prettify!(m, 20), "(fuel r)");
     }
 
     #[test]
     fn metric_fexp_is_violated_works() {
-        let m = MetricFluentExpression::new_is_violated(PreferenceName::new_string("p1"));
+        let m = MetricFluentExpression::is_violated(PreferenceName::string("p1"));
         assert_eq!(prettify!(m, 20), "(is-violated p1)");
     }
 
     #[test]
     fn fexp_multi_op_addition_works() {
-        let a = FluentExpression::new_number(Number::from(1));
-        let b = FluentExpression::new_number(Number::from(2));
-        let c = FluentExpression::new_number(Number::from(3));
-        let e = FluentExpression::new_multi_op(MultiOp::Addition, a, [b, c]);
+        let a = FluentExpression::number(Number::from(1));
+        let b = FluentExpression::number(Number::from(2));
+        let c = FluentExpression::number(Number::from(3));
+        let e = FluentExpression::multi_op(MultiOp::Addition, a, [b, c]);
         assert_eq!(prettify!(e, 20), "(+ 1 2 3)");
     }
 
     #[test]
     fn fexp_multi_op_multiplication_works() {
-        let a = FluentExpression::new_number(Number::from(2));
-        let b = FluentExpression::new_number(Number::from(3));
-        let c = FluentExpression::new_number(Number::from(4));
-        let e = FluentExpression::new_multi_op(MultiOp::Multiplication, a, [b, c]);
+        let a = FluentExpression::number(Number::from(2));
+        let b = FluentExpression::number(Number::from(3));
+        let c = FluentExpression::number(Number::from(4));
+        let e = FluentExpression::multi_op(MultiOp::Multiplication, a, [b, c]);
         assert_eq!(prettify!(e, 20), "(* 2 3 4)");
     }
 
     #[test]
     fn fexp_binary_op_subtraction_works() {
-        let a = FluentExpression::new_number(Number::from(5));
-        let b = FluentExpression::new_number(Number::from(3));
-        let e = FluentExpression::new_binary_op(BinaryOp::Subtraction, a, b);
+        let a = FluentExpression::number(Number::from(5));
+        let b = FluentExpression::number(Number::from(3));
+        let e = FluentExpression::binary_op(BinaryOp::Subtraction, a, b);
         assert_eq!(prettify!(e, 10), "(- 5 3)");
     }
 
     #[test]
     fn fexp_binary_op_division_works() {
-        let a = FluentExpression::new_number(Number::from(10));
-        let b = FluentExpression::new_number(Number::from(2));
-        let e = FluentExpression::new_binary_op(BinaryOp::Division, a, b);
+        let a = FluentExpression::number(Number::from(10));
+        let b = FluentExpression::number(Number::from(2));
+        let e = FluentExpression::binary_op(BinaryOp::Division, a, b);
         assert_eq!(prettify!(e, 10), "(/ 10 2)");
     }
 
     #[test]
     fn fexp_binary_op_multiplication_works() {
-        let a = FluentExpression::new_number(Number::from(3));
-        let b = FluentExpression::new_number(Number::from(4));
-        let e = FluentExpression::new_binary_op(BinaryOp::Multiplication, a, b);
+        let a = FluentExpression::number(Number::from(3));
+        let b = FluentExpression::number(Number::from(4));
+        let e = FluentExpression::binary_op(BinaryOp::Multiplication, a, b);
         assert_eq!(prettify!(e, 10), "(* 3 4)");
     }
 
     #[test]
     fn fexp_da_negative_works() {
-        let inner = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(
+        let inner = DurativeActionFluentExpression::fluent_expression(FluentExpression::number(
             Number::from(5),
         ));
-        let e = DurativeActionFluentExpression::new_negative(inner);
+        let e = DurativeActionFluentExpression::negative(inner);
         assert_eq!(prettify!(e, 10), "(- 5)");
     }
 
     #[test]
     fn fexp_da_binary_op_subtraction_works() {
-        let a = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(
+        let a = DurativeActionFluentExpression::fluent_expression(FluentExpression::number(
             Number::from(5),
         ));
-        let b = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(
+        let b = DurativeActionFluentExpression::fluent_expression(FluentExpression::number(
             Number::from(3),
         ));
-        let e = DurativeActionFluentExpression::new_binary_op(BinaryOp::Subtraction, a, b);
+        let e = DurativeActionFluentExpression::binary_op(BinaryOp::Subtraction, a, b);
         assert_eq!(prettify!(e, 10), "(- 5 3)");
     }
 
     #[test]
     fn fexp_da_binary_op_division_works() {
-        let a = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(
+        let a = DurativeActionFluentExpression::fluent_expression(FluentExpression::number(
             Number::from(10),
         ));
-        let b = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(
+        let b = DurativeActionFluentExpression::fluent_expression(FluentExpression::number(
             Number::from(2),
         ));
-        let e = DurativeActionFluentExpression::new_binary_op(BinaryOp::Division, a, b);
+        let e = DurativeActionFluentExpression::binary_op(BinaryOp::Division, a, b);
         assert_eq!(prettify!(e, 10), "(/ 10 2)");
     }
 
     #[test]
     fn fexp_da_binary_op_multiplication_works() {
-        let a = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(
+        let a = DurativeActionFluentExpression::fluent_expression(FluentExpression::number(
             Number::from(3),
         ));
-        let b = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(
+        let b = DurativeActionFluentExpression::fluent_expression(FluentExpression::number(
             Number::from(4),
         ));
-        let e = DurativeActionFluentExpression::new_binary_op(BinaryOp::Multiplication, a, b);
+        let e = DurativeActionFluentExpression::binary_op(BinaryOp::Multiplication, a, b);
         assert_eq!(prettify!(e, 10), "(* 3 4)");
     }
 
     #[test]
     fn fexp_da_multi_op_addition_works() {
-        let a = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(
+        let a = DurativeActionFluentExpression::fluent_expression(FluentExpression::number(
             Number::from(1),
         ));
-        let b = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(
+        let b = DurativeActionFluentExpression::fluent_expression(FluentExpression::number(
             Number::from(2),
         ));
-        let c = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(
+        let c = DurativeActionFluentExpression::fluent_expression(FluentExpression::number(
             Number::from(3),
         ));
-        let e = DurativeActionFluentExpression::new_multi_op(MultiOp::Addition, a, [b, c]);
+        let e = DurativeActionFluentExpression::multi_op(MultiOp::Addition, a, [b, c]);
         assert_eq!(prettify!(e, 20), "(+ 1 2 3)");
     }
 
     #[test]
     fn fexp_da_multi_op_multiplication_works() {
-        let a = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(
+        let a = DurativeActionFluentExpression::fluent_expression(FluentExpression::number(
             Number::from(2),
         ));
-        let b = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(
+        let b = DurativeActionFluentExpression::fluent_expression(FluentExpression::number(
             Number::from(3),
         ));
-        let c = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(
+        let c = DurativeActionFluentExpression::fluent_expression(FluentExpression::number(
             Number::from(4),
         ));
-        let e = DurativeActionFluentExpression::new_multi_op(MultiOp::Multiplication, a, [b, c]);
+        let e = DurativeActionFluentExpression::multi_op(MultiOp::Multiplication, a, [b, c]);
         assert_eq!(prettify!(e, 20), "(* 2 3 4)");
     }
 
@@ -441,7 +439,7 @@ mod tests {
     fn fexp_da_assign_works() {
         use crate::FunctionHead;
         let head = FunctionHead::Simple(FunctionSymbol::from("x"));
-        let expr = DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(
+        let expr = DurativeActionFluentExpression::fluent_expression(FluentExpression::number(
             Number::from(10),
         ));
         let e = DurativeActionFluentExpression::Assign(AssignOp::Increase, head, Box::new(expr));
@@ -450,74 +448,74 @@ mod tests {
 
     #[test]
     fn fcomp_less_than_works() {
-        let a = FluentExpression::new_number(Number::from(3));
-        let b = FluentExpression::new_number(Number::from(4));
+        let a = FluentExpression::number(Number::from(3));
+        let b = FluentExpression::number(Number::from(4));
         let fc = FluentComparison::new(BinaryComparison::LessThan, a, b);
         assert_eq!(prettify!(fc, 10), "(< 3 4)");
     }
 
     #[test]
     fn fcomp_equal_works() {
-        let a = FluentExpression::new_number(Number::from(3));
-        let b = FluentExpression::new_number(Number::from(4));
+        let a = FluentExpression::number(Number::from(3));
+        let b = FluentExpression::number(Number::from(4));
         let fc = FluentComparison::new(BinaryComparison::Equal, a, b);
         assert_eq!(prettify!(fc, 10), "(= 3 4)");
     }
 
     #[test]
     fn fcomp_greater_or_equal_works() {
-        let a = FluentExpression::new_number(Number::from(3));
-        let b = FluentExpression::new_number(Number::from(4));
+        let a = FluentExpression::number(Number::from(3));
+        let b = FluentExpression::number(Number::from(4));
         let fc = FluentComparison::new(BinaryComparison::GreaterOrEqual, a, b);
         assert_eq!(prettify!(fc, 10), "(>= 3 4)");
     }
 
     #[test]
     fn fcomp_less_than_or_equal_works() {
-        let a = FluentExpression::new_number(Number::from(3));
-        let b = FluentExpression::new_number(Number::from(4));
+        let a = FluentExpression::number(Number::from(3));
+        let b = FluentExpression::number(Number::from(4));
         let fc = FluentComparison::new(BinaryComparison::LessThanOrEqual, a, b);
         assert_eq!(prettify!(fc, 10), "(<= 3 4)");
     }
 
     #[test]
     fn metric_fexp_negative_works() {
-        let inner = MetricFluentExpression::new_number(Number::from(5));
-        let m = MetricFluentExpression::new_negative(inner);
+        let inner = MetricFluentExpression::number(Number::from(5));
+        let m = MetricFluentExpression::negative(inner);
         assert_eq!(prettify!(m, 10), "(- 5)");
     }
 
     #[test]
     fn metric_fexp_binary_op_subtraction_works() {
-        let a = MetricFluentExpression::new_number(Number::from(5));
-        let b = MetricFluentExpression::new_number(Number::from(3));
-        let m = MetricFluentExpression::new_binary_op(BinaryOp::Subtraction, a, b);
+        let a = MetricFluentExpression::number(Number::from(5));
+        let b = MetricFluentExpression::number(Number::from(3));
+        let m = MetricFluentExpression::binary_op(BinaryOp::Subtraction, a, b);
         assert_eq!(prettify!(m, 10), "(- 5 3)");
     }
 
     #[test]
     fn metric_fexp_binary_op_multiplication_works() {
-        let a = MetricFluentExpression::new_number(Number::from(3));
-        let b = MetricFluentExpression::new_number(Number::from(4));
-        let m = MetricFluentExpression::new_binary_op(BinaryOp::Multiplication, a, b);
+        let a = MetricFluentExpression::number(Number::from(3));
+        let b = MetricFluentExpression::number(Number::from(4));
+        let m = MetricFluentExpression::binary_op(BinaryOp::Multiplication, a, b);
         assert_eq!(prettify!(m, 10), "(* 3 4)");
     }
 
     #[test]
     fn metric_fexp_multi_op_addition_works() {
-        let a = MetricFluentExpression::new_number(Number::from(1));
-        let b = MetricFluentExpression::new_number(Number::from(2));
-        let c = MetricFluentExpression::new_number(Number::from(3));
-        let m = MetricFluentExpression::new_multi_op(MultiOp::Addition, a, [b, c]);
+        let a = MetricFluentExpression::number(Number::from(1));
+        let b = MetricFluentExpression::number(Number::from(2));
+        let c = MetricFluentExpression::number(Number::from(3));
+        let m = MetricFluentExpression::multi_op(MultiOp::Addition, a, [b, c]);
         assert_eq!(prettify!(m, 20), "(+ 1 2 3)");
     }
 
     #[test]
     fn metric_fexp_multi_op_multiplication_works() {
-        let a = MetricFluentExpression::new_number(Number::from(2));
-        let b = MetricFluentExpression::new_number(Number::from(3));
-        let c = MetricFluentExpression::new_number(Number::from(4));
-        let m = MetricFluentExpression::new_multi_op(MultiOp::Multiplication, a, [b, c]);
+        let a = MetricFluentExpression::number(Number::from(2));
+        let b = MetricFluentExpression::number(Number::from(3));
+        let c = MetricFluentExpression::number(Number::from(4));
+        let m = MetricFluentExpression::multi_op(MultiOp::Multiplication, a, [b, c]);
         assert_eq!(prettify!(m, 20), "(* 2 3 4)");
     }
 }

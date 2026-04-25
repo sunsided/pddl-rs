@@ -23,8 +23,13 @@ impl TimedFluentExpression {
         Self::Now
     }
 
-    pub fn new_scaled(exp: FluentExpression) -> Self {
+    #[doc(alias = "new_scaled")]
+    pub const fn scaled(exp: FluentExpression) -> Self {
         Self::Scaled(exp)
+    }
+
+    pub fn new_scaled(exp: FluentExpression) -> Self {
+        Self::scaled(exp)
     }
 }
 

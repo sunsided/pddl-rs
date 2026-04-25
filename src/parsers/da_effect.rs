@@ -58,8 +58,8 @@ use nom::Parser;
 /// assert!(parse_da_effect("(forall (?a ?b) (at start (= a b)))").is_value(
 ///     DurativeActionEffect::new_forall(
 ///         TypedList::from_iter([
-///             Typed::new_object(Variable::new_string("a")),
-///             Typed::new_object(Variable::new_string("b")),
+///             Typed::object(Variable::new_string("a")),
+///             Typed::object(Variable::new_string("b")),
 ///         ]),
 ///         DurativeActionEffect::Timed(
 ///             TimedEffect::new_conditional(
@@ -158,7 +158,7 @@ mod tests {
     #[test]
     fn test_at_start() {
         assert!(DurativeActionEffect::parse("(at start (= x y))").is_value(
-            DurativeActionEffect::Timed(TimedEffect::new_conditional(
+            DurativeActionEffect::Timed(TimedEffect::conditional(
                 TimeSpecifier::Start,
                 EffectCondition::new(PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
                     EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
@@ -169,15 +169,15 @@ mod tests {
 
     #[test]
     fn test_and_empty() {
-        assert!(DurativeActionEffect::parse("(and )").is_value(DurativeActionEffect::new_and([])));
+        assert!(DurativeActionEffect::parse("(and )").is_value(DurativeActionEffect::and([])));
     }
 
     #[test]
     fn test_and() {
         assert!(
             DurativeActionEffect::parse("(and (at start (= x y)) (and ))").is_value(
-                DurativeActionEffect::new_and([
-                    DurativeActionEffect::Timed(TimedEffect::new_conditional(
+                DurativeActionEffect::and([
+                    DurativeActionEffect::Timed(TimedEffect::conditional(
                         TimeSpecifier::Start,
                         EffectCondition::new(PrimitiveEffect::AtomicFormula(
                             AtomicFormula::Equality(EqualityAtomicFormula::new(
@@ -186,7 +186,7 @@ mod tests {
                             ))
                         ))
                     )),
-                    DurativeActionEffect::new_and([])
+                    DurativeActionEffect::and([])
                 ])
             )
         );
@@ -196,12 +196,12 @@ mod tests {
     fn test_forall() {
         assert!(
             DurativeActionEffect::parse("(forall (?a ?b) (at start (= a b)))").is_value(
-                DurativeActionEffect::new_forall(
+                DurativeActionEffect::forall(
                     TypedList::from_iter([
-                        Typed::new_object(Variable::new_string("a")),
-                        Typed::new_object(Variable::new_string("b")),
+                        Typed::object(Variable::new_string("a")),
+                        Typed::object(Variable::new_string("b")),
                     ]),
-                    DurativeActionEffect::Timed(TimedEffect::new_conditional(
+                    DurativeActionEffect::Timed(TimedEffect::conditional(
                         TimeSpecifier::Start,
                         EffectCondition::new(PrimitiveEffect::AtomicFormula(
                             AtomicFormula::Equality(EqualityAtomicFormula::new(

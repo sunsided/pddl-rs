@@ -24,8 +24,14 @@ impl EffectCondition {
     pub const fn new(effect: PrimitiveEffect) -> Self {
         Self::Single(effect)
     }
-    pub const fn new_and(effect: Vec<PrimitiveEffect>) -> Self {
+
+    pub const fn all(effect: Vec<PrimitiveEffect>) -> Self {
         Self::All(effect)
+    }
+
+    #[deprecated(since = "0.2.0", note = "Use `all` instead")]
+    pub const fn new_and(effect: Vec<PrimitiveEffect>) -> Self {
+        Self::all(effect)
     }
 }
 
@@ -49,13 +55,13 @@ impl From<PrimitiveEffect> for EffectCondition {
 
 impl From<Vec<PrimitiveEffect>> for EffectCondition {
     fn from(value: Vec<PrimitiveEffect>) -> Self {
-        EffectCondition::new_and(value)
+        EffectCondition::all(value)
     }
 }
 
 impl FromIterator<PrimitiveEffect> for EffectCondition {
     fn from_iter<T: IntoIterator<Item = PrimitiveEffect>>(iter: T) -> Self {
-        EffectCondition::new_and(iter.into_iter().collect())
+        EffectCondition::all(iter.into_iter().collect())
     }
 }
 

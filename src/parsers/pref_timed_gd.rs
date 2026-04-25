@@ -18,7 +18,7 @@ use crate::types::PreferenceTimedGoalDefinition;
 /// # use pddl::{AtomicFormula, GoalDefinition, Interval, PreferenceTimedGoalDefinition, Term, TimedGoalDefinition, TimeSpecifier};
 /// assert!(parse_pref_timed_gd("(at start (= x y))").is_value(
 ///     PreferenceTimedGoalDefinition::Required(
-///         TimedGoalDefinition::new_at(
+///         TimedGoalDefinition::at(
 ///             TimeSpecifier::Start,
 ///             GoalDefinition::AtomicFormula(
 ///                 AtomicFormula::new_equality(
@@ -34,7 +34,7 @@ use crate::types::PreferenceTimedGoalDefinition;
 /// assert!(parse_pref_timed_gd("(preference (over all (= x y)))").is_value(
 ///     PreferenceTimedGoalDefinition::Preference(
 ///         None,
-///         TimedGoalDefinition::new_over(
+///         TimedGoalDefinition::over(
 ///             Interval::All,
 ///             GoalDefinition::AtomicFormula(
 ///                 AtomicFormula::new_equality(
@@ -49,7 +49,7 @@ use crate::types::PreferenceTimedGoalDefinition;
 /// assert!(parse_pref_timed_gd("(preference pref-name (over all (= x y)))").is_value(
 ///     PreferenceTimedGoalDefinition::Preference(
 ///         Some("pref-name".into()),
-///         TimedGoalDefinition::new_over(
+///         TimedGoalDefinition::over(
 ///             Interval::All,
 ///             GoalDefinition::AtomicFormula(
 ///                 AtomicFormula::new_equality(
@@ -102,7 +102,7 @@ mod tests {
     fn test_parse() {
         assert!(
             PreferenceTimedGoalDefinition::parse("(at start (= x y))").is_value(
-                PreferenceTimedGoalDefinition::Required(TimedGoalDefinition::new_at(
+                PreferenceTimedGoalDefinition::Required(TimedGoalDefinition::at(
                     TimeSpecifier::Start,
                     GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
                         Term::Name("x".into()),
@@ -116,7 +116,7 @@ mod tests {
             PreferenceTimedGoalDefinition::parse("(preference (over all (= x y)))").is_value(
                 PreferenceTimedGoalDefinition::Preference(
                     None,
-                    TimedGoalDefinition::new_over(
+                    TimedGoalDefinition::over(
                         Interval::All,
                         GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
                             Term::Name("x".into()),
@@ -131,7 +131,7 @@ mod tests {
             PreferenceTimedGoalDefinition::parse("(preference pref-name (over all (= x y)))")
                 .is_value(PreferenceTimedGoalDefinition::Preference(
                     Some("pref-name".into()),
-                    TimedGoalDefinition::new_over(
+                    TimedGoalDefinition::over(
                         Interval::All,
                         GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
                             Term::Name("x".into()),

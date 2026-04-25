@@ -67,3 +67,30 @@ impl From<ProblemGoalDefinition> for PreconditionGoalDefinitions {
 /// Alias for [`ProblemGoalDefinition`].
 #[deprecated(since = "0.2.0", note = "Use `ProblemGoalDefinition` instead")]
 pub type GoalDef = ProblemGoalDefinition;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::GoalDefinition;
+
+    #[test]
+    fn problem_goal_definition_from_precondition_goal_definitions() {
+        let defs = PreconditionGoalDefinitions::new(Vec::new());
+        let pgd: ProblemGoalDefinition = defs.clone().into();
+        assert_eq!(*pgd.value(), defs);
+    }
+
+    #[test]
+    fn problem_goal_definition_from_precondition_goal_definition() {
+        let pref_gd = crate::PreferenceGoalDefinition::from_gd(GoalDefinition::and(Vec::new()));
+        let pre_gd = PreconditionGoalDefinition::preference(pref_gd);
+        let pgd: ProblemGoalDefinition = pre_gd.into();
+        assert_eq!(pgd.len(), 1);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn deprecated_alias_exists() {
+        fn _assert_alias(_: GoalDef) {}
+    }
+}

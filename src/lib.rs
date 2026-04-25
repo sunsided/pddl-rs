@@ -281,8 +281,8 @@
 //!       (clear ?x)                ← GoalDefinition::AtomicFormula
 //!       (handempty))              ← GoalDefinition::AtomicFormula
 //!     :effect (and                ← Effects
-//!       (not (clear ?x))          ← ConditionalEffect::PrimitiveEffect(PrimitiveEffect::NotAtomicFormula)
-//!       (holding ?x)))            ← ConditionalEffect::PrimitiveEffect(PrimitiveEffect::AtomicFormula)
+//!       (not (clear ?x))          ← ConditionalEffect::Effect(PrimitiveEffect::NotAtomicFormula)
+//!       (holding ?x)))            ← ConditionalEffect::Effect(PrimitiveEffect::AtomicFormula)
 //!
 //!   (:goal (and                   ← ProblemGoalDefinition → PreconditionGoalDefinitions
 //!     (on a b)                    ← GoalDefinition::AtomicFormula

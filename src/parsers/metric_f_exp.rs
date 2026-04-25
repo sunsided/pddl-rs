@@ -20,54 +20,54 @@ use nom::Parser;
 /// # use pddl::parsers::{parse_metric_f_exp, preamble::*};
 /// # use pddl::{BinaryOp, MetricFluentExpression, FunctionSymbol, MultiOp, Name, PreferenceName};
 /// assert!(parse_metric_f_exp("1.23").is_value(
-///     MetricFluentExpression::new_number(1.23)
+///     MetricFluentExpression::number(1.23)
 /// ));
 ///
 /// assert!(parse_metric_f_exp("(- total-time)").is_value(
-///     MetricFluentExpression::new_negative(
+///     MetricFluentExpression::negative(
 ///         MetricFluentExpression::TotalTime
 ///     )
 /// ));
 ///
 /// assert!(parse_metric_f_exp("(+ 1.23 2.34)").is_value(
-///     MetricFluentExpression::new_binary_op(
+///     MetricFluentExpression::binary_op(
 ///         BinaryOp::Addition,
-///         MetricFluentExpression::new_number(1.23),
-///         MetricFluentExpression::new_number(2.34)
+///         MetricFluentExpression::number(1.23),
+///         MetricFluentExpression::number(2.34)
 ///     )
 /// ));
 ///
 /// assert!(parse_metric_f_exp("(+ 1.23 2.34 3.45)").is_value(
-///     MetricFluentExpression::new_multi_op(
+///     MetricFluentExpression::multi_op(
 ///         MultiOp::Addition,
-///         MetricFluentExpression::new_number(1.23),
-///         [MetricFluentExpression::new_number(2.34), MetricFluentExpression::new_number(3.45)]
+///         MetricFluentExpression::number(1.23),
+///         [MetricFluentExpression::number(2.34), MetricFluentExpression::number(3.45)]
 ///     )
 /// ));
 ///
 /// assert!(parse_metric_f_exp("(is-violated preference)").is_value(
-///     MetricFluentExpression::new_is_violated(
+///     MetricFluentExpression::is_violated(
 ///         PreferenceName::from("preference")
 ///     )
 /// ));
 ///
 /// assert!(parse_metric_f_exp("fun-sym").is_value(
-///     MetricFluentExpression::new_function(
-///         FunctionSymbol::new_string("fun-sym"),
+///     MetricFluentExpression::function(
+///         FunctionSymbol::string("fun-sym"),
 ///         []
 ///     )
 /// ));
 ///
 /// assert!(parse_metric_f_exp("(fun-sym)").is_value(
-///     MetricFluentExpression::new_function(
-///         FunctionSymbol::new_string("fun-sym"),
+///     MetricFluentExpression::function(
+///         FunctionSymbol::string("fun-sym"),
 ///         []
 ///     )
 /// ));
 ///
 /// assert!(parse_metric_f_exp("(fun-sym a b c)").is_value(
-///     MetricFluentExpression::new_function(
-///         FunctionSymbol::new_string("fun-sym"),
+///     MetricFluentExpression::function(
+///         FunctionSymbol::string("fun-sym"),
 ///         [
 ///             Name::new("a"),
 ///             Name::new("b"),
@@ -85,7 +85,7 @@ pub fn parse_metric_f_exp<'a, T: Into<Span<'a>>>(
             preceded(multispace1, parse_metric_f_exp),
             preceded(multispace1, parse_metric_f_exp),
         )),
-        |(op, lhs, rhs)| MetricFluentExpression::new_binary_op(op, lhs, rhs),
+        |(op, lhs, rhs)| MetricFluentExpression::binary_op(op, lhs, rhs),
     );
 
     let multi_op = map(
@@ -94,7 +94,7 @@ pub fn parse_metric_f_exp<'a, T: Into<Span<'a>>>(
             preceded(multispace1, parse_metric_f_exp),
             preceded(multispace1, space_separated_list1(parse_metric_f_exp)),
         )),
-        |(op, lhs, rhs)| MetricFluentExpression::new_multi_op(op, lhs, rhs),
+        |(op, lhs, rhs)| MetricFluentExpression::multi_op(op, lhs, rhs),
     );
 
     let negated = map(
@@ -105,16 +105,14 @@ pub fn parse_metric_f_exp<'a, T: Into<Span<'a>>>(
     let number = map(parse_number, MetricFluentExpression::new_number);
 
     let simple_function = map(parse_function_symbol, |sym| {
-        MetricFluentExpression::new_function(sym, [])
+        MetricFluentExpression::function(sym, [])
     });
     let complex_function = map(
         parens((parse_function_symbol, ws(space_separated_list0(parse_name)))),
-        |(sym, names)| MetricFluentExpression::new_function(sym, names),
+        |(sym, names)| MetricFluentExpression::function(sym, names),
     );
 
-    let total_time = map(tag("total-time"), |_| {
-        MetricFluentExpression::new_total_time()
-    });
+    let total_time = map(tag("total-time"), |_| MetricFluentExpression::total_time());
 
     // :preferences
     let is_violated = map(
@@ -151,29 +149,30 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        assert!(MetricFluentExpression::parse("1.23")
-            .is_value(MetricFluentExpression::new_number(1.23)));
+        assert!(
+            MetricFluentExpression::parse("1.23").is_value(MetricFluentExpression::number(1.23))
+        );
 
         assert!(MetricFluentExpression::parse("(- total-time)").is_value(
-            MetricFluentExpression::new_negative(MetricFluentExpression::TotalTime)
+            MetricFluentExpression::negative(MetricFluentExpression::TotalTime)
         ));
 
         assert!(MetricFluentExpression::parse("(+ 1.23 2.34)").is_value(
-            MetricFluentExpression::new_binary_op(
+            MetricFluentExpression::binary_op(
                 BinaryOp::Addition,
-                MetricFluentExpression::new_number(1.23),
-                MetricFluentExpression::new_number(2.34)
+                MetricFluentExpression::number(1.23),
+                MetricFluentExpression::number(2.34)
             )
         ));
 
         assert!(
             MetricFluentExpression::parse("(+ 1.23 2.34 3.45)").is_value(
-                MetricFluentExpression::new_multi_op(
+                MetricFluentExpression::multi_op(
                     MultiOp::Addition,
-                    MetricFluentExpression::new_number(1.23),
+                    MetricFluentExpression::number(1.23),
                     [
-                        MetricFluentExpression::new_number(2.34),
-                        MetricFluentExpression::new_number(3.45)
+                        MetricFluentExpression::number(2.34),
+                        MetricFluentExpression::number(3.45)
                     ]
                 )
             )
@@ -181,21 +180,21 @@ mod tests {
 
         assert!(
             MetricFluentExpression::parse("(is-violated preference)").is_value(
-                MetricFluentExpression::new_is_violated(PreferenceName::from("preference"))
+                MetricFluentExpression::is_violated(PreferenceName::from("preference"))
             )
         );
 
         assert!(MetricFluentExpression::parse("fun-sym").is_value(
-            MetricFluentExpression::new_function(FunctionSymbol::new_string("fun-sym"), [])
+            MetricFluentExpression::function(FunctionSymbol::string("fun-sym"), [])
         ));
 
         assert!(MetricFluentExpression::parse("(fun-sym)").is_value(
-            MetricFluentExpression::new_function(FunctionSymbol::new_string("fun-sym"), [])
+            MetricFluentExpression::function(FunctionSymbol::string("fun-sym"), [])
         ));
 
         assert!(MetricFluentExpression::parse("(fun-sym a b c)").is_value(
-            MetricFluentExpression::new_function(
-                FunctionSymbol::new_string("fun-sym"),
+            MetricFluentExpression::function(
+                FunctionSymbol::string("fun-sym"),
                 [Name::new("a"), Name::new("b"), Name::new("c")]
             )
         ));

@@ -123,7 +123,7 @@ mod tests {
     #[test]
     fn test_parse() {
         assert!(
-            TimedEffect::parse("(at start (= x y))").is_value(TimedEffect::new_conditional(
+            TimedEffect::parse("(at start (= x y))").is_value(TimedEffect::conditional(
                 TimeSpecifier::Start,
                 EffectCondition::new(PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
                     EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
@@ -133,7 +133,7 @@ mod tests {
 
         assert!(
             TimedEffect::parse("(at end (assign fun-sym ?duration))").is_value(
-                TimedEffect::new_fluent(
+                TimedEffect::fluent(
                     TimeSpecifier::End,
                     DurativeActionFunctionAssignment::new(
                         AssignOp::Assign,
@@ -145,7 +145,7 @@ mod tests {
         );
 
         assert!(
-            TimedEffect::parse("(increase fun-sym #t)").is_value(TimedEffect::new_continuous(
+            TimedEffect::parse("(increase fun-sym #t)").is_value(TimedEffect::continuous(
                 TimedAssignOperator::Increase,
                 FunctionHead::Simple("fun-sym".into()),
                 TimedFluentExpression::Now

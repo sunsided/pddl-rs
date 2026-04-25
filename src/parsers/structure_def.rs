@@ -24,15 +24,15 @@ use crate::types::StructureDef;
 /// let action = parse_structure_def(input);
 ///
 /// assert!(action.is_value(
-///     StructureDef::new_action(ActionDefinition::new(
+///     StructureDef::action(ActionDefinition::new(
 ///         ActionSymbol::from("take-out"),
 ///         TypedList::from_iter([
 ///             Variable::from("x").to_typed("physob")
 ///         ]),
-///         PreconditionGoalDefinitions::new_preference(PreferenceGoalDefinition::from_gd(
-///             GoalDefinition::new_not(
-///                 GoalDefinition::new_atomic_formula(
-///                     AtomicFormula::new_equality(
+///         PreconditionGoalDefinitions::preference(PreferenceGoalDefinition::from_gd(
+///             GoalDefinition::not(
+///                 GoalDefinition::atomic_formula(
+///                     AtomicFormula::equality(
 ///                         Term::Variable(Variable::from("x")),
 ///                         Term::Name(Name::new("B"))
 ///                     )
@@ -41,7 +41,7 @@ use crate::types::StructureDef;
 ///         )),
 ///         Some(Effects::new(ConditionalEffect::new_primitive_effect(
 ///             PrimitiveEffect::NotAtomicFormula(
-///                 AtomicFormula::new_predicate(
+///                 AtomicFormula::predicate(
 ///                     Predicate::from("in"),
 ///                     vec![Term::Variable(Variable::from("x"))]
 ///                 )
@@ -87,25 +87,21 @@ mod tests {
 
         let action = StructureDef::parse(input);
 
-        assert!(
-            action.is_value(StructureDef::new_action(ActionDefinition::new(
-                ActionSymbol::from("take-out"),
-                TypedList::from_iter([Variable::from("x").to_typed("physob")]),
-                PreconditionGoalDefinitions::new_preference(PreferenceGoalDefinition::from_gd(
-                    GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
-                        AtomicFormula::new_equality(
-                            Term::Variable(Variable::from("x")),
-                            Term::Name(Name::new("B"))
-                        )
-                    ))
-                )),
-                Some(Effects::new(ConditionalEffect::new_primitive_effect(
-                    PrimitiveEffect::NotAtomicFormula(AtomicFormula::new_predicate(
-                        Predicate::from("in"),
-                        vec![Term::Variable(Variable::from("x"))]
-                    ))
+        assert!(action.is_value(StructureDef::action(ActionDefinition::new(
+            ActionSymbol::from("take-out"),
+            TypedList::from_iter([Variable::from("x").to_typed("physob")]),
+            PreconditionGoalDefinitions::preference(PreferenceGoalDefinition::from_gd(
+                GoalDefinition::not(GoalDefinition::atomic_formula(AtomicFormula::equality(
+                    Term::Variable(Variable::from("x")),
+                    Term::Name(Name::new("B"))
                 )))
+            )),
+            Some(Effects::new(ConditionalEffect::new_primitive_effect(
+                PrimitiveEffect::NotAtomicFormula(AtomicFormula::predicate(
+                    Predicate::from("in"),
+                    vec![Term::Variable(Variable::from("x"))]
+                ))
             )))
-        );
+        ))));
     }
 }

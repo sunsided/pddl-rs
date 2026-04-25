@@ -16,7 +16,7 @@ use crate::types::DomainConstraintsDef;
 ///
 /// let input = "(:constraints (and))";
 /// assert!(parse_domain_constraints_def(input).is_value(
-///     DomainConstraintsDef::new(ConstraintGoalDefinition::new_and([]))
+///     DomainConstraintsDef::new(ConstraintGoalDefinition::and([]))
 /// ));
 /// ```
 pub fn parse_domain_constraints_def<'a, T: Into<Span<'a>>>(
@@ -46,10 +46,7 @@ mod tests {
     #[test]
     fn test_parse() {
         let input = "(:constraints (and))";
-        assert!(
-            DomainConstraintsDef::parse(input).is_value(DomainConstraintsDef::new(
-                ConstraintGoalDefinition::new_and([])
-            ))
-        );
+        assert!(DomainConstraintsDef::parse(input)
+            .is_value(DomainConstraintsDef::new(ConstraintGoalDefinition::and([]))));
     }
 }

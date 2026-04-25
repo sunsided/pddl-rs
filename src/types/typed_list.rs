@@ -149,16 +149,16 @@ mod tests {
 
     #[test]
     fn simple_works() {
-        let name = TypedList::from_iter([Name::new("x").to_typed(Type::new_exactly("letter"))]);
+        let name = TypedList::from_iter([Name::new("x").to_typed(Type::exactly("letter"))]);
         assert_eq!(format!("{name}"), "x - letter");
     }
 
     #[test]
     fn multiple_same_works() {
         let name = TypedList::from_iter([
-            Name::new("x").to_typed(Type::new_exactly("letter")),
-            Name::new("y").to_typed(Type::new_exactly("letter")),
-            Name::new("z").to_typed(Type::new_exactly("letter")),
+            Name::new("x").to_typed(Type::exactly("letter")),
+            Name::new("y").to_typed(Type::exactly("letter")),
+            Name::new("z").to_typed(Type::exactly("letter")),
         ]);
         assert_eq!(format!("{name}"), "x y z - letter");
     }
@@ -166,9 +166,9 @@ mod tests {
     #[test]
     fn interleaved_at_end() {
         let name = TypedList::from_iter([
-            Name::new("x").to_typed(Type::new_exactly("letter")),
-            Name::new("y").to_typed(Type::new_exactly("letter")),
-            Name::new("z").to_typed(Type::new_exactly("car")),
+            Name::new("x").to_typed(Type::exactly("letter")),
+            Name::new("y").to_typed(Type::exactly("letter")),
+            Name::new("z").to_typed(Type::exactly("car")),
         ]);
         assert_eq!(format!("{name}"), "x y - letter z - car");
     }
@@ -176,9 +176,9 @@ mod tests {
     #[test]
     fn interleaved() {
         let name = TypedList::from_iter([
-            Name::new("x").to_typed(Type::new_exactly("letter")),
-            Name::new("y").to_typed(Type::new_exactly("car")),
-            Name::new("z").to_typed(Type::new_exactly("letter")),
+            Name::new("x").to_typed(Type::exactly("letter")),
+            Name::new("y").to_typed(Type::exactly("car")),
+            Name::new("z").to_typed(Type::exactly("letter")),
         ]);
         assert_eq!(format!("{name}"), "x - letter y - car z - letter");
     }
@@ -186,7 +186,7 @@ mod tests {
     #[test]
     fn object_at_end() {
         let name = TypedList::from_iter([
-            Name::new("x").to_typed(Type::new_exactly("letter")),
+            Name::new("x").to_typed(Type::exactly("letter")),
             Name::new("y").to_typed(Type::OBJECT),
             Name::new("z").to_typed(Type::OBJECT),
         ]);
@@ -196,9 +196,9 @@ mod tests {
     #[test]
     fn object_at_start() {
         let name = TypedList::from_iter([
-            Variable::new_string("x").to_typed(Type::OBJECT),
-            Variable::new_string("y").to_typed(Type::OBJECT),
-            Variable::new_string("z").to_typed(Type::new_exactly("letter")),
+            Variable::string("x").to_typed(Type::OBJECT),
+            Variable::string("y").to_typed(Type::OBJECT),
+            Variable::string("z").to_typed(Type::exactly("letter")),
         ]);
         assert_eq!(format!("{name}"), "?x ?y - object ?z - letter");
     }

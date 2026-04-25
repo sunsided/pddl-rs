@@ -46,3 +46,50 @@ impl From<ProblemConstraintsDef> for PreferenceConstraintGoalDefinitions {
         val.0
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_is_empty() {
+        let def = ProblemConstraintsDef::default();
+        assert!(def.is_empty());
+    }
+
+    #[test]
+    fn new_works() {
+        let defs = PreferenceConstraintGoalDefinitions::default();
+        let def = ProblemConstraintsDef::new(defs.clone());
+        assert_eq!(*def.value(), defs);
+    }
+
+    #[test]
+    fn from_works() {
+        let defs = PreferenceConstraintGoalDefinitions::default();
+        let def = ProblemConstraintsDef::from(defs.clone());
+        assert_eq!(def, ProblemConstraintsDef::new(defs));
+    }
+
+    #[test]
+    fn deref_works() {
+        let def = ProblemConstraintsDef::default();
+        let inner: &PreferenceConstraintGoalDefinitions = &def;
+        assert!(inner.is_empty());
+    }
+
+    #[test]
+    fn into_works() {
+        let defs = PreferenceConstraintGoalDefinitions::default();
+        let def = ProblemConstraintsDef::new(defs.clone());
+        let result: PreferenceConstraintGoalDefinitions = def.into();
+        assert_eq!(result, defs);
+    }
+
+    #[test]
+    fn clone_works() {
+        let def = ProblemConstraintsDef::default();
+        let clone = def.clone();
+        assert_eq!(def, clone);
+    }
+}

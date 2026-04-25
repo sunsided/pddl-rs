@@ -138,7 +138,7 @@ mod tests {
     fn metric_spec_works() {
         let ms = crate::MetricSpec::new(
             crate::Optimization::Minimize,
-            crate::MetricFluentExpression::new_total_time(),
+            crate::MetricFluentExpression::total_time(),
         );
         assert_eq!(prettify!(ms, 30), "minimize total-time");
     }
@@ -187,12 +187,12 @@ mod tests {
 
     #[test]
     fn init_elements_multi_works() {
-        let lit1 = crate::AtomicFormula::new_predicate(
-            crate::Predicate::new_string("block"),
+        let lit1 = crate::AtomicFormula::predicate(
+            crate::Predicate::string("block"),
             vec![crate::Name::new("a")],
         );
-        let lit2 = crate::AtomicFormula::new_predicate(
-            crate::Predicate::new_string("block"),
+        let lit2 = crate::AtomicFormula::predicate(
+            crate::Predicate::string("block"),
             vec![crate::Name::new("b")],
         );
         let ie = InitElements::new(vec![
@@ -206,8 +206,8 @@ mod tests {
 
     #[test]
     fn init_element_literal_works() {
-        let af = crate::AtomicFormula::new_predicate(
-            crate::Predicate::new_string("block"),
+        let af = crate::AtomicFormula::predicate(
+            crate::Predicate::string("block"),
             vec![crate::Name::new("a")],
         );
         let ie = InitElement::Literal(Literal::new(af));
@@ -216,8 +216,8 @@ mod tests {
 
     #[test]
     fn init_element_at_works() {
-        let af = crate::AtomicFormula::new_predicate(
-            crate::Predicate::new_string("block"),
+        let af = crate::AtomicFormula::predicate(
+            crate::Predicate::string("block"),
             vec![crate::Name::new("a")],
         );
         let ie = InitElement::At(crate::Number::from(10), Literal::new(af));
@@ -242,8 +242,8 @@ mod tests {
 
     #[test]
     fn goal_def_works() {
-        let gd = crate::GoalDefinition::new_and(Vec::<crate::GoalDefinition>::new());
-        let pre_gd = crate::PreconditionGoalDefinition::new_preference(
+        let gd = crate::GoalDefinition::and(Vec::<crate::GoalDefinition>::new());
+        let pre_gd = crate::PreconditionGoalDefinition::preference(
             crate::PreferenceGoalDefinition::from_gd(gd),
         );
         let gdef = ProblemGoalDefinition::new(PreconditionGoalDefinitions::new(vec![pre_gd]));
@@ -266,7 +266,7 @@ mod tests {
     fn predicate_definitions_works() {
         use crate::AtomicFormulaSkeleton;
         let preds = PredicateDefinitions::new(vec![AtomicFormulaSkeleton::new(
-            crate::Predicate::new_string("at"),
+            crate::Predicate::string("at"),
             vec![].into(),
         )]);
         assert_eq!(prettify!(preds, 20), "(at)");

@@ -47,7 +47,7 @@ mod tests {
         let literal: Literal<Term> = effect.into();
         assert_eq!(
             literal,
-            Literal::AtomicFormula(AtomicFormula::new_equality(
+            Literal::AtomicFormula(AtomicFormula::equality(
                 Term::new_name("x".into()),
                 Term::new_name("y".into()),
             ))

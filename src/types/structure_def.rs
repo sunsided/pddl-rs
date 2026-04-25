@@ -18,31 +18,48 @@ pub enum StructureDef {
 }
 
 impl StructureDef {
-    pub const fn new_action(action: ActionDefinition) -> Self {
+    #[doc(alias = "new_action")]
+    pub const fn action(action: ActionDefinition) -> Self {
         Self::Action(action)
     }
-    pub fn new_durative_action(action: DurativeActionDefinition) -> Self {
+
+    pub fn new_action(action: ActionDefinition) -> Self {
+        Self::action(action)
+    }
+
+    #[doc(alias = "new_durative_action")]
+    pub fn durative_action(action: DurativeActionDefinition) -> Self {
         Self::DurativeAction(Box::new(action))
     }
-    pub const fn new_derived(predicate: DerivedPredicate) -> Self {
+
+    pub fn new_durative_action(action: DurativeActionDefinition) -> Self {
+        Self::durative_action(action)
+    }
+
+    #[doc(alias = "new_derived")]
+    pub const fn derived(predicate: DerivedPredicate) -> Self {
         Self::Derived(predicate)
+    }
+
+    pub fn new_derived(predicate: DerivedPredicate) -> Self {
+        Self::derived(predicate)
     }
 }
 
 impl From<ActionDefinition> for StructureDef {
     fn from(value: ActionDefinition) -> Self {
-        StructureDef::new_action(value)
+        StructureDef::action(value)
     }
 }
 
 impl From<DurativeActionDefinition> for StructureDef {
     fn from(value: DurativeActionDefinition) -> Self {
-        StructureDef::new_durative_action(value)
+        StructureDef::durative_action(value)
     }
 }
 
 impl From<DerivedPredicate> for StructureDef {
     fn from(value: DerivedPredicate) -> Self {
-        StructureDef::new_derived(value)
+        StructureDef::derived(value)
     }
 }

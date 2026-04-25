@@ -90,7 +90,8 @@ pub use atomic_formula::{AtomicFormula, EqualityAtomicFormula, PredicateAtomicFo
 pub use atomic_formula_skeleton::AtomicFormulaSkeleton;
 pub use atomic_function_skeleton::AtomicFunctionSkeleton;
 pub use basic_function_term::BasicFunctionTerm;
-pub use binary_comp::BinaryComparison;
+#[allow(deprecated)]
+pub use binary_comp::{BinaryComp, BinaryComparison};
 pub use binary_op::BinaryOp;
 #[allow(deprecated)]
 pub use c_effect::{

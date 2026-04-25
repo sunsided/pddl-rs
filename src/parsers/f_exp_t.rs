@@ -20,22 +20,22 @@ use crate::types::TimedFluentExpression;
 /// assert!(parse_f_exp_t("#t").is_value(TimedFluentExpression::Now));
 ///
 /// assert!(parse_f_exp_t("(* (fuel ?tank) #t)").is_value(
-///     TimedFluentExpression::new_scaled(
-///         FluentExpression::new_function(
-///             FunctionHead::new_with_terms(
-///                 FunctionSymbol::new_string("fuel"),
-///                 [Term::Variable(Variable::new_string("tank"))]
+///     TimedFluentExpression::scaled(
+///         FluentExpression::function(
+///             FunctionHead::with_terms(
+///                 FunctionSymbol::string("fuel"),
+///                 [Term::Variable(Variable::string("tank"))]
 ///             )
 ///         )
 ///     )
 /// ));
 ///
 /// assert!(parse_f_exp_t("(* #t (fuel ?tank))").is_value(
-///     TimedFluentExpression::new_scaled(
-///         FluentExpression::new_function(
-///             FunctionHead::new_with_terms(
-///                 FunctionSymbol::new_string("fuel"),
-///                 [Term::Variable(Variable::new_string("tank"))]
+///     TimedFluentExpression::scaled(
+///         FluentExpression::function(
+///             FunctionHead::with_terms(
+///                 FunctionSymbol::string("fuel"),
+///                 [Term::Variable(Variable::string("tank"))]
 ///             )
 ///         )
 ///     )
@@ -80,10 +80,10 @@ mod tests {
 
         assert!(
             TimedFluentExpression::parse("(* (fuel ?tank) #t)").is_value(
-                TimedFluentExpression::new_scaled(FluentExpression::new_function(
-                    FunctionHead::new_with_terms(
-                        FunctionSymbol::new_string("fuel"),
-                        [Term::Variable(Variable::new_string("tank"))]
+                TimedFluentExpression::scaled(FluentExpression::function(
+                    FunctionHead::with_terms(
+                        FunctionSymbol::string("fuel"),
+                        [Term::Variable(Variable::string("tank"))]
                     )
                 ))
             )
@@ -91,10 +91,10 @@ mod tests {
 
         assert!(
             TimedFluentExpression::parse("(* #t (fuel ?tank))").is_value(
-                TimedFluentExpression::new_scaled(FluentExpression::new_function(
-                    FunctionHead::new_with_terms(
-                        FunctionSymbol::new_string("fuel"),
-                        [Term::Variable(Variable::new_string("tank"))]
+                TimedFluentExpression::scaled(FluentExpression::function(
+                    FunctionHead::with_terms(
+                        FunctionSymbol::string("fuel"),
+                        [Term::Variable(Variable::string("tank"))]
                     )
                 ))
             )

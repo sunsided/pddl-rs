@@ -207,14 +207,14 @@ mod tests {
     };
 
     fn make_simple_gd() -> GoalDefinition {
-        let af: AtomicFormula<Term> = AtomicFormula::new_predicate(
-            Predicate::new_string("at"),
+        let af: AtomicFormula<Term> = AtomicFormula::predicate(
+            Predicate::string("at"),
             vec![
                 Term::new_variable(Variable::from("r")),
                 Term::new_name(Name::new("loc1")),
             ],
         );
-        GoalDefinition::new_atomic_formula(af)
+        GoalDefinition::atomic_formula(af)
     }
 
     #[test]
@@ -225,77 +225,77 @@ mod tests {
 
     #[test]
     fn goal_and_works() {
-        let af: AtomicFormula<Term> = AtomicFormula::new_predicate(
-            Predicate::new_string("at"),
+        let af: AtomicFormula<Term> = AtomicFormula::predicate(
+            Predicate::string("at"),
             vec![
                 Term::new_variable(Variable::from("r")),
                 Term::new_name(Name::new("loc1")),
             ],
         );
-        let gd = GoalDefinition::new_and([
-            GoalDefinition::new_atomic_formula(af.clone()),
-            GoalDefinition::new_atomic_formula(af),
+        let gd = GoalDefinition::and([
+            GoalDefinition::atomic_formula(af.clone()),
+            GoalDefinition::atomic_formula(af),
         ]);
         assert_eq!(prettify!(gd, 40), "(and (at ?r loc1) (at ?r loc1))");
     }
 
     #[test]
     fn goal_and_empty_works() {
-        let gd = GoalDefinition::new_and(Vec::<GoalDefinition>::new());
+        let gd = GoalDefinition::and(Vec::<GoalDefinition>::new());
         assert_eq!(prettify!(gd, 40), "(and)");
     }
 
     #[test]
     fn goal_or_works() {
-        let af: AtomicFormula<Term> = AtomicFormula::new_predicate(
-            Predicate::new_string("at"),
+        let af: AtomicFormula<Term> = AtomicFormula::predicate(
+            Predicate::string("at"),
             vec![
                 Term::new_variable(Variable::from("r")),
                 Term::new_name(Name::new("loc1")),
             ],
         );
-        let gd = GoalDefinition::new_or([
-            GoalDefinition::new_atomic_formula(af.clone()),
-            GoalDefinition::new_atomic_formula(af),
+        let gd = GoalDefinition::or([
+            GoalDefinition::atomic_formula(af.clone()),
+            GoalDefinition::atomic_formula(af),
         ]);
         assert_eq!(prettify!(gd, 40), "(or (at ?r loc1) (at ?r loc1))");
     }
 
     #[test]
     fn goal_not_works() {
-        let af: AtomicFormula<Term> = AtomicFormula::new_predicate(
-            Predicate::new_string("at"),
+        let af: AtomicFormula<Term> = AtomicFormula::predicate(
+            Predicate::string("at"),
             vec![
                 Term::new_variable(Variable::from("r")),
                 Term::new_name(Name::new("loc1")),
             ],
         );
-        let gd = GoalDefinition::new_not(GoalDefinition::new_atomic_formula(af));
+        let gd = GoalDefinition::not(GoalDefinition::atomic_formula(af));
         assert_eq!(prettify!(gd, 40), "(not (at ?r loc1))");
     }
 
     #[test]
     fn goal_imply_works() {
-        let af: AtomicFormula<Term> = AtomicFormula::new_predicate(
-            Predicate::new_string("at"),
+        let af: AtomicFormula<Term> = AtomicFormula::predicate(
+            Predicate::string("at"),
             vec![
                 Term::new_variable(Variable::from("r")),
                 Term::new_name(Name::new("loc1")),
             ],
         );
-        let gd = GoalDefinition::new_imply(
-            GoalDefinition::new_atomic_formula(af.clone()),
-            GoalDefinition::new_atomic_formula(af),
+        let gd = GoalDefinition::imply(
+            GoalDefinition::atomic_formula(af.clone()),
+            GoalDefinition::atomic_formula(af),
         );
         assert_eq!(prettify!(gd, 40), "(imply (at ?r loc1) (at ?r loc1))");
     }
 
     #[test]
     fn goal_fcomp_works() {
-        let a = FluentExpression::new_number(crate::Number::from(3));
-        let b = FluentExpression::new_number(crate::Number::from(4));
+        let a = FluentExpression::number(crate::Number::from(3));
+        let b = FluentExpression::number(crate::Number::from(4));
         let fc = FluentComparison::new(BinaryComparison::GreaterThan, a, b);
-        let gd = GoalDefinition::new_f_comp(fc);
+        let gd = GoalDefinition::fluent_comparison(fc);
         assert_eq!(prettify!(gd, 10), "(> 3 4)");
     }
 
@@ -310,7 +310,7 @@ mod tests {
     fn preference_gd_preference_works() {
         use crate::PreferenceName;
         let gd = make_simple_gd();
-        let pref = Preference::new(Some(PreferenceName::new_string("p1")), gd);
+        let pref = Preference::new(Some(PreferenceName::string("p1")), gd);
         let pgd = PreferenceGoalDefinition::from_preference(pref);
         assert_eq!(prettify!(pgd, 40), "(preference p1 (at ?r loc1))");
     }
@@ -325,30 +325,30 @@ mod tests {
     #[test]
     fn con_gd_and_works() {
         let gd = make_simple_gd();
-        let con = ConstraintGoalDefinition::new_and([ConstraintGoalDefinition::new_at_end(gd)]);
+        let con = ConstraintGoalDefinition::and([ConstraintGoalDefinition::at_end(gd)]);
         assert_eq!(prettify!(con, 40), "(and (at end (at ?r loc1)))");
     }
 
     #[test]
     fn con_gd_at_end_works() {
         let gd = make_simple_gd();
-        let con = ConstraintGoalDefinition::new_at_end(gd);
+        let con = ConstraintGoalDefinition::at_end(gd);
         assert_eq!(prettify!(con, 40), "(at end (at ?r loc1))");
     }
 
     #[test]
     fn con_gd_always_works() {
         let gd = make_simple_gd();
-        let con2 = ConstraintGoalDefinitionInner::new_goal(gd);
-        let con = ConstraintGoalDefinition::new_always(con2);
+        let con2 = ConstraintGoalDefinitionInner::goal(gd);
+        let con = ConstraintGoalDefinition::always(con2);
         assert_eq!(prettify!(con, 40), "(always (at ?r loc1))");
     }
 
     #[test]
     fn con_gd_within_works() {
         let gd = make_simple_gd();
-        let con2 = ConstraintGoalDefinitionInner::new_goal(gd);
-        let con = ConstraintGoalDefinition::new_within(Number::from(10), con2);
+        let con2 = ConstraintGoalDefinitionInner::goal(gd);
+        let con = ConstraintGoalDefinition::within(Number::from(10), con2);
         assert_eq!(prettify!(con, 40), "(within 10 (at ?r loc1))");
     }
 
@@ -356,9 +356,9 @@ mod tests {
     fn con_gd_sometime_after_works() {
         let gd1 = make_simple_gd();
         let gd2 = make_simple_gd();
-        let con = ConstraintGoalDefinition::new_sometime_after(
-            ConstraintGoalDefinitionInner::new_goal(gd1),
-            ConstraintGoalDefinitionInner::new_goal(gd2),
+        let con = ConstraintGoalDefinition::sometime_after(
+            ConstraintGoalDefinitionInner::goal(gd1),
+            ConstraintGoalDefinitionInner::goal(gd2),
         );
         assert_eq!(
             prettify!(con, 40),
@@ -369,44 +369,43 @@ mod tests {
     #[test]
     fn con_gd_hold_during_works() {
         let gd = make_simple_gd();
-        let con2 = ConstraintGoalDefinitionInner::new_goal(gd);
-        let con =
-            ConstraintGoalDefinition::new_hold_during(Number::from(5), Number::from(15), con2);
+        let con2 = ConstraintGoalDefinitionInner::goal(gd);
+        let con = ConstraintGoalDefinition::hold_during(Number::from(5), Number::from(15), con2);
         assert_eq!(prettify!(con, 40), "(hold-during 5 15 (at ?r loc1))");
     }
 
     #[test]
     fn goal_literal_works() {
-        let af: AtomicFormula<Term> = AtomicFormula::new_predicate(
-            Predicate::new_string("at"),
+        let af: AtomicFormula<Term> = AtomicFormula::predicate(
+            Predicate::string("at"),
             vec![Term::new_name(Name::new("x"))],
         );
         let lit = Literal::new(af);
-        let gd = GoalDefinition::new_literal(lit);
+        let gd = GoalDefinition::literal(lit);
         assert_eq!(prettify!(gd, 20), "(at x)");
     }
 
     #[test]
     fn goal_or_empty_works() {
-        let gd = GoalDefinition::new_or(Vec::<GoalDefinition>::new());
+        let gd = GoalDefinition::or(Vec::<GoalDefinition>::new());
         assert_eq!(prettify!(gd, 20), "(or)");
     }
 
     #[test]
     fn goal_exists_works() {
         use crate::{ToTyped, Type, TypedVariables, Variable};
-        let vars: TypedVariables = vec![Variable::new_string("x").to_typed(Type::OBJECT)].into();
+        let vars: TypedVariables = vec![Variable::string("x").to_typed(Type::OBJECT)].into();
         let inner = make_simple_gd();
-        let gd = GoalDefinition::new_exists(vars, inner);
+        let gd = GoalDefinition::exists(vars, inner);
         assert_eq!(prettify!(gd, 40), "(exists (?x) (at ?r loc1))");
     }
 
     #[test]
     fn goal_forall_works() {
         use crate::{ToTyped, Type, TypedVariables, Variable};
-        let vars: TypedVariables = vec![Variable::new_string("x").to_typed(Type::OBJECT)].into();
+        let vars: TypedVariables = vec![Variable::string("x").to_typed(Type::OBJECT)].into();
         let inner = make_simple_gd();
-        let gd = GoalDefinition::new_forall(vars, inner);
+        let gd = GoalDefinition::forall(vars, inner);
         assert_eq!(prettify!(gd, 40), "(forall (?x) (at ?r loc1))");
     }
 
@@ -415,16 +414,16 @@ mod tests {
         use crate::PreferenceGoalDefinition;
         let gd = make_simple_gd();
         let pref_gd = PreferenceGoalDefinition::from_gd(gd);
-        let pre_gd = PreconditionGoalDefinition::new_preference(pref_gd);
+        let pre_gd = PreconditionGoalDefinition::preference(pref_gd);
         assert_eq!(prettify!(pre_gd, 40), "(at ?r loc1)");
     }
 
     #[test]
     fn precondition_goal_definition_forall_works() {
         use crate::{ToTyped, Type, TypedVariables, Variable};
-        let vars: TypedVariables = vec![Variable::new_string("x").to_typed(Type::OBJECT)].into();
+        let vars: TypedVariables = vec![Variable::string("x").to_typed(Type::OBJECT)].into();
         let inner = PreconditionGoalDefinitions::default();
-        let pre_gd = PreconditionGoalDefinition::new_forall(vars, inner);
+        let pre_gd = PreconditionGoalDefinition::forall(vars, inner);
         // The visitor renders as "forall (?x)" with the body being empty PreconditionGoalDefinitions rendering as (and)
         let out = prettify!(pre_gd, 40);
         assert!(out.contains("forall"));
@@ -440,8 +439,7 @@ mod tests {
     #[test]
     fn precondition_goal_definitions_single_works() {
         let gd = make_simple_gd();
-        let pre_gd =
-            PreconditionGoalDefinition::new_preference(PreferenceGoalDefinition::from_gd(gd));
+        let pre_gd = PreconditionGoalDefinition::preference(PreferenceGoalDefinition::from_gd(gd));
         let pgds = PreconditionGoalDefinitions::new(vec![pre_gd]);
         assert_eq!(prettify!(pgds, 40), "(at ?r loc1)");
     }
@@ -451,8 +449,8 @@ mod tests {
         let gd1 = make_simple_gd();
         let gd2 = make_simple_gd();
         let pgds = PreconditionGoalDefinitions::new(vec![
-            PreconditionGoalDefinition::new_preference(PreferenceGoalDefinition::from_gd(gd1)),
-            PreconditionGoalDefinition::new_preference(PreferenceGoalDefinition::from_gd(gd2)),
+            PreconditionGoalDefinition::preference(PreferenceGoalDefinition::from_gd(gd1)),
+            PreconditionGoalDefinition::preference(PreferenceGoalDefinition::from_gd(gd2)),
         ]);
         assert_eq!(prettify!(pgds, 40), "(and (at ?r loc1) (at ?r loc1))");
     }
@@ -460,14 +458,14 @@ mod tests {
     #[test]
     fn pref_con_gd_forall_works() {
         use crate::{ToTyped, Type, TypedVariables, Variable};
-        let vars: TypedVariables = vec![Variable::new_string("x").to_typed(Type::OBJECT)].into();
-        let _inner = ConstraintGoalDefinition::new_and(Vec::new());
+        let vars: TypedVariables = vec![Variable::string("x").to_typed(Type::OBJECT)].into();
+        let _inner = ConstraintGoalDefinition::and(Vec::new());
         let pgds = PreferenceConstraintGoalDefinitions::new(vec![
-            PreferenceConstraintGoalDefinition::new_goal(ConstraintGoalDefinition::new_always(
-                ConstraintGoalDefinitionInner::new_goal(make_simple_gd()),
+            PreferenceConstraintGoalDefinition::goal(ConstraintGoalDefinition::always(
+                ConstraintGoalDefinitionInner::goal(make_simple_gd()),
             )),
         ]);
-        let pgd = PreferenceConstraintGoalDefinition::new_forall(vars, pgds);
+        let pgd = PreferenceConstraintGoalDefinition::forall(vars, pgds);
         assert_eq!(prettify!(pgd, 40), "(forall (?x) (always (at ?r loc1)))");
     }
 
@@ -475,19 +473,17 @@ mod tests {
     fn pref_con_gd_preference_with_name_works() {
         use crate::PreferenceName;
         let gd = make_simple_gd();
-        let con = ConstraintGoalDefinition::new_at_end(gd);
-        let pcgd = PreferenceConstraintGoalDefinition::new_preference(
-            Some(PreferenceName::new_string("p1")),
-            con,
-        );
+        let con = ConstraintGoalDefinition::at_end(gd);
+        let pcgd =
+            PreferenceConstraintGoalDefinition::preference(Some(PreferenceName::string("p1")), con);
         assert_eq!(prettify!(pcgd, 40), "(preference p1 (at end (at ?r loc1)))");
     }
 
     #[test]
     fn pref_con_gd_preference_no_name_works() {
         let gd = make_simple_gd();
-        let con = ConstraintGoalDefinition::new_at_end(gd);
-        let pcgd = PreferenceConstraintGoalDefinition::new_preference(None, con);
+        let con = ConstraintGoalDefinition::at_end(gd);
+        let pcgd = PreferenceConstraintGoalDefinition::preference(None, con);
         assert_eq!(prettify!(pcgd, 40), "(preference (at end (at ?r loc1)))");
     }
 
@@ -496,8 +492,8 @@ mod tests {
         let gd1 = make_simple_gd();
         let gd2 = make_simple_gd();
         let pgds = PreferenceConstraintGoalDefinitions::new(vec![
-            PreferenceConstraintGoalDefinition::new_goal(ConstraintGoalDefinition::new_at_end(gd1)),
-            PreferenceConstraintGoalDefinition::new_goal(ConstraintGoalDefinition::new_at_end(gd2)),
+            PreferenceConstraintGoalDefinition::goal(ConstraintGoalDefinition::at_end(gd1)),
+            PreferenceConstraintGoalDefinition::goal(ConstraintGoalDefinition::at_end(gd2)),
         ]);
         let out = prettify!(pgds, 40);
         assert!(out.contains("(at end"));
@@ -506,16 +502,16 @@ mod tests {
     #[test]
     fn con_gd_sometime_works() {
         let gd = make_simple_gd();
-        let con2 = ConstraintGoalDefinitionInner::new_goal(gd);
-        let con = ConstraintGoalDefinition::new_sometime(con2);
+        let con2 = ConstraintGoalDefinitionInner::goal(gd);
+        let con = ConstraintGoalDefinition::sometime(con2);
         assert_eq!(prettify!(con, 40), "(sometime (at ?r loc1))");
     }
 
     #[test]
     fn con_gd_at_most_once_works() {
         let gd = make_simple_gd();
-        let con2 = ConstraintGoalDefinitionInner::new_goal(gd);
-        let con = ConstraintGoalDefinition::new_at_most_once(con2);
+        let con2 = ConstraintGoalDefinitionInner::goal(gd);
+        let con = ConstraintGoalDefinition::at_most_once(con2);
         assert_eq!(prettify!(con, 40), "(at-most-once (at ?r loc1))");
     }
 
@@ -523,9 +519,9 @@ mod tests {
     fn con_gd_sometime_before_works() {
         let gd1 = make_simple_gd();
         let gd2 = make_simple_gd();
-        let con = ConstraintGoalDefinition::new_sometime_before(
-            ConstraintGoalDefinitionInner::new_goal(gd1),
-            ConstraintGoalDefinitionInner::new_goal(gd2),
+        let con = ConstraintGoalDefinition::sometime_before(
+            ConstraintGoalDefinitionInner::goal(gd1),
+            ConstraintGoalDefinitionInner::goal(gd2),
         );
         assert_eq!(
             prettify!(con, 40),
@@ -537,10 +533,10 @@ mod tests {
     fn con_gd_always_within_works() {
         let gd1 = make_simple_gd();
         let gd2 = make_simple_gd();
-        let con = ConstraintGoalDefinition::new_always_within(
+        let con = ConstraintGoalDefinition::always_within(
             Number::from(10),
-            ConstraintGoalDefinitionInner::new_goal(gd1),
-            ConstraintGoalDefinitionInner::new_goal(gd2),
+            ConstraintGoalDefinitionInner::goal(gd1),
+            ConstraintGoalDefinitionInner::goal(gd2),
         );
         assert_eq!(
             prettify!(con, 40),
@@ -551,25 +547,25 @@ mod tests {
     #[test]
     fn con_gd_hold_after_works() {
         let gd = make_simple_gd();
-        let con2 = ConstraintGoalDefinitionInner::new_goal(gd);
-        let con = ConstraintGoalDefinition::new_hold_after(Number::from(15), con2);
+        let con2 = ConstraintGoalDefinitionInner::goal(gd);
+        let con = ConstraintGoalDefinition::hold_after(Number::from(15), con2);
         assert_eq!(prettify!(con, 40), "(hold-after 15 (at ?r loc1))");
     }
 
     #[test]
     fn con_gd_forall_works() {
         use crate::{ToTyped, Type, TypedVariables, Variable};
-        let vars: TypedVariables = vec![Variable::new_string("x").to_typed(Type::OBJECT)].into();
-        let inner = ConstraintGoalDefinition::new_at_end(make_simple_gd());
-        let con = ConstraintGoalDefinition::new_forall(vars, inner);
+        let vars: TypedVariables = vec![Variable::string("x").to_typed(Type::OBJECT)].into();
+        let inner = ConstraintGoalDefinition::at_end(make_simple_gd());
+        let con = ConstraintGoalDefinition::forall(vars, inner);
         assert_eq!(prettify!(con, 40), "(forall (?x) (at end (at ?r loc1)))");
     }
 
     #[test]
     fn con2_gd_nested_works() {
         let gd = make_simple_gd();
-        let con = ConstraintGoalDefinition::new_at_end(gd);
-        let con2 = ConstraintGoalDefinitionInner::new_nested(con);
+        let con = ConstraintGoalDefinition::at_end(gd);
+        let con2 = ConstraintGoalDefinitionInner::nested(con);
         assert_eq!(prettify!(con2, 40), "(at end (at ?r loc1))");
     }
 }

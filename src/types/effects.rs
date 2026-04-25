@@ -20,8 +20,13 @@ impl Effects {
     }
 
     /// Constructs a new instance from the provided vector of values.
-    pub fn new_and(effects: Vec<ConditionalEffect>) -> Self {
+    #[doc(alias = "new_and")]
+    pub fn and(effects: Vec<ConditionalEffect>) -> Self {
         Self(effects)
+    }
+
+    pub fn new_and(effects: Vec<ConditionalEffect>) -> Self {
+        Self::and(effects)
     }
 
     /// Returns `true` if the list contains no elements.
@@ -84,13 +89,13 @@ impl From<ConditionalEffect> for Effects {
 
 impl From<Vec<ConditionalEffect>> for Effects {
     fn from(value: Vec<ConditionalEffect>) -> Self {
-        Effects::new_and(value)
+        Effects::and(value)
     }
 }
 
 impl FromIterator<ConditionalEffect> for Effects {
     fn from_iter<T: IntoIterator<Item = ConditionalEffect>>(iter: T) -> Self {
-        Effects::new_and(iter.into_iter().collect())
+        Effects::and(iter.into_iter().collect())
     }
 }
 
@@ -99,5 +104,60 @@ impl TryInto<ConditionalEffect> for Effects {
 
     fn try_into(self) -> Result<ConditionalEffect, Self::Error> {
         self.try_get_single().ok_or(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::{AtomicFormula, PrimitiveEffect, Term};
+
+    #[test]
+    fn effects_try_get_single_with_one() {
+        let pe = PrimitiveEffect::new(AtomicFormula::new_equality(
+            Term::Name("x".into()),
+            Term::Name("y".into()),
+        ));
+        let effects = Effects::new(ConditionalEffect::new_primitive_effect(pe));
+        assert!(effects.try_get_single().is_some());
+    }
+
+    #[test]
+    fn effects_try_get_single_with_zero() {
+        let effects = Effects::default();
+        assert!(effects.try_get_single().is_none());
+    }
+
+    #[test]
+    fn effects_try_get_single_with_many() {
+        let pe1 = PrimitiveEffect::new(AtomicFormula::equality(
+            Term::Name("x".into()),
+            Term::Name("y".into()),
+        ));
+        let pe2 = PrimitiveEffect::new(AtomicFormula::equality(
+            Term::Name("a".into()),
+            Term::Name("b".into()),
+        ));
+        let effects = Effects::and(vec![
+            ConditionalEffect::new_primitive_effect(pe1),
+            ConditionalEffect::new_primitive_effect(pe2),
+        ]);
+        assert!(effects.try_get_single().is_none());
+    }
+
+    #[test]
+    fn effects_try_into() {
+        let pe = PrimitiveEffect::new(AtomicFormula::new_equality(
+            Term::Name("x".into()),
+            Term::Name("y".into()),
+        ));
+        let effects = Effects::new(ConditionalEffect::new_primitive_effect(pe));
+        let result: Result<ConditionalEffect, ()> = effects.try_into();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn effects_from_vec() {
+        let _ = Effects::from(Vec::<ConditionalEffect>::new());
     }
 }

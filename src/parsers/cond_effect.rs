@@ -101,4 +101,9 @@ mod tests {
             ))
         );
     }
+
+    #[test]
+    fn test_parse_empty_and() {
+        assert!(EffectCondition::parse("(and)").is_value(EffectCondition::All(vec![])));
+    }
 }

@@ -118,8 +118,8 @@ mod tests {
 
     #[test]
     fn p_effect_atomic() {
-        let af = AtomicFormula::new_predicate(
-            Predicate::new_string("at"),
+        let af = AtomicFormula::predicate(
+            Predicate::string("at"),
             vec![
                 Term::new_name(Name::new("B")),
                 Term::new_name(Name::new("home")),
@@ -131,28 +131,28 @@ mod tests {
 
     #[test]
     fn p_effect_not() {
-        let af = AtomicFormula::new_predicate(
-            Predicate::new_string("at"),
+        let af = AtomicFormula::predicate(
+            Predicate::string("at"),
             vec![Term::new_name(Name::new("B"))],
         );
-        let pe = PrimitiveEffect::new_not(af);
+        let pe = PrimitiveEffect::not(af);
         assert_eq!(prettify!(pe, 30), "(not (at B))");
     }
 
     #[test]
     fn p_effect_assign() {
-        let pe = PrimitiveEffect::new_numeric_fluent(
+        let pe = PrimitiveEffect::numeric_fluent(
             crate::AssignOp::Assign,
             crate::FunctionHead::new(FunctionSymbol::from("battery")),
-            crate::FluentExpression::new_number(10),
+            crate::FluentExpression::number(10),
         );
         assert_eq!(prettify!(pe, 30), "(assign battery 10)");
     }
 
     #[test]
     fn effects_single() {
-        let af = AtomicFormula::new_predicate(
-            Predicate::new_string("at"),
+        let af = AtomicFormula::predicate(
+            Predicate::string("at"),
             vec![Term::new_name(Name::new("B"))],
         );
         let pe = PrimitiveEffect::new(af);
@@ -168,7 +168,7 @@ mod tests {
             FunctionSymbol::from("loc"),
             vec![Term::new_name(Name::new("x"))],
         );
-        let pe = PrimitiveEffect::new_object_fluent(ft, Some(Term::new_name(Name::new("y"))));
+        let pe = PrimitiveEffect::object_fluent(ft, Some(Term::new_name(Name::new("y"))));
         assert_eq!(prettify!(pe, 30), "(assign (loc x) y)");
     }
 
@@ -176,63 +176,63 @@ mod tests {
     fn p_effect_assign_object_fluent_without_term() {
         use crate::{FunctionSymbol, FunctionTerm};
         let ft = FunctionTerm::new(FunctionSymbol::from("loc"), vec![]);
-        let pe = PrimitiveEffect::new_object_fluent(ft, None);
+        let pe = PrimitiveEffect::object_fluent(ft, None);
         assert_eq!(prettify!(pe, 30), "(assign loc)");
     }
 
     #[test]
     fn c_effect_forall() {
         use crate::{ToTyped, Type, TypedVariables, Variable};
-        let vars: TypedVariables = vec![Variable::new_string("x").to_typed(Type::OBJECT)].into();
-        let af = AtomicFormula::new_predicate(
-            Predicate::new_string("p"),
+        let vars: TypedVariables = vec![Variable::string("x").to_typed(Type::OBJECT)].into();
+        let af = AtomicFormula::predicate(
+            Predicate::string("p"),
             vec![Term::new_variable(Variable::from("x"))],
         );
         let pe = PrimitiveEffect::new(af);
         let effects = Effects::new(ConditionalEffect::new_primitive_effect(pe));
-        let ce = ConditionalEffect::new_forall(vars, effects);
+        let ce = ConditionalEffect::forall(vars, effects);
         assert_eq!(prettify!(ce, 40), "(forall (?x) (and (p ?x)))");
     }
 
     #[test]
     fn c_effect_when() {
-        let cond = GoalDefinition::new_and(Vec::<GoalDefinition>::new());
-        let ce_inner = EffectCondition::new_and(Vec::new());
-        let ce = ConditionalEffect::new_when(cond, ce_inner);
+        let cond = GoalDefinition::and(Vec::<GoalDefinition>::new());
+        let ce_inner = EffectCondition::all(Vec::new());
+        let ce = ConditionalEffect::when(cond, ce_inner);
         assert_eq!(prettify!(ce, 30), "(when (and) (and))");
     }
 
     #[test]
     fn conditional_effect_all_empty() {
-        let ce = EffectCondition::new_and(Vec::new());
+        let ce = EffectCondition::all(Vec::new());
         assert_eq!(prettify!(ce, 20), "(and)");
     }
 
     #[test]
     fn conditional_effect_all_non_empty() {
-        let af = AtomicFormula::new_predicate(
-            Predicate::new_string("at"),
+        let af = AtomicFormula::predicate(
+            Predicate::string("at"),
             vec![Term::new_name(Name::new("x"))],
         );
         let pe1 = PrimitiveEffect::new(af.clone());
         let pe2 = PrimitiveEffect::new(af);
-        let ce = EffectCondition::new_and(vec![pe1, pe2]);
+        let ce = EffectCondition::all(vec![pe1, pe2]);
         assert_eq!(prettify!(ce, 30), "(and (at x) (at x))");
     }
 
     #[test]
     fn effects_multi_effect() {
-        let af1 = AtomicFormula::new_predicate(
-            Predicate::new_string("at"),
+        let af1 = AtomicFormula::predicate(
+            Predicate::string("at"),
             vec![Term::new_name(Name::new("x"))],
         );
-        let af2 = AtomicFormula::new_predicate(
-            Predicate::new_string("at"),
+        let af2 = AtomicFormula::predicate(
+            Predicate::string("at"),
             vec![Term::new_name(Name::new("y"))],
         );
         let ce1 = ConditionalEffect::new_primitive_effect(PrimitiveEffect::new(af1));
         let ce2 = ConditionalEffect::new_primitive_effect(PrimitiveEffect::new(af2));
-        let effects = Effects::new_and(vec![ce1, ce2]);
+        let effects = Effects::and(vec![ce1, ce2]);
         assert_eq!(prettify!(effects, 40), "(and (at x) (at y))");
     }
 }

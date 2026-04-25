@@ -18,13 +18,23 @@ impl PreconditionGoalDefinitions {
     }
 
     /// Constructs a list containing a single [`PreconditionGoalDefinition::Preference`] variant.
+    #[doc(alias = "new_preference")]
+    pub fn preference(pref: PreferenceGoalDefinition) -> Self {
+        PreconditionGoalDefinition::preference(pref).into()
+    }
+
     pub fn new_preference(pref: PreferenceGoalDefinition) -> Self {
-        PreconditionGoalDefinition::new_preference(pref).into()
+        Self::preference(pref)
     }
 
     /// Constructs a list containing a single [`PreconditionGoalDefinition::Forall`] variant.
+    #[doc(alias = "new_forall")]
+    pub fn r#forall(variables: TypedVariables, gd: PreconditionGoalDefinitions) -> Self {
+        PreconditionGoalDefinition::r#forall(variables, gd).into()
+    }
+
     pub fn new_forall(variables: TypedVariables, gd: PreconditionGoalDefinitions) -> Self {
-        PreconditionGoalDefinition::new_forall(variables, gd).into()
+        Self::r#forall(variables, gd)
     }
 
     /// Returns `true` if the list contains no elements.
@@ -136,32 +146,49 @@ pub enum PreconditionGoalDefinition {
 }
 
 impl PreconditionGoalDefinition {
-    pub fn new_and<I: IntoIterator<Item = PreconditionGoalDefinition>>(
+    #[doc(alias = "new_and")]
+    pub fn and<I: IntoIterator<Item = PreconditionGoalDefinition>>(
         iter: I,
     ) -> PreconditionGoalDefinitions {
         // TODO: Flatten `(and (and a b) (and x y))` into `(and a b c y)`.
         PreconditionGoalDefinitions::from_iter(iter)
     }
 
+    pub fn new_and<I: IntoIterator<Item = PreconditionGoalDefinition>>(
+        iter: I,
+    ) -> PreconditionGoalDefinitions {
+        Self::and(iter)
+    }
+
     /// Constructs a new [`Preference`](Self::Preference) variant.
-    pub const fn new_preference(pref: PreferenceGoalDefinition) -> Self {
+    #[doc(alias = "new_preference")]
+    pub const fn preference(pref: PreferenceGoalDefinition) -> Self {
         Self::Preference(pref)
     }
 
+    pub fn new_preference(pref: PreferenceGoalDefinition) -> Self {
+        Self::preference(pref)
+    }
+
     /// Constructs a new [`Forall`](Self::Forall) variant.
-    pub const fn new_forall(variables: TypedVariables, gd: PreconditionGoalDefinitions) -> Self {
+    #[doc(alias = "new_forall")]
+    pub const fn r#forall(variables: TypedVariables, gd: PreconditionGoalDefinitions) -> Self {
         Self::Forall(variables, gd)
+    }
+
+    pub fn new_forall(variables: TypedVariables, gd: PreconditionGoalDefinitions) -> Self {
+        Self::r#forall(variables, gd)
     }
 }
 
 impl From<PreferenceGoalDefinition> for PreconditionGoalDefinition {
     fn from(value: PreferenceGoalDefinition) -> Self {
-        PreconditionGoalDefinition::new_preference(value)
+        PreconditionGoalDefinition::preference(value)
     }
 }
 
 impl From<Preference> for PreconditionGoalDefinition {
     fn from(value: Preference) -> Self {
-        PreconditionGoalDefinition::new_preference(PreferenceGoalDefinition::from_preference(value))
+        PreconditionGoalDefinition::preference(PreferenceGoalDefinition::from_preference(value))
     }
 }

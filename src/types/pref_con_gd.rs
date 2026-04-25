@@ -22,28 +22,43 @@ impl PreferenceConstraintGoalDefinitions {
     }
 
     /// Constructs a list containing a single [`PreferenceConstraintGoalDefinition::Goal`] variant.
+    #[doc(alias = "new_goal")]
+    pub fn goal(gd: ConstraintGoalDefinition) -> Self {
+        Self::new(vec![PreferenceConstraintGoalDefinition::goal(gd)])
+    }
+
     pub fn new_goal(gd: ConstraintGoalDefinition) -> Self {
-        Self::new(vec![PreferenceConstraintGoalDefinition::new_goal(gd)])
+        Self::goal(gd)
     }
 
     /// Constructs a list containing a single [`PreferenceConstraintGoalDefinition::Preference`] variant.
     ///
     /// ## Requirements
     /// Requires [Preferences](crate::Requirement::Preferences).
-    pub fn new_preference(name: Option<PreferenceName>, gd: ConstraintGoalDefinition) -> Self {
-        Self::new(vec![PreferenceConstraintGoalDefinition::new_preference(
+    #[doc(alias = "new_preference")]
+    pub fn preference(name: Option<PreferenceName>, gd: ConstraintGoalDefinition) -> Self {
+        Self::new(vec![PreferenceConstraintGoalDefinition::preference(
             name, gd,
         )])
+    }
+
+    pub fn new_preference(name: Option<PreferenceName>, gd: ConstraintGoalDefinition) -> Self {
+        Self::preference(name, gd)
     }
 
     /// Constructs a list containing a single [`PreferenceConstraintGoalDefinition::Forall`] variant.
     ///
     /// ## Requirements
     /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
-    pub fn new_forall(variables: TypedVariables, gd: PreferenceConstraintGoalDefinitions) -> Self {
-        Self::new(vec![PreferenceConstraintGoalDefinition::new_forall(
+    #[doc(alias = "new_forall")]
+    pub fn r#forall(variables: TypedVariables, gd: PreferenceConstraintGoalDefinitions) -> Self {
+        Self::new(vec![PreferenceConstraintGoalDefinition::r#forall(
             variables, gd,
         )])
+    }
+
+    pub fn new_forall(variables: TypedVariables, gd: PreferenceConstraintGoalDefinitions) -> Self {
+        Self::r#forall(variables, gd)
     }
 
     /// Returns `true` if the list contains no elements.
@@ -139,7 +154,7 @@ impl From<Option<PreferenceConstraintGoalDefinitions>> for PreferenceConstraintG
 
 impl From<ConstraintGoalDefinition> for PreferenceConstraintGoalDefinitions {
     fn from(value: ConstraintGoalDefinition) -> Self {
-        PreferenceConstraintGoalDefinitions::new_goal(value)
+        PreferenceConstraintGoalDefinitions::goal(value)
     }
 }
 
@@ -169,23 +184,35 @@ pub enum PreferenceConstraintGoalDefinition {
 }
 
 impl PreferenceConstraintGoalDefinition {
-    pub const fn new_goal(gd: ConstraintGoalDefinition) -> Self {
+    #[doc(alias = "new_goal")]
+    pub const fn goal(gd: ConstraintGoalDefinition) -> Self {
         Self::Goal(gd)
+    }
+
+    pub fn new_goal(gd: ConstraintGoalDefinition) -> Self {
+        Self::goal(gd)
     }
 
     /// ## Requirements
     /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
-    pub fn new_forall(variables: TypedVariables, gd: PreferenceConstraintGoalDefinitions) -> Self {
+    #[doc(alias = "new_forall")]
+    pub fn r#forall(variables: TypedVariables, gd: PreferenceConstraintGoalDefinitions) -> Self {
         Self::Forall(variables, gd)
+    }
+
+    pub fn new_forall(variables: TypedVariables, gd: PreferenceConstraintGoalDefinitions) -> Self {
+        Self::r#forall(variables, gd)
     }
 
     /// ## Requirements
     /// Requires [Preferences](crate::Requirement::Preferences).
-    pub const fn new_preference(
-        name: Option<PreferenceName>,
-        gd: ConstraintGoalDefinition,
-    ) -> Self {
+    #[doc(alias = "new_preference")]
+    pub const fn preference(name: Option<PreferenceName>, gd: ConstraintGoalDefinition) -> Self {
         Self::Preference(name, gd)
+    }
+
+    pub fn new_preference(name: Option<PreferenceName>, gd: ConstraintGoalDefinition) -> Self {
+        Self::preference(name, gd)
     }
 
     pub fn is_empty(&self) -> bool {
@@ -210,3 +237,98 @@ pub type PrefConGD = PreferenceConstraintGoalDefinition;
     note = "Use `PreferenceConstraintGoalDefinitions` instead"
 )]
 pub type PrefConGDs = PreferenceConstraintGoalDefinitions;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pref_con_gd_is_empty() {
+        let gds = PreferenceConstraintGoalDefinitions::default();
+        assert!(gds.is_empty());
+
+        let inner = ConstraintGoalDefinition::default();
+        let goal = PreferenceConstraintGoalDefinition::goal(inner);
+        let list = PreferenceConstraintGoalDefinitions::new(vec![goal]);
+        assert!(!list.is_empty());
+    }
+
+    #[test]
+    fn pref_con_gd_try_get_single() {
+        let inner = ConstraintGoalDefinition::default();
+        let goal = PreferenceConstraintGoalDefinition::goal(inner);
+        let list = PreferenceConstraintGoalDefinitions::new(vec![goal.clone()]);
+        assert_eq!(list.try_get_single(), Some(goal));
+
+        let empty = PreferenceConstraintGoalDefinitions::default();
+        assert!(empty.try_get_single().is_none());
+    }
+
+    #[test]
+    fn pref_con_gd_is_empty_variants() {
+        let inner = ConstraintGoalDefinition::default();
+        let goal = PreferenceConstraintGoalDefinition::goal(inner.clone());
+        assert!(goal.is_empty());
+
+        let pref = PreferenceConstraintGoalDefinition::preference(None, inner.clone());
+        assert!(pref.is_empty());
+
+        let forall = PreferenceConstraintGoalDefinition::r#forall(
+            crate::types::TypedVariables::default(),
+            PreferenceConstraintGoalDefinitions::default(),
+        );
+        assert!(forall.is_empty());
+    }
+
+    #[test]
+    fn pref_con_gd_from_variants() {
+        let inner = ConstraintGoalDefinition::default();
+        let from_inner: PreferenceConstraintGoalDefinitions = inner.into();
+        assert_eq!(from_inner.len(), 1);
+
+        let single = PreferenceConstraintGoalDefinition::Goal(ConstraintGoalDefinition::default());
+        let from_single: PreferenceConstraintGoalDefinitions = single.into();
+        assert_eq!(from_single.len(), 1);
+
+        let vec = vec![PreferenceConstraintGoalDefinition::goal(
+            ConstraintGoalDefinition::default(),
+        )];
+        let from_vec: PreferenceConstraintGoalDefinitions = vec.into();
+        assert_eq!(from_vec.len(), 1);
+
+        let from_some: PreferenceConstraintGoalDefinitions = Some(
+            PreferenceConstraintGoalDefinition::goal(ConstraintGoalDefinition::default()),
+        )
+        .into();
+        assert_eq!(from_some.len(), 1);
+
+        let from_none: PreferenceConstraintGoalDefinitions =
+            Option::<PreferenceConstraintGoalDefinition>::None.into();
+        assert!(from_none.is_empty());
+
+        let from_some_list: PreferenceConstraintGoalDefinitions = Some(
+            PreferenceConstraintGoalDefinitions::goal(ConstraintGoalDefinition::default()),
+        )
+        .into();
+        assert_eq!(from_some_list.len(), 1);
+
+        let from_none_list: PreferenceConstraintGoalDefinitions =
+            Option::<PreferenceConstraintGoalDefinitions>::None.into();
+        assert!(from_none_list.is_empty());
+    }
+
+    #[test]
+    fn pref_con_gd_try_into() {
+        let goal = PreferenceConstraintGoalDefinition::goal(ConstraintGoalDefinition::default());
+        let list = PreferenceConstraintGoalDefinitions::new(vec![goal.clone()]);
+        let result: Result<PreferenceConstraintGoalDefinition, ()> = list.try_into();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn deprecated_aliases_exist() {
+        fn _assert_alias(_: PrefConGD) {}
+        fn _assert_aliases(_: PrefConGDs) {}
+    }
+}

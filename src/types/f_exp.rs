@@ -27,15 +27,26 @@ pub enum FluentExpression {
 
 impl FluentExpression {
     #[inline(always)]
-    pub fn new_number<N: Into<Number>>(number: N) -> Self {
+    #[doc(alias = "new_number")]
+    pub fn number<N: Into<Number>>(number: N) -> Self {
         Self::Number(number.into())
     }
 
-    pub fn new_binary_op(op: BinaryOp, lhs: FluentExpression, rhs: FluentExpression) -> Self {
+    pub fn new_number<N: Into<Number>>(number: N) -> Self {
+        Self::number(number)
+    }
+
+    #[doc(alias = "new_binary_op")]
+    pub fn binary_op(op: BinaryOp, lhs: FluentExpression, rhs: FluentExpression) -> Self {
         Self::BinaryOp(op, Box::new(lhs), Box::new(rhs))
     }
 
-    pub fn new_multi_op<I: IntoIterator<Item = FluentExpression>>(
+    pub fn new_binary_op(op: BinaryOp, lhs: FluentExpression, rhs: FluentExpression) -> Self {
+        Self::binary_op(op, lhs, rhs)
+    }
+
+    #[doc(alias = "new_multi_op")]
+    pub fn multi_op<I: IntoIterator<Item = FluentExpression>>(
         op: MultiOp,
         lhs: FluentExpression,
         rhs: I,
@@ -43,12 +54,30 @@ impl FluentExpression {
         Self::MultiOp(op, Box::new(lhs), rhs.into_iter().collect())
     }
 
-    pub fn new_negative(value: FluentExpression) -> Self {
+    pub fn new_multi_op<I: IntoIterator<Item = FluentExpression>>(
+        op: MultiOp,
+        lhs: FluentExpression,
+        rhs: I,
+    ) -> Self {
+        Self::multi_op(op, lhs, rhs)
+    }
+
+    #[doc(alias = "new_negative")]
+    pub fn negative(value: FluentExpression) -> Self {
         Self::Negative(Box::new(value))
     }
 
-    pub const fn new_function(f_head: FunctionHead) -> Self {
+    pub fn new_negative(value: FluentExpression) -> Self {
+        Self::negative(value)
+    }
+
+    #[doc(alias = "new_function")]
+    pub const fn function(f_head: FunctionHead) -> Self {
         Self::Function(f_head)
+    }
+
+    pub fn new_function(f_head: FunctionHead) -> Self {
+        Self::function(f_head)
     }
 }
 

@@ -30,10 +30,15 @@ impl DurationConstraint {
         Self::Single(constraint)
     }
 
-    pub fn new_all<I: IntoIterator<Item = SimpleDurationConstraint>>(constraints: I) -> Self {
+    #[doc(alias = "new_all")]
+    pub fn all<I: IntoIterator<Item = SimpleDurationConstraint>>(constraints: I) -> Self {
         let vec: Vec<_> = constraints.into_iter().collect();
         debug_assert!(!vec.is_empty());
         Self::All(vec)
+    }
+
+    pub fn new_all<I: IntoIterator<Item = SimpleDurationConstraint>>(constraints: I) -> Self {
+        Self::all(constraints)
     }
 
     pub fn len(&self) -> usize {
@@ -59,7 +64,7 @@ impl From<SimpleDurationConstraint> for DurationConstraint {
 
 impl FromIterator<SimpleDurationConstraint> for DurationConstraint {
     fn from_iter<T: IntoIterator<Item = SimpleDurationConstraint>>(iter: T) -> Self {
-        DurationConstraint::new_all(iter)
+        DurationConstraint::all(iter)
     }
 }
 

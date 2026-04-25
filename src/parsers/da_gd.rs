@@ -19,10 +19,10 @@ use nom::Parser;
 /// assert!(parse_da_gd("(at start (= x y))").is_value(
 ///     DurativeActionGoalDefinition::Timed(
 ///             PreferenceTimedGoalDefinition::Required(
-///                 TimedGoalDefinition::new_at(
+///                 TimedGoalDefinition::at(
 ///                 TimeSpecifier::Start,
 ///                 GoalDefinition::AtomicFormula(
-///                     AtomicFormula::new_equality(
+///                     AtomicFormula::equality(
 ///                         Term::Name("x".into()),
 ///                         Term::Name("y".into())
 ///                     )
@@ -33,16 +33,16 @@ use nom::Parser;
 /// ));
 ///
 /// assert!(parse_da_gd("(and )").is_value(
-///     DurativeActionGoalDefinition::new_and([])
+///     DurativeActionGoalDefinition::and([])
 /// ));
 ///
 /// assert!(parse_da_gd("(and (at start (= x y)) (over all (= a b)))").is_value(
-///     DurativeActionGoalDefinition::new_and([
+///     DurativeActionGoalDefinition::and([
 ///         DurativeActionGoalDefinition::Timed(PreferenceTimedGoalDefinition::Required(
-///             TimedGoalDefinition::new_at(
+///             TimedGoalDefinition::at(
 ///                 TimeSpecifier::Start,
 ///                 GoalDefinition::AtomicFormula(
-///                     AtomicFormula::new_equality(
+///                     AtomicFormula::equality(
 ///                         Term::Name("x".into()),
 ///                         Term::Name("y".into())
 ///                     )
@@ -50,10 +50,10 @@ use nom::Parser;
 ///             )
 ///         )),
 ///         DurativeActionGoalDefinition::Timed(PreferenceTimedGoalDefinition::Required(
-///             TimedGoalDefinition::new_over(
+///             TimedGoalDefinition::over(
 ///                 Interval::All,
 ///                 GoalDefinition::AtomicFormula(
-///                     AtomicFormula::new_equality(
+///                     AtomicFormula::equality(
 ///                         Term::Name("a".into()),
 ///                         Term::Name("b".into())
 ///                     )
@@ -64,17 +64,17 @@ use nom::Parser;
 /// ));
 ///
 /// assert!(parse_da_gd("(forall (?a ?b) (at start (= a b)))").is_value(
-///     DurativeActionGoalDefinition::new_forall(
+///     DurativeActionGoalDefinition::forall(
 ///         TypedList::from_iter([
-///             Typed::new_object(Variable::new_string("a")),
-///             Typed::new_object(Variable::new_string("b")),
+///             Typed::object(Variable::string("a")),
+///             Typed::object(Variable::string("b")),
 ///         ]),
 ///         DurativeActionGoalDefinition::Timed(
 ///             PreferenceTimedGoalDefinition::Required(
-///                 TimedGoalDefinition::new_at(
+///                 TimedGoalDefinition::at(
 ///                     TimeSpecifier::Start,
 ///                     GoalDefinition::AtomicFormula(
-///                         AtomicFormula::new_equality(
+///                         AtomicFormula::equality(
 ///                             Term::Name("a".into()),
 ///                             Term::Name("b".into())
 ///                         )
@@ -103,7 +103,7 @@ pub fn parse_da_gd<'a, T: Into<Span<'a>>>(
                 preceded(multispace1, parse_da_gd),
             ),
         ),
-        |(vars, gd)| DurativeActionGoalDefinition::new_forall(vars, gd),
+        |(vars, gd)| DurativeActionGoalDefinition::forall(vars, gd),
     );
 
     alt((forall, and, pref_timed_gd)).parse(input.into())
@@ -144,9 +144,9 @@ mod tests {
         assert!(
             DurativeActionGoalDefinition::parse("(at start (= x y))").is_value(
                 DurativeActionGoalDefinition::Timed(PreferenceTimedGoalDefinition::Required(
-                    TimedGoalDefinition::new_at(
+                    TimedGoalDefinition::at(
                         TimeSpecifier::Start,
-                        GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                        GoalDefinition::AtomicFormula(AtomicFormula::equality(
                             Term::Name("x".into()),
                             Term::Name("y".into())
                         ))
@@ -159,27 +159,27 @@ mod tests {
     #[test]
     fn test_and_empty() {
         assert!(DurativeActionGoalDefinition::parse("(and )")
-            .is_value(DurativeActionGoalDefinition::new_and([])));
+            .is_value(DurativeActionGoalDefinition::and([])));
     }
 
     #[test]
     fn test_and() {
         assert!(
             DurativeActionGoalDefinition::parse("(and (at start (= x y)) (over all (= a b)))")
-                .is_value(DurativeActionGoalDefinition::new_and([
+                .is_value(DurativeActionGoalDefinition::and([
                     DurativeActionGoalDefinition::Timed(PreferenceTimedGoalDefinition::Required(
-                        TimedGoalDefinition::new_at(
+                        TimedGoalDefinition::at(
                             TimeSpecifier::Start,
-                            GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                            GoalDefinition::AtomicFormula(AtomicFormula::equality(
                                 Term::Name("x".into()),
                                 Term::Name("y".into())
                             ))
                         )
                     )),
                     DurativeActionGoalDefinition::Timed(PreferenceTimedGoalDefinition::Required(
-                        TimedGoalDefinition::new_over(
+                        TimedGoalDefinition::over(
                             Interval::All,
-                            GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                            GoalDefinition::AtomicFormula(AtomicFormula::equality(
                                 Term::Name("a".into()),
                                 Term::Name("b".into())
                             ))
@@ -193,15 +193,15 @@ mod tests {
     fn test_forall() {
         assert!(
             DurativeActionGoalDefinition::parse("(forall (?a ?b) (at start (= a b)))").is_value(
-                DurativeActionGoalDefinition::new_forall(
+                DurativeActionGoalDefinition::forall(
                     TypedList::from_iter([
-                        Typed::new_object(Variable::new_string("a")),
-                        Typed::new_object(Variable::new_string("b")),
+                        Typed::object(Variable::string("a")),
+                        Typed::object(Variable::string("b")),
                     ]),
                     DurativeActionGoalDefinition::Timed(PreferenceTimedGoalDefinition::Required(
-                        TimedGoalDefinition::new_at(
+                        TimedGoalDefinition::at(
                             TimeSpecifier::Start,
-                            GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                            GoalDefinition::AtomicFormula(AtomicFormula::equality(
                                 Term::Name("a".into()),
                                 Term::Name("b".into())
                             ))

@@ -19,8 +19,13 @@ impl<O> FunctionTyped<O> {
         Self(value, r#type)
     }
 
-    pub const fn new_number(value: O) -> Self {
+    pub const fn number(value: O) -> Self {
         Self::new(value, FunctionType::NUMBER)
+    }
+
+    #[deprecated(since = "0.2.0", note = "Use `number` instead")]
+    pub const fn new_number(value: O) -> Self {
+        Self::number(value)
     }
 
     pub const fn from_type(value: O, r#type: Type) -> Self {
@@ -38,7 +43,7 @@ impl<O> FunctionTyped<O> {
 
 impl<O> From<O> for FunctionTyped<O> {
     fn from(value: O) -> Self {
-        FunctionTyped::new_number(value)
+        FunctionTyped::number(value)
     }
 }
 

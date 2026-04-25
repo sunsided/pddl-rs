@@ -15,12 +15,12 @@ use crate::types::DurationValue;
 /// # use pddl::parsers::{parse_d_value, preamble::*};
 /// # use pddl::{BinaryOp, DurationValue, FluentExpression, FunctionHead, FunctionSymbol, MultiOp};
 /// assert!(parse_d_value("1.23").is_value(
-///     DurationValue::new_number(1.23)
+///     DurationValue::number(1.23)
 /// ));
 ///
 /// assert!(parse_d_value("fun-sym").is_value(
-///     DurationValue::new_f_exp(
-///         FluentExpression::new_function(FunctionHead::Simple("fun-sym".into()))
+///     DurationValue::fluent_expression(
+///         FluentExpression::function(FunctionHead::Simple("fun-sym".into()))
 ///     )
 /// ));
 ///```
@@ -49,11 +49,11 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        assert!(DurationValue::parse("1.23").is_value(DurationValue::new_number(1.23)));
+        assert!(DurationValue::parse("1.23").is_value(DurationValue::number(1.23)));
 
         assert!(
-            DurationValue::parse("fun-sym").is_value(DurationValue::new_f_exp(
-                FluentExpression::new_function(FunctionHead::Simple("fun-sym".into()))
+            DurationValue::parse("fun-sym").is_value(DurationValue::fluent_expression(
+                FluentExpression::function(FunctionHead::Simple("fun-sym".into()))
             ))
         );
     }

@@ -16,7 +16,7 @@ use nom::Parser;
 /// # use pddl::parsers::{parse_timed_gd, preamble::*};
 /// # use pddl::{AtomicFormula, GoalDefinition, Interval, Term, TimedGoalDefinition, TimeSpecifier};
 /// assert!(parse_timed_gd("(at start (= x y))").is_value(
-///     TimedGoalDefinition::new_at(
+///     TimedGoalDefinition::at(
 ///         TimeSpecifier::Start,
 ///         GoalDefinition::AtomicFormula(
 ///             AtomicFormula::new_equality(
@@ -28,7 +28,7 @@ use nom::Parser;
 /// ));
 ///
 /// assert!(parse_timed_gd("(over all (= x y))").is_value(
-///     TimedGoalDefinition::new_over(
+///     TimedGoalDefinition::over(
 ///         Interval::All,
 ///         GoalDefinition::AtomicFormula(
 ///             AtomicFormula::new_equality(
@@ -80,7 +80,7 @@ mod tests {
     #[test]
     fn test_parse() {
         assert!(TimedGoalDefinition::parse("(at start (= x y))").is_value(
-            TimedGoalDefinition::new_at(
+            TimedGoalDefinition::at(
                 TimeSpecifier::Start,
                 GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
                     Term::Name("x".into()),
@@ -90,7 +90,7 @@ mod tests {
         ));
 
         assert!(
-            parse_timed_gd("(over all (= x y))").is_value(TimedGoalDefinition::new_over(
+            parse_timed_gd("(over all (= x y))").is_value(TimedGoalDefinition::over(
                 Interval::All,
                 GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
                     Term::Name("x".into()),

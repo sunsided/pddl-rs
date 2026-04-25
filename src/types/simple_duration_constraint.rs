@@ -15,23 +15,33 @@ pub enum SimpleDurationConstraint {
 }
 
 impl SimpleDurationConstraint {
-    pub const fn new_op(op: DurationOperator, value: DurationValue) -> Self {
+    #[doc(alias = "new_op")]
+    pub const fn op(op: DurationOperator, value: DurationValue) -> Self {
         Self::Op(op, value)
     }
 
-    pub fn new_at(time: TimeSpecifier, constraint: SimpleDurationConstraint) -> Self {
+    pub fn new_op(op: DurationOperator, value: DurationValue) -> Self {
+        Self::op(op, value)
+    }
+
+    #[doc(alias = "new_at")]
+    pub fn at(time: TimeSpecifier, constraint: SimpleDurationConstraint) -> Self {
         Self::At(time, Box::new(constraint))
+    }
+
+    pub fn new_at(time: TimeSpecifier, constraint: SimpleDurationConstraint) -> Self {
+        Self::at(time, constraint)
     }
 }
 
 impl From<(DurationOperator, DurationValue)> for SimpleDurationConstraint {
     fn from(value: (DurationOperator, DurationValue)) -> Self {
-        SimpleDurationConstraint::new_op(value.0, value.1)
+        SimpleDurationConstraint::op(value.0, value.1)
     }
 }
 
 impl From<(TimeSpecifier, SimpleDurationConstraint)> for SimpleDurationConstraint {
     fn from(value: (TimeSpecifier, SimpleDurationConstraint)) -> Self {
-        SimpleDurationConstraint::new_at(value.0, value.1)
+        SimpleDurationConstraint::at(value.0, value.1)
     }
 }

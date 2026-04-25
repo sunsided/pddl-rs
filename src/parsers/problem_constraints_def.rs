@@ -15,7 +15,7 @@ use crate::types::ProblemConstraintsDef;
 /// let input = "(:constraints (preference test (and)))";
 /// assert!(parse_problem_constraints_def(input).is_value(
 ///     ProblemConstraintsDef::new(
-///         PreferenceConstraintGoalDefinitions::new_preference(Some("test".into()), ConstraintGoalDefinition::new_and([]))
+///         PreferenceConstraintGoalDefinitions::preference(Some("test".into()), ConstraintGoalDefinition::and([]))
 ///     )
 /// ));
 /// ```
@@ -51,9 +51,9 @@ mod tests {
         let input = "(:constraints (preference test (and)))";
         assert!(
             ProblemConstraintsDef::parse(input).is_value(ProblemConstraintsDef::new(
-                PreferenceConstraintGoalDefinitions::new_preference(
+                PreferenceConstraintGoalDefinitions::preference(
                     Some("test".into()),
-                    ConstraintGoalDefinition::new_and([])
+                    ConstraintGoalDefinition::and([])
                 )
             ))
         );

@@ -38,31 +38,31 @@ use nom::Parser;
 /// ));
 ///
 /// assert!(parse_p_effect("(assign fun-sym 1.23)").is_value(
-///     PrimitiveEffect::new_numeric_fluent(
+///     PrimitiveEffect::numeric_fluent(
 ///         AssignOp::Assign,
-///         FunctionHead::new(FunctionSymbol::new_string("fun-sym")),
-///         FluentExpression::new_number(1.23)
+///         FunctionHead::new(FunctionSymbol::string("fun-sym")),
+///         FluentExpression::number(1.23)
 ///     )
 /// ));
 ///
 /// assert!(parse_p_effect("(assign fun-sym 1.23)").is_value(
-///     PrimitiveEffect::new_numeric_fluent(
+///     PrimitiveEffect::numeric_fluent(
 ///         AssignOp::Assign,
-///         FunctionHead::new(FunctionSymbol::new_string("fun-sym")),
-///         FluentExpression::new_number(1.23)
+///         FunctionHead::new(FunctionSymbol::string("fun-sym")),
+///         FluentExpression::number(1.23)
 ///     )
 /// ));
 ///
 /// assert!(parse_p_effect("(assign (fun-sym) undefined)").is_value(
-///     PrimitiveEffect::new_object_fluent(
-///         FunctionTerm::new(FunctionSymbol::new_string("fun-sym"), []),
+///     PrimitiveEffect::object_fluent(
+///         FunctionTerm::new(FunctionSymbol::string("fun-sym"), []),
 ///         None
 ///     )
 /// ));
 ///
 /// assert!(parse_p_effect("(assign (fun-sym) something)").is_value(
-///     PrimitiveEffect::new_object_fluent(
-///         FunctionTerm::new(FunctionSymbol::new_string("fun-sym"), []),
+///     PrimitiveEffect::object_fluent(
+///         FunctionTerm::new(FunctionSymbol::string("fun-sym"), []),
 ///         Some(Term::Name("something".into()))
 ///     )
 /// ));
@@ -70,7 +70,7 @@ use nom::Parser;
 pub fn parse_p_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PrimitiveEffect> {
     let is = map(atomic_formula(parse_term), PrimitiveEffect::new);
     let is_not = map(prefix_expr("not", atomic_formula(parse_term)), |af| {
-        PrimitiveEffect::new_not(af)
+        PrimitiveEffect::not(af)
     });
 
     // :numeric-fluents
@@ -80,7 +80,7 @@ pub fn parse_p_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Primit
             preceded(multispace1, parse_f_head),
             preceded(multispace1, parse_f_exp),
         )),
-        |(op, head, exp)| PrimitiveEffect::new_numeric_fluent(op, head, exp),
+        |(op, head, exp)| PrimitiveEffect::numeric_fluent(op, head, exp),
     );
 
     // :object-fluents
@@ -89,14 +89,14 @@ pub fn parse_p_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Primit
             "assign",
             terminated(parse_function_term, (multispace1, tag("undefined"))),
         ),
-        |f_term| PrimitiveEffect::new_object_fluent(f_term, None),
+        |f_term| PrimitiveEffect::object_fluent(f_term, None),
     );
     let object = map(
         prefix_expr(
             "assign",
             (parse_function_term, preceded(multispace1, parse_term)),
         ),
-        |(f_term, term)| PrimitiveEffect::new_object_fluent(f_term, Some(term)),
+        |(f_term, term)| PrimitiveEffect::object_fluent(f_term, Some(term)),
     );
 
     alt((is_not, object_undefined, object, numeric, is)).parse(input.into())
@@ -130,7 +130,7 @@ mod tests {
     fn not_works() {
         let input = "(not (at B ?m))";
         let mut is_not = map(prefix_expr("not", atomic_formula(parse_term)), |af| {
-            PrimitiveEffect::new_not(af)
+            PrimitiveEffect::not(af)
         });
 
         let result: Result<(_, _), _> = nom::Parser::parse(&mut is_not, input.into());
@@ -156,25 +156,25 @@ mod tests {
         ));
 
         assert!(PrimitiveEffect::parse("(assign fun-sym 1.23)").is_value(
-            PrimitiveEffect::new_numeric_fluent(
+            PrimitiveEffect::numeric_fluent(
                 AssignOp::Assign,
-                FunctionHead::new(FunctionSymbol::new_string("fun-sym")),
-                FluentExpression::new_number(1.23)
+                FunctionHead::new(FunctionSymbol::string("fun-sym")),
+                FluentExpression::number(1.23)
             )
         ));
 
         assert!(PrimitiveEffect::parse("(assign fun-sym 1.23)").is_value(
-            PrimitiveEffect::new_numeric_fluent(
+            PrimitiveEffect::numeric_fluent(
                 AssignOp::Assign,
-                FunctionHead::new(FunctionSymbol::new_string("fun-sym")),
-                FluentExpression::new_number(1.23)
+                FunctionHead::new(FunctionSymbol::string("fun-sym")),
+                FluentExpression::number(1.23)
             )
         ));
 
         assert!(
             PrimitiveEffect::parse("(assign (fun-sym) undefined)").is_value(
-                PrimitiveEffect::new_object_fluent(
-                    FunctionTerm::new(FunctionSymbol::new_string("fun-sym"), []),
+                PrimitiveEffect::object_fluent(
+                    FunctionTerm::new(FunctionSymbol::string("fun-sym"), []),
                     None
                 )
             )
@@ -182,8 +182,8 @@ mod tests {
 
         assert!(
             PrimitiveEffect::parse("(assign (fun-sym) something)").is_value(
-                PrimitiveEffect::new_object_fluent(
-                    FunctionTerm::new(FunctionSymbol::new_string("fun-sym"), []),
+                PrimitiveEffect::object_fluent(
+                    FunctionTerm::new(FunctionSymbol::string("fun-sym"), []),
                     Some(Term::Name("something".into()))
                 )
             )

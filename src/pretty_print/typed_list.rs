@@ -135,7 +135,7 @@ mod tests {
 
     #[test]
     fn typed_explicit() {
-        let x = Name::new("x").to_typed(Type::new_exactly("letter"));
+        let x = Name::new("x").to_typed(Type::exactly("letter"));
         assert_eq!(prettify!(x, 20), "x - letter");
     }
 
@@ -152,9 +152,9 @@ mod tests {
     #[test]
     fn typed_list_same_type() {
         let list = TypedList::from_iter([
-            Name::new("x").to_typed(Type::new_exactly("letter")),
-            Name::new("y").to_typed(Type::new_exactly("letter")),
-            Name::new("z").to_typed(Type::new_exactly("letter")),
+            Name::new("x").to_typed(Type::exactly("letter")),
+            Name::new("y").to_typed(Type::exactly("letter")),
+            Name::new("z").to_typed(Type::exactly("letter")),
         ]);
         assert_eq!(prettify!(list, 30), "x y z - letter");
     }
@@ -162,9 +162,9 @@ mod tests {
     #[test]
     fn typed_list_interleaved() {
         let list = TypedList::from_iter([
-            Name::new("x").to_typed(Type::new_exactly("letter")),
-            Name::new("y").to_typed(Type::new_exactly("car")),
-            Name::new("z").to_typed(Type::new_exactly("letter")),
+            Name::new("x").to_typed(Type::exactly("letter")),
+            Name::new("y").to_typed(Type::exactly("car")),
+            Name::new("z").to_typed(Type::exactly("letter")),
         ]);
         assert_eq!(prettify!(list, 30), "x - letter y - car z - letter");
     }
@@ -172,7 +172,7 @@ mod tests {
     #[test]
     fn typed_list_object_at_end() {
         let list = TypedList::from_iter([
-            Name::new("x").to_typed(Type::new_exactly("letter")),
+            Name::new("x").to_typed(Type::exactly("letter")),
             Name::new("y").to_typed(Type::OBJECT),
             Name::new("z").to_typed(Type::OBJECT),
         ]);
@@ -182,9 +182,9 @@ mod tests {
     #[test]
     fn typed_list_object_at_start() {
         let list = TypedList::from_iter([
-            Variable::new_string("x").to_typed(Type::OBJECT),
-            Variable::new_string("y").to_typed(Type::OBJECT),
-            Variable::new_string("z").to_typed(Type::new_exactly("letter")),
+            Variable::string("x").to_typed(Type::OBJECT),
+            Variable::string("y").to_typed(Type::OBJECT),
+            Variable::string("z").to_typed(Type::exactly("letter")),
         ]);
         assert_eq!(prettify!(list, 30), "?x ?y - object ?z - letter");
     }
@@ -207,7 +207,7 @@ mod tests {
         use crate::{FunctionSymbol, FunctionTyped};
         let ft = FunctionTyped::new(
             FunctionSymbol::from("loc"),
-            crate::FunctionType::new(crate::Type::new_exactly("location")),
+            crate::FunctionType::new(crate::Type::exactly("location")),
         );
         assert_eq!(prettify!(ft, 20), "loc - location");
     }
@@ -245,7 +245,7 @@ mod tests {
             ),
             FunctionTyped::new(
                 AtomicFunctionSkeleton::new(FunctionSymbol::from("y"), vec![].into()),
-                crate::FunctionType::new(crate::Type::new_exactly("location")),
+                crate::FunctionType::new(crate::Type::exactly("location")),
             ),
         ]);
         assert_eq!(prettify!(list, 30), "(x) - number (y) - location");
@@ -257,7 +257,7 @@ mod tests {
         let list = crate::FunctionTypedList::new(vec![
             FunctionTyped::new(
                 AtomicFunctionSkeleton::new(FunctionSymbol::from("x"), vec![].into()),
-                crate::FunctionType::new(crate::Type::new_exactly("location")),
+                crate::FunctionType::new(crate::Type::exactly("location")),
             ),
             FunctionTyped::new(
                 AtomicFunctionSkeleton::new(FunctionSymbol::from("y"), vec![].into()),
@@ -277,7 +277,7 @@ mod tests {
             ),
             FunctionTyped::new(
                 AtomicFunctionSkeleton::new(FunctionSymbol::from("y"), vec![].into()),
-                crate::FunctionType::new(crate::Type::new_exactly("location")),
+                crate::FunctionType::new(crate::Type::exactly("location")),
             ),
         ]);
         assert_eq!(prettify!(list, 30), "(x) - number (y) - location");

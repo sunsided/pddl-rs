@@ -49,3 +49,23 @@ impl From<DomainConstraintsDef> for ConstraintGoalDefinition {
         val.0
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn domain_constraints_def_from_con_gd() {
+        let gd = ConstraintGoalDefinition::default();
+        let dcd: DomainConstraintsDef = gd.clone().into();
+        assert_eq!(*dcd, gd);
+    }
+
+    #[test]
+    fn domain_constraints_def_into_con_gd() {
+        let gd = ConstraintGoalDefinition::default();
+        let dcd = DomainConstraintsDef::new(gd.clone());
+        let back: ConstraintGoalDefinition = dcd.into();
+        assert_eq!(back, gd);
+    }
+}

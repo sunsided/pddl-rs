@@ -22,8 +22,13 @@ impl FunctionHead {
         Self::Simple(symbol)
     }
 
-    pub fn new_with_terms<I: IntoIterator<Item = Term>>(symbol: FunctionSymbol, terms: I) -> Self {
+    #[doc(alias = "new_with_terms")]
+    pub fn with_terms<I: IntoIterator<Item = Term>>(symbol: FunctionSymbol, terms: I) -> Self {
         Self::WithTerms(symbol, terms.into_iter().collect())
+    }
+
+    pub fn new_with_terms<I: IntoIterator<Item = Term>>(symbol: FunctionSymbol, terms: I) -> Self {
+        Self::with_terms(symbol, terms)
     }
 }
 
