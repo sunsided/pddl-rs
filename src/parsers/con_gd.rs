@@ -4,7 +4,7 @@ use crate::parsers::{
     parens, parse_gd, parse_number, parse_variable, prefix_expr, space_separated_list0, typed_list,
     ParseResult, Span,
 };
-use crate::types::{Con2GD, ConGD};
+use crate::types::{ConstraintGoalDefinition, ConstraintGoalDefinitionInner};
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
@@ -16,11 +16,11 @@ use nom::Parser;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_con_gd, preamble::*};
-/// # use pddl::{AtomicFormula, Con2GD, ConGD, GoalDefinition, Number, Term, ToTyped, Type, TypedList, Variable};
+/// # use pddl::{AtomicFormula, ConstraintGoalDefinitionInner, ConstraintGoalDefinition, GoalDefinition, Number, Term, ToTyped, Type, TypedList, Variable};
 /// // (= x y)
 /// let gd_a =
-///     GoalDefinition::new_atomic_formula(
-///         AtomicFormula::new_equality(
+///     GoalDefinition::atomic_formula(
+///         AtomicFormula::equality(
 ///             Term::Name("x".into()),
 ///             Term::Name("y".into())
 ///         )
@@ -28,9 +28,9 @@ use nom::Parser;
 ///
 /// // (not (= x z))
 /// let gd_b =
-///     GoalDefinition::new_not(
-///         GoalDefinition::new_atomic_formula(
-///             AtomicFormula::new_equality(
+///     GoalDefinition::not(
+///         GoalDefinition::atomic_formula(
+///             AtomicFormula::equality(
 ///                 Term::Name("x".into()),
 ///                 Term::Name("z".into())
 ///             )
@@ -38,27 +38,27 @@ use nom::Parser;
 ///     );
 ///
 /// assert!(parse_con_gd("(and)").is_value(
-///     ConGD::new_and([])
+///     ConstraintGoalDefinition::and([])
 /// ));
 ///
 /// assert!(parse_con_gd("(and (at end (= x y)) (at end (not (= x z))))").is_value(
-///     ConGD::new_and([
-///         ConGD::new_at_end(gd_a.clone()),
-///         ConGD::new_at_end(gd_b.clone()),
+///     ConstraintGoalDefinition::and([
+///         ConstraintGoalDefinition::at_end(gd_a.clone()),
+///         ConstraintGoalDefinition::at_end(gd_b.clone()),
 ///     ])
 /// ));
 ///
 /// assert!(parse_con_gd("(forall (?x ?z) (sometime (= ?x ?z)))").is_value(
-///     ConGD::new_forall(
+///     ConstraintGoalDefinition::forall(
 ///         TypedList::from_iter([
 ///             Variable::from("x").to_typed(Type::OBJECT),
 ///             Variable::from("z").to_typed(Type::OBJECT),
 ///         ]),
-///         ConGD::new_sometime(
-///             Con2GD::Goal(
+///         ConstraintGoalDefinition::sometime(
+///             ConstraintGoalDefinitionInner::Goal(
 ///                 // gd ...
-///                 # GoalDefinition::new_atomic_formula(
-///                 #    AtomicFormula::new_equality(
+///                 # GoalDefinition::atomic_formula(
+///                 #    AtomicFormula::equality(
 ///                 #        Term::Variable("x".into()),
 ///                 #        Term::Variable("z".into())
 ///                 #    )
@@ -69,62 +69,62 @@ use nom::Parser;
 /// ));
 ///
 /// assert!(parse_con_gd("(at end (= x y))").is_value(
-///     ConGD::AtEnd(gd_a.clone())
+///     ConstraintGoalDefinition::AtEnd(gd_a.clone())
 /// ));
 ///
 /// assert!(parse_con_gd("(always (= x y))").is_value(
-///     ConGD::Always(Con2GD::new_goal(gd_a.clone()))
+///     ConstraintGoalDefinition::Always(ConstraintGoalDefinitionInner::goal(gd_a.clone()))
 /// ));
 ///
 /// assert!(parse_con_gd("(sometime (= x y))").is_value(
-///     ConGD::Sometime(Con2GD::new_goal(gd_a.clone()))
+///     ConstraintGoalDefinition::Sometime(ConstraintGoalDefinitionInner::goal(gd_a.clone()))
 /// ));
 ///
 /// assert!(parse_con_gd("(within 10 (= x y))").is_value(
-///     ConGD::Within(
+///     ConstraintGoalDefinition::Within(
 ///         Number::from(10),
-///         Con2GD::new_goal(gd_a.clone())
+///         ConstraintGoalDefinitionInner::goal(gd_a.clone())
 ///     )
 /// ));
 ///
 /// assert!(parse_con_gd("(at-most-once (= x y))").is_value(
-///     ConGD::AtMostOnce(Con2GD::new_goal(gd_a.clone()))
+///     ConstraintGoalDefinition::AtMostOnce(ConstraintGoalDefinitionInner::goal(gd_a.clone()))
 /// ));
 ///
 /// assert!(parse_con_gd("(sometime-after (= x y) (not (= x z)))").is_value(
-///     ConGD::SometimeAfter(
-///         Con2GD::new_goal(gd_a.clone()),
-///         Con2GD::new_goal(gd_b.clone())
+///     ConstraintGoalDefinition::SometimeAfter(
+///         ConstraintGoalDefinitionInner::goal(gd_a.clone()),
+///         ConstraintGoalDefinitionInner::goal(gd_b.clone())
 ///     )
 /// ));
 ///
 /// assert!(parse_con_gd("(sometime-before (= x y) (not (= x z)))").is_value(
-///     ConGD::SometimeBefore(
-///         Con2GD::new_goal(gd_a.clone()),
-///         Con2GD::new_goal(gd_b.clone())
+///     ConstraintGoalDefinition::SometimeBefore(
+///         ConstraintGoalDefinitionInner::goal(gd_a.clone()),
+///         ConstraintGoalDefinitionInner::goal(gd_b.clone())
 ///     )
 /// ));
 ///
 /// assert!(parse_con_gd("(always-within 10 (= x y) (not (= x z)))").is_value(
-///     ConGD::AlwaysWithin(
+///     ConstraintGoalDefinition::AlwaysWithin(
 ///         Number::from(10),
-///         Con2GD::new_goal(gd_a.clone()),
-///         Con2GD::new_goal(gd_b.clone())
+///         ConstraintGoalDefinitionInner::goal(gd_a.clone()),
+///         ConstraintGoalDefinitionInner::goal(gd_b.clone())
 ///     )
 /// ));
 ///
 /// assert!(parse_con_gd("(hold-during 10 20 (= x y))").is_value(
-///     ConGD::HoldDuring(
+///     ConstraintGoalDefinition::HoldDuring(
 ///         Number::from(10),
 ///         Number::from(20),
-///         Con2GD::new_goal(gd_a.clone())
+///         ConstraintGoalDefinitionInner::goal(gd_a.clone())
 ///     )
 /// ));
 ///
 /// assert!(parse_con_gd("(hold-after 10 (= x y))").is_value(
-///     ConGD::HoldAfter(
+///     ConstraintGoalDefinition::HoldAfter(
 ///         Number::from(10),
-///         Con2GD::new_goal(gd_a.clone())
+///         ConstraintGoalDefinitionInner::goal(gd_a.clone())
 ///     )
 /// ));
 /// ```
@@ -133,11 +133,11 @@ use nom::Parser;
 ///
 /// ```
 /// # use pddl::parsers::{parse_con_gd, preamble::*};
-/// # use pddl::{AtomicFormula, Con2GD, ConGD, GoalDefinition, Number, Term};
+/// # use pddl::{AtomicFormula, ConstraintGoalDefinitionInner, ConstraintGoalDefinition, GoalDefinition, Number, Term};
 /// # // (= x y)
 /// # let gd =
-/// #    GoalDefinition::new_atomic_formula(
-/// #        AtomicFormula::new_equality(
+/// #    GoalDefinition::atomic_formula(
+/// #        AtomicFormula::equality(
 /// #            Term::Name("x".into()),
 /// #            Term::Name("y".into())
 /// #        )
@@ -145,11 +145,11 @@ use nom::Parser;
 ///
 /// let input = "(within 10 (at-most-once (= x y)))";
 /// assert!(parse_con_gd(input).is_value(
-///     ConGD::new_within(
+///     ConstraintGoalDefinition::within(
 ///         Number::from(10),
-///         Con2GD::new_nested(
-///             ConGD::new_at_most_once(
-///                 Con2GD::new_goal(
+///         ConstraintGoalDefinitionInner::nested(
+///             ConstraintGoalDefinition::at_most_once(
+///                 ConstraintGoalDefinitionInner::goal(
 ///                     // gd ...
 ///                     # gd
 ///                 )
@@ -158,10 +158,10 @@ use nom::Parser;
 ///     )
 /// ));
 /// ```
-pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD> {
+pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConstraintGoalDefinition> {
     let and = map(
         prefix_expr("and", space_separated_list0(parse_con_gd)),
-        ConGD::new_and,
+        ConstraintGoalDefinition::new_and,
     );
 
     let forall = map(
@@ -172,26 +172,35 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD> {
                 preceded(multispace1, parse_con_gd),
             ),
         ),
-        |(vars, gd)| ConGD::new_forall(vars, gd),
+        |(vars, gd)| ConstraintGoalDefinition::forall(vars, gd),
     );
 
-    let at_end = map(prefix_expr("at end", parse_gd), ConGD::new_at_end);
+    let at_end = map(
+        prefix_expr("at end", parse_gd),
+        ConstraintGoalDefinition::new_at_end,
+    );
 
-    let always = map(prefix_expr("always", parse_con2_gd), ConGD::new_always);
+    let always = map(
+        prefix_expr("always", parse_con2_gd),
+        ConstraintGoalDefinition::new_always,
+    );
 
-    let sometime = map(prefix_expr("sometime", parse_con2_gd), ConGD::new_sometime);
+    let sometime = map(
+        prefix_expr("sometime", parse_con2_gd),
+        ConstraintGoalDefinition::new_sometime,
+    );
 
     let within = map(
         prefix_expr(
             "within",
             (parse_number, preceded(multispace1, parse_con2_gd)),
         ),
-        |(num, gd)| ConGD::new_within(num, gd),
+        |(num, gd)| ConstraintGoalDefinition::within(num, gd),
     );
 
     let at_most_once = map(
         prefix_expr("at-most-once", parse_con2_gd),
-        ConGD::new_at_most_once,
+        ConstraintGoalDefinition::new_at_most_once,
     );
 
     let sometime_after = map(
@@ -199,7 +208,7 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD> {
             "sometime-after",
             (parse_con2_gd, preceded(multispace1, parse_con2_gd)),
         ),
-        |(a, b)| ConGD::new_sometime_after(a, b),
+        |(a, b)| ConstraintGoalDefinition::sometime_after(a, b),
     );
 
     let sometime_before = map(
@@ -207,7 +216,7 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD> {
             "sometime-before",
             (parse_con2_gd, preceded(multispace1, parse_con2_gd)),
         ),
-        |(a, b)| ConGD::new_sometime_before(a, b),
+        |(a, b)| ConstraintGoalDefinition::sometime_before(a, b),
     );
 
     let always_within = map(
@@ -219,7 +228,7 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD> {
                 preceded(multispace1, parse_con2_gd),
             ),
         ),
-        |(num, a, b)| ConGD::new_always_within(num, a, b),
+        |(num, a, b)| ConstraintGoalDefinition::always_within(num, a, b),
     );
 
     let hold_during = map(
@@ -231,7 +240,7 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD> {
                 preceded(multispace1, parse_con2_gd),
             ),
         ),
-        |(t0, t1, gd)| ConGD::new_hold_during(t0, t1, gd),
+        |(t0, t1, gd)| ConstraintGoalDefinition::hold_during(t0, t1, gd),
     );
 
     let hold_after = map(
@@ -239,7 +248,7 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD> {
             "hold-after",
             (parse_number, preceded(multispace1, parse_con2_gd)),
         ),
-        |(time, gd)| ConGD::new_hold_after(time, gd),
+        |(time, gd)| ConstraintGoalDefinition::hold_after(time, gd),
     );
 
     alt((
@@ -259,16 +268,18 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ConGD> {
     .parse(input.into())
 }
 
-fn parse_con2_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Con2GD> {
-    let gd = map(parse_gd, Con2GD::new_goal);
+fn parse_con2_gd<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, ConstraintGoalDefinitionInner> {
+    let gd = map(parse_gd, ConstraintGoalDefinitionInner::new_goal);
 
     // TODO: Add crate feature to allow this to be forbidden if unsupported by the application.
-    let con_gd = map(parse_con_gd, Con2GD::new_nested);
+    let con_gd = map(parse_con_gd, ConstraintGoalDefinitionInner::new_nested);
     alt((gd, con_gd)).parse(input.into())
 }
 
-impl crate::parsers::Parser for ConGD {
-    type Item = ConGD;
+impl crate::parsers::Parser for ConstraintGoalDefinition {
+    type Item = ConstraintGoalDefinition;
 
     /// See [`parse_con_gd`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
@@ -276,8 +287,8 @@ impl crate::parsers::Parser for ConGD {
     }
 }
 
-impl crate::parsers::Parser for Con2GD {
-    type Item = Con2GD;
+impl crate::parsers::Parser for ConstraintGoalDefinitionInner {
+    type Item = ConstraintGoalDefinitionInner;
 
     /// Parses a constraint goal definition.
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
@@ -288,27 +299,95 @@ impl crate::parsers::Parser for Con2GD {
 #[cfg(test)]
 mod tests {
     use crate::parsers::preamble::*;
-    use crate::{AtomicFormula, Con2GD, ConGD, GoalDefinition, Number, Term};
+    use crate::{
+        AtomicFormula, ConstraintGoalDefinition, ConstraintGoalDefinitionInner, GoalDefinition,
+        Number, Term,
+    };
 
     #[test]
     fn test_parse() {
-        let gd = GoalDefinition::new_atomic_formula(AtomicFormula::new_equality(
+        let gd = GoalDefinition::atomic_formula(AtomicFormula::equality(
             Term::Name("x".into()),
             Term::Name("y".into()),
         ));
 
         let input = "(within 10 (at-most-once (= x y)))";
-        assert!(ConGD::parse(input).is_value(ConGD::new_within(
-            Number::from(10),
-            Con2GD::new_nested(ConGD::new_at_most_once(Con2GD::new_goal(gd.clone())))
-        )));
+        assert!(
+            ConstraintGoalDefinition::parse(input).is_value(ConstraintGoalDefinition::within(
+                Number::from(10),
+                ConstraintGoalDefinitionInner::nested(ConstraintGoalDefinition::at_most_once(
+                    ConstraintGoalDefinitionInner::goal(gd.clone())
+                ))
+            ))
+        );
 
         let input = "(within 10 (at-most-once (= x y)))";
-        assert!(
-            Con2GD::parse(input).is_value(Con2GD::Nested(Box::new(ConGD::new_within(
+        assert!(ConstraintGoalDefinitionInner::parse(input).is_value(
+            ConstraintGoalDefinitionInner::Nested(Box::new(ConstraintGoalDefinition::within(
                 Number::from(10),
-                Con2GD::new_nested(ConGD::new_at_most_once(Con2GD::new_goal(gd)))
-            ))))
+                ConstraintGoalDefinitionInner::nested(ConstraintGoalDefinition::at_most_once(
+                    ConstraintGoalDefinitionInner::goal(gd)
+                ))
+            )))
+        ));
+    }
+
+    #[test]
+    fn test_parse_sometime() {
+        assert!(
+            ConstraintGoalDefinition::parse("(sometime (= x y))").is_value(
+                ConstraintGoalDefinition::sometime(ConstraintGoalDefinitionInner::goal(
+                    GoalDefinition::atomic_formula(AtomicFormula::equality(
+                        Term::Name("x".into()),
+                        Term::Name("y".into()),
+                    ))
+                ))
+            )
+        );
+    }
+
+    #[test]
+    fn test_parse_sometime_after() {
+        assert!(
+            ConstraintGoalDefinition::parse("(sometime-after (= x y) (= a b))").is_value(
+                ConstraintGoalDefinition::sometime_after(
+                    ConstraintGoalDefinitionInner::goal(GoalDefinition::atomic_formula(
+                        AtomicFormula::equality(Term::Name("x".into()), Term::Name("y".into()))
+                    )),
+                    ConstraintGoalDefinitionInner::goal(GoalDefinition::atomic_formula(
+                        AtomicFormula::equality(Term::Name("a".into()), Term::Name("b".into()))
+                    ))
+                )
+            )
+        );
+    }
+
+    #[test]
+    fn test_parse_hold_during() {
+        assert!(
+            ConstraintGoalDefinition::parse("(hold-during 5 10 (= x y))").is_value(
+                ConstraintGoalDefinition::hold_during(
+                    Number::from(5),
+                    Number::from(10),
+                    ConstraintGoalDefinitionInner::goal(GoalDefinition::atomic_formula(
+                        AtomicFormula::equality(Term::Name("x".into()), Term::Name("y".into()))
+                    ))
+                )
+            )
+        );
+    }
+
+    #[test]
+    fn test_parse_hold_after() {
+        assert!(
+            ConstraintGoalDefinition::parse("(hold-after 5 (= x y))").is_value(
+                ConstraintGoalDefinition::hold_after(
+                    Number::from(5),
+                    ConstraintGoalDefinitionInner::goal(GoalDefinition::atomic_formula(
+                        AtomicFormula::equality(Term::Name("x".into()), Term::Name("y".into()))
+                    ))
+                )
+            )
         );
     }
 }

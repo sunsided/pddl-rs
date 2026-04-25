@@ -14,7 +14,7 @@ static STRING_INTERNING: LazyLock<Mutex<Vec<Arc<String>>>> = LazyLock::new(Mutex
 ///
 /// ## Usage
 /// Used by [`Domain`](crate::Domain), [`InitElement`](crate::InitElement),
-/// [`BasicFunctionTerm`](crate::BasicFunctionTerm), [`MetricFExp`](crate::MetricFExp),
+/// [`BasicFunctionTerm`](crate::BasicFunctionTerm), [`MetricFluentExpression`](crate::MetricFluentExpression),
 /// [`PrimitiveType`](PrimitiveType), [`Predicate`](crate::Predicate), [`Variable`](crate::Variable),
 /// [`FunctionSymbol`](crate::FunctionSymbol), [`ActionSymbol`](crate::ActionSymbol),
 /// [`PreferenceName`](crate::PreferenceName), [`Term`](crate::Term),

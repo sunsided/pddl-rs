@@ -1,10 +1,10 @@
 //! Contains the [`Problem`] type.
 
 use crate::types::{
-    GoalDef, InitElements, LengthSpec, MetricSpec, Name, Objects, ProblemConstraintsDef,
-    Requirements,
+    InitElements, LengthSpec, MetricSpec, Name, Objects, ProblemConstraintsDef,
+    ProblemGoalDefinition, Requirements,
 };
-use crate::{PreconditionGoalDefinitions, PrefConGDs};
+use crate::{PreconditionGoalDefinitions, PreferenceConstraintGoalDefinitions};
 
 /// A domain-specific problem declaration.
 ///
@@ -48,7 +48,7 @@ pub struct Problem {
     /// The initial state definition.
     init: InitElements,
     /// The goal definition.
-    goal: GoalDef,
+    goal: ProblemGoalDefinition,
     /// The optional list of constraints.
     ///
     /// ## Requirements
@@ -74,7 +74,7 @@ impl Problem {
         requires: Requirements,
         objects: Objects,
         init: InitElements,
-        goal: GoalDef,
+        goal: ProblemGoalDefinition,
         constraints: ProblemConstraintsDef,
         metric_spec: Option<MetricSpec>,
         length_spec: Option<LengthSpec>,
@@ -97,7 +97,7 @@ impl Problem {
         problem_name: P,
         domain_name: D,
         init: InitElements,
-        goal: GoalDef,
+        goal: ProblemGoalDefinition,
     ) -> Self {
         Self {
             name: problem_name.into(),
@@ -175,7 +175,7 @@ impl Problem {
     /// Returns the optional constraints of the problem.
     /// ## Requirements
     /// Requires [Constraints](crate::Requirement::Constraints).
-    pub const fn constraints(&self) -> &PrefConGDs {
+    pub const fn constraints(&self) -> &PreferenceConstraintGoalDefinitions {
         self.constraints.value()
     }
 
@@ -190,5 +190,85 @@ impl Problem {
     /// Deprecated since PDDL 2.1.
     pub const fn length_spec(&self) -> &Option<LengthSpec> {
         &self.length_spec
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::{InitElements, ProblemGoalDefinition};
+    use crate::{PreconditionGoalDefinitions, Requirement, Requirements};
+
+    fn make_minimal_problem() -> Problem {
+        let init = InitElements::new(Vec::new());
+        let goal = ProblemGoalDefinition::new(PreconditionGoalDefinitions::default());
+        Problem::builder("test-problem", "test-domain", init, goal)
+    }
+
+    #[test]
+    fn builder_works() {
+        let problem = make_minimal_problem();
+        assert_eq!(problem.name(), &Name::new("test-problem"));
+        assert_eq!(problem.domain(), &Name::new("test-domain"));
+        assert!(problem.requirements().is_empty());
+        assert!(problem.init().is_empty());
+        assert!(problem.goals().is_empty());
+        assert!(problem.constraints().is_empty());
+        assert!(problem.metric_spec().is_none());
+        assert!(problem.length_spec().is_none());
+    }
+
+    #[test]
+    fn with_requirements() {
+        let problem =
+            make_minimal_problem().with_requirements(Requirements::new([Requirement::Strips]));
+        assert_eq!(problem.requirements().len(), 1);
+    }
+
+    #[test]
+    fn with_objects() {
+        let problem = make_minimal_problem().with_objects(Objects::default());
+        assert!(problem.objects().is_empty());
+    }
+
+    #[test]
+    fn with_constraints() {
+        let problem = make_minimal_problem().with_constraints(ProblemConstraintsDef::default());
+        assert!(problem.constraints().is_empty());
+    }
+
+    #[test]
+    fn new_full() {
+        let init = InitElements::new(Vec::new());
+        let goal = ProblemGoalDefinition::new(PreconditionGoalDefinitions::default());
+        let problem = Problem::new(
+            Name::new("p"),
+            Name::new("d"),
+            Requirements::new([Requirement::Typing]),
+            Objects::default(),
+            init,
+            goal,
+            ProblemConstraintsDef::default(),
+            None,
+            None,
+        );
+        assert_eq!(problem.name(), &Name::new("p"));
+        assert_eq!(problem.domain(), &Name::new("d"));
+        assert_eq!(problem.requirements().len(), 1);
+    }
+
+    #[test]
+    fn clone_works() {
+        let problem = make_minimal_problem();
+        let clone = problem.clone();
+        assert_eq!(problem, clone);
+    }
+
+    #[test]
+    fn debug_impl() {
+        let problem = make_minimal_problem();
+        let dbg = format!("{problem:?}");
+        assert!(dbg.contains("Problem"));
+        assert!(dbg.contains("test-problem"));
     }
 }

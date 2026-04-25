@@ -1,6 +1,6 @@
 //! Contains the [`MetricSpec`] type.
 
-use crate::types::{MetricFExp, Optimization};
+use crate::types::{MetricFluentExpression, Optimization};
 
 /// A metric specification.
 ///
@@ -9,11 +9,11 @@ use crate::types::{MetricFExp, Optimization};
 #[derive(Debug, Clone, PartialEq)]
 pub struct MetricSpec {
     optimization: Optimization,
-    exp: MetricFExp,
+    exp: MetricFluentExpression,
 }
 
 impl MetricSpec {
-    pub const fn new(optimization: Optimization, exp: MetricFExp) -> Self {
+    pub const fn new(optimization: Optimization, exp: MetricFluentExpression) -> Self {
         Self { optimization, exp }
     }
 
@@ -23,7 +23,7 @@ impl MetricSpec {
     }
 
     /// Gets the expression to optimize.
-    pub const fn expression(&self) -> &MetricFExp {
+    pub const fn expression(&self) -> &MetricFluentExpression {
         &self.exp
     }
 }

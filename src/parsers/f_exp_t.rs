@@ -9,40 +9,40 @@ use nom::Parser;
 
 use crate::parsers::prefix_expr;
 use crate::parsers::{parse_f_exp, ParseResult, Span};
-use crate::types::FExpT;
+use crate::types::TimedFluentExpression;
 
 /// Parses an f-exp-t.
 ///
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_f_exp, parse_f_exp_t, preamble::*};
-/// # use pddl::{BinaryOp, FExp, FExpT, FHead, FunctionSymbol, MultiOp, Term, Variable};
-/// assert!(parse_f_exp_t("#t").is_value(FExpT::Now));
+/// # use pddl::{BinaryOp, FluentExpression, TimedFluentExpression, FunctionHead, FunctionSymbol, MultiOp, Term, Variable};
+/// assert!(parse_f_exp_t("#t").is_value(TimedFluentExpression::Now));
 ///
 /// assert!(parse_f_exp_t("(* (fuel ?tank) #t)").is_value(
-///     FExpT::new_scaled(
-///         FExp::new_function(
-///             FHead::new_with_terms(
-///                 FunctionSymbol::new_string("fuel"),
-///                 [Term::Variable(Variable::new_string("tank"))]
+///     TimedFluentExpression::scaled(
+///         FluentExpression::function(
+///             FunctionHead::with_terms(
+///                 FunctionSymbol::string("fuel"),
+///                 [Term::Variable(Variable::string("tank"))]
 ///             )
 ///         )
 ///     )
 /// ));
 ///
 /// assert!(parse_f_exp_t("(* #t (fuel ?tank))").is_value(
-///     FExpT::new_scaled(
-///         FExp::new_function(
-///             FHead::new_with_terms(
-///                 FunctionSymbol::new_string("fuel"),
-///                 [Term::Variable(Variable::new_string("tank"))]
+///     TimedFluentExpression::scaled(
+///         FluentExpression::function(
+///             FunctionHead::with_terms(
+///                 FunctionSymbol::string("fuel"),
+///                 [Term::Variable(Variable::string("tank"))]
 ///             )
 ///         )
 ///     )
 /// ));
 ///```
-pub fn parse_f_exp_t<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExpT> {
-    let now = map(tag("#t"), |_| FExpT::new());
+pub fn parse_f_exp_t<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedFluentExpression> {
+    let now = map(tag("#t"), |_| TimedFluentExpression::new());
     let scaled = map(
         prefix_expr(
             "*",
@@ -51,14 +51,14 @@ pub fn parse_f_exp_t<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExpT> 
                 terminated(parse_f_exp, (multispace1, tag("#t"))),
             )),
         ),
-        FExpT::new_scaled,
+        TimedFluentExpression::new_scaled,
     );
 
     alt((scaled, now)).parse(input.into())
 }
 
-impl crate::parsers::Parser for FExpT {
-    type Item = FExpT;
+impl crate::parsers::Parser for TimedFluentExpression {
+    type Item = TimedFluentExpression;
 
     /// See [`parse_f_exp_t`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
@@ -69,28 +69,35 @@ impl crate::parsers::Parser for FExpT {
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{FExp, FExpT, FHead, FunctionSymbol, Parser, Term, Variable};
+    use crate::{
+        FluentExpression, FunctionHead, FunctionSymbol, Parser, Term, TimedFluentExpression,
+        Variable,
+    };
 
     #[test]
     fn test_parse() {
-        assert!(FExpT::parse("#t").is_value(FExpT::Now));
+        assert!(TimedFluentExpression::parse("#t").is_value(TimedFluentExpression::Now));
 
         assert!(
-            FExpT::parse("(* (fuel ?tank) #t)").is_value(FExpT::new_scaled(FExp::new_function(
-                FHead::new_with_terms(
-                    FunctionSymbol::new_string("fuel"),
-                    [Term::Variable(Variable::new_string("tank"))]
-                )
-            )))
+            TimedFluentExpression::parse("(* (fuel ?tank) #t)").is_value(
+                TimedFluentExpression::scaled(FluentExpression::function(
+                    FunctionHead::with_terms(
+                        FunctionSymbol::string("fuel"),
+                        [Term::Variable(Variable::string("tank"))]
+                    )
+                ))
+            )
         );
 
         assert!(
-            FExpT::parse("(* #t (fuel ?tank))").is_value(FExpT::new_scaled(FExp::new_function(
-                FHead::new_with_terms(
-                    FunctionSymbol::new_string("fuel"),
-                    [Term::Variable(Variable::new_string("tank"))]
-                )
-            )))
+            TimedFluentExpression::parse("(* #t (fuel ?tank))").is_value(
+                TimedFluentExpression::scaled(FluentExpression::function(
+                    FunctionHead::with_terms(
+                        FunctionSymbol::string("fuel"),
+                        [Term::Variable(Variable::string("tank"))]
+                    )
+                ))
+            )
         );
     }
 }

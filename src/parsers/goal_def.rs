@@ -1,7 +1,7 @@
 //! Provides parsers for pre-GD goal definitions.
 
 use crate::parsers::{parse_pre_gd, prefix_expr, ParseResult, Span};
-use crate::types::GoalDef;
+use crate::types::ProblemGoalDefinition;
 use nom::combinator::map;
 use nom::Parser;
 
@@ -10,12 +10,12 @@ use nom::Parser;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_problem_goal_def, preamble::*};
-/// # use pddl::{AtomicFormula, GoalDef, GoalDefinition, PreferenceGD, PreconditionGoalDefinition, Term};
+/// # use pddl::{AtomicFormula, GoalDefinition, ProblemGoalDefinition, PreferenceGoalDefinition, PreconditionGoalDefinition, Term};
 /// let input = "(:goal (= x y))";
 /// assert!(parse_problem_goal_def(input).is_value(
-///     GoalDef::from(
+///     ProblemGoalDefinition::from(
 ///         PreconditionGoalDefinition::Preference(
-///             PreferenceGD::Goal(
+///             PreferenceGoalDefinition::Goal(
 ///                 GoalDefinition::AtomicFormula(
 ///                     AtomicFormula::new_equality(
 ///                         Term::Name("x".into()),
@@ -27,12 +27,18 @@ use nom::Parser;
 ///     )
 /// ));
 /// ```
-pub fn parse_problem_goal_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, GoalDef> {
-    map(prefix_expr(":goal", parse_pre_gd), GoalDef::new).parse(input.into())
+pub fn parse_problem_goal_def<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, ProblemGoalDefinition> {
+    map(
+        prefix_expr(":goal", parse_pre_gd),
+        ProblemGoalDefinition::new,
+    )
+    .parse(input.into())
 }
 
-impl crate::parsers::Parser for GoalDef {
-    type Item = GoalDef;
+impl crate::parsers::Parser for ProblemGoalDefinition {
+    type Item = ProblemGoalDefinition;
 
     /// See [`parse_problem_goal_def`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
@@ -44,20 +50,22 @@ impl crate::parsers::Parser for GoalDef {
 mod tests {
     use crate::parsers::UnwrapValue;
     use crate::{
-        AtomicFormula, GoalDef, GoalDefinition, Parser, PreconditionGoalDefinition, PreferenceGD,
-        Term,
+        AtomicFormula, GoalDefinition, Parser, PreconditionGoalDefinition,
+        PreferenceGoalDefinition, ProblemGoalDefinition, Term,
     };
 
     #[test]
     fn test_parse() {
         let input = "(:goal (= x y))";
-        assert!(GoalDef::parse(input).is_value(GoalDef::from(
-            PreconditionGoalDefinition::Preference(PreferenceGD::Goal(
-                GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
-                    Term::Name("x".into()),
-                    Term::Name("y".into())
+        assert!(
+            ProblemGoalDefinition::parse(input).is_value(ProblemGoalDefinition::from(
+                PreconditionGoalDefinition::Preference(PreferenceGoalDefinition::Goal(
+                    GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                        Term::Name("x".into()),
+                        Term::Name("y".into())
+                    ))
                 ))
             ))
-        )));
+        );
     }
 }

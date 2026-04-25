@@ -91,7 +91,8 @@ impl crate::parsers::Parser for DurationConstraint {
 mod tests {
     use crate::parsers::UnwrapValue;
     use crate::{
-        DOp, DurationConstraint, DurationValue, Parser, SimpleDurationConstraint, TimeSpecifier,
+        DurationConstraint, DurationOperator, DurationValue, Parser, SimpleDurationConstraint,
+        TimeSpecifier,
     };
 
     #[test]
@@ -102,7 +103,10 @@ mod tests {
         let input = "(= ?duration 5)";
         assert!(
             DurationConstraint::parse(input).is_value(Some(DurationConstraint::new(
-                SimpleDurationConstraint::Op(DOp::Equal, DurationValue::Number(5.into()))
+                SimpleDurationConstraint::Op(
+                    DurationOperator::Equal,
+                    DurationValue::Number(5.into())
+                )
             )))
         );
 
@@ -112,7 +116,7 @@ mod tests {
                 SimpleDurationConstraint::new_at(
                     TimeSpecifier::End,
                     SimpleDurationConstraint::Op(
-                        DOp::LessThanOrEqual,
+                        DurationOperator::LessThanOrEqual,
                         DurationValue::Number(1.23.into())
                     )
                 )
@@ -125,12 +129,12 @@ mod tests {
                 SimpleDurationConstraint::new_at(
                     TimeSpecifier::End,
                     SimpleDurationConstraint::Op(
-                        DOp::LessThanOrEqual,
+                        DurationOperator::LessThanOrEqual,
                         DurationValue::Number(1.23.into())
                     )
                 ),
                 SimpleDurationConstraint::new_op(
-                    DOp::GreaterOrEqual,
+                    DurationOperator::GreaterOrEqual,
                     DurationValue::Number(1.0.into())
                 )
             ])))

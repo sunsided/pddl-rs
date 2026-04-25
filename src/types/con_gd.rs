@@ -1,116 +1,236 @@
-//! Contains the conditional problem/goal definition types [`ConGD`] and [`Con2GD`].
+//! Contains the constraint goal definition types [`ConstraintGoalDefinition`] and [`ConstraintGoalDefinitionInner`].
 
 use crate::types::{GoalDefinition, Number, TypedVariables};
 
+/// A constraint goal definition.
+///
+/// Represents temporal constraint goals for problem-level constraints in PDDL 3.1.
+/// Supports `always`, `sometime`, `within`, `at-most-once`, `sometime-after`,
+/// `sometime-before`, `always-within`, `hold-during`, and `hold-after`.
+///
+/// # BNF
+/// Corresponds to `<con-GD>` in the PDDL 3.1 specification.
+///
 /// ## Usage
-/// Used by [`ConGD`](ConGD) itself, as well as [`PrefConGD`](crate::types::PrefConGD) and [`Con2GD`](Con2GD).
+/// Used by [`PreferenceConstraintGoalDefinition`](crate::types::PreferenceConstraintGoalDefinition) and [`ConstraintGoalDefinitionInner`].
+#[doc(alias = "con-GD")]
 #[derive(Debug, Clone, PartialEq)]
-pub enum ConGD {
-    And(Vec<ConGD>),
-    Forall(TypedVariables, Box<ConGD>),
+pub enum ConstraintGoalDefinition {
+    And(Vec<ConstraintGoalDefinition>),
+    Forall(TypedVariables, Box<ConstraintGoalDefinition>),
     AtEnd(GoalDefinition),
-    Always(Con2GD),
-    Sometime(Con2GD),
-    Within(Number, Con2GD),
-    AtMostOnce(Con2GD),
-    SometimeAfter(Con2GD, Con2GD),
-    SometimeBefore(Con2GD, Con2GD),
-    AlwaysWithin(Number, Con2GD, Con2GD),
-    HoldDuring(Number, Number, Con2GD),
-    HoldAfter(Number, Con2GD),
+    Always(ConstraintGoalDefinitionInner),
+    Sometime(ConstraintGoalDefinitionInner),
+    Within(Number, ConstraintGoalDefinitionInner),
+    AtMostOnce(ConstraintGoalDefinitionInner),
+    SometimeAfter(ConstraintGoalDefinitionInner, ConstraintGoalDefinitionInner),
+    SometimeBefore(ConstraintGoalDefinitionInner, ConstraintGoalDefinitionInner),
+    AlwaysWithin(
+        Number,
+        ConstraintGoalDefinitionInner,
+        ConstraintGoalDefinitionInner,
+    ),
+    HoldDuring(Number, Number, ConstraintGoalDefinitionInner),
+    HoldAfter(Number, ConstraintGoalDefinitionInner),
 }
 
-impl Default for ConGD {
+/// Alias for [`ConstraintGoalDefinition`]; matches BNF `<con-GD>`.
+#[deprecated(since = "0.2.0", note = "Use `ConstraintGoalDefinition` instead")]
+pub type ConGD = ConstraintGoalDefinition;
+
+/// A type that represents either a [`GoalDefinition`] or an embedded [`ConstraintGoalDefinition`].
+///
+/// # BNF
+/// Corresponds to `<con2-GD>` in the PDDL 3.1 specification.
+///
+/// ## Usage
+/// Used by [`ConstraintGoalDefinition`].
+#[doc(alias = "con2-GD")]
+#[derive(Debug, Clone, PartialEq)]
+pub enum ConstraintGoalDefinitionInner {
+    Goal(GoalDefinition),
+    Nested(Box<ConstraintGoalDefinition>),
+}
+
+/// Alias for [`ConstraintGoalDefinitionInner`]; matches BNF `<con2-GD>`.
+#[deprecated(since = "0.2.0", note = "Use `ConstraintGoalDefinitionInner` instead")]
+pub type Con2GD = ConstraintGoalDefinitionInner;
+
+impl Default for ConstraintGoalDefinition {
     fn default() -> Self {
         Self::And(Vec::default())
     }
 }
 
-/// A type that represents either a [`GoalDefinition`] or an embedded [`ConGD`].
-///
-/// ## Usage
-/// Used by [`ConGD`](ConGD).
-#[derive(Debug, Clone, PartialEq)]
-pub enum Con2GD {
-    Goal(GoalDefinition),
-    Nested(Box<ConGD>),
-}
-
-impl ConGD {
-    pub fn new_and<G: IntoIterator<Item = ConGD>>(goals: G) -> Self {
+impl ConstraintGoalDefinition {
+    #[doc(alias = "new_and")]
+    pub fn and<G: IntoIterator<Item = ConstraintGoalDefinition>>(goals: G) -> Self {
         // TODO: Flatten `(and (and a b) (and x y))` into `(and a b c y)`.
         Self::And(goals.into_iter().collect())
     }
 
-    pub fn new_forall(variables: TypedVariables, gd: ConGD) -> Self {
+    pub fn new_and<G: IntoIterator<Item = ConstraintGoalDefinition>>(goals: G) -> Self {
+        Self::and(goals)
+    }
+
+    #[doc(alias = "new_forall")]
+    pub fn r#forall(variables: TypedVariables, gd: ConstraintGoalDefinition) -> Self {
         Self::Forall(variables, Box::new(gd))
     }
 
-    pub const fn new_at_end(gd: GoalDefinition) -> Self {
+    pub fn new_forall(variables: TypedVariables, gd: ConstraintGoalDefinition) -> Self {
+        Self::r#forall(variables, gd)
+    }
+
+    #[doc(alias = "new_at_end")]
+    pub const fn at_end(gd: GoalDefinition) -> Self {
         Self::AtEnd(gd)
     }
 
-    pub const fn new_always(gd: Con2GD) -> Self {
+    pub fn new_at_end(gd: GoalDefinition) -> Self {
+        Self::at_end(gd)
+    }
+
+    #[doc(alias = "new_always")]
+    pub const fn always(gd: ConstraintGoalDefinitionInner) -> Self {
         Self::Always(gd)
     }
 
-    pub const fn new_sometime(gd: Con2GD) -> Self {
+    pub fn new_always(gd: ConstraintGoalDefinitionInner) -> Self {
+        Self::always(gd)
+    }
+
+    #[doc(alias = "new_sometime")]
+    pub const fn sometime(gd: ConstraintGoalDefinitionInner) -> Self {
         Self::Sometime(gd)
     }
 
-    pub const fn new_within(number: Number, gd: Con2GD) -> Self {
+    pub fn new_sometime(gd: ConstraintGoalDefinitionInner) -> Self {
+        Self::sometime(gd)
+    }
+
+    #[doc(alias = "new_within")]
+    pub const fn within(number: Number, gd: ConstraintGoalDefinitionInner) -> Self {
         Self::Within(number, gd)
     }
 
-    pub const fn new_at_most_once(gd: Con2GD) -> Self {
+    pub fn new_within(number: Number, gd: ConstraintGoalDefinitionInner) -> Self {
+        Self::within(number, gd)
+    }
+
+    #[doc(alias = "new_at_most_once")]
+    pub const fn at_most_once(gd: ConstraintGoalDefinitionInner) -> Self {
         Self::AtMostOnce(gd)
     }
 
-    pub const fn new_sometime_after(first: Con2GD, then: Con2GD) -> Self {
+    pub fn new_at_most_once(gd: ConstraintGoalDefinitionInner) -> Self {
+        Self::at_most_once(gd)
+    }
+
+    #[doc(alias = "new_sometime_after")]
+    pub const fn sometime_after(
+        first: ConstraintGoalDefinitionInner,
+        then: ConstraintGoalDefinitionInner,
+    ) -> Self {
         Self::SometimeAfter(first, then)
     }
 
-    pub const fn new_sometime_before(later: Con2GD, earlier: Con2GD) -> Self {
+    pub fn new_sometime_after(
+        first: ConstraintGoalDefinitionInner,
+        then: ConstraintGoalDefinitionInner,
+    ) -> Self {
+        Self::sometime_after(first, then)
+    }
+
+    #[doc(alias = "new_sometime_before")]
+    pub const fn sometime_before(
+        later: ConstraintGoalDefinitionInner,
+        earlier: ConstraintGoalDefinitionInner,
+    ) -> Self {
         Self::SometimeBefore(later, earlier)
     }
 
-    pub const fn new_always_within(number: Number, first: Con2GD, second: Con2GD) -> Self {
+    pub fn new_sometime_before(
+        later: ConstraintGoalDefinitionInner,
+        earlier: ConstraintGoalDefinitionInner,
+    ) -> Self {
+        Self::sometime_before(later, earlier)
+    }
+
+    #[doc(alias = "new_always_within")]
+    pub const fn always_within(
+        number: Number,
+        first: ConstraintGoalDefinitionInner,
+        second: ConstraintGoalDefinitionInner,
+    ) -> Self {
         Self::AlwaysWithin(number, first, second)
     }
 
-    pub const fn new_hold_during(begin: Number, end: Number, gd: Con2GD) -> Self {
+    pub fn new_always_within(
+        number: Number,
+        first: ConstraintGoalDefinitionInner,
+        second: ConstraintGoalDefinitionInner,
+    ) -> Self {
+        Self::always_within(number, first, second)
+    }
+
+    #[doc(alias = "new_hold_during")]
+    pub const fn hold_during(
+        begin: Number,
+        end: Number,
+        gd: ConstraintGoalDefinitionInner,
+    ) -> Self {
         Self::HoldDuring(begin, end, gd)
     }
 
-    pub const fn new_hold_after(number: Number, gd: Con2GD) -> Self {
+    pub fn new_hold_during(begin: Number, end: Number, gd: ConstraintGoalDefinitionInner) -> Self {
+        Self::hold_during(begin, end, gd)
+    }
+
+    #[doc(alias = "new_hold_after")]
+    pub const fn hold_after(number: Number, gd: ConstraintGoalDefinitionInner) -> Self {
         Self::HoldAfter(number, gd)
+    }
+
+    pub fn new_hold_after(number: Number, gd: ConstraintGoalDefinitionInner) -> Self {
+        Self::hold_after(number, gd)
     }
 
     pub fn is_empty(&self) -> bool {
         match self {
-            ConGD::And(x) => x.iter().all(|y| y.is_empty()),
-            ConGD::Forall(_, x) => x.is_empty(),
-            ConGD::AtEnd(x) => x.is_empty(),
-            ConGD::Always(x) => x.is_empty(),
-            ConGD::Sometime(x) => x.is_empty(),
-            ConGD::Within(_, x) => x.is_empty(),
-            ConGD::AtMostOnce(x) => x.is_empty(),
-            ConGD::SometimeAfter(x, y) => x.is_empty() && y.is_empty(),
-            ConGD::SometimeBefore(x, y) => x.is_empty() && y.is_empty(),
-            ConGD::AlwaysWithin(_, x, y) => x.is_empty() && y.is_empty(),
-            ConGD::HoldDuring(_, _, x) => x.is_empty(),
-            ConGD::HoldAfter(_, x) => x.is_empty(),
+            ConstraintGoalDefinition::And(x) => x.iter().all(|y| y.is_empty()),
+            ConstraintGoalDefinition::Forall(_, x) => x.is_empty(),
+            ConstraintGoalDefinition::AtEnd(x) => x.is_empty(),
+            ConstraintGoalDefinition::Always(x) => x.is_empty(),
+            ConstraintGoalDefinition::Sometime(x) => x.is_empty(),
+            ConstraintGoalDefinition::Within(_, x) => x.is_empty(),
+            ConstraintGoalDefinition::AtMostOnce(x) => x.is_empty(),
+            ConstraintGoalDefinition::SometimeAfter(x, y) => x.is_empty() && y.is_empty(),
+            ConstraintGoalDefinition::SometimeBefore(x, y) => x.is_empty() && y.is_empty(),
+            ConstraintGoalDefinition::AlwaysWithin(_, x, y) => x.is_empty() && y.is_empty(),
+            ConstraintGoalDefinition::HoldDuring(_, _, x) => x.is_empty(),
+            ConstraintGoalDefinition::HoldAfter(_, x) => x.is_empty(),
         }
     }
 }
 
-impl Con2GD {
-    pub fn new_nested(gd: ConGD) -> Self {
+impl ConstraintGoalDefinitionInner {
+    #[doc(alias = "new_nested")]
+    pub fn nested(gd: ConstraintGoalDefinition) -> Self {
         Self::Nested(Box::new(gd))
     }
 
-    pub const fn new_goal(gd: GoalDefinition) -> Self {
+    pub fn new_nested(gd: ConstraintGoalDefinition) -> Self {
+        Self::nested(gd)
+    }
+
+    #[doc(alias = "new_goal")]
+    pub const fn goal(gd: GoalDefinition) -> Self {
         Self::Goal(gd)
+    }
+
+    pub fn new_goal(gd: GoalDefinition) -> Self {
+        Self::goal(gd)
     }
 
     pub fn is_empty(&self) -> bool {
@@ -121,14 +241,161 @@ impl Con2GD {
     }
 }
 
-impl From<ConGD> for Con2GD {
-    fn from(value: ConGD) -> Self {
-        Con2GD::new_nested(value)
+impl From<ConstraintGoalDefinition> for ConstraintGoalDefinitionInner {
+    fn from(value: ConstraintGoalDefinition) -> Self {
+        ConstraintGoalDefinitionInner::nested(value)
     }
 }
 
-impl From<GoalDefinition> for Con2GD {
+impl From<GoalDefinition> for ConstraintGoalDefinitionInner {
     fn from(value: GoalDefinition) -> Self {
-        Con2GD::new_goal(value)
+        ConstraintGoalDefinitionInner::goal(value)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn constraint_goal_definition_is_empty() {
+        let empty = ConstraintGoalDefinition::default();
+        assert!(empty.is_empty());
+
+        let gd = GoalDefinition::and(Vec::new());
+        let non_empty = ConstraintGoalDefinition::at_end(gd);
+        assert!(non_empty.is_empty());
+    }
+
+    #[test]
+    fn constraint_goal_definition_is_empty_nested() {
+        let inner = ConstraintGoalDefinitionInner::goal(GoalDefinition::and(Vec::new()));
+        let always = ConstraintGoalDefinition::always(inner);
+        assert!(always.is_empty());
+    }
+
+    #[test]
+    fn constraint_goal_definition_inner_is_empty() {
+        let goal_inner = ConstraintGoalDefinitionInner::goal(GoalDefinition::and(Vec::new()));
+        assert!(goal_inner.is_empty());
+
+        let nested = ConstraintGoalDefinitionInner::nested(ConstraintGoalDefinition::default());
+        assert!(nested.is_empty());
+    }
+
+    #[test]
+    fn constraint_goal_definition_constructors() {
+        let inner = ConstraintGoalDefinitionInner::goal(GoalDefinition::and(Vec::new()));
+
+        let _ = ConstraintGoalDefinition::sometime(inner.clone());
+        let _ = ConstraintGoalDefinition::at_most_once(inner.clone());
+        let _ = ConstraintGoalDefinition::sometime_after(inner.clone(), inner.clone());
+        let _ = ConstraintGoalDefinition::sometime_before(inner.clone(), inner.clone());
+        let _ =
+            ConstraintGoalDefinition::always_within(Number::from(5), inner.clone(), inner.clone());
+        let _ =
+            ConstraintGoalDefinition::hold_during(Number::from(0), Number::from(10), inner.clone());
+        let _ = ConstraintGoalDefinition::hold_after(Number::from(5), inner);
+    }
+
+    #[test]
+    fn constraint_goal_definition_inner_from() {
+        let gd = GoalDefinition::and(Vec::new());
+        let from_gd: ConstraintGoalDefinitionInner = gd.clone().into();
+        assert!(matches!(from_gd, ConstraintGoalDefinitionInner::Goal(_)));
+
+        let con_gd = ConstraintGoalDefinition::default();
+        let from_con_gd: ConstraintGoalDefinitionInner = con_gd.into();
+        assert!(matches!(
+            from_con_gd,
+            ConstraintGoalDefinitionInner::Nested(_)
+        ));
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn deprecated_new_constructors() {
+        let inner = ConstraintGoalDefinitionInner::goal(GoalDefinition::and(Vec::new()));
+        let num = Number::from(5);
+
+        let _ = ConstraintGoalDefinition::new_and(vec![ConstraintGoalDefinition::default()]);
+        let _ = ConstraintGoalDefinition::new_forall(
+            TypedVariables::default(),
+            ConstraintGoalDefinition::default(),
+        );
+        let _ = ConstraintGoalDefinition::new_at_end(GoalDefinition::and(Vec::new()));
+        let _ = ConstraintGoalDefinition::new_always(inner.clone());
+        let _ = ConstraintGoalDefinition::new_sometime(inner.clone());
+        let _ = ConstraintGoalDefinition::new_within(num, inner.clone());
+        let _ = ConstraintGoalDefinition::new_at_most_once(inner.clone());
+        let _ = ConstraintGoalDefinition::new_sometime_after(inner.clone(), inner.clone());
+        let _ = ConstraintGoalDefinition::new_sometime_before(inner.clone(), inner.clone());
+        let _ = ConstraintGoalDefinition::new_always_within(num, inner.clone(), inner.clone());
+        let _ = ConstraintGoalDefinition::new_hold_during(
+            Number::from(0),
+            Number::from(10),
+            inner.clone(),
+        );
+        let _ = ConstraintGoalDefinition::new_hold_after(num, inner.clone());
+
+        // ConstraintGoalDefinitionInner
+        let _ = ConstraintGoalDefinitionInner::new_nested(ConstraintGoalDefinition::default());
+        let _ = ConstraintGoalDefinitionInner::new_goal(GoalDefinition::and(Vec::new()));
+    }
+
+    #[test]
+    fn is_empty_non_empty_variants() {
+        use crate::types::{AtomicFormula, Predicate, Term};
+
+        let term = Term::new_name(crate::types::Name::new("x"));
+        let atomic = AtomicFormula::predicate(Predicate::string("at"), vec![term]);
+        let gd = GoalDefinition::AtomicFormula(atomic);
+        let inner = ConstraintGoalDefinitionInner::goal(gd.clone());
+
+        let always = ConstraintGoalDefinition::always(inner.clone());
+        assert!(!always.is_empty());
+
+        let sometime = ConstraintGoalDefinition::sometime(inner.clone());
+        assert!(!sometime.is_empty());
+
+        let within = ConstraintGoalDefinition::within(Number::from(5), inner.clone());
+        assert!(!within.is_empty());
+
+        let at_most_once = ConstraintGoalDefinition::at_most_once(inner.clone());
+        assert!(!at_most_once.is_empty());
+
+        let sometime_after = ConstraintGoalDefinition::sometime_after(inner.clone(), inner.clone());
+        assert!(!sometime_after.is_empty());
+
+        let sometime_before =
+            ConstraintGoalDefinition::sometime_before(inner.clone(), inner.clone());
+        assert!(!sometime_before.is_empty());
+
+        let always_within =
+            ConstraintGoalDefinition::always_within(Number::from(5), inner.clone(), inner.clone());
+        assert!(!always_within.is_empty());
+
+        let hold_during =
+            ConstraintGoalDefinition::hold_during(Number::from(0), Number::from(10), inner.clone());
+        assert!(!hold_during.is_empty());
+
+        let hold_after = ConstraintGoalDefinition::hold_after(Number::from(5), inner);
+        assert!(!hold_after.is_empty());
+
+        let at_end = ConstraintGoalDefinition::at_end(gd);
+        assert!(!at_end.is_empty());
+
+        let nested_inner = ConstraintGoalDefinitionInner::nested(ConstraintGoalDefinition::at_end(
+            GoalDefinition::and(vec![GoalDefinition::AtomicFormula(
+                AtomicFormula::predicate(
+                    Predicate::string("on"),
+                    vec![
+                        Term::new_name(crate::types::Name::new("a")),
+                        Term::new_name(crate::types::Name::new("b")),
+                    ],
+                ),
+            )]),
+        ));
+        assert!(!nested_inner.is_empty());
     }
 }

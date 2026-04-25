@@ -7,14 +7,14 @@ use crate::types::{GoalDefinition, Preference};
 /// ## Usage
 /// Used by [`PreconditionGoalDefinition`](crate::PreconditionGoalDefinition).
 #[derive(Debug, Clone, PartialEq)]
-pub enum PreferenceGD {
+pub enum PreferenceGoalDefinition {
     Goal(GoalDefinition),
     /// ## Requirements
     /// Requires [Preferences](crate::Requirement::Preferences).
     Preference(Preference),
 }
 
-impl PreferenceGD {
+impl PreferenceGoalDefinition {
     pub const fn from_gd(gd: GoalDefinition) -> Self {
         Self::Goal(gd)
     }
@@ -24,14 +24,74 @@ impl PreferenceGD {
     }
 }
 
-impl From<GoalDefinition> for PreferenceGD {
+impl From<GoalDefinition> for PreferenceGoalDefinition {
     fn from(value: GoalDefinition) -> Self {
-        PreferenceGD::from_gd(value)
+        PreferenceGoalDefinition::from_gd(value)
     }
 }
 
-impl From<Preference> for PreferenceGD {
+impl From<Preference> for PreferenceGoalDefinition {
     fn from(value: Preference) -> Self {
-        PreferenceGD::from_preference(value)
+        PreferenceGoalDefinition::from_preference(value)
+    }
+}
+
+/// Alias for [`PreferenceGoalDefinition`]; matches BNF `<pref-GD>`.
+#[deprecated(since = "0.2.0", note = "Use `PreferenceGoalDefinition` instead")]
+pub type PreferenceGD = PreferenceGoalDefinition;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::GoalDefinition;
+
+    #[test]
+    fn from_gd() {
+        let gd = GoalDefinition::and(Vec::new());
+        let pref_gd = PreferenceGoalDefinition::from_gd(gd.clone());
+        assert!(matches!(pref_gd, PreferenceGoalDefinition::Goal(_)));
+    }
+
+    #[test]
+    fn from_preference() {
+        let pref = crate::Preference::from(GoalDefinition::and(Vec::new()));
+        let pref_gd = PreferenceGoalDefinition::from_preference(pref.clone());
+        assert!(matches!(pref_gd, PreferenceGoalDefinition::Preference(_)));
+    }
+
+    #[test]
+    fn from_gd_trait() {
+        let gd = GoalDefinition::and(Vec::new());
+        let pref_gd = PreferenceGoalDefinition::from(gd);
+        assert!(matches!(pref_gd, PreferenceGoalDefinition::Goal(_)));
+    }
+
+    #[test]
+    fn from_preference_trait() {
+        let pref = crate::Preference::from(GoalDefinition::and(Vec::new()));
+        let pref_gd = PreferenceGoalDefinition::from(pref);
+        assert!(matches!(pref_gd, PreferenceGoalDefinition::Preference(_)));
+    }
+
+    #[test]
+    fn clone_works() {
+        let gd = GoalDefinition::and(Vec::new());
+        let pref_gd = PreferenceGoalDefinition::from_gd(gd);
+        let clone = pref_gd.clone();
+        assert_eq!(pref_gd, clone);
+    }
+
+    #[test]
+    fn debug_impl() {
+        let gd = GoalDefinition::and(Vec::new());
+        let pref_gd = PreferenceGoalDefinition::from_gd(gd);
+        let dbg = format!("{pref_gd:?}");
+        assert!(dbg.contains("Goal"));
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn deprecated_alias_exists() {
+        fn _assert_alias(_: PreferenceGD) {}
     }
 }

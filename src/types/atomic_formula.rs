@@ -7,7 +7,7 @@ use std::ops::Deref;
 ///
 /// ## Usage
 /// Used by [`Literal`](crate::Literal), [`GoalDefinition`](crate::GoalDefinition) and
-/// [`PEffect`](crate::PEffect).
+/// [`PrimitiveEffect`](crate::PrimitiveEffect).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum AtomicFormula<T> {
     Equality(EqualityAtomicFormula<T>),
@@ -15,15 +15,25 @@ pub enum AtomicFormula<T> {
 }
 
 impl<T> AtomicFormula<T> {
-    pub const fn new_equality(first: T, second: T) -> Self {
+    #[doc(alias = "new_equality")]
+    pub const fn equality(first: T, second: T) -> Self {
         Self::Equality(EqualityAtomicFormula::new(first, second))
     }
 
-    pub fn new_predicate<V: IntoIterator<Item = T>>(predicate: Predicate, values: V) -> Self {
+    pub fn new_equality(first: T, second: T) -> Self {
+        Self::equality(first, second)
+    }
+
+    #[doc(alias = "new_predicate")]
+    pub fn predicate<V: IntoIterator<Item = T>>(predicate: Predicate, values: V) -> Self {
         Self::Predicate(PredicateAtomicFormula::new(
             predicate,
             values.into_iter().collect(),
         ))
+    }
+
+    pub fn new_predicate<V: IntoIterator<Item = T>>(predicate: Predicate, values: V) -> Self {
+        Self::predicate(predicate, values)
     }
 }
 

@@ -8,17 +8,17 @@ use nom::Parser;
 
 use crate::parsers::{parse_gd, parse_pref_name};
 use crate::parsers::{prefix_expr, ParseResult, Span};
-use crate::types::{Preference, PreferenceGD};
+use crate::types::{Preference, PreferenceGoalDefinition};
 
 /// Parser for goal definitions.
 ///
 /// ## Examples
 /// ```
 /// # use pddl::parsers::{parse_pref_gd, preamble::*};
-/// # use pddl::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Preference, PreferenceName, PreferenceGD, Term, Variable};
+/// # use pddl::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Preference, PreferenceName, PreferenceGoalDefinition, Term, Variable};
 /// // Simple goal definition.
 /// assert!(parse_pref_gd("(= x y)").is_value(
-///     PreferenceGD::Goal(
+///     PreferenceGoalDefinition::Goal(
 ///         GoalDefinition::AtomicFormula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Name("x".into()),
@@ -30,7 +30,7 @@ use crate::types::{Preference, PreferenceGD};
 ///
 /// // Named preference.
 /// assert!(parse_pref_gd("(preference p (= x y))").is_value(
-///     PreferenceGD::Preference(
+///     PreferenceGoalDefinition::Preference(
 ///         Preference::new(
 ///             Some(PreferenceName::from("p")),
 ///             GoalDefinition::AtomicFormula(
@@ -45,7 +45,7 @@ use crate::types::{Preference, PreferenceGD};
 ///
 /// // Unnamed preference.
 /// assert!(parse_pref_gd("(preference (= x y))").is_value(
-///     PreferenceGD::Preference(
+///     PreferenceGoalDefinition::Preference(
 ///         Preference::new(
 ///             None,
 ///             GoalDefinition::AtomicFormula(
@@ -58,27 +58,27 @@ use crate::types::{Preference, PreferenceGD};
 ///     )
 /// ));
 /// ```
-pub fn parse_pref_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PreferenceGD> {
+pub fn parse_pref_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PreferenceGoalDefinition> {
     // :preferences
     let pref_named = map(
         prefix_expr(
             "preference",
             (opt(parse_pref_name), preceded(multispace1, parse_gd)),
         ),
-        |(pref, gd)| PreferenceGD::from_preference(Preference::new(pref, gd)),
+        |(pref, gd)| PreferenceGoalDefinition::from_preference(Preference::new(pref, gd)),
     );
 
     let pref_unnamed = map(prefix_expr("preference", parse_gd), |gd| {
-        PreferenceGD::from_preference(Preference::new(None, gd))
+        PreferenceGoalDefinition::from_preference(Preference::new(None, gd))
     });
 
-    let gd = map(parse_gd, PreferenceGD::from_gd);
+    let gd = map(parse_gd, PreferenceGoalDefinition::from_gd);
 
     alt((pref_named, pref_unnamed, gd)).parse(input.into())
 }
 
-impl crate::parsers::Parser for PreferenceGD {
-    type Item = PreferenceGD;
+impl crate::parsers::Parser for PreferenceGoalDefinition {
+    type Item = PreferenceGoalDefinition;
 
     /// See [`parse_pref_gd`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
@@ -89,42 +89,43 @@ impl crate::parsers::Parser for PreferenceGD {
 #[cfg(test)]
 mod tests {
     use crate::parsers::preamble::*;
-    use crate::{AtomicFormula, GoalDefinition, Preference, PreferenceGD, PreferenceName, Term};
+    use crate::{
+        AtomicFormula, GoalDefinition, Preference, PreferenceGoalDefinition, PreferenceName, Term,
+    };
 
     #[test]
     fn test_parse() {
         // Simple goal definition.
-        assert!(PreferenceGD::parse("(= x y)").is_value(PreferenceGD::Goal(
-            GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
-                Term::Name("x".into()),
-                Term::Name("y".into())
+        assert!(PreferenceGoalDefinition::parse("(= x y)").is_value(
+            PreferenceGoalDefinition::Goal(GoalDefinition::AtomicFormula(
+                AtomicFormula::new_equality(Term::Name("x".into()), Term::Name("y".into()))
             ))
-        )));
+        ));
 
         // Named preference.
         assert!(
-            PreferenceGD::parse("(preference p (= x y))").is_value(PreferenceGD::Preference(
-                Preference::new(
+            PreferenceGoalDefinition::parse("(preference p (= x y))").is_value(
+                PreferenceGoalDefinition::Preference(Preference::new(
                     Some(PreferenceName::from("p")),
                     GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
                         Term::Name("x".into()),
                         Term::Name("y".into())
                     ))
-                )
-            ))
+                ))
+            )
         );
 
         // Unnamed preference.
         assert!(
-            PreferenceGD::parse("(preference (= x y))").is_value(PreferenceGD::Preference(
-                Preference::new(
+            PreferenceGoalDefinition::parse("(preference (= x y))").is_value(
+                PreferenceGoalDefinition::Preference(Preference::new(
                     None,
                     GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
                         Term::Name("x".into()),
                         Term::Name("y".into())
                     ))
-                )
-            ))
+                ))
+            )
         );
     }
 }

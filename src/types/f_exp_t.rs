@@ -1,6 +1,6 @@
-//! Contains timed function expressions via the [`FExpT`] type.
+//! Contains timed function expressions via the [`TimedFluentExpression`] type.
 
-use crate::types::FExp;
+use crate::types::FluentExpression;
 
 /// An f-exp-t.
 ///
@@ -10,25 +10,35 @@ use crate::types::FExp;
 ///
 /// ## Usage
 /// Used by [`TimedEffect`](crate::TimedEffect).
+#[doc(alias("f-exp-t"))]
 #[derive(Debug, Clone, PartialEq, Default)]
-pub enum FExpT {
+pub enum TimedFluentExpression {
     #[default]
     Now,
-    Scaled(FExp),
+    Scaled(FluentExpression),
 }
 
-impl FExpT {
+impl TimedFluentExpression {
     pub const fn new() -> Self {
         Self::Now
     }
 
-    pub fn new_scaled(exp: FExp) -> Self {
+    #[doc(alias = "new_scaled")]
+    pub const fn scaled(exp: FluentExpression) -> Self {
         Self::Scaled(exp)
+    }
+
+    pub fn new_scaled(exp: FluentExpression) -> Self {
+        Self::scaled(exp)
     }
 }
 
-impl From<FExp> for FExpT {
-    fn from(value: FExp) -> Self {
+impl From<FluentExpression> for TimedFluentExpression {
+    fn from(value: FluentExpression) -> Self {
         Self::Scaled(value)
     }
 }
+
+/// Alias for [`TimedFluentExpression`]; matches BNF `<f-exp-t>`.
+#[deprecated(since = "0.2.0", note = "Use `TimedFluentExpression` instead")]
+pub type FExpT = TimedFluentExpression;

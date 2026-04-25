@@ -13,7 +13,7 @@ use crate::types::StructureDef;
 ///
 /// ```
 /// # use pddl::parsers::{parse_structure_def, preamble::*};
-/// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effects, GoalDefinition, Literal, PEffect, Predicate, Preference, PreferenceGD, PreconditionGoalDefinitions, StructureDef, Term, Variable};
+/// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, ConditionalEffect, Effects, GoalDefinition, Literal, PrimitiveEffect, Predicate, Preference, PreferenceGoalDefinition, PreconditionGoalDefinitions, StructureDef, Term, Variable};
 /// # use pddl::{Name, ToTyped, TypedList};
 /// let input = r#"(:action take-out
 ///                     :parameters (?x - physob)
@@ -24,24 +24,24 @@ use crate::types::StructureDef;
 /// let action = parse_structure_def(input);
 ///
 /// assert!(action.is_value(
-///     StructureDef::new_action(ActionDefinition::new(
+///     StructureDef::action(ActionDefinition::new(
 ///         ActionSymbol::from("take-out"),
 ///         TypedList::from_iter([
 ///             Variable::from("x").to_typed("physob")
 ///         ]),
-///         PreconditionGoalDefinitions::new_preference(PreferenceGD::from_gd(
-///             GoalDefinition::new_not(
-///                 GoalDefinition::new_atomic_formula(
-///                     AtomicFormula::new_equality(
+///         PreconditionGoalDefinitions::preference(PreferenceGoalDefinition::from_gd(
+///             GoalDefinition::not(
+///                 GoalDefinition::atomic_formula(
+///                     AtomicFormula::equality(
 ///                         Term::Variable(Variable::from("x")),
 ///                         Term::Name(Name::new("B"))
 ///                     )
 ///                 )
 ///             )
 ///         )),
-///         Some(Effects::new(CEffect::new_p_effect(
-///             PEffect::NotAtomicFormula(
-///                 AtomicFormula::new_predicate(
+///         Some(Effects::new(ConditionalEffect::new_primitive_effect(
+///             PrimitiveEffect::NotAtomicFormula(
+///                 AtomicFormula::predicate(
 ///                     Predicate::from("in"),
 ///                     vec![Term::Variable(Variable::from("x"))]
 ///                 )
@@ -72,9 +72,9 @@ impl crate::parsers::Parser for StructureDef {
 mod tests {
     use crate::parsers::preamble::*;
     use crate::{
-        ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effects, GoalDefinition, Name,
-        PEffect, PreconditionGoalDefinitions, Predicate, PreferenceGD, StructureDef, Term, ToTyped,
-        TypedList, Variable,
+        ActionDefinition, ActionSymbol, AtomicFormula, ConditionalEffect, Effects, GoalDefinition,
+        Name, PreconditionGoalDefinitions, Predicate, PreferenceGoalDefinition, PrimitiveEffect,
+        StructureDef, Term, ToTyped, TypedList, Variable,
     };
 
     #[test]
@@ -87,25 +87,21 @@ mod tests {
 
         let action = StructureDef::parse(input);
 
-        assert!(
-            action.is_value(StructureDef::new_action(ActionDefinition::new(
-                ActionSymbol::from("take-out"),
-                TypedList::from_iter([Variable::from("x").to_typed("physob")]),
-                PreconditionGoalDefinitions::new_preference(PreferenceGD::from_gd(
-                    GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
-                        AtomicFormula::new_equality(
-                            Term::Variable(Variable::from("x")),
-                            Term::Name(Name::new("B"))
-                        )
-                    ))
-                )),
-                Some(Effects::new(CEffect::new_p_effect(
-                    PEffect::NotAtomicFormula(AtomicFormula::new_predicate(
-                        Predicate::from("in"),
-                        vec![Term::Variable(Variable::from("x"))]
-                    ))
+        assert!(action.is_value(StructureDef::action(ActionDefinition::new(
+            ActionSymbol::from("take-out"),
+            TypedList::from_iter([Variable::from("x").to_typed("physob")]),
+            PreconditionGoalDefinitions::preference(PreferenceGoalDefinition::from_gd(
+                GoalDefinition::not(GoalDefinition::atomic_formula(AtomicFormula::equality(
+                    Term::Variable(Variable::from("x")),
+                    Term::Name(Name::new("B"))
                 )))
+            )),
+            Some(Effects::new(ConditionalEffect::new_primitive_effect(
+                PrimitiveEffect::NotAtomicFormula(AtomicFormula::predicate(
+                    Predicate::from("in"),
+                    vec![Term::Variable(Variable::from("x"))]
+                ))
             )))
-        );
+        ))));
     }
 }

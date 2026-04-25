@@ -2,7 +2,7 @@
 
 use crate::parsers::{parse_gd, parse_interval, parse_time_specifier};
 use crate::parsers::{prefix_expr, ParseResult, Span};
-use crate::types::TimedGD;
+use crate::types::TimedGoalDefinition;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
@@ -14,9 +14,9 @@ use nom::Parser;
 /// ## Examples
 /// ```
 /// # use pddl::parsers::{parse_timed_gd, preamble::*};
-/// # use pddl::{AtomicFormula, GoalDefinition, Interval, Term, TimedGD, TimeSpecifier};
+/// # use pddl::{AtomicFormula, GoalDefinition, Interval, Term, TimedGoalDefinition, TimeSpecifier};
 /// assert!(parse_timed_gd("(at start (= x y))").is_value(
-///     TimedGD::new_at(
+///     TimedGoalDefinition::at(
 ///         TimeSpecifier::Start,
 ///         GoalDefinition::AtomicFormula(
 ///             AtomicFormula::new_equality(
@@ -28,7 +28,7 @@ use nom::Parser;
 /// ));
 ///
 /// assert!(parse_timed_gd("(over all (= x y))").is_value(
-///     TimedGD::new_over(
+///     TimedGoalDefinition::over(
 ///         Interval::All,
 ///         GoalDefinition::AtomicFormula(
 ///             AtomicFormula::new_equality(
@@ -39,25 +39,25 @@ use nom::Parser;
 ///     )
 /// ));
 /// ```
-pub fn parse_timed_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedGD> {
+pub fn parse_timed_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedGoalDefinition> {
     let at = map(
         prefix_expr(
             "at",
             (parse_time_specifier, preceded(multispace1, parse_gd)),
         ),
-        TimedGD::from,
+        TimedGoalDefinition::from,
     );
 
     let over = map(
         prefix_expr("over", (parse_interval, preceded(multispace1, parse_gd))),
-        TimedGD::from,
+        TimedGoalDefinition::from,
     );
 
     alt((at, over)).parse(input.into())
 }
 
-impl crate::parsers::Parser for TimedGD {
-    type Item = TimedGD;
+impl crate::parsers::Parser for TimedGoalDefinition {
+    type Item = TimedGoalDefinition;
 
     /// See [`parse_timed_gd`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
@@ -79,18 +79,18 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        assert!(
-            TimedGD::parse("(at start (= x y))").is_value(TimedGD::new_at(
+        assert!(TimedGoalDefinition::parse("(at start (= x y))").is_value(
+            TimedGoalDefinition::at(
                 TimeSpecifier::Start,
                 GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
                     Term::Name("x".into()),
                     Term::Name("y".into())
                 ))
-            ))
-        );
+            )
+        ));
 
         assert!(
-            parse_timed_gd("(over all (= x y))").is_value(TimedGD::new_over(
+            parse_timed_gd("(over all (= x y))").is_value(TimedGoalDefinition::over(
                 Interval::All,
                 GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
                     Term::Name("x".into()),

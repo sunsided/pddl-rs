@@ -17,9 +17,9 @@ use crate::types::Functions;
 /// let input = "(:functions (battery-amount ?r - rover))";
 /// assert!(parse_functions_def(input).is_value(
 ///     Functions::from_iter([
-///         FunctionTyped::new_number(
+///         FunctionTyped::number(
 ///             AtomicFunctionSkeleton::new(
-///                 FunctionSymbol::new_string("battery-amount"),
+///                 FunctionSymbol::string("battery-amount"),
 ///                 TypedList::from_iter([
 ///                     Typed::new(Variable::from("r"), Type::Exactly("rover".into()))
 ///                 ])
@@ -59,14 +59,16 @@ mod tests {
     #[test]
     fn test_parse() {
         let input = "(:functions (battery-amount ?r - rover))";
-        assert!(Functions::parse(input).is_value(Functions::from_iter([
-            FunctionTyped::new_number(AtomicFunctionSkeleton::new(
-                FunctionSymbol::new_string("battery-amount"),
-                TypedList::from_iter([Typed::new(
-                    Variable::from("r"),
-                    Type::Exactly("rover".into())
-                )])
-            ))
-        ])));
+        assert!(
+            Functions::parse(input).is_value(Functions::from_iter([FunctionTyped::number(
+                AtomicFunctionSkeleton::new(
+                    FunctionSymbol::string("battery-amount"),
+                    TypedList::from_iter([Typed::new(
+                        Variable::from("r"),
+                        Type::Exactly("rover".into())
+                    )])
+                )
+            )]))
+        );
     }
 }

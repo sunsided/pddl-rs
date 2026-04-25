@@ -2,8 +2,8 @@ use std::ops::Deref;
 
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{
-    Constants, Functions, GoalDef, InitElement, InitElements, LengthSpec, MetricSpec, Objects,
-    PredicateDefinitions, Requirements, Types,
+    Constants, Functions, InitElement, InitElements, LengthSpec, MetricSpec, Objects,
+    PredicateDefinitions, ProblemGoalDefinition, Requirements, Types,
 };
 use crate::visitor::{Accept, Visitor};
 use pretty::RcDoc;
@@ -15,7 +15,7 @@ impl sealed::Sealed for PredicateDefinitions {}
 impl sealed::Sealed for Functions {}
 impl sealed::Sealed for Objects {}
 impl sealed::Sealed for InitElements {}
-impl sealed::Sealed for GoalDef {}
+impl sealed::Sealed for ProblemGoalDefinition {}
 impl sealed::Sealed for MetricSpec {}
 impl sealed::Sealed for LengthSpec {}
 impl sealed::Sealed for InitElement {}
@@ -91,8 +91,8 @@ impl Visitor<InitElement, RcDoc<'static>> for PrettyRenderer {
     }
 }
 
-impl Visitor<GoalDef, RcDoc<'static>> for PrettyRenderer {
-    fn visit(&self, value: &GoalDef) -> RcDoc<'static> {
+impl Visitor<ProblemGoalDefinition, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &ProblemGoalDefinition) -> RcDoc<'static> {
         value.deref().accept(self)
     }
 }
@@ -138,7 +138,7 @@ mod tests {
     fn metric_spec_works() {
         let ms = crate::MetricSpec::new(
             crate::Optimization::Minimize,
-            crate::MetricFExp::new_total_time(),
+            crate::MetricFluentExpression::total_time(),
         );
         assert_eq!(prettify!(ms, 30), "minimize total-time");
     }
@@ -187,12 +187,12 @@ mod tests {
 
     #[test]
     fn init_elements_multi_works() {
-        let lit1 = crate::AtomicFormula::new_predicate(
-            crate::Predicate::new_string("block"),
+        let lit1 = crate::AtomicFormula::predicate(
+            crate::Predicate::string("block"),
             vec![crate::Name::new("a")],
         );
-        let lit2 = crate::AtomicFormula::new_predicate(
-            crate::Predicate::new_string("block"),
+        let lit2 = crate::AtomicFormula::predicate(
+            crate::Predicate::string("block"),
             vec![crate::Name::new("b")],
         );
         let ie = InitElements::new(vec![
@@ -206,8 +206,8 @@ mod tests {
 
     #[test]
     fn init_element_literal_works() {
-        let af = crate::AtomicFormula::new_predicate(
-            crate::Predicate::new_string("block"),
+        let af = crate::AtomicFormula::predicate(
+            crate::Predicate::string("block"),
             vec![crate::Name::new("a")],
         );
         let ie = InitElement::Literal(Literal::new(af));
@@ -216,8 +216,8 @@ mod tests {
 
     #[test]
     fn init_element_at_works() {
-        let af = crate::AtomicFormula::new_predicate(
-            crate::Predicate::new_string("block"),
+        let af = crate::AtomicFormula::predicate(
+            crate::Predicate::string("block"),
             vec![crate::Name::new("a")],
         );
         let ie = InitElement::At(crate::Number::from(10), Literal::new(af));
@@ -242,10 +242,11 @@ mod tests {
 
     #[test]
     fn goal_def_works() {
-        let gd = crate::GoalDefinition::new_and(Vec::<crate::GoalDefinition>::new());
-        let pre_gd =
-            crate::PreconditionGoalDefinition::new_preference(crate::PreferenceGD::from_gd(gd));
-        let gdef = GoalDef::new(PreconditionGoalDefinitions::new(vec![pre_gd]));
+        let gd = crate::GoalDefinition::and(Vec::<crate::GoalDefinition>::new());
+        let pre_gd = crate::PreconditionGoalDefinition::preference(
+            crate::PreferenceGoalDefinition::from_gd(gd),
+        );
+        let gdef = ProblemGoalDefinition::new(PreconditionGoalDefinitions::new(vec![pre_gd]));
         assert_eq!(prettify!(gdef, 20), "(and)");
     }
 
@@ -265,7 +266,7 @@ mod tests {
     fn predicate_definitions_works() {
         use crate::AtomicFormulaSkeleton;
         let preds = PredicateDefinitions::new(vec![AtomicFormulaSkeleton::new(
-            crate::Predicate::new_string("at"),
+            crate::Predicate::string("at"),
             vec![].into(),
         )]);
         assert_eq!(prettify!(preds, 20), "(at)");

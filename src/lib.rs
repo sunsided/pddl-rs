@@ -117,8 +117,8 @@
 //!
 //! **Every type name maps directly to a BNF non-terminal from the PDDL 3.1 spec.**
 //!
-//! For example, the BNF rule `<c-effect>` becomes [`CEffect`], `<da-gd>` becomes
-//! [`DurativeActionGoalDefinition`], and `<con-GD>` becomes [`ConGD`]. This 1:1 mapping
+//! For example, the BNF rule `<c-effect>` becomes [`ConditionalEffect`], `<da-gd>` becomes
+//! [`DurativeActionGoalDefinition`], and `<con-GD>` becomes [`ConstraintGoalDefinition`]. This 1:1 mapping
 //! makes it trivial to cross-reference the spec while reading or writing code.
 //!
 //! ### BNF Naming Convention
@@ -133,16 +133,17 @@
 //! | `<pre-GD>` | [`PreconditionGoalDefinition`] | Precondition-specific wrapper |
 //! | `<precondition>` | [`PreconditionGoalDefinitions`] | Collection of preconditions |
 //! | `<da-gd>` | [`DurativeActionGoalDefinition`] | Durative action goals (timed) |
-//! | `<con-GD>` | [`ConGD`] | Constraint goals (temporal constraints) |
-//! | `<con2-GD>` | [`Con2GD`] | Inner constraint goal (goal or nested con-GD) |
-//! | `<pref-con-GD>` | [`PrefConGD`] | Preference constraint goals |
-//! | `<c-effect>` | [`CEffect`] | Conditional effect |
-//! | `<p-effect>` | [`PEffect`] | Primitive effect |
+//! | `<con-GD>` | [`ConstraintGoalDefinition`] | Constraint goals (temporal constraints) |
+//! | `<con2-GD>` | [`ConstraintGoalDefinitionInner`] | Inner constraint goal (goal or nested con-GD) |
+//! | `<pref-con-GD>` | [`PreferenceConstraintGoalDefinition`] | Preference constraint goals |
+//! | `<pref-GD>` | [`PreferenceGoalDefinition`] | Preferred goal (goal or named preference) |
+//! | `<c-effect>` | [`ConditionalEffect`] | Conditional effect |
+//! | `<p-effect>` | [`PrimitiveEffect`] | Primitive effect |
 //! | `<effect>` | [`Effects`] | Collection of effects (the `(and ...)` block) |
 //! | `<da-effect>` | [`DurativeActionEffect`] | Durative action effect |
-//! | `<f-exp>` | [`FExp`] | Fluent/numeric expression |
-//! | `<f-comp>` | [`FComp`] | Fluent comparison |
-//! | `<f-head>` | [`FHead`] | Fluent head (function reference) |
+//! | `<f-exp>` | [`FluentExpression`] | Fluent/numeric expression |
+//! | `<f-comp>` | [`FluentComparison`] | Fluent comparison |
+//! | `<f-head>` | [`FunctionHead`] | Fluent head (function reference) |
 //! | `<atomic formula (skeleton)>` | [`AtomicFormulaSkeleton`] | Predicate declaration with typed variables |
 //!
 //! When you see a type with an abbreviated name, look for the corresponding BNF rule
@@ -176,28 +177,28 @@
 //!   Used in action preconditions, goal definitions, and effect conditions.
 //!
 //! - [`PreconditionGoalDefinition`] (`<pre-GD>`) — A simplified variant used specifically
-//!   for action preconditions. Contains either a [`PreferenceGD`] or a `forall` quantifier.
+//!   for action preconditions. Contains either a [`PreferenceGoalDefinition`] or a `forall` quantifier.
 //!   Multiple are collected in [`PreconditionGoalDefinitions`].
 //!
-//! - [`GoalDef`] — A thin wrapper around [`PreconditionGoalDefinitions`] used by
+//! - [`ProblemGoalDefinition`] (`<goal>` in problem context) — A thin wrapper around [`PreconditionGoalDefinitions`] used by
 //!   [`Problem`] for the `(:goal ...)` section.
 //!
 //! - [`DurativeActionGoalDefinition`] (`<da-gd>`) — Goals for durative actions. Uses
-//!   [`TimedGD`] (time-qualified goals like `(at start (on a b))`) instead of plain
+//!   [`TimedGoalDefinition`] (time-qualified goals like `(at start (on a b))`) instead of plain
 //!   [`GoalDefinition`].
 //!
-//! - [`ConGD`] (`<con-GD>`) — Temporal constraint goals for problem-level constraints.
+//! - [`ConstraintGoalDefinition`] (`<con-GD>`) — Temporal constraint goals for problem-level constraints.
 //!   Supports `always`, `sometime`, `within`, `at-most-once`, `sometime-after`,
 //!   `sometime-before`, `always-within`, `hold-during`, `hold-after`. Used by
 //!   [`ProblemConstraintsDef`].
 //!
-//! - [`Con2GD`] (`<con2-GD>`) — An inner component of [`ConGD`], representing either
-//!   a plain [`GoalDefinition`] or a nested [`ConGD`].
+//! - [`ConstraintGoalDefinitionInner`] (`<con2-GD>`) — An inner component of [`ConstraintGoalDefinition`], representing either
+//!   a plain [`GoalDefinition`] or a nested [`ConstraintGoalDefinition`].
 //!
-//! - [`PrefConGD`] (`<pref-con-GD>`) — Constraint goals with optional preference names.
+//! - [`PreferenceConstraintGoalDefinition`] (`<pref-con-GD>`) — Constraint goals with optional preference names.
 //!   Used in [`ProblemConstraintsDef`].
 //!
-//! - [`PreferenceGD`] — Either a plain [`GoalDefinition`] or a named [`Preference`].
+//! - [`PreferenceGoalDefinition`] — Either a plain [`GoalDefinition`] or a named [`Preference`].
 //!   Used in [`PreconditionGoalDefinition`].
 //!
 //! #### Effects
@@ -205,22 +206,22 @@
 //! The effects hierarchy mirrors the BNF structure:
 //!
 //! ```text
-//! Effects (Vec<CEffect>)        ← the (and ...) block
-//! └── CEffect                   ← one effect element
-//!       ├── Effect(PEffect)     ← primitive effect
-//!       ├── Forall(ForallCEffect)  ← universal quantification over effects
-//!       └── When(WhenCEffect)   ← conditional effect (when <cond> <effect>)
-//!             └── ConditionalEffect
-//!                   ├── PEffect ← primitive effect (same as above)
+//! Effects (Vec<ConditionalEffect>)        ← the (and ...) block
+//! └── ConditionalEffect                   ← one effect element
+//!       ├── PrimitiveEffect               ← primitive effect
+//!       ├── Forall(ForallConditionalEffect)  ← universal quantification over effects
+//!       └── When(WhenConditionalEffect)   ← conditional effect (when <cond> <effect>)
+//!             └── EffectCondition
+//!                   ├── PrimitiveEffect   ← primitive effect (same as above)
 //!                   ├── Forall...
 //!                   └── When...
 //! ```
 //!
-//! - [`PEffect`] (`<p-effect>`) — A primitive effect: setting/negating an atomic formula,
+//! - [`PrimitiveEffect`] (`<p-effect>`) — A primitive effect: setting/negating an atomic formula,
 //!   or assigning a numeric/object fluent.
-//! - [`CEffect`] (`<c-effect>`) — A potentially conditional effect. Wraps [`PEffect`],
-//!   [`ForallCEffect`], or [`WhenCEffect`].
-//! - [`Effects`] (`<effect>`) — A collection of [`CEffect`] values, representing the
+//! - [`ConditionalEffect`] (`<c-effect>`) — A potentially conditional effect. Wraps [`PrimitiveEffect`],
+//!   [`ForallConditionalEffect`], or [`WhenConditionalEffect`].
+//! - [`Effects`] (`<effect>`) — A collection of [`ConditionalEffect`] values, representing the
 //!   `(and ...)` block in PDDL.
 //! - [`DurativeActionEffect`] (`<da-effect>`) — Effects for durative actions, using
 //!   [`TimedEffect`] (time-qualified effects like `(at end (on a b))`).
@@ -229,16 +230,16 @@
 //!
 //! Types for numeric reasoning in PDDL:
 //!
-//! - [`FExp`] (`<f-exp>`) — A fluent expression: a number, function call, negation,
+//! - [`FluentExpression`] (`<f-exp>`) — A fluent expression: a number, function call, negation,
 //!   binary operation (`+`, `-`, `*`, `/`), or multi-operand operation.
-//! - [`FHead`] (`<f-head>`) — A function head: either a bare function symbol or a
+//! - [`FunctionHead`] (`<f-head>`) — A function head: either a bare function symbol or a
 //!   [`FunctionTerm`] (function applied to arguments).
-//! - [`FComp`] (`<f-comp>`) — A fluent comparison: `<`, `<=`, `>`, `>=`, `=` applied
-//!   to two [`FExp`] values.
-//! - [`FExpT`] (`<f-exp-t>`) — Time-qualified fluent expression (for durative actions).
-//! - [`FExpDa`] (`<f-exp-da>`) — Durative-action-specific fluent expression.
-//! - [`FHead`] variants: [`BasicFunctionTerm`], [`FunctionTerm`].
-//! - [`AssignOp`] / [`AssignOpT`] — Assignment operators (`assign`, `scale-up`, etc.).
+//! - [`FluentComparison`] (`<f-comp>`) — A fluent comparison: `<`, `<=`, `>`, `>=`, `=` applied
+//!   to two [`FluentExpression`] values.
+//! - [`TimedFluentExpression`] (`<f-exp-t>`) — Time-qualified fluent expression (for durative actions).
+//! - [`DurativeActionFluentExpression`] (`<f-exp-da>`) — Durative-action-specific fluent expression.
+//! - [`FunctionHead`] variants: [`BasicFunctionTerm`], [`FunctionTerm`].
+//! - [`AssignOp`] / [`TimedAssignOperator`] — Assignment operators (`assign`, `scale-up`, etc.).
 //!
 //! #### Terms
 //!
@@ -256,14 +257,14 @@
 //! | Confused Pair | Difference |
 //! |---------------|------------|
 //! | [`AtomicFormulaSkeleton`] vs [`AtomicFormula`] | Skeleton declares a predicate's signature (used in `:predicates`); Formula applies it to concrete terms (used in goals/init). |
-//! | [`PEffect`] vs [`CEffect`] vs [`Effects`] | `PEffect` is a single primitive effect; `CEffect` may add conditions/quantifiers; `Effects` is the `(and ...)` collection. |
+//! | [`PrimitiveEffect`] vs [`ConditionalEffect`] vs [`Effects`] | `PrimitiveEffect` is a single primitive effect; `ConditionalEffect` may add conditions/quantifiers; `Effects` is the `(and ...)` collection. |
 //! | [`GoalDefinition`] vs [`PreconditionGoalDefinition`] | `GoalDefinition` is the full logical formula; `PreconditionGoalDefinition` is a simplified wrapper used only in action preconditions. |
-//! | [`GoalDefinition`] vs [`DurativeActionGoalDefinition`] | `GoalDefinition` is timeless; `DurativeActionGoalDefinition` uses [`TimedGD`] for time-qualified goals `(at start ...)`. |
-//! | [`ConGD`] vs [`GoalDefinition`] | `ConGD` is for problem-level temporal constraints (`always`, `sometime`); `GoalDefinition` is the standard logical formula. |
-//! | [`GoalDef`] vs [`GoalDefinition`] | `GoalDef` wraps [`PreconditionGoalDefinitions`] for the problem's `(:goal ...)`; `GoalDefinition` is the individual formula. |
-//! | [`PreferenceGD`] vs [`PrefConGD`] | `PreferenceGD` is for action-level preferences; `PrefConGD` is for problem-level constraint preferences. |
-//! | [`Effects`] vs [`ConditionalEffect`] | `Effects` is a flat collection of [`CEffect`]; `ConditionalEffect` is recursive (used inside `when` clauses). |
-//! | [`FExp`] vs [`FHead`] | `FExp` is any numeric expression; `FHead` is specifically a function reference (with or without args). |
+//! | [`GoalDefinition`] vs [`DurativeActionGoalDefinition`] | `GoalDefinition` is timeless; `DurativeActionGoalDefinition` uses [`TimedGoalDefinition`] for time-qualified goals `(at start ...)`. |
+//! | [`ConstraintGoalDefinition`] vs [`GoalDefinition`] | `ConstraintGoalDefinition` is for problem-level temporal constraints (`always`, `sometime`); `GoalDefinition` is the standard logical formula. |
+//! | [`ProblemGoalDefinition`] vs [`GoalDefinition`] | `ProblemGoalDefinition` wraps [`PreconditionGoalDefinitions`] for the problem's `(:goal ...)`; `GoalDefinition` is the individual formula. |
+//! | [`PreferenceGoalDefinition`] vs [`PreferenceConstraintGoalDefinition`] | `PreferenceGoalDefinition` is for action-level preferences; `PreferenceConstraintGoalDefinition` is for problem-level constraint preferences. |
+//! | [`Effects`] vs [`ConditionalEffect`] vs [`EffectCondition`] | `Effects` is the top-level `(and ...)` collection of [`ConditionalEffect`]s (action `:effect` body); `ConditionalEffect` is one element that may be primitive, `forall`-quantified, or `when`-conditional; `EffectCondition` is the recursive `ConditionalEffect` tree nested inside `when` clauses. |
+//! | [`FluentExpression`] vs [`FunctionHead`] | `FluentExpression` is any numeric expression; `FunctionHead` is specifically a function reference (with or without args). |
 //! | [`Literal<T>`] vs [`AtomicFormula<T>`] | `Literal` can be negated; `AtomicFormula` is always positive. |
 //!
 //! ### PDDL Snippet → Rust Type Mapping
@@ -280,10 +281,10 @@
 //!       (clear ?x)                ← GoalDefinition::AtomicFormula
 //!       (handempty))              ← GoalDefinition::AtomicFormula
 //!     :effect (and                ← Effects
-//!       (not (clear ?x))          ← CEffect::Effect(PEffect::NotAtomicFormula)
-//!       (holding ?x)))            ← CEffect::Effect(PEffect::AtomicFormula)
+//!       (not (clear ?x))          ← ConditionalEffect::Effect(PrimitiveEffect::NotAtomicFormula)
+//!       (holding ?x)))            ← ConditionalEffect::Effect(PrimitiveEffect::AtomicFormula)
 //!
-//!   (:goal (and                   ← GoalDef → PreconditionGoalDefinitions
+//!   (:goal (and                   ← ProblemGoalDefinition → PreconditionGoalDefinitions
 //!     (on a b)                    ← GoalDefinition::AtomicFormula
 //!     (on b c)))                  ← GoalDefinition::AtomicFormula
 //! )
@@ -291,9 +292,9 @@
 //! ;; PDDL problem initial state
 //! (define (problem bw-1)
 //!   (:init
-//!     (on a b)                    ← InitElement::AtomicFormula (Literal<Name>)
-//!     (clear a)                   ← InitElement::AtomicFormula
-//!     (= (total-cost) 0))         ← InitElement::FAssign (numeric fluent)
+//!     (on a b)                    ← InitElement::Literal (Literal<Name>)
+//!     (clear a)                   ← InitElement::Literal
+//!     (= (total-cost) 0))         ← InitElement::IsValue (numeric fluent)
 //! )
 //! ```
 //!

@@ -14,14 +14,14 @@ use nom::Parser;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_da_effect, preamble::*};
-/// # use pddl::{AtomicFormula, ConditionalEffect, DurativeActionEffect, EqualityAtomicFormula, PEffect, Term, TimedEffect, TimeSpecifier, Variable};
+/// # use pddl::{AtomicFormula, EffectCondition, DurativeActionEffect, EqualityAtomicFormula, PrimitiveEffect, Term, TimedEffect, TimeSpecifier, Variable};
 /// # use pddl::{Typed, TypedList};
 /// assert!(parse_da_effect("(at start (= x y))").is_value(
 ///     DurativeActionEffect::Timed(
 ///         TimedEffect::new_conditional(
 ///             TimeSpecifier::Start,
-///             ConditionalEffect::new(
-///                 PEffect::AtomicFormula(AtomicFormula::Equality(
+///             EffectCondition::new(
+///                 PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
 ///                     EqualityAtomicFormula::new(
 ///                         Term::Name("x".into()),
 ///                         Term::Name("y".into()))
@@ -41,8 +41,8 @@ use nom::Parser;
 ///         DurativeActionEffect::Timed(
 ///             TimedEffect::new_conditional(
 ///                 TimeSpecifier::Start,
-///                 ConditionalEffect::new(
-///                     PEffect::AtomicFormula(AtomicFormula::Equality(
+///                 EffectCondition::new(
+///                     PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
 ///                         EqualityAtomicFormula::new(
 ///                             Term::Name("x".into()),
 ///                             Term::Name("y".into()))
@@ -58,14 +58,14 @@ use nom::Parser;
 /// assert!(parse_da_effect("(forall (?a ?b) (at start (= a b)))").is_value(
 ///     DurativeActionEffect::new_forall(
 ///         TypedList::from_iter([
-///             Typed::new_object(Variable::new_string("a")),
-///             Typed::new_object(Variable::new_string("b")),
+///             Typed::object(Variable::new_string("a")),
+///             Typed::object(Variable::new_string("b")),
 ///         ]),
 ///         DurativeActionEffect::Timed(
 ///             TimedEffect::new_conditional(
 ///                 TimeSpecifier::Start,
-///                 ConditionalEffect::new(
-///                     PEffect::AtomicFormula(AtomicFormula::Equality(
+///                 EffectCondition::new(
+///                     PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
 ///                         EqualityAtomicFormula::new(
 ///                             Term::Name("a".into()),
 ///                             Term::Name("b".into()))
@@ -123,7 +123,7 @@ mod tests {
     use super::*;
     use crate::parsers::UnwrapValue;
     use crate::{
-        AtomicFormula, ConditionalEffect, EqualityAtomicFormula, PEffect, Parser, Term,
+        AtomicFormula, EffectCondition, EqualityAtomicFormula, Parser, PrimitiveEffect, Term,
         TimeSpecifier, TimedEffect, Typed, TypedList, Variable,
     };
 
@@ -158,9 +158,9 @@ mod tests {
     #[test]
     fn test_at_start() {
         assert!(DurativeActionEffect::parse("(at start (= x y))").is_value(
-            DurativeActionEffect::Timed(TimedEffect::new_conditional(
+            DurativeActionEffect::Timed(TimedEffect::conditional(
                 TimeSpecifier::Start,
-                ConditionalEffect::new(PEffect::AtomicFormula(AtomicFormula::Equality(
+                EffectCondition::new(PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
                     EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
                 )))
             ))
@@ -169,24 +169,24 @@ mod tests {
 
     #[test]
     fn test_and_empty() {
-        assert!(DurativeActionEffect::parse("(and )").is_value(DurativeActionEffect::new_and([])));
+        assert!(DurativeActionEffect::parse("(and )").is_value(DurativeActionEffect::and([])));
     }
 
     #[test]
     fn test_and() {
         assert!(
             DurativeActionEffect::parse("(and (at start (= x y)) (and ))").is_value(
-                DurativeActionEffect::new_and([
-                    DurativeActionEffect::Timed(TimedEffect::new_conditional(
+                DurativeActionEffect::and([
+                    DurativeActionEffect::Timed(TimedEffect::conditional(
                         TimeSpecifier::Start,
-                        ConditionalEffect::new(PEffect::AtomicFormula(AtomicFormula::Equality(
-                            EqualityAtomicFormula::new(
+                        EffectCondition::new(PrimitiveEffect::AtomicFormula(
+                            AtomicFormula::Equality(EqualityAtomicFormula::new(
                                 Term::Name("x".into()),
                                 Term::Name("y".into())
-                            )
-                        )))
+                            ))
+                        ))
                     )),
-                    DurativeActionEffect::new_and([])
+                    DurativeActionEffect::and([])
                 ])
             )
         );
@@ -196,19 +196,19 @@ mod tests {
     fn test_forall() {
         assert!(
             DurativeActionEffect::parse("(forall (?a ?b) (at start (= a b)))").is_value(
-                DurativeActionEffect::new_forall(
+                DurativeActionEffect::forall(
                     TypedList::from_iter([
-                        Typed::new_object(Variable::new_string("a")),
-                        Typed::new_object(Variable::new_string("b")),
+                        Typed::object(Variable::new_string("a")),
+                        Typed::object(Variable::new_string("b")),
                     ]),
-                    DurativeActionEffect::Timed(TimedEffect::new_conditional(
+                    DurativeActionEffect::Timed(TimedEffect::conditional(
                         TimeSpecifier::Start,
-                        ConditionalEffect::new(PEffect::AtomicFormula(AtomicFormula::Equality(
-                            EqualityAtomicFormula::new(
+                        EffectCondition::new(PrimitiveEffect::AtomicFormula(
+                            AtomicFormula::Equality(EqualityAtomicFormula::new(
                                 Term::Name("a".into()),
                                 Term::Name("b".into())
-                            )
-                        )))
+                            ))
+                        ))
                     ))
                 )
             )

@@ -8,7 +8,7 @@ use crate::types::{GoalDefinition, PreferenceName};
 /// Requires [Preferences](crate::Requirement::Preferences).
 ///
 /// ## Usage
-/// Used by [`PreferenceGD`](crate::PreferenceGD).
+/// Used by [`PreferenceGoalDefinition`](crate::PreferenceGoalDefinition).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Preference(Option<PreferenceName>, GoalDefinition); // TODO: A similar type is used for PrefConGD
 
@@ -47,5 +47,91 @@ impl From<(PreferenceName, GoalDefinition)> for Preference {
 impl From<GoalDefinition> for Preference {
     fn from(value: GoalDefinition) -> Self {
         Self::new(None, value)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{GoalDefinition, Name, Term};
+
+    #[test]
+    fn new_with_name() {
+        let name = PreferenceName::string("pref1");
+        let gd = GoalDefinition::and(Vec::new());
+        let pref = Preference::new(Some(name.clone()), gd.clone());
+        assert_eq!(pref.name(), &Some(name));
+        assert_eq!(pref.goal(), &gd);
+    }
+
+    #[test]
+    fn new_without_name() {
+        let gd = GoalDefinition::and(Vec::new());
+        let pref = Preference::new(None, gd.clone());
+        assert_eq!(pref.name(), &None);
+        assert_eq!(pref.goal(), &gd);
+    }
+
+    #[test]
+    fn from_tuple_with_option() {
+        let gd = GoalDefinition::and(Vec::new());
+        let pref = Preference::from((None::<PreferenceName>, gd.clone()));
+        assert_eq!(pref.name(), &None);
+        assert_eq!(pref.goal(), &gd);
+    }
+
+    #[test]
+    fn from_tuple_with_name() {
+        let name = PreferenceName::string("my_pref");
+        let gd = GoalDefinition::and(Vec::new());
+        let pref = Preference::from((name.clone(), gd.clone()));
+        assert_eq!(pref.name(), &Some(name));
+        assert_eq!(pref.goal(), &gd);
+    }
+
+    #[test]
+    fn from_gd_only() {
+        let gd = GoalDefinition::and(Vec::new());
+        let pref = Preference::from(gd.clone());
+        assert_eq!(pref.name(), &None);
+        assert_eq!(pref.goal(), &gd);
+    }
+
+    #[test]
+    fn is_empty_true() {
+        let gd = GoalDefinition::and(Vec::new());
+        let pref = Preference::new(None, gd);
+        assert!(pref.is_empty());
+    }
+
+    #[test]
+    fn is_empty_false() {
+        use crate::AtomicFormula;
+        let af = AtomicFormula::<Term>::predicate(
+            crate::Predicate::new(Name::new("on")),
+            vec![
+                Term::new_name(Name::new("a")),
+                Term::new_name(Name::new("b")),
+            ],
+        );
+        let gd = GoalDefinition::AtomicFormula(af);
+        let pref = Preference::new(None, gd);
+        assert!(!pref.is_empty());
+    }
+
+    #[test]
+    fn clone_works() {
+        let gd = GoalDefinition::and(Vec::new());
+        let pref = Preference::new(None, gd);
+        let clone = pref.clone();
+        assert_eq!(pref, clone);
+    }
+
+    #[test]
+    fn debug_impl() {
+        let gd = GoalDefinition::and(Vec::new());
+        let pref = Preference::new(None, gd);
+        let dbg = format!("{pref:?}");
+        assert!(dbg.contains("Preference"));
     }
 }

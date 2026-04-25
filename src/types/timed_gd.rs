@@ -3,9 +3,10 @@ use crate::types::{GoalDefinition, Interval, TimeSpecifier};
 /// A timed goal definition.
 ///
 /// ## Usage
-/// Used by [`PrefTimedGD`](crate::PrefTimedGD).
+/// Used by [`PreferenceTimedGoalDefinition`](crate::PreferenceTimedGoalDefinition).
+#[doc(alias("timed-GD"))]
 #[derive(Debug, Clone, PartialEq)]
-pub enum TimedGD {
+pub enum TimedGoalDefinition {
     /// ## `at start`
     /// An expression or predicate with `at start` prefixed to it means that the condition
     /// must be true at the start of the action in order for the action to be applied. e.g.
@@ -47,24 +48,118 @@ pub enum TimedGD {
     Over(Interval, GoalDefinition),
 }
 
-impl TimedGD {
-    pub const fn new_at(time: TimeSpecifier, gd: GoalDefinition) -> Self {
+impl TimedGoalDefinition {
+    pub const fn at(time: TimeSpecifier, gd: GoalDefinition) -> Self {
         Self::At(time, gd)
     }
 
-    pub const fn new_over(interval: Interval, gd: GoalDefinition) -> Self {
+    #[deprecated(since = "0.2.0", note = "Use `at` instead")]
+    pub const fn new_at(time: TimeSpecifier, gd: GoalDefinition) -> Self {
+        Self::at(time, gd)
+    }
+
+    pub const fn over(interval: Interval, gd: GoalDefinition) -> Self {
         Self::Over(interval, gd)
     }
-}
 
-impl From<(TimeSpecifier, GoalDefinition)> for TimedGD {
-    fn from(value: (TimeSpecifier, GoalDefinition)) -> Self {
-        TimedGD::At(value.0, value.1)
+    #[deprecated(since = "0.2.0", note = "Use `over` instead")]
+    pub const fn new_over(interval: Interval, gd: GoalDefinition) -> Self {
+        Self::over(interval, gd)
     }
 }
 
-impl From<(Interval, GoalDefinition)> for TimedGD {
+impl From<(TimeSpecifier, GoalDefinition)> for TimedGoalDefinition {
+    fn from(value: (TimeSpecifier, GoalDefinition)) -> Self {
+        TimedGoalDefinition::At(value.0, value.1)
+    }
+}
+
+impl From<(Interval, GoalDefinition)> for TimedGoalDefinition {
     fn from(value: (Interval, GoalDefinition)) -> Self {
-        TimedGD::Over(value.0, value.1)
+        TimedGoalDefinition::Over(value.0, value.1)
+    }
+}
+
+/// Alias for [`TimedGoalDefinition`]; matches BNF `<timed-GD>`.
+#[deprecated(since = "0.2.0", note = "Use `TimedGoalDefinition` instead")]
+pub type TimedGD = TimedGoalDefinition;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::GoalDefinition;
+
+    #[test]
+    fn at_start() {
+        let gd = GoalDefinition::and(Vec::new());
+        let timed = TimedGoalDefinition::at(TimeSpecifier::Start, gd.clone());
+        assert!(matches!(
+            timed,
+            TimedGoalDefinition::At(TimeSpecifier::Start, _)
+        ));
+    }
+
+    #[test]
+    fn at_end() {
+        let gd = GoalDefinition::and(Vec::new());
+        let timed = TimedGoalDefinition::at(TimeSpecifier::End, gd.clone());
+        assert!(matches!(
+            timed,
+            TimedGoalDefinition::At(TimeSpecifier::End, _)
+        ));
+    }
+
+    #[test]
+    fn over_all() {
+        let gd = GoalDefinition::and(Vec::new());
+        let timed = TimedGoalDefinition::over(Interval::All, gd.clone());
+        assert!(matches!(timed, TimedGoalDefinition::Over(Interval::All, _)));
+    }
+
+    #[test]
+    fn from_over_tuple() {
+        let gd = GoalDefinition::and(Vec::new());
+        let timed = TimedGoalDefinition::from((Interval::All, gd));
+        assert!(matches!(timed, TimedGoalDefinition::Over(Interval::All, _)));
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn deprecated_over() {
+        let gd = GoalDefinition::and(Vec::new());
+        let timed = TimedGoalDefinition::new_over(Interval::All, gd);
+        assert!(matches!(timed, TimedGoalDefinition::Over(Interval::All, _)));
+    }
+
+    #[test]
+    fn from_at_tuple() {
+        let gd = GoalDefinition::and(Vec::new());
+        let timed = TimedGoalDefinition::from((TimeSpecifier::Start, gd));
+        assert!(matches!(
+            timed,
+            TimedGoalDefinition::At(TimeSpecifier::Start, _)
+        ));
+    }
+
+    #[test]
+    fn clone_works() {
+        let gd = GoalDefinition::and(Vec::new());
+        let timed = TimedGoalDefinition::at(TimeSpecifier::Start, gd);
+        let clone = timed.clone();
+        assert_eq!(timed, clone);
+    }
+
+    #[test]
+    fn debug_impl() {
+        let gd = GoalDefinition::and(Vec::new());
+        let timed = TimedGoalDefinition::at(TimeSpecifier::Start, gd);
+        let dbg = format!("{timed:?}");
+        assert!(dbg.contains("At"));
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn deprecated_alias_exists() {
+        fn _assert_alias(_: TimedGD) {}
     }
 }

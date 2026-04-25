@@ -23,8 +23,14 @@ impl Variable {
     }
 
     #[inline(always)]
-    pub fn new_string(name: &str) -> Self {
+    #[doc(alias = "new_string")]
+    pub fn string(name: &str) -> Self {
         Self(Name::new(name))
+    }
+
+    #[inline(always)]
+    pub fn new_string(name: &str) -> Self {
+        Self::string(name)
     }
 
     #[inline(always)]
@@ -95,7 +101,7 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let var = Variable::new_string("x");
+        let var = Variable::string("x");
         assert_eq!(format!("{var}"), "?x");
     }
 }

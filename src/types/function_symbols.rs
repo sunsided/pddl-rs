@@ -7,7 +7,7 @@ use std::ops::Deref;
 ///
 /// ## Usage
 /// Used by [`FunctionTerm`](crate::FunctionTerm), [`FHead`](crate::FHead),
-/// [`BasicFunctionTerm`](crate::BasicFunctionTerm) and [`MetricFExp`](crate::MetricFExp).
+/// [`BasicFunctionTerm`](crate::BasicFunctionTerm) and [`MetricFluentExpression`](crate::MetricFluentExpression).
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
 pub struct FunctionSymbol(Name);
 
@@ -18,8 +18,14 @@ impl FunctionSymbol {
     }
 
     #[inline(always)]
-    pub fn new_string(name: &str) -> Self {
+    #[doc(alias = "new_string")]
+    pub fn string(name: &str) -> Self {
         Self(Name::new(name))
+    }
+
+    #[inline(always)]
+    pub fn new_string(name: &str) -> Self {
+        Self::string(name)
     }
 
     #[inline(always)]

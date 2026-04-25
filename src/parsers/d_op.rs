@@ -6,19 +6,19 @@ use nom::combinator::map;
 use nom::Parser;
 
 use crate::parsers::{ParseResult, Span};
-use crate::types::{d_op::names, DOp};
+use crate::types::{d_op::names, DurationOperator};
 
 /// Parses a durative operation, i.e. `<= | >= | =`.
 ///
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_d_op, preamble::*};
-/// # use pddl::{DOp};
-/// assert!(parse_d_op("<=").is_value(DOp::LessThanOrEqual));
-/// assert!(parse_d_op(">=").is_value(DOp::GreaterOrEqual));
-/// assert!(parse_d_op("=").is_value(DOp::Equal));
+/// # use pddl::{DurationOperator};
+/// assert!(parse_d_op("<=").is_value(DurationOperator::LessThanOrEqual));
+/// assert!(parse_d_op(">=").is_value(DurationOperator::GreaterOrEqual));
+/// assert!(parse_d_op("=").is_value(DurationOperator::Equal));
 ///```
-pub fn parse_d_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DOp> {
+pub fn parse_d_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DurationOperator> {
     // :duration-inequalities
     map(
         alt((
@@ -26,21 +26,21 @@ pub fn parse_d_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DOp> {
             tag(names::GREATER_OR_EQUAL),
             tag(names::EQUAL),
         )),
-        |x: Span| DOp::try_from(*x.fragment()).expect("unhandled variant"),
+        |x: Span| DurationOperator::try_from(*x.fragment()).expect("unhandled variant"),
     )
     .parse(input.into())
 }
 
-impl crate::parsers::Parser for DOp {
-    type Item = DOp;
+impl crate::parsers::Parser for DurationOperator {
+    type Item = DurationOperator;
 
     /// Parses a durative operation.
     ///
     /// ## Example
     /// ```
-    /// # use pddl::{DOp, Parser};
-    /// let (_, value) = DOp::parse("<=").unwrap();
-    /// assert_eq!(value, DOp::LessThanOrEqual);
+    /// # use pddl::{DurationOperator, Parser};
+    /// let (_, value) = DurationOperator::parse("<=").unwrap();
+    /// assert_eq!(value, DurationOperator::LessThanOrEqual);
     ///```
     ///
     /// ## See also
@@ -53,12 +53,12 @@ impl crate::parsers::Parser for DOp {
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{DOp, Parser};
+    use crate::{DurationOperator, Parser};
 
     #[test]
     fn test_parse() {
-        assert!(DOp::parse("<=").is_value(DOp::LessThanOrEqual));
-        assert!(DOp::parse(">=").is_value(DOp::GreaterOrEqual));
-        assert!(DOp::parse("=").is_value(DOp::Equal));
+        assert!(DurationOperator::parse("<=").is_value(DurationOperator::LessThanOrEqual));
+        assert!(DurationOperator::parse(">=").is_value(DurationOperator::GreaterOrEqual));
+        assert!(DurationOperator::parse("=").is_value(DurationOperator::Equal));
     }
 }

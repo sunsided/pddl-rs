@@ -1,6 +1,6 @@
 use pddl::{
-    AtomicFormula, Domain, GoalDefinition, Parser, PreconditionGoalDefinition, PreferenceGD,
-    Problem, TermLiteral,
+    AtomicFormula, Domain, GoalDefinition, Parser, PreconditionGoalDefinition,
+    PreferenceGoalDefinition, Problem, TermLiteral,
 };
 
 pub const BRIEFCASE_WORLD: &str = r#"
@@ -88,7 +88,7 @@ fn parse_problem_works() {
     for goal in problem.goals().iter() {
         match goal {
             PreconditionGoalDefinition::Preference(pref) => match pref {
-                PreferenceGD::Goal(goal) => match goal {
+                PreferenceGoalDefinition::Goal(goal) => match goal {
                     GoalDefinition::AtomicFormula(af) => match af {
                         AtomicFormula::Predicate(_) => atomic_formulas += 1,
                         AtomicFormula::Equality(_) => {}
@@ -107,9 +107,9 @@ fn parse_problem_works() {
                     GoalDefinition::Imply(_, _) => {}
                     GoalDefinition::Exists(_, _) => {}
                     GoalDefinition::ForAll(_, _) => {}
-                    GoalDefinition::FComp(_) => {}
+                    GoalDefinition::FluentComparison(_) => {}
                 },
-                PreferenceGD::Preference(_) => {}
+                PreferenceGoalDefinition::Preference(_) => {}
             },
             PreconditionGoalDefinition::Forall(_, _) => {}
         }

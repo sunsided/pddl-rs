@@ -9,37 +9,41 @@ use nom::Parser;
 
 use crate::parsers::{parens, space_separated_list1, ParseResult, Span};
 use crate::parsers::{parse_binary_op, parse_f_exp, parse_multi_op};
-use crate::types::FExpDa;
+use crate::types::DurativeActionFluentExpression;
 
 /// Parses an f-exp-da.
 ///
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_f_exp_da, preamble::*};
-/// # use pddl::{BinaryOp, FExpDa, FExp, FunctionSymbol, MultiOp};
+/// # use pddl::{BinaryOp, DurativeActionFluentExpression, FluentExpression, FunctionSymbol, MultiOp};
 /// assert!(parse_f_exp_da("?duration").is_value(
-///     FExpDa::Duration
+///     DurativeActionFluentExpression::Duration
 /// ));
 ///
 /// assert!(parse_f_exp_da("(+ 1.23 2.34)").is_value(
-///     FExpDa::new_binary_op(
+///     DurativeActionFluentExpression::new_binary_op(
 ///         BinaryOp::Addition,
-///             FExpDa::new_f_exp(FExp::new_number(1.23)),
-///             FExpDa::new_f_exp(FExp::new_number(2.34))
+///             DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(1.23)),
+///             DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(2.34))
 ///     )
 /// ));
 ///
 /// assert!(parse_f_exp_da("(+ 1.23 2.34 3.45)").is_value(
-///     FExpDa::new_multi_op(
+///     DurativeActionFluentExpression::new_multi_op(
 ///         MultiOp::Addition,
-///         FExpDa::new_f_exp(FExp::new_number(1.23)),
-///         [FExp::new_number(2.34).into(), FExp::new_number(3.45).into()]
+///         DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(1.23)),
+///         [FluentExpression::new_number(2.34).into(), FluentExpression::new_number(3.45).into()]
 ///     )
 /// ));
 ///```
-pub fn parse_f_exp_da<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExpDa> {
+pub fn parse_f_exp_da<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, DurativeActionFluentExpression> {
     // :duration-inequalities
-    let duration = map(tag("?duration"), |_| FExpDa::new_duration());
+    let duration = map(tag("?duration"), |_| {
+        DurativeActionFluentExpression::new_duration()
+    });
 
     let binary_op = map(
         parens((
@@ -47,7 +51,7 @@ pub fn parse_f_exp_da<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExpDa
             preceded(multispace1, parse_f_exp_da),
             preceded(multispace1, parse_f_exp_da),
         )),
-        |(op, lhs, rhs)| FExpDa::new_binary_op(op, lhs, rhs),
+        |(op, lhs, rhs)| DurativeActionFluentExpression::new_binary_op(op, lhs, rhs),
     );
 
     let multi_op = map(
@@ -56,21 +60,21 @@ pub fn parse_f_exp_da<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExpDa
             preceded(multispace1, parse_f_exp_da),
             preceded(multispace1, space_separated_list1(parse_f_exp_da)),
         )),
-        |(op, lhs, rhs)| FExpDa::new_multi_op(op, lhs, rhs),
+        |(op, lhs, rhs)| DurativeActionFluentExpression::new_multi_op(op, lhs, rhs),
     );
 
     let negated = map(
         parens(preceded((char('-'), multispace0), parse_f_exp_da)),
-        FExpDa::new_negative,
+        DurativeActionFluentExpression::new_negative,
     );
 
-    let f_exp = map(parse_f_exp, FExpDa::new_f_exp);
+    let f_exp = map(parse_f_exp, DurativeActionFluentExpression::new_f_exp);
 
     alt((duration, binary_op, multi_op, negated, f_exp)).parse(input.into())
 }
 
-impl crate::parsers::Parser for FExpDa {
-    type Item = FExpDa;
+impl crate::parsers::Parser for DurativeActionFluentExpression {
+    type Item = DurativeActionFluentExpression;
 
     /// See [`parse_f_exp_da`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
@@ -81,26 +85,34 @@ impl crate::parsers::Parser for FExpDa {
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{BinaryOp, FExp, FExpDa, MultiOp, Parser};
+    use crate::{BinaryOp, DurativeActionFluentExpression, FluentExpression, MultiOp, Parser};
 
     #[test]
     fn test_parse() {
-        assert!(FExpDa::parse("?duration").is_value(FExpDa::Duration));
+        assert!(DurativeActionFluentExpression::parse("?duration")
+            .is_value(DurativeActionFluentExpression::Duration));
 
         assert!(
-            FExpDa::parse("(+ 1.23 2.34)").is_value(FExpDa::new_binary_op(
-                BinaryOp::Addition,
-                FExpDa::new_f_exp(FExp::new_number(1.23)),
-                FExpDa::new_f_exp(FExp::new_number(2.34))
-            ))
+            DurativeActionFluentExpression::parse("(+ 1.23 2.34)").is_value(
+                DurativeActionFluentExpression::new_binary_op(
+                    BinaryOp::Addition,
+                    DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(1.23)),
+                    DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(2.34))
+                )
+            )
         );
 
         assert!(
-            FExpDa::parse("(+ 1.23 2.34 3.45)").is_value(FExpDa::new_multi_op(
-                MultiOp::Addition,
-                FExpDa::new_f_exp(FExp::new_number(1.23)),
-                [FExp::new_number(2.34).into(), FExp::new_number(3.45).into()]
-            ))
+            DurativeActionFluentExpression::parse("(+ 1.23 2.34 3.45)").is_value(
+                DurativeActionFluentExpression::new_multi_op(
+                    MultiOp::Addition,
+                    DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(1.23)),
+                    [
+                        FluentExpression::new_number(2.34).into(),
+                        FluentExpression::new_number(3.45).into()
+                    ]
+                )
+            )
         );
     }
 }

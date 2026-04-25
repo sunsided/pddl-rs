@@ -17,8 +17,14 @@ impl DurativeActionSymbol {
     }
 
     #[inline(always)]
-    pub fn new_string(name: &str) -> Self {
+    #[doc(alias = "new_string")]
+    pub fn string(name: &str) -> Self {
         Self(Name::new(name))
+    }
+
+    #[inline(always)]
+    pub fn new_string(name: &str) -> Self {
+        Self::string(name)
     }
 
     #[inline(always)]

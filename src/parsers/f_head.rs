@@ -8,44 +8,44 @@ use nom::Parser;
 
 use crate::parsers::{parens, space_separated_list0, ParseResult, Span};
 use crate::parsers::{parse_function_symbol, parse_term};
-use crate::types::FHead;
+use crate::types::FunctionHead;
 
 /// Parses an f-head.
 ///
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_f_head, preamble::*};
-/// # use pddl::{FunctionTerm, Variable, FunctionSymbol, Term, FHead};
+/// # use pddl::{FunctionTerm, Variable, FunctionSymbol, Term, FunctionHead};
 /// assert!(parse_f_head("fun-sym").is_value(
-///     FHead::new(FunctionSymbol::new_string("fun-sym"))
+///     FunctionHead::new(FunctionSymbol::string("fun-sym"))
 /// ));
 ///
 /// assert!(parse_f_head("(fun-sym)").is_value(
-///     FHead::new(FunctionSymbol::new_string("fun-sym"))
+///     FunctionHead::new(FunctionSymbol::string("fun-sym"))
 /// ));
 ///
 /// assert!(parse_f_head("(fun-sym term)").is_value(
-///     FHead::new_with_terms(FunctionSymbol::new_string("fun-sym"), [
+///     FunctionHead::with_terms(FunctionSymbol::string("fun-sym"), [
 ///         Term::Name("term".into())
 ///     ])
 /// ));
 ///```
-pub fn parse_f_head<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FHead> {
-    let simple = map(parse_function_symbol, FHead::new);
-    let simple_parens = map(parens(parse_function_symbol), FHead::new);
+pub fn parse_f_head<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FunctionHead> {
+    let simple = map(parse_function_symbol, FunctionHead::new);
+    let simple_parens = map(parens(parse_function_symbol), FunctionHead::new);
     let with_terms = map(
         parens((
             parse_function_symbol,
             preceded(multispace1, space_separated_list0(parse_term)),
         )),
-        |(symbol, terms)| FHead::new_with_terms(symbol, terms),
+        |(symbol, terms)| FunctionHead::with_terms(symbol, terms),
     );
 
     alt((simple, simple_parens, with_terms)).parse(input.into())
 }
 
-impl crate::parsers::Parser for FHead {
-    type Item = FHead;
+impl crate::parsers::Parser for FunctionHead {
+    type Item = FunctionHead;
 
     /// See [`parse_f_head`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
@@ -56,19 +56,19 @@ impl crate::parsers::Parser for FHead {
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{FHead, FunctionSymbol, Parser, Term};
+    use crate::{FunctionHead, FunctionSymbol, Parser, Term};
 
     #[test]
     fn test_parse() {
-        assert!(FHead::parse("fun-sym").is_value(FHead::new(FunctionSymbol::new_string("fun-sym"))));
+        assert!(FunctionHead::parse("fun-sym")
+            .is_value(FunctionHead::new(FunctionSymbol::string("fun-sym"))));
+
+        assert!(FunctionHead::parse("(fun-sym)")
+            .is_value(FunctionHead::new(FunctionSymbol::string("fun-sym"))));
 
         assert!(
-            FHead::parse("(fun-sym)").is_value(FHead::new(FunctionSymbol::new_string("fun-sym")))
-        );
-
-        assert!(
-            FHead::parse("(fun-sym term)").is_value(FHead::new_with_terms(
-                FunctionSymbol::new_string("fun-sym"),
+            FunctionHead::parse("(fun-sym term)").is_value(FunctionHead::with_terms(
+                FunctionSymbol::string("fun-sym"),
                 [Term::Name("term".into())]
             ))
         );

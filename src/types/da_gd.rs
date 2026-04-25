@@ -1,6 +1,6 @@
 //! Contains durative action goal definitions via the [`DurativeActionGoalDefinition`] type.
 
-use crate::types::PrefTimedGD;
+use crate::types::PreferenceTimedGoalDefinition;
 use crate::types::TypedVariables;
 
 /// A durative action goal definition.
@@ -10,7 +10,7 @@ use crate::types::TypedVariables;
 /// [`DurativeActionEffect`](crate::DurativeActionEffect).
 #[derive(Debug, Clone, PartialEq)]
 pub enum DurativeActionGoalDefinition {
-    Timed(PrefTimedGD),
+    Timed(PreferenceTimedGoalDefinition),
     And(Vec<DurativeActionGoalDefinition>),
     /// ## Requirements
     /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
@@ -18,19 +18,36 @@ pub enum DurativeActionGoalDefinition {
 }
 
 impl DurativeActionGoalDefinition {
-    pub fn new_timed(pref: PrefTimedGD) -> Self {
+    #[doc(alias = "new_timed")]
+    pub fn timed(pref: PreferenceTimedGoalDefinition) -> Self {
         Self::Timed(pref)
     }
-    pub fn new_and<I: IntoIterator<Item = DurativeActionGoalDefinition>>(prefs: I) -> Self {
+
+    pub fn new_timed(pref: PreferenceTimedGoalDefinition) -> Self {
+        Self::timed(pref)
+    }
+
+    #[doc(alias = "new_and")]
+    pub fn and<I: IntoIterator<Item = DurativeActionGoalDefinition>>(prefs: I) -> Self {
         Self::And(prefs.into_iter().collect())
     }
-    pub fn new_forall(variables: TypedVariables, gd: DurativeActionGoalDefinition) -> Self {
+
+    pub fn new_and<I: IntoIterator<Item = DurativeActionGoalDefinition>>(prefs: I) -> Self {
+        Self::and(prefs)
+    }
+
+    #[doc(alias = "new_forall")]
+    pub fn r#forall(variables: TypedVariables, gd: DurativeActionGoalDefinition) -> Self {
         Self::Forall(variables, Box::new(gd))
+    }
+
+    pub fn new_forall(variables: TypedVariables, gd: DurativeActionGoalDefinition) -> Self {
+        Self::r#forall(variables, gd)
     }
 }
 
-impl From<PrefTimedGD> for DurativeActionGoalDefinition {
-    fn from(value: PrefTimedGD) -> Self {
-        DurativeActionGoalDefinition::new_timed(value)
+impl From<PreferenceTimedGoalDefinition> for DurativeActionGoalDefinition {
+    fn from(value: PreferenceTimedGoalDefinition) -> Self {
+        DurativeActionGoalDefinition::timed(value)
     }
 }

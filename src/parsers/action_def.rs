@@ -14,7 +14,7 @@ use crate::types::ActionDefinition;
 ///
 /// ## Example
 /// ```
-/// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effects, GoalDefinition, Name, PEffect, Predicate, PreferenceGD, PreconditionGoalDefinitions, PreconditionGoalDefinition, Term, ToTyped, TypedList, Variable};
+/// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, ConditionalEffect, Effects, GoalDefinition, Name, PrimitiveEffect, Predicate, PreferenceGoalDefinition, PreconditionGoalDefinitions, PreconditionGoalDefinition, Term, ToTyped, TypedList, Variable};
 /// # use pddl::parsers::{parse_action_def, Span, UnwrapValue};
 /// let input = r#"(:action take-out
 ///                     :parameters (?x - physob)
@@ -26,12 +26,12 @@ use crate::types::ActionDefinition;
 ///
 /// assert!(action.is_value(
 ///     ActionDefinition::new(
-///         ActionSymbol::new_string("take-out"),
+///         ActionSymbol::string("take-out"),
 ///         TypedList::from_iter([
 ///             Variable::new_string("x").to_typed("physob")
 ///         ]),
 ///         PreconditionGoalDefinitions::from(
-///             PreconditionGoalDefinition::Preference(PreferenceGD::from_gd(
+///             PreconditionGoalDefinition::Preference(PreferenceGoalDefinition::from_gd(
 ///                 GoalDefinition::new_not(
 ///                     GoalDefinition::AtomicFormula(
 ///                         AtomicFormula::new_equality(
@@ -42,8 +42,8 @@ use crate::types::ActionDefinition;
 ///                 )
 ///             )
 ///         )),
-///         Some(Effects::new(CEffect::new_p_effect(
-///             PEffect::NotAtomicFormula(
+///         Some(Effects::new(ConditionalEffect::new_primitive_effect(
+///             PrimitiveEffect::NotAtomicFormula(
 ///                 AtomicFormula::new_predicate(
 ///                     Predicate::new_string("in"),
 ///                     vec![Term::Variable(Variable::new_string("x"))]
@@ -94,7 +94,7 @@ impl crate::parsers::Parser for ActionDefinition {
     ///
     /// ## Example
     /// ```
-    /// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, CEffect, Effects, GoalDefinition, Name, PEffect, Predicate, PreferenceGD, PreconditionGoalDefinitions, PreconditionGoalDefinition, Term, ToTyped, TypedList, Variable, Parser};
+    /// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, ConditionalEffect, Effects, GoalDefinition, Name, PrimitiveEffect, Predicate, PreferenceGoalDefinition, PreconditionGoalDefinitions, PreconditionGoalDefinition, Term, ToTyped, TypedList, Variable, Parser};
     /// # use pddl::parsers::{parse_action_def, Span, UnwrapValue};
     /// let input = r#"(:action take-out
     ///                     :parameters (?x - physob)
@@ -106,7 +106,7 @@ impl crate::parsers::Parser for ActionDefinition {
     ///
     /// assert_eq!(action,
     ///     ActionDefinition::new(
-    ///         ActionSymbol::new_string("take-out"),
+    ///         ActionSymbol::string("take-out"),
     ///         TypedList::from_iter([
     ///             Variable::new_string("x").to_typed("physob")
     ///         ]),
@@ -143,7 +143,7 @@ mod tests {
         assert_eq!(
             action,
             ActionDefinition::new(
-                ActionSymbol::new_string("take-out"),
+                ActionSymbol::string("take-out"),
                 TypedList::from_iter([Variable::new_string("x").to_typed("physob")]),
                 PreconditionGoalDefinitions::from_str("(not (= ?x B))").unwrap(),
                 Some(Effects::from_str("(not (in ?x))").unwrap())

@@ -21,9 +21,9 @@ use crate::types::{FunctionType, FunctionTyped, FunctionTypedList};
 /// assert!(function_typed_list(parse_atomic_function_skeleton).parse(
 ///     "(battery-amount ?r - rover)".into()
 /// )
-/// .is_value(FunctionTypedList::from_iter([FunctionTyped::new_number(
+/// .is_value(FunctionTypedList::from_iter([FunctionTyped::number(
 ///     AtomicFunctionSkeleton::new(
-///         FunctionSymbol::new_string("battery-amount"),
+///         FunctionSymbol::string("battery-amount"),
 ///         TypedList::from_iter([
 ///             Typed::new(
 ///                 Variable::from("r"),
@@ -40,7 +40,7 @@ where
     F: Clone + Parser<Span<'a>, Output = O, Error = ParseError<'a>>,
 {
     // `x*`
-    let implicitly_typed = map(inner.clone(), |o| FunctionTyped::new_number(o));
+    let implicitly_typed = map(inner.clone(), |o| FunctionTyped::number(o));
     let implicitly_typed_list = space_separated_list0(implicitly_typed);
 
     // `x⁺ - <type>`
@@ -82,9 +82,9 @@ mod tests {
     fn test_parse() {
         assert!(function_typed_list(parse_atomic_function_skeleton)
             .parse("(battery-amount ?r - rover)".into())
-            .is_value(FunctionTypedList::from_iter([FunctionTyped::new_number(
+            .is_value(FunctionTypedList::from_iter([FunctionTyped::number(
                 AtomicFunctionSkeleton::new(
-                    FunctionSymbol::new_string("battery-amount"),
+                    FunctionSymbol::string("battery-amount"),
                     TypedList::from_iter([Typed::new(
                         Variable::from("r"),
                         Type::Exactly("rover".into())
@@ -94,9 +94,9 @@ mod tests {
 
         assert!(function_typed_list(parse_atomic_function_skeleton)
             .parse("(move ?from ?to - location)".into())
-            .is_value(FunctionTypedList::from_iter([FunctionTyped::new_number(
+            .is_value(FunctionTypedList::from_iter([FunctionTyped::number(
                 AtomicFunctionSkeleton::new(
-                    FunctionSymbol::new_string("move"),
+                    FunctionSymbol::string("move"),
                     TypedList::from_iter([
                         Typed::new(Variable::from("from"), Type::Exactly("location".into())),
                         Typed::new(Variable::from("to"), Type::Exactly("location".into()))

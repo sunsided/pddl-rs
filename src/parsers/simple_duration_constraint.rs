@@ -19,19 +19,19 @@ use crate::types::SimpleDurationConstraint;
 /// # use pddl::{DOp, DurationValue, FunctionType, SimpleDurationConstraint, TimeSpecifier};
 /// let input = "(>= ?duration 1.23)";
 /// assert!(parse_simple_duration_constraint(input).is_value(
-///     SimpleDurationConstraint::new_op(
+///     SimpleDurationConstraint::op(
 ///         DOp::GreaterOrEqual,
-///         DurationValue::new_number(1.23)
+///         DurationValue::number(1.23)
 ///     )
 /// ));
 ///
 /// let input = "(at end (<= ?duration 1.23))";
 /// assert!(parse_simple_duration_constraint(input).is_value(
-///     SimpleDurationConstraint::new_at(
+///     SimpleDurationConstraint::at(
 ///         TimeSpecifier::End,
 ///         SimpleDurationConstraint::Op(
 ///             DOp::LessThanOrEqual,
-///             DurationValue::new_number(1.23)
+///             DurationValue::number(1.23)
 ///         )
 ///     )
 /// ));
@@ -73,23 +73,26 @@ impl crate::parsers::Parser for SimpleDurationConstraint {
 #[cfg(test)]
 mod tests {
     use crate::parsers::preamble::*;
-    use crate::{DOp, DurationValue, SimpleDurationConstraint, TimeSpecifier};
+    use crate::{DurationOperator, DurationValue, SimpleDurationConstraint, TimeSpecifier};
 
     #[test]
     fn test_parse() {
         let input = "(>= ?duration 1.23)";
         assert!(
-            SimpleDurationConstraint::parse(input).is_value(SimpleDurationConstraint::new_op(
-                DOp::GreaterOrEqual,
-                DurationValue::new_number(1.23)
+            SimpleDurationConstraint::parse(input).is_value(SimpleDurationConstraint::op(
+                DurationOperator::GreaterOrEqual,
+                DurationValue::number(1.23)
             ))
         );
 
         let input = "(at end (<= ?duration 1.23))";
         assert!(
-            SimpleDurationConstraint::parse(input).is_value(SimpleDurationConstraint::new_at(
+            SimpleDurationConstraint::parse(input).is_value(SimpleDurationConstraint::at(
                 TimeSpecifier::End,
-                SimpleDurationConstraint::Op(DOp::LessThanOrEqual, DurationValue::new_number(1.23))
+                SimpleDurationConstraint::Op(
+                    DurationOperator::LessThanOrEqual,
+                    DurationValue::number(1.23)
+                )
             ))
         );
     }

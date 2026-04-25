@@ -54,7 +54,7 @@ where
     F: Clone + Parser<Span<'a>, Output = O, Error = ParseError<'a>>,
 {
     // `x*`
-    let implicitly_typed = map(inner.clone(), |o| Typed::new_object(o));
+    let implicitly_typed = map(inner.clone(), |o| Typed::object(o));
     let implicitly_typed_list = space_separated_list0(implicitly_typed);
 
     // `x⁺ - <type>`

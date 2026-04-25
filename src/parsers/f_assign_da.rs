@@ -2,7 +2,7 @@
 
 use crate::parsers::{parens, ParseResult, Span};
 use crate::parsers::{parse_assign_op, parse_f_exp_da, parse_f_head};
-use crate::types::FAssignDa;
+use crate::types::DurativeActionFunctionAssignment;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::preceded;
@@ -15,20 +15,22 @@ use nom::Parser;
 /// # use pddl::parsers::parse_f_assign_da;
 /// assert!(parse_f_assign_da("(assign fun-sym ?duration)").is_ok());
 ///```
-pub fn parse_f_assign_da<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FAssignDa> {
+pub fn parse_f_assign_da<'a, T: Into<Span<'a>>>(
+    input: T,
+) -> ParseResult<'a, DurativeActionFunctionAssignment> {
     map(
         parens((
             parse_assign_op,
             preceded(multispace1, parse_f_head),
             preceded(multispace1, parse_f_exp_da),
         )),
-        FAssignDa::from,
+        DurativeActionFunctionAssignment::from,
     )
     .parse(input.into())
 }
 
-impl crate::parsers::Parser for FAssignDa {
-    type Item = FAssignDa;
+impl crate::parsers::Parser for DurativeActionFunctionAssignment {
+    type Item = DurativeActionFunctionAssignment;
 
     /// See [`parse_f_assign_da`].
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
@@ -44,6 +46,6 @@ mod tests {
     #[test]
     fn it_works() {
         let input = "(increase (distance-travelled) 5)";
-        let (_, _effect) = FAssignDa::parse(Span::new(input)).unwrap();
+        let (_, _effect) = DurativeActionFunctionAssignment::parse(Span::new(input)).unwrap();
     }
 }

@@ -15,8 +15,13 @@ impl<O> Typed<O> {
         Self(value, r#type)
     }
 
-    pub const fn new_object(value: O) -> Self {
+    pub const fn object(value: O) -> Self {
         Self::new(value, Type::OBJECT)
+    }
+
+    #[deprecated(since = "0.2.0", note = "Use `object` instead")]
+    pub const fn new_object(value: O) -> Self {
+        Self::object(value)
     }
 
     /// Gets the value.
@@ -66,7 +71,7 @@ pub trait ToTyped<T> {
 
 impl<O> From<O> for Typed<O> {
     fn from(value: O) -> Self {
-        Typed::new_object(value)
+        Typed::object(value)
     }
 }
 
