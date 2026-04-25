@@ -1,11 +1,14 @@
 use crate::parsers::{ParseResult, Span};
+use nom::bytes::complete::take_while;
 use nom::character::complete::{char, multispace0};
 use nom::combinator::opt;
+use nom::combinator::value;
 use nom::sequence::{pair, terminated};
 use nom::Parser;
-use nom::{bytes::complete::is_not, combinator::value};
 
 /// Parses a comment and swallows trailing whitespace / newline.
+///
+/// Accepts empty comments such as `;` followed immediately by `\n` or `\r\n`.
 ///
 /// ## Example
 ///
@@ -36,7 +39,7 @@ pub fn ignore_eol_comment<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, ()
     value(
         (), // Output is thrown away.
         opt(terminated(
-            pair(char(';'), is_not("\r\n")),
+            pair(char(';'), take_while(|c: char| c != '\n' && c != '\r')),
             (multispace0, opt(ignore_eol_comment)),
         )),
     )

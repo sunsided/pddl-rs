@@ -1,11 +1,29 @@
 //! Utility parsers.
 
-use crate::parsers::{ignore_eol_comment, ParseError, Span};
-use nom::bytes::complete::tag;
-use nom::character::complete::{char, multispace0, multispace1};
-use nom::multi::{separated_list0, separated_list1};
-use nom::sequence::{delimited, preceded};
+use crate::parsers::{ParseError, ParseResult, Span};
+use nom::branch::alt;
+use nom::bytes::complete::{tag, take_while};
+use nom::character::complete::{char, multispace1};
+use nom::combinator::{recognize, value};
+use nom::multi::{many0, separated_list0, separated_list1};
+use nom::sequence::{delimited, pair, preceded};
 use nom::Parser;
+
+/// Recognizes a semicolon comment up to, but not including, the line ending.
+/// Accepts empty comments such as `;` followed immediately by `\n` or `\r\n`.
+fn eol_comment<'a>(input: Span<'a>) -> ParseResult<'a, Span<'a>> {
+    recognize(pair(
+        char(';'),
+        take_while(|c: char| c != '\n' && c != '\r'),
+    ))
+    .parse(input)
+}
+
+/// Skips all leading whitespace and semicolon comments.
+/// Handles multiple comment lines, including empty ones (`;\n`).
+fn skip_whitespace_and_comments<'a>(input: Span<'a>) -> ParseResult<'a, ()> {
+    value((), many0(alt((multispace1, eol_comment)))).parse(input)
+}
 
 /// A combinator that takes a parser `inner` and produces a parser that also consumes a leading `(name` and trailing `)`, returning the output of `inner`.
 #[allow(clippy::needless_lifetimes)]
@@ -27,7 +45,7 @@ pub fn ws<'a, P, O>(inner: P) -> impl Parser<Span<'a>, Output = O, Error = Parse
 where
     P: Parser<Span<'a>, Output = O, Error = ParseError<'a>>,
 {
-    preceded(preceded(multispace0, ignore_eol_comment), inner)
+    preceded(skip_whitespace_and_comments, inner)
 }
 
 /// A combinator that takes a parser `inner` and produces a parser that also consumes leading
@@ -39,9 +57,9 @@ where
     P: Parser<Span<'a>, Output = O, Error = ParseError<'a>>,
 {
     delimited(
-        preceded(multispace0, ignore_eol_comment),
+        skip_whitespace_and_comments,
         inner,
-        preceded(multispace0, ignore_eol_comment),
+        skip_whitespace_and_comments,
     )
 }
 
@@ -56,7 +74,7 @@ where
 {
     ws(separated_list0(
         multispace1,
-        preceded(ignore_eol_comment, inner),
+        preceded(skip_whitespace_and_comments, inner),
     ))
 }
 
@@ -70,7 +88,7 @@ where
 {
     ws(separated_list1(
         multispace1,
-        preceded(ignore_eol_comment, inner),
+        preceded(skip_whitespace_and_comments, inner),
     ))
 }
 
@@ -81,7 +99,7 @@ where
     P: Parser<Span<'a>, Output = O, Error = ParseError<'a>>,
 {
     preceded(
-        ignore_eol_comment,
+        skip_whitespace_and_comments,
         delimited(char('('), ws(inner), char(')')),
     )
 }
@@ -92,7 +110,6 @@ mod tests {
     use crate::parsers::{parse_name, Match};
     use crate::Name;
     use nom::multi::separated_list1;
-    use nom::Parser;
 
     #[test]
     fn parens_works() {
@@ -133,5 +150,42 @@ mod tests {
             .parse(Span::new("x"))
             .is_exactly(vec![Name::from("x")]));
         assert!(parser.parse(Span::new("")).is_err());
+    }
+
+    #[test]
+    fn leading_empty_comment() {
+        let input = ";\ncontent";
+        let mut parser = ws(tag("content"));
+        let (remainder, _) = parser.parse(Span::new(input)).unwrap();
+        assert!(remainder.fragment().is_empty());
+    }
+
+    #[test]
+    fn multiple_leading_comments() {
+        let input = "; comment 1\n; comment 2\n; comment 3\ncontent";
+        let mut parser = ws(tag("content"));
+        let (remainder, _) = parser.parse(Span::new(input)).unwrap();
+        assert!(remainder.fragment().is_empty());
+    }
+
+    #[test]
+    fn mixed_comments_and_whitespace() {
+        let input = "\n  ; comment\n\n  ; another\n\t\ncontent";
+        let mut parser = ws(tag("content"));
+        let (remainder, _) = parser.parse(Span::new(input)).unwrap();
+        assert!(remainder.fragment().is_empty());
+    }
+
+    #[test]
+    fn domain_with_leading_comments() {
+        let input = r#"; This is a comment
+; Another comment
+(define (domain test)
+    (:requirements :strips)
+    (:predicates (p))
+)
+"#;
+        let (_, domain) = crate::parsers::parse_domain(Span::new(input)).unwrap();
+        assert_eq!(domain.name(), &crate::Name::new("test"));
     }
 }
