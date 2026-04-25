@@ -68,6 +68,7 @@ pub const PDDL_FILE: &'static str = r#"
 (define (domain blocks-world)
     (:requirements :strips)
     (:predicates (clear ?x) (on ?x ?y) (on-table ?x))
+    ; ... actions omitted for brevity
 )
 
 (define (problem blocks-problem-1)
