@@ -32,7 +32,7 @@ impl<T> From<AtomicFormula<T>> for Literal<T> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "parser"))]
 mod tests {
     use super::*;
     use crate::parsers::{atomic_formula, parse_term, Span};

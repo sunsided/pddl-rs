@@ -13,6 +13,8 @@ use crate::types::{Name, Types};
 ///
 /// ## Example
 /// ```
+/// # #[cfg(feature = "parser")]
+/// # fn main() {
 /// # use pddl::{Domain, Name, Parser};
 /// let input = r#"(define (domain briefcase-world)
 ///       (:requirements :strips :equality :typing :conditional-effects)
@@ -58,6 +60,9 @@ use crate::types::{Name, Types};
 /// assert_eq!(domain.predicates().len(), 2);
 /// assert!(domain.constraints().is_empty());
 /// assert_eq!(domain.structure().len(), 3);
+/// # }
+/// # #[cfg(not(feature = "parser"))]
+/// # fn main() {}
 /// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct Domain {

@@ -16,6 +16,8 @@
 //! parse them:
 //!
 //! ```
+//! # #[cfg(feature = "parser")]
+//! # fn main() {
 //! use pddl::{Parser, Domain, Problem};
 //!
 //! const BRIEFCASE_WORLD: &'static str = r#"
@@ -74,6 +76,9 @@
 //! assert!(problem.requirements().is_empty());
 //! assert_eq!(problem.init().len(), 9);
 //! assert_eq!(problem.goals().len(), 3);
+//! # }
+//! # #[cfg(not(feature = "parser"))]
+//! # fn main() {}
 //! ```
 
 // only enables the `doc_cfg` feature when

@@ -164,7 +164,7 @@ impl Display for Type {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "parser"))]
 mod tests {
     use super::*;
     use crate::parsers::Span;
