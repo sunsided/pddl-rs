@@ -152,14 +152,14 @@ tasks:
     aliases:
       - docs
     cmds:
-      - "{{.CARGO}} doc --no-deps"
+      - "{{.CARGO}} doc --no-deps --all-features"
 
   doc:open:
     desc: Build and open Rust documentation
     aliases:
       - docs:open
     cmds:
-      - "{{.CARGO}} doc --no-deps --open"
+      - "{{.CARGO}} doc --no-deps --all-features --open"
 
   clean:
     desc: Remove Cargo build artifacts

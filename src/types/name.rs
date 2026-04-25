@@ -55,7 +55,7 @@ impl Name {
         }
     }
 
-    /// Like [`new`] but makes use of the fact that if the string provided
+    /// Like [`Self::new`] but makes use of the fact that if the string provided
     /// is `'static`, the method can be `const`.
     ///
     /// ## Interning

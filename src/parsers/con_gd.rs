@@ -279,7 +279,7 @@ impl crate::parsers::Parser for ConGD {
 impl crate::parsers::Parser for Con2GD {
     type Item = Con2GD;
 
-    /// See [`parse_con2_gd`].
+    /// Parses a constraint goal definition.
     fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
         parse_con2_gd(input)
     }

@@ -3,7 +3,7 @@
 use crate::PrefConGDs;
 use std::ops::Deref;
 
-/// A problem constraints definition; wraps a [`PrefConGD`].
+/// A problem constraints definition; wraps a [`PrefConGDs`].
 ///
 /// ## Requirements
 /// Requires [Constraints](crate::Requirement::Constraints).
