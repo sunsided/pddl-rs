@@ -52,3 +52,92 @@ impl PddlFile {
         self.problems.len()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::Parser;
+    use crate::{Domain, PddlFile, Problem};
+
+    fn sample_domain() -> Domain {
+        Domain::from_str("(define (domain test) (:requirements :strips) (:predicates (p)))")
+            .unwrap()
+    }
+
+    fn sample_problem() -> Problem {
+        Problem::from_str("(define (problem p1) (:domain test) (:init) (:goal (and)))").unwrap()
+    }
+
+    #[test]
+    fn test_new_creates_empty_file() {
+        let file = PddlFile::new();
+        assert!(file.is_empty());
+        assert_eq!(file.domain_count(), 0);
+        assert_eq!(file.problem_count(), 0);
+    }
+
+    #[test]
+    fn test_default_creates_empty_file() {
+        let file = PddlFile::default();
+        assert!(file.is_empty());
+        assert_eq!(file.domain_count(), 0);
+        assert_eq!(file.problem_count(), 0);
+    }
+
+    #[test]
+    fn test_with_domains_and_problems() {
+        let domain = sample_domain();
+        let problem = sample_problem();
+        let file = PddlFile::with_domains_and_problems(vec![domain.clone()], vec![problem.clone()]);
+        assert_eq!(file.domain_count(), 1);
+        assert_eq!(file.problem_count(), 1);
+        assert!(!file.is_empty());
+    }
+
+    #[test]
+    fn test_with_domain_builder() {
+        let file = PddlFile::new()
+            .with_domain(sample_domain())
+            .with_domain(sample_domain());
+        assert_eq!(file.domain_count(), 2);
+        assert!(!file.is_empty());
+    }
+
+    #[test]
+    fn test_with_problem_builder() {
+        let file = PddlFile::new()
+            .with_problem(sample_problem())
+            .with_problem(sample_problem());
+        assert_eq!(file.problem_count(), 2);
+        assert!(!file.is_empty());
+    }
+
+    #[test]
+    fn test_with_domain_and_problem_chained() {
+        let file = PddlFile::new()
+            .with_domain(sample_domain())
+            .with_problem(sample_problem())
+            .with_domain(sample_domain());
+        assert_eq!(file.domain_count(), 2);
+        assert_eq!(file.problem_count(), 1);
+        assert!(!file.is_empty());
+    }
+
+    #[test]
+    fn test_clone() {
+        let original = PddlFile::new()
+            .with_domain(sample_domain())
+            .with_problem(sample_problem());
+        let cloned = original.clone();
+        assert_eq!(cloned.domain_count(), original.domain_count());
+        assert_eq!(cloned.problem_count(), original.problem_count());
+        assert_eq!(original.domain_count(), 1);
+        assert_eq!(original.problem_count(), 1);
+    }
+
+    #[test]
+    fn test_debug_format() {
+        let file = PddlFile::new();
+        let debug = format!("{:?}", file);
+        assert!(debug.contains("PddlFile"));
+    }
+}
