@@ -80,6 +80,8 @@ mod typed_list;
 mod types;
 mod variable;
 
+mod pddl_file;
+
 pub use action_definition::ActionDefinition;
 pub use action_symbols::ActionSymbol;
 pub use assign_op::AssignOp;
@@ -132,6 +134,7 @@ pub use number::Number;
 pub use objects::Objects;
 pub use optimization::Optimization;
 pub use p_effect::PEffect;
+pub use pddl_file::PddlFile;
 pub use pre_gd::{PreconditionGoalDefinition, PreconditionGoalDefinitions};
 pub use predicate::Predicate;
 pub use predicate_definitions::PredicateDefinitions;

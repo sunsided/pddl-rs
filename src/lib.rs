@@ -80,6 +80,35 @@
 //! # #[cfg(not(feature = "parser"))]
 //! # fn main() {}
 //! ```
+//!
+//! ## Multi-Definition Files
+//!
+//! Some PDDL files contain multiple domain and problem definitions. Use [`PddlFile`] to parse them:
+//!
+//! ```
+//! # #[cfg(feature = "parser")]
+//! # fn main() {
+//! use pddl::{Parser, PddlFile};
+//!
+//! const MULTI_DEF: &'static str = r#"
+//!     (define (domain my-domain)
+//!         (:requirements :strips)
+//!         (:predicates (p))
+//!     )
+//!     (define (problem my-problem)
+//!         (:domain my-domain)
+//!         (:init (p))
+//!         (:goal (p))
+//!     )
+//! "#;
+//!
+//! let file = PddlFile::from_str(MULTI_DEF).unwrap();
+//! assert_eq!(file.domain_count(), 1);
+//! assert_eq!(file.problem_count(), 1);
+//! # }
+//! # #[cfg(not(feature = "parser"))]
+//! # fn main() {}
+//! ```
 
 // only enables the `doc_cfg` feature when
 // the `docsrs` configuration attribute is defined

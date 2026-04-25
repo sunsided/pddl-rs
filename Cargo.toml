@@ -41,6 +41,10 @@ required-features = ["pretty", "parser"]
 name = "pretty_print_round_trip"
 required-features = ["pretty", "parser"]
 
+[[test]]
+name = "pddl_file"
+required-features = ["parser"]
+
 [[example]]
 name = "pretty_print"
 required-features = ["pretty", "parser"]
