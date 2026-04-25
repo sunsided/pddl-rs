@@ -1,7 +1,10 @@
-use crate::pretty_print::PrettyRenderer;
+use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{PrimitiveType, Type};
 use crate::visitor::{Accept, Visitor};
 use pretty::RcDoc;
+
+impl sealed::Sealed for PrimitiveType {}
+impl sealed::Sealed for Type {}
 
 impl<'a> Visitor<PrimitiveType, RcDoc<'a>> for PrettyRenderer {
     fn visit(&self, value: &PrimitiveType) -> RcDoc<'a> {

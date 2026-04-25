@@ -1,11 +1,58 @@
-#![allow(dead_code)]
 use std::fmt;
 
-use crate::visitor::Accept;
+use crate::visitor::{Accept, Visitor};
 use pretty::RcDoc;
 
+mod action;
+mod atomic_formula;
+mod decl;
+mod domain;
+mod effect;
+mod f_exp;
+mod formula_skeleton;
+mod function_type;
+mod gd;
 mod name;
+mod number;
+mod ops;
+mod predicate;
+mod problem;
+mod term;
+mod timed;
 mod r#type;
+mod typed_list;
+
+mod sealed {
+    pub trait Sealed {}
+}
+
+pub trait PrettyVisit: sealed::Sealed {
+    fn to_doc<'a>(&'a self, r: &PrettyRenderer) -> RcDoc<'a>;
+}
+
+impl<T> PrettyVisit for T
+where
+    T: sealed::Sealed,
+    PrettyRenderer: for<'a> Visitor<T, RcDoc<'a>>,
+{
+    fn to_doc<'a>(&'a self, r: &PrettyRenderer) -> RcDoc<'a> {
+        self.accept(r)
+    }
+}
+
+impl<T: PrettyVisit> Pretty for T {
+    fn pretty(&self, width: usize) -> PrettyPrinted<'_, Self> {
+        PrettyPrinted { value: self, width }
+    }
+}
+
+impl<T: PrettyVisit> fmt::Display for PrettyPrinted<'_, T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let renderer = PrettyRenderer;
+        let doc = self.value.to_doc(&renderer);
+        doc.render_fmt(self.width, f)
+    }
+}
 
 #[derive(Default)]
 pub struct PrettyRenderer;
@@ -15,6 +62,63 @@ impl PrettyRenderer {
         let mut w = Vec::new();
         doc.render(width, &mut w).unwrap();
         String::from_utf8(w).unwrap()
+    }
+
+    pub fn sexpr<'a>(
+        &self,
+        head: &'static str,
+        children: impl IntoIterator<Item = RcDoc<'a>>,
+    ) -> RcDoc<'a> {
+        RcDoc::text("(")
+            .append(RcDoc::text(head))
+            .append(RcDoc::softline())
+            .append(RcDoc::intersperse(children, RcDoc::softline()))
+            .nest(4)
+            .group()
+            .append(")")
+    }
+
+    pub fn sexpr_nested<'a>(
+        &self,
+        head: &'static str,
+        children: impl IntoIterator<Item = RcDoc<'a>>,
+    ) -> RcDoc<'a> {
+        RcDoc::text("(")
+            .append(RcDoc::text(head))
+            .append(
+                RcDoc::hardline()
+                    .append(RcDoc::intersperse(children, RcDoc::hardline()))
+                    .nest(4),
+            )
+            .append(RcDoc::hardline())
+            .append(")")
+    }
+
+    pub fn section<'a>(
+        &self,
+        keyword: &'static str,
+        body: impl IntoIterator<Item = RcDoc<'a>>,
+    ) -> RcDoc<'a> {
+        RcDoc::text("(")
+            .append(RcDoc::text(":"))
+            .append(RcDoc::text(keyword))
+            .append(RcDoc::softline())
+            .append(RcDoc::intersperse(body, RcDoc::softline()))
+            .nest(4)
+            .group()
+            .append(")")
+    }
+
+    pub fn keyword_line(&self, name: &'static str) -> RcDoc<'static> {
+        RcDoc::text(":").append(RcDoc::text(name))
+    }
+
+    pub fn list<'a>(
+        &self,
+        items: impl IntoIterator<Item = RcDoc<'a>>,
+        sep: RcDoc<'a>,
+    ) -> RcDoc<'a> {
+        RcDoc::intersperse(items, sep)
     }
 }
 
@@ -27,82 +131,12 @@ pub struct PrettyPrinted<'a, T> {
     width: usize,
 }
 
-impl<'a> fmt::Display for PrettyPrinted<'a, crate::types::Name> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let renderer = PrettyRenderer;
-        let doc = self.value.accept(&renderer);
-        doc.render_fmt(self.width, f)
-    }
-}
-
-impl<'a> fmt::Display for PrettyPrinted<'a, crate::types::Variable> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let renderer = PrettyRenderer;
-        let doc = self.value.accept(&renderer);
-        doc.render_fmt(self.width, f)
-    }
-}
-
-impl<'a> fmt::Display for PrettyPrinted<'a, crate::types::FunctionSymbol> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let renderer = PrettyRenderer;
-        let doc = self.value.accept(&renderer);
-        doc.render_fmt(self.width, f)
-    }
-}
-
-impl<'a> fmt::Display for PrettyPrinted<'a, crate::types::PrimitiveType> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let renderer = PrettyRenderer;
-        let doc = self.value.accept(&renderer);
-        doc.render_fmt(self.width, f)
-    }
-}
-
-impl<'a> fmt::Display for PrettyPrinted<'a, crate::types::Type> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let renderer = PrettyRenderer;
-        let doc = self.value.accept(&renderer);
-        doc.render_fmt(self.width, f)
-    }
-}
-
 /// Extension trait to obtain a [`Display`](fmt::Display)-able pretty-printed
 /// adapter for any type with a registered pretty-print visitor impl.
 pub trait Pretty: Sized {
     /// Wrap `self` together with a target line `width`. The returned value
     /// implements [`Display`](fmt::Display).
     fn pretty(&self, width: usize) -> PrettyPrinted<'_, Self>;
-}
-
-impl Pretty for crate::types::Name {
-    fn pretty(&self, width: usize) -> PrettyPrinted<'_, Self> {
-        PrettyPrinted { value: self, width }
-    }
-}
-
-impl Pretty for crate::types::Variable {
-    fn pretty(&self, width: usize) -> PrettyPrinted<'_, Self> {
-        PrettyPrinted { value: self, width }
-    }
-}
-
-impl Pretty for crate::types::FunctionSymbol {
-    fn pretty(&self, width: usize) -> PrettyPrinted<'_, Self> {
-        PrettyPrinted { value: self, width }
-    }
-}
-
-impl Pretty for crate::types::PrimitiveType {
-    fn pretty(&self, width: usize) -> PrettyPrinted<'_, Self> {
-        PrettyPrinted { value: self, width }
-    }
-}
-
-impl Pretty for crate::types::Type {
-    fn pretty(&self, width: usize) -> PrettyPrinted<'_, Self> {
-        PrettyPrinted { value: self, width }
-    }
 }
 
 /// Helper macro to quickly prettify an element.

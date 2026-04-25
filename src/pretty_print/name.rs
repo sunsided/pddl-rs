@@ -1,7 +1,11 @@
-use crate::pretty_print::PrettyRenderer;
+use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{FunctionSymbol, Name, Variable};
 use crate::visitor::Visitor;
 use pretty::RcDoc;
+
+impl sealed::Sealed for Name {}
+impl sealed::Sealed for Variable {}
+impl sealed::Sealed for FunctionSymbol {}
 
 impl<'a> Visitor<Name, RcDoc<'a>> for PrettyRenderer {
     fn visit(&self, value: &Name) -> RcDoc<'a> {
