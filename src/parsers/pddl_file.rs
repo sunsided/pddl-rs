@@ -1,8 +1,8 @@
 //! Provides parsers for multi-definition PDDL files.
 
 use nom::branch::alt;
-use nom::combinator::map;
-use nom::multi::many0;
+use nom::bytes::complete::tag;
+use nom::combinator::{map, value};
 use nom::Parser;
 
 use crate::parsers::{parse_domain, parse_problem};
@@ -38,6 +38,42 @@ fn parse_define_block<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Define
     .parse(input)
 }
 
+/// Parses zero or more `(define ...)` blocks, failing if a malformed
+/// define block is encountered after valid ones.
+fn parse_define_blocks<'a>(input: Span<'a>) -> ParseResult<'a, Vec<DefineBlock>> {
+    let mut blocks = Vec::new();
+    let mut remaining = input;
+
+    loop {
+        // Skip whitespace/comments
+        let (after_ws, _) = ws2::<_, ()>(value((), tag(""))).parse(remaining)?;
+        remaining = after_ws;
+
+        // Check if there's a `(define` ahead
+        if value((), tag::<_, _, crate::parsers::ParseError<'a>>("(define"))
+            .parse(remaining)
+            .is_err()
+        {
+            break;
+        }
+
+        // We saw `(define`, so parse it. Fail immediately if the define
+        // block is malformed instead of silently stopping.
+        match ws2(parse_define_block).parse(remaining) {
+            Ok((next, block)) => {
+                blocks.push(block);
+                remaining = next;
+            }
+            Err(nom::Err::Error(e)) => {
+                return Err(nom::Err::Error(e));
+            }
+            Err(e) => return Err(e),
+        }
+    }
+
+    Ok((remaining, blocks))
+}
+
 /// Parses a PDDL file containing zero or more domain and problem definitions.
 ///
 /// This function consumes all `(define ...)` blocks in the input, returning
@@ -64,7 +100,7 @@ fn parse_define_block<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Define
 /// assert_eq!(pddl_file.problem_count(), 1);
 /// ```
 pub fn parse_pddl_file<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PddlFile> {
-    let (remainder, blocks) = ws2(many0(ws2(parse_define_block))).parse(input.into())?;
+    let (remainder, blocks) = parse_define_blocks(input.into())?;
 
     let mut domains = Vec::new();
     let mut problems = Vec::new();
@@ -97,7 +133,7 @@ pub fn parse_pddl_file<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PddlF
 /// assert_eq!(domains.len(), 2);
 /// ```
 pub fn parse_domains<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Vec<Domain>> {
-    let (remainder, blocks) = ws2(many0(ws2(parse_define_block))).parse(input.into())?;
+    let (remainder, blocks) = parse_define_blocks(input.into())?;
 
     let domains = blocks
         .into_iter()
@@ -125,7 +161,7 @@ pub fn parse_domains<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Vec<Dom
 /// assert_eq!(problems.len(), 2);
 /// ```
 pub fn parse_problems<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Vec<Problem>> {
-    let (remainder, blocks) = ws2(many0(ws2(parse_define_block))).parse(input.into())?;
+    let (remainder, blocks) = parse_define_blocks(input.into())?;
 
     let problems = blocks
         .into_iter()
@@ -367,5 +403,24 @@ mod tests {
         let (remainder, problems) = super::parse_problems(input).unwrap();
         assert!(remainder.is_empty());
         assert_eq!(problems.len(), 2);
+    }
+
+    #[test]
+    fn parse_rejects_malformed_define_block_after_valid_ones() {
+        let input = r#"
+            (define (domain d1)
+                (:requirements :strips)
+                (:predicates (p))
+            )
+            (define (domain d2)
+                (:requirements
+            )
+        "#;
+
+        let result = super::parse_pddl_file(input);
+        assert!(
+            result.is_err(),
+            "Should reject file with malformed define block after valid ones"
+        );
     }
 }
