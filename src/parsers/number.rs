@@ -4,7 +4,6 @@ use nom::character::complete::{char, digit1};
 use nom::combinator::{map, recognize};
 use nom::multi::many_m_n;
 use nom::number::complete::float;
-use nom::sequence::tuple;
 use nom::Parser;
 
 use crate::parsers::{ParseResult, Span};
@@ -25,14 +24,14 @@ use crate::types::Number;
 /// assert!(parse_number("-1").is_err());
 ///```
 pub fn parse_number<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Number> {
-    let pattern = recognize(tuple((digit1, many_m_n(0, 1, parse_decimal))));
+    let pattern = recognize((digit1, many_m_n(0, 1, parse_decimal)));
     let float = pattern.and_then(float);
-    map(float, Number::new)(input.into())
+    map(float, Number::new).parse(input.into())
 }
 
 /// Parses a decimal, i.e. `.<digit>⁺`.
 pub fn parse_decimal(input: Span) -> ParseResult<Span> {
-    recognize(tuple((char('.'), digit1)))(input)
+    recognize((char('.'), digit1)).parse(input)
 }
 
 impl crate::parsers::Parser for Number {

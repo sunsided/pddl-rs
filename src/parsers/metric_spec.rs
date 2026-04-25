@@ -2,7 +2,8 @@
 
 use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 use crate::parsers::{parse_metric_f_exp, parse_optimization, prefix_expr, ParseResult, Span};
 use crate::types::MetricSpec;
@@ -25,13 +26,14 @@ pub fn parse_problem_metric_spec<'a, T: Into<Span<'a>>>(input: T) -> ParseResult
     map(
         prefix_expr(
             ":metric",
-            tuple((
+            (
                 parse_optimization,
                 preceded(multispace1, parse_metric_f_exp),
-            )),
+            ),
         ),
         |(optimization, exp)| MetricSpec::new(optimization, exp),
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for MetricSpec {

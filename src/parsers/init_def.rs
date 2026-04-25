@@ -1,6 +1,7 @@
 //! Provides parsers for goal initial state definitions.
 
 use nom::combinator::map;
+use nom::Parser;
 
 use crate::parsers::{parse_init_el, prefix_expr, space_separated_list0, ParseResult, Span};
 use crate::types::InitElements;
@@ -38,7 +39,8 @@ pub fn parse_problem_init_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a
     map(
         prefix_expr(":init", space_separated_list0(parse_init_el)),
         InitElements::new,
-    )(input.into())
+    )
+    .parse(input.into())
 }
 impl crate::parsers::Parser for InitElements {
     type Item = InitElements;

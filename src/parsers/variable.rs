@@ -3,6 +3,7 @@
 use nom::bytes::complete::tag;
 use nom::combinator::map;
 use nom::sequence::preceded;
+use nom::Parser;
 
 use crate::parsers::{parse_name, ParseResult, Span};
 use crate::types::Variable;
@@ -22,7 +23,7 @@ use crate::types::Variable;
 /// assert!(parse_variable(Span::new("?1")).is_err());
 ///```
 pub fn parse_variable<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Variable> {
-    map(preceded(tag("?"), parse_name), Variable::from)(input.into())
+    map(preceded(tag("?"), parse_name), Variable::from).parse(input.into())
 }
 
 impl crate::parsers::Parser for Variable {

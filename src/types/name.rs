@@ -5,13 +5,10 @@ use std::fmt::{Debug, Display, Formatter};
 use std::ops::Deref;
 
 #[cfg(feature = "interning")]
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 
 #[cfg(feature = "interning")]
-lazy_static::lazy_static! {
-    /// Used in [`Name::new_string_interned`] to deduplicate string occurrences.
-    static ref STRING_INTERNING: Mutex<Vec<Arc<String>>> = Mutex::new(Vec::default());
-}
+static STRING_INTERNING: LazyLock<Mutex<Vec<Arc<String>>>> = LazyLock::new(Mutex::default);
 
 /// A name.
 ///
@@ -258,13 +255,12 @@ impl Display for NameVariant {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nom_greedyerror::AsStr;
 
     #[test]
     fn map_to_static_works() {
         let object = Name::map_to_static("object").expect("mapping works");
         let number = Name::map_to_static("number").expect("mapping works");
-        assert!(std::ptr::eq(object.as_str(), well_known::OBJECT));
-        assert!(std::ptr::eq(number.as_str(), well_known::NUMBER));
+        assert!(std::ptr::eq(&*object, well_known::OBJECT));
+        assert!(std::ptr::eq(&*number, well_known::NUMBER));
     }
 }

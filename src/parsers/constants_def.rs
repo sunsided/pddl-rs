@@ -1,6 +1,7 @@
 //! Provides parsers for constant definitions.
 
 use nom::combinator::map;
+use nom::Parser;
 
 use crate::parsers::{parse_name, prefix_expr, typed_list, ParseResult, Span};
 use crate::types::Constants;
@@ -23,7 +24,8 @@ use crate::types::Constants;
 pub fn parse_constants_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Constants> {
     map(prefix_expr(":constants", typed_list(parse_name)), |vec| {
         Constants::new(vec)
-    })(input.into())
+    })
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for Constants {

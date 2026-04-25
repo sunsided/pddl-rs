@@ -1,6 +1,7 @@
 //! Provides parsers for problem constraint definitions.
 
 use nom::combinator::map;
+use nom::Parser;
 
 use crate::parsers::{parse_pref_con_gd, prefix_expr, ParseResult, Span};
 use crate::types::ProblemConstraintsDef;
@@ -25,7 +26,8 @@ pub fn parse_problem_constraints_def<'a, T: Into<Span<'a>>>(
     map(
         prefix_expr(":constraints", parse_pref_con_gd),
         ProblemConstraintsDef::new,
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for ProblemConstraintsDef {

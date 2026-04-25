@@ -3,6 +3,7 @@
 use crate::parsers::{parse_type, ParseResult, Span};
 use crate::types::FunctionType;
 use nom::combinator::map;
+use nom::Parser;
 
 /// Parses a primitive type, i.e. `object | <name>`.
 ///
@@ -15,7 +16,7 @@ use nom::combinator::map;
 /// assert!(parse_function_type("(either object number)").is_value(FunctionType::new(Type::from_iter(["object", "number"]))));
 ///```
 pub fn parse_function_type<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FunctionType> {
-    map(parse_type, FunctionType::from)(input.into())
+    map(parse_type, FunctionType::from).parse(input.into())
 }
 
 impl crate::parsers::Parser for FunctionType {

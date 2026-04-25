@@ -6,7 +6,8 @@ use crate::types::DurativeActionGoalDefinition;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 /// Parser for goal definitions.
 ///
@@ -97,15 +98,15 @@ pub fn parse_da_gd<'a, T: Into<Span<'a>>>(
     let forall = map(
         prefix_expr(
             "forall",
-            tuple((
+            (
                 parens(typed_list(parse_variable)),
                 preceded(multispace1, parse_da_gd),
-            )),
+            ),
         ),
         |(vars, gd)| DurativeActionGoalDefinition::new_forall(vars, gd),
     );
 
-    alt((forall, and, pref_timed_gd))(input.into())
+    alt((forall, and, pref_timed_gd)).parse(input.into())
 }
 
 impl crate::parsers::Parser for DurativeActionGoalDefinition {

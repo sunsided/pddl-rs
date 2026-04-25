@@ -1,6 +1,7 @@
 //! Provides parsers for constant definitions.
 
 use nom::combinator::map;
+use nom::Parser;
 
 use crate::parsers::{function_typed_list, parse_atomic_function_skeleton};
 use crate::parsers::{prefix_expr, ParseResult, Span};
@@ -34,7 +35,8 @@ pub fn parse_functions_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, F
             function_typed_list(parse_atomic_function_skeleton),
         ),
         Functions::new,
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for Functions {

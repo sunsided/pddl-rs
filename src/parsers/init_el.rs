@@ -3,7 +3,8 @@
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 use crate::parsers::{
     literal, parse_basic_function_term, parse_name, parse_number, prefix_expr, ParseResult, Span,
@@ -60,7 +61,7 @@ pub fn parse_init_el<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, InitEle
     let at = map(
         prefix_expr(
             "at",
-            tuple((parse_number, preceded(multispace1, literal(parse_name)))),
+            (parse_number, preceded(multispace1, literal(parse_name))),
         ),
         |(time, name)| InitElement::new_at(time, name),
     );
@@ -69,10 +70,10 @@ pub fn parse_init_el<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, InitEle
     let is_numeric = map(
         prefix_expr(
             "=",
-            tuple((
+            (
                 parse_basic_function_term,
                 preceded(multispace1, parse_number),
-            )),
+            ),
         ),
         |(fun, value)| InitElement::new_is_value(fun, value),
     );
@@ -81,12 +82,12 @@ pub fn parse_init_el<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, InitEle
     let is_object = map(
         prefix_expr(
             "=",
-            tuple((parse_basic_function_term, preceded(multispace1, parse_name))),
+            (parse_basic_function_term, preceded(multispace1, parse_name)),
         ),
         |(fun, name)| InitElement::new_is_object(fun, name),
     );
 
-    alt((literal_, at, is_numeric, is_object))(input.into())
+    alt((literal_, at, is_numeric, is_object)).parse(input.into())
 }
 
 impl crate::parsers::Parser for InitElement {

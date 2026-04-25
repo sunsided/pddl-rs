@@ -6,7 +6,7 @@ use crate::parsers::{
 use crate::types::BasicFunctionTerm;
 use nom::branch::alt;
 use nom::combinator::map;
-use nom::sequence::tuple;
+use nom::Parser;
 
 /// Parses a basic function term.
 ///
@@ -31,13 +31,10 @@ pub fn parse_basic_function_term<'a, T: Into<Span<'a>>>(
 ) -> ParseResult<'a, BasicFunctionTerm> {
     let direct = map(parse_function_symbol, |s| BasicFunctionTerm::new(s, []));
     let named = map(
-        parens(tuple((
-            parse_function_symbol,
-            ws(space_separated_list0(parse_name)),
-        ))),
+        parens((parse_function_symbol, ws(space_separated_list0(parse_name)))),
         |(s, ns)| BasicFunctionTerm::new(s, ns),
     );
-    alt((direct, named))(input.into())
+    alt((direct, named)).parse(input.into())
 }
 
 impl crate::parsers::Parser for BasicFunctionTerm {

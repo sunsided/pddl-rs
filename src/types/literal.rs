@@ -37,11 +37,12 @@ mod tests {
     use super::*;
     use crate::parsers::{atomic_formula, parse_term, Span};
     use crate::Term;
+    use nom::Parser;
 
     #[test]
     fn from_works() {
         let input = "(= x y)";
-        let (_, effect) = atomic_formula(parse_term)(Span::new(input)).unwrap();
+        let (_, effect) = atomic_formula(parse_term).parse(Span::new(input)).unwrap();
 
         let literal: Literal<Term> = effect.into();
         assert_eq!(

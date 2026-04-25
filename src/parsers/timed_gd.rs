@@ -6,7 +6,8 @@ use crate::types::TimedGD;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 /// Parser for timed goal definitions.
 ///
@@ -42,20 +43,17 @@ pub fn parse_timed_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedG
     let at = map(
         prefix_expr(
             "at",
-            tuple((parse_time_specifier, preceded(multispace1, parse_gd))),
+            (parse_time_specifier, preceded(multispace1, parse_gd)),
         ),
         TimedGD::from,
     );
 
     let over = map(
-        prefix_expr(
-            "over",
-            tuple((parse_interval, preceded(multispace1, parse_gd))),
-        ),
+        prefix_expr("over", (parse_interval, preceded(multispace1, parse_gd))),
         TimedGD::from,
     );
 
-    alt((at, over))(input.into())
+    alt((at, over)).parse(input.into())
 }
 
 impl crate::parsers::Parser for TimedGD {

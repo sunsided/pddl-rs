@@ -7,7 +7,7 @@ use nom::bytes::complete::tag;
 use nom::character::complete::{alpha1, digit1};
 use nom::combinator::{map, recognize};
 use nom::multi::many0;
-use nom::sequence::tuple;
+use nom::Parser;
 
 /// Parses a name, i.e. `<letter> <any char>⁺`.
 ///
@@ -26,15 +26,15 @@ use nom::sequence::tuple;
 /// assert!(parse_name("-1").is_err());
 ///```
 pub fn parse_name<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Name> {
-    map(
-        ws(recognize(tuple((alpha1, many0(parse_any_char))))),
-        |x: Span| Name::from(*x.fragment()),
-    )(input.into())
+    map(ws(recognize((alpha1, many0(parse_any_char)))), |x: Span| {
+        Name::from(*x.fragment())
+    })
+    .parse(input.into())
 }
 
 /// Parses any accepted character.
 pub fn parse_any_char(input: Span) -> ParseResult<Span> {
-    recognize(alt((alpha1, digit1, tag("-"), tag("_"))))(input)
+    recognize(alt((alpha1, digit1, tag("-"), tag("_")))).parse(input)
 }
 
 impl crate::parsers::Parser for Name {

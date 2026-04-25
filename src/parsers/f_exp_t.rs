@@ -4,7 +4,8 @@ use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{preceded, terminated, tuple};
+use nom::sequence::{preceded, terminated};
+use nom::Parser;
 
 use crate::parsers::prefix_expr;
 use crate::parsers::{parse_f_exp, ParseResult, Span};
@@ -46,14 +47,14 @@ pub fn parse_f_exp_t<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FExpT> 
         prefix_expr(
             "*",
             alt((
-                preceded(tuple((tag("#t"), multispace1)), parse_f_exp),
-                terminated(parse_f_exp, tuple((multispace1, tag("#t")))),
+                preceded((tag("#t"), multispace1), parse_f_exp),
+                terminated(parse_f_exp, (multispace1, tag("#t"))),
             )),
         ),
         FExpT::new_scaled,
     );
 
-    alt((scaled, now))(input.into())
+    alt((scaled, now)).parse(input.into())
 }
 
 impl crate::parsers::Parser for FExpT {

@@ -3,6 +3,7 @@
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
+use nom::Parser;
 
 use crate::parsers::{parse_name, ParseResult, Span};
 use crate::types::{Name, PrimitiveType};
@@ -18,11 +19,11 @@ use crate::types::{Name, PrimitiveType};
 /// assert!(parse_primitive_type(Span::new("obj!ect")).is_value("obj".into()));
 ///```
 pub fn parse_primitive_type<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PrimitiveType> {
-    map(alt((parse_object, parse_name)), PrimitiveType::from)(input.into())
+    map(alt((parse_object, parse_name)), PrimitiveType::from).parse(input.into())
 }
 
 fn parse_object(input: Span) -> ParseResult<Name> {
-    map(tag("object"), |x: Span| Name::from(*x.fragment()))(input)
+    map(tag("object"), |x: Span| Name::from(*x.fragment())).parse(input)
 }
 
 impl crate::parsers::Parser for PrimitiveType {

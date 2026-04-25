@@ -10,7 +10,8 @@ use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::character::complete::{char, multispace0, multispace1};
 use nom::combinator::map;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 /// Parses a metric f-exp.
 ///
@@ -77,28 +78,25 @@ use nom::sequence::{preceded, tuple};
 ///```
 pub fn parse_metric_f_exp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, MetricFExp> {
     let binary_op = map(
-        parens(tuple((
+        parens((
             parse_binary_op,
             preceded(multispace1, parse_metric_f_exp),
             preceded(multispace1, parse_metric_f_exp),
-        ))),
+        )),
         |(op, lhs, rhs)| MetricFExp::new_binary_op(op, lhs, rhs),
     );
 
     let multi_op = map(
-        parens(tuple((
+        parens((
             parse_multi_op,
             preceded(multispace1, parse_metric_f_exp),
             preceded(multispace1, space_separated_list1(parse_metric_f_exp)),
-        ))),
+        )),
         |(op, lhs, rhs)| MetricFExp::new_multi_op(op, lhs, rhs),
     );
 
     let negated = map(
-        parens(preceded(
-            tuple((char('-'), multispace0)),
-            parse_metric_f_exp,
-        )),
+        parens(preceded((char('-'), multispace0), parse_metric_f_exp)),
         MetricFExp::new_negative,
     );
 
@@ -108,10 +106,7 @@ pub fn parse_metric_f_exp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Me
         MetricFExp::new_function(sym, [])
     });
     let complex_function = map(
-        parens(tuple((
-            parse_function_symbol,
-            ws(space_separated_list0(parse_name)),
-        ))),
+        parens((parse_function_symbol, ws(space_separated_list0(parse_name)))),
         |(sym, names)| MetricFExp::new_function(sym, names),
     );
 
@@ -132,7 +127,8 @@ pub fn parse_metric_f_exp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Me
         is_violated,
         complex_function,
         simple_function,
-    ))(input.into())
+    ))
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for MetricFExp {

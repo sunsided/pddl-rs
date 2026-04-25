@@ -6,7 +6,8 @@ use crate::types::DurativeActionEffect;
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 /// Parses effects.
 ///
@@ -88,10 +89,10 @@ pub fn parse_da_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Durat
     let forall = map(
         prefix_expr(
             "forall",
-            tuple((
+            (
                 parens(typed_list(parse_variable)),
                 preceded(multispace1, parse_da_effect),
-            )),
+            ),
         ),
         DurativeActionEffect::from,
     );
@@ -100,12 +101,12 @@ pub fn parse_da_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Durat
     let when = map(
         prefix_expr(
             "when",
-            tuple((parse_da_gd, preceded(multispace1, parse_timed_effect))),
+            (parse_da_gd, preceded(multispace1, parse_timed_effect)),
         ),
         DurativeActionEffect::from,
     );
 
-    alt((all, forall, when, exactly))(input.into())
+    alt((all, forall, when, exactly)).parse(input.into())
 }
 
 impl crate::parsers::Parser for DurativeActionEffect {

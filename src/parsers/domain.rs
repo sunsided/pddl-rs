@@ -2,7 +2,8 @@
 
 use nom::character::complete::multispace1;
 use nom::combinator::{map, opt};
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 use crate::parsers::{
     parse_constants_def, parse_domain_constraints_def, parse_functions_def, parse_predicates_def,
@@ -63,7 +64,7 @@ pub fn parse_domain<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Domain> 
     map(
         ws2(prefix_expr(
             "define",
-            tuple((
+            (
                 prefix_expr("domain", parse_name),
                 opt(preceded(
                     multispace1,
@@ -85,7 +86,7 @@ pub fn parse_domain<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Domain> 
                         StructureDefs::new,
                     ),
                 )),
-            )),
+            ),
         )),
         |(
             name,
@@ -107,7 +108,8 @@ pub fn parse_domain<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Domain> 
                 .with_functions(functions.unwrap_or(Functions::default()))
                 .with_constraints(constraints.unwrap_or(DomainConstraintsDef::default()))
         },
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for Domain {

@@ -3,7 +3,8 @@
 use nom::branch::alt;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 use crate::parsers::{parens, prefix_expr, typed_list, ParseResult, Span};
 use crate::parsers::{parse_cond_effect, parse_effect, parse_gd, parse_p_effect, parse_variable};
@@ -97,7 +98,7 @@ pub fn parse_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, CEffec
     let forall = map(parse_forall_c_effect, CEffect::from);
     let when = map(parse_when_c_effect, CEffect::from);
 
-    alt((forall, when, p_effect))(input.into())
+    alt((forall, when, p_effect)).parse(input.into())
 }
 
 /// Parses [`ForallCEffect`] values.
@@ -128,13 +129,14 @@ pub fn parse_forall_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a,
     map(
         prefix_expr(
             "forall",
-            tuple((
+            (
                 parens(typed_list(parse_variable)),
                 preceded(multispace1, parse_effect),
-            )),
+            ),
         ),
         ForallCEffect::from,
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 /// Parses c-effects.
@@ -184,12 +186,10 @@ pub fn parse_forall_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a,
 /// ```
 pub fn parse_when_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, WhenCEffect> {
     map(
-        prefix_expr(
-            "when",
-            tuple((parse_gd, preceded(multispace1, parse_cond_effect))),
-        ),
+        prefix_expr("when", (parse_gd, preceded(multispace1, parse_cond_effect))),
         WhenCEffect::from,
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for CEffect {

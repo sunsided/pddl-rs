@@ -8,7 +8,8 @@ use crate::types::DurativeActionDefinition;
 use nom::bytes::complete::tag;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 /// Parses a durative action definition.
 ///
@@ -73,14 +74,14 @@ pub fn parse_da_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Durative
 
     let da_def = prefix_expr(
         ":durative-action",
-        tuple((
+        (
             parse_da_symbol,
             preceded(multispace1, parameters),
             // <da-def body>
             preceded(multispace1, duration),
             preceded(multispace1, condition),
             preceded(multispace1, effect),
-        )),
+        ),
     );
 
     map(
@@ -88,7 +89,8 @@ pub fn parse_da_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Durative
         |(symbol, parameters, duration, condition, effect)| {
             DurativeActionDefinition::new(symbol, parameters, duration, condition, effect)
         },
-    )(input.into())
+    )
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for DurativeActionDefinition {

@@ -3,6 +3,7 @@
 use crate::parsers::{parse_pre_gd, prefix_expr, ParseResult, Span};
 use crate::types::GoalDef;
 use nom::combinator::map;
+use nom::Parser;
 
 /// Parses pre-GD goal definitions.
 ///
@@ -27,7 +28,7 @@ use nom::combinator::map;
 /// ));
 /// ```
 pub fn parse_problem_goal_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, GoalDef> {
-    map(prefix_expr(":goal", parse_pre_gd), GoalDef::new)(input.into())
+    map(prefix_expr(":goal", parse_pre_gd), GoalDef::new).parse(input.into())
 }
 
 impl crate::parsers::Parser for GoalDef {

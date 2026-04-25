@@ -3,7 +3,8 @@
 use nom::bytes::complete::tag;
 use nom::character::complete::multispace1;
 use nom::combinator::{map, opt};
-use nom::sequence::{preceded, tuple};
+use nom::sequence::preceded;
+use nom::Parser;
 
 use crate::parsers::{empty_or, parens, prefix_expr, typed_list, ws, ParseResult, Span};
 use crate::parsers::{parse_action_symbol, parse_effect, parse_pre_gd, parse_variable};
@@ -61,18 +62,18 @@ pub fn parse_action_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Acti
         tag(":effect"),
         preceded(multispace1, empty_or(parse_effect)),
     );
-    let action_def_body = tuple((opt(ws(precondition)), opt(ws(effect))));
+    let action_def_body = (opt(ws(precondition)), opt(ws(effect)));
     let parameters = preceded(
         tag(":parameters"),
         preceded(multispace1, parens(typed_list(parse_variable))),
     );
     let action_def = prefix_expr(
         ":action",
-        tuple((
+        (
             parse_action_symbol,
             preceded(multispace1, parameters),
             ws(action_def_body),
-        )),
+        ),
     );
 
     map(action_def, |(symbol, params, (preconditions, effects))| {
@@ -82,7 +83,8 @@ pub fn parse_action_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Acti
             preconditions.flatten().into(),
             effects.flatten(),
         )
-    })(input.into())
+    })
+    .parse(input.into())
 }
 
 impl crate::parsers::Parser for ActionDefinition {
