@@ -5,7 +5,7 @@ use nom::combinator::map;
 use nom::Parser;
 
 use crate::parsers::prefix_expr;
-use crate::parsers::{atomic_formula, ParseError, ParseResult, Span};
+use crate::parsers::{atomic_formula, ParseError, Span};
 use crate::types::Literal;
 
 /// Parser combinator that parses a literal, i.e. `<atomic formula(t)> | (not <atomic formula(t)>)`.

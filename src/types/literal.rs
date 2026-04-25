@@ -12,7 +12,7 @@ pub enum Literal<T> {
     NotAtomicFormula(AtomicFormula<T>),
 }
 
-impl<'a, T> Literal<T> {
+impl<T> Literal<T> {
     pub const fn new(atomic_formula: AtomicFormula<T>) -> Self {
         Self::AtomicFormula(atomic_formula)
     }
@@ -26,7 +26,7 @@ impl<'a, T> Literal<T> {
     }
 }
 
-impl<'a, T> From<AtomicFormula<T>> for Literal<T> {
+impl<T> From<AtomicFormula<T>> for Literal<T> {
     fn from(value: AtomicFormula<T>) -> Self {
         Literal::new(value)
     }

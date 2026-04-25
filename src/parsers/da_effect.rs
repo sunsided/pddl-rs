@@ -58,8 +58,8 @@ use nom::Parser;
 /// assert!(parse_da_effect("(forall (?a ?b) (at start (= a b)))").is_value(
 ///     DurativeActionEffect::new_forall(
 ///         TypedList::from_iter([
-///             Typed::new_object(Variable::from_str("a")),
-///             Typed::new_object(Variable::from_str("b")),
+///             Typed::new_object(Variable::new_string("a")),
+///             Typed::new_object(Variable::new_string("b")),
 ///         ]),
 ///         DurativeActionEffect::Timed(
 ///             TimedEffect::new_conditional(
@@ -198,8 +198,8 @@ mod tests {
             DurativeActionEffect::parse("(forall (?a ?b) (at start (= a b)))").is_value(
                 DurativeActionEffect::new_forall(
                     TypedList::from_iter([
-                        Typed::new_object(Variable::from_str("a")),
-                        Typed::new_object(Variable::from_str("b")),
+                        Typed::new_object(Variable::new_string("a")),
+                        Typed::new_object(Variable::new_string("b")),
                     ]),
                     DurativeActionEffect::Timed(TimedEffect::new_conditional(
                         TimeSpecifier::Start,

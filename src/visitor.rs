@@ -1,3 +1,9 @@
+//! Visitor traits for traversing PDDL structures.
+//!
+//! These traits are currently provisional; the API may change in future releases.
+
+#![allow(dead_code)]
+
 /// A visitor.
 pub trait Visitor<T, O> {
     fn visit(&self, value: &T) -> O;

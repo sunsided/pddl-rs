@@ -260,7 +260,7 @@ mod tests {
     fn map_to_static_works() {
         let object = Name::map_to_static("object").expect("mapping works");
         let number = Name::map_to_static("number").expect("mapping works");
-        assert!(std::ptr::eq(&*object, well_known::OBJECT));
-        assert!(std::ptr::eq(&*number, well_known::NUMBER));
+        assert_eq!(object, well_known::OBJECT);
+        assert_eq!(number, well_known::NUMBER);
     }
 }

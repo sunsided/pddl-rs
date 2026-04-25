@@ -96,7 +96,7 @@ pub trait Parser {
 
     /// Uses the [`Parser::parse`] method to parse the input and, if successful,
     /// discards the unparsed remaining input.
-    fn from_str(input: &str) -> Result<Self::Item, nom::Err<ParseError>> {
+    fn from_str(input: &str) -> Result<Self::Item, nom::Err<ParseError<'_>>> {
         let (_, value) = Self::parse(input)?;
         Ok(value)
     }

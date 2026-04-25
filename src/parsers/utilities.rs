@@ -1,6 +1,6 @@
 //! Utility parsers.
 
-use crate::parsers::{ignore_eol_comment, ParseError, ParseResult, Span};
+use crate::parsers::{ignore_eol_comment, ParseError, Span};
 use nom::bytes::complete::tag;
 use nom::character::complete::{char, multispace0, multispace1};
 use nom::multi::{separated_list0, separated_list1};

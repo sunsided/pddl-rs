@@ -92,7 +92,7 @@ use crate::types::GoalDefinition;
 /// // Existential preconditions
 /// assert!(parse_gd("(exists (?x ?y) (not (= ?x ?y)))").is_value(
 ///     GoalDefinition::new_exists(
-///         TypedList::from_iter([Variable::from_str("x").into(), Variable::from_str("y").into()]),
+///         TypedList::from_iter([Variable::new_string("x").into(), Variable::new_string("y").into()]),
 ///         GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Variable("x".into()),
@@ -105,7 +105,7 @@ use crate::types::GoalDefinition;
 /// // Universal preconditions
 /// assert!(parse_gd("(forall (?x ?y) (not (= ?x ?y)))").is_value(
 ///     GoalDefinition::new_forall(
-///         TypedList::from_iter([Variable::from_str("x").into(), Variable::from_str("y").into()]),
+///         TypedList::from_iter([Variable::new_string("x").into(), Variable::new_string("y").into()]),
 ///         GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
 ///             AtomicFormula::new_equality(
 ///                 Term::Variable("x".into()),
@@ -275,8 +275,8 @@ mod tests {
             GoalDefinition::parse("(exists (?x ?y) (not (= ?x ?y)))").is_value(
                 GoalDefinition::new_exists(
                     TypedList::from_iter([
-                        Variable::from_str("x").into(),
-                        Variable::from_str("y").into()
+                        Variable::new_string("x").into(),
+                        Variable::new_string("y").into()
                     ]),
                     GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
                         AtomicFormula::new_equality(
@@ -293,8 +293,8 @@ mod tests {
             GoalDefinition::parse("(forall (?x ?y) (not (= ?x ?y)))").is_value(
                 GoalDefinition::new_forall(
                     TypedList::from_iter([
-                        Variable::from_str("x").into(),
-                        Variable::from_str("y").into()
+                        Variable::new_string("x").into(),
+                        Variable::new_string("y").into()
                     ]),
                     GoalDefinition::new_not(GoalDefinition::new_atomic_formula(
                         AtomicFormula::new_equality(

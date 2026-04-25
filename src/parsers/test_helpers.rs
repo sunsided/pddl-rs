@@ -48,7 +48,7 @@ impl<'a, E> Match<Option<&str>> for ParseResult<'a, Option<Span<'a>>, E> {
             if !remainder.eq(*lhs.fragment()) {
                 false
             } else if value.is_none() {
-                return rhs.is_none();
+                rhs.is_none()
             } else if let Some(rhs) = rhs {
                 value.eq(&Some(*rhs.fragment()))
             } else {

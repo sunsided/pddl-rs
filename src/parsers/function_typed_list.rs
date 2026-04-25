@@ -5,7 +5,7 @@ use nom::sequence::preceded;
 use nom::Parser;
 
 use crate::parsers::{
-    parse_type, space_separated_list0, space_separated_list1, ws, ParseError, ParseResult, Span,
+    parse_type, space_separated_list0, space_separated_list1, ws, ParseError, Span,
 };
 use crate::types::{FunctionType, FunctionTyped, FunctionTypedList};
 
@@ -60,7 +60,7 @@ mod tests {
             .parse("(battery-amount ?r - rover)".into())
             .is_value(FunctionTypedList::from_iter([FunctionTyped::new_number(
                 AtomicFunctionSkeleton::new(
-                    FunctionSymbol::from_str("battery-amount"),
+                    FunctionSymbol::new_string("battery-amount"),
                     TypedList::from_iter([Typed::new(
                         Variable::from("r"),
                         Type::Exactly("rover".into())
@@ -72,7 +72,7 @@ mod tests {
             .parse("(move ?from ?to - location)".into())
             .is_value(FunctionTypedList::from_iter([FunctionTyped::new_number(
                 AtomicFunctionSkeleton::new(
-                    FunctionSymbol::from_str("move"),
+                    FunctionSymbol::new_string("move"),
                     TypedList::from_iter([
                         Typed::new(Variable::from("from"), Type::Exactly("location".into())),
                         Typed::new(Variable::from("to"), Type::Exactly("location".into()))

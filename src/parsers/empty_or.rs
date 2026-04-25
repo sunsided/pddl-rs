@@ -6,7 +6,7 @@ use nom::combinator::map;
 use nom::error::ParseError;
 use nom::Parser;
 
-use crate::parsers::{ParseError as CrateParseError, ParseResult, Span};
+use crate::parsers::Span;
 
 /// Parser combinator that takes a parser `inner` and produces a parser that
 /// consumes `()` and returns [`None`] or the result of `inner` and produces [`Some(O)`](Some).

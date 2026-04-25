@@ -17,7 +17,7 @@ impl Predicate {
     }
 
     #[inline(always)]
-    pub fn from_str(name: &str) -> Self {
+    pub fn new_string(name: &str) -> Self {
         Self(Name::new(name))
     }
 
@@ -32,7 +32,7 @@ impl Predicate {
     }
 }
 
-impl<'a, T> From<T> for Predicate
+impl<T> From<T> for Predicate
 where
     T: Into<Name>,
 {

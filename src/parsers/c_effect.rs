@@ -42,8 +42,8 @@ use crate::{ForallCEffect, WhenCEffect};
 /// assert!(parse_c_effect(Span::new("(forall (?a ?b) (= ?a ?b))")).is_value(
 ///     CEffect::new_forall(
 ///         TypedList::from_iter([
-///             Typed::new_object(Variable::from_str("a")),
-///             Typed::new_object(Variable::from_str("b")),
+///             Typed::new_object(Variable::new_string("a")),
+///             Typed::new_object(Variable::new_string("b")),
 ///         ]),
 ///         Effects::new(CEffect::Effect(
 ///             PEffect::AtomicFormula(AtomicFormula::Equality(
@@ -111,8 +111,8 @@ pub fn parse_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, CEffec
 /// assert!(parse_forall_c_effect(Span::new("(forall (?a ?b) (= ?a ?b))")).is_value(
 ///     ForallCEffect::new(
 ///         TypedList::from_iter([
-///             Typed::new_object(Variable::from_str("a")),
-///             Typed::new_object(Variable::from_str("b")),
+///             Typed::new_object(Variable::new_string("a")),
+///             Typed::new_object(Variable::new_string("b")),
 ///         ]),
 ///         Effects::new(CEffect::Effect(
 ///             PEffect::AtomicFormula(AtomicFormula::Equality(
@@ -218,8 +218,8 @@ impl crate::parsers::Parser for CEffect {
     /// assert_eq!(value,
     ///     CEffect::new_forall(
     ///         TypedList::from_iter([
-    ///             Typed::new_object(Variable::from_str("a")),
-    ///             Typed::new_object(Variable::from_str("b")),
+    ///             Typed::new_object(Variable::new_string("a")),
+    ///             Typed::new_object(Variable::new_string("b")),
     ///         ]),
     ///         Effects::from_str("(= ?a ?b)").unwrap()
     ///     )
@@ -256,8 +256,8 @@ impl crate::parsers::Parser for ForallCEffect {
     /// assert_eq!(value,
     ///     ForallCEffect::new(
     ///         TypedList::from_iter([
-    ///             Typed::new_object(Variable::from_str("a")),
-    ///             Typed::new_object(Variable::from_str("b")),
+    ///             Typed::new_object(Variable::new_string("a")),
+    ///             Typed::new_object(Variable::new_string("b")),
     ///         ]),
     ///         Effects::from_str("(= ?a ?b)").unwrap()
     ///     )
@@ -325,8 +325,8 @@ mod tests {
             value,
             CEffect::new_forall(
                 TypedList::from_iter([
-                    Typed::new_object(Variable::from_str("a")),
-                    Typed::new_object(Variable::from_str("b")),
+                    Typed::new_object(Variable::new_string("a")),
+                    Typed::new_object(Variable::new_string("b")),
                 ]),
                 Effects::from_str("(= ?a ?b)").unwrap()
             )
@@ -353,8 +353,8 @@ mod tests {
             value,
             ForallCEffect::new(
                 TypedList::from_iter([
-                    Typed::new_object(Variable::from_str("a")),
-                    Typed::new_object(Variable::from_str("b")),
+                    Typed::new_object(Variable::new_string("a")),
+                    Typed::new_object(Variable::new_string("b")),
                 ]),
                 Effects::from_str("(= ?a ?b)").unwrap()
             )

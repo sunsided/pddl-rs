@@ -7,7 +7,7 @@ use nom::sequence::preceded;
 use nom::Parser;
 
 use crate::parsers::{
-    parse_type, space_separated_list0, space_separated_list1, ws, ParseError, ParseResult, Span,
+    parse_type, space_separated_list0, space_separated_list1, ws, ParseError, Span,
 };
 use crate::types::{Typed, TypedList};
 

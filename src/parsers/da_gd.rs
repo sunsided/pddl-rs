@@ -66,8 +66,8 @@ use nom::Parser;
 /// assert!(parse_da_gd("(forall (?a ?b) (at start (= a b)))").is_value(
 ///     DurativeActionGoalDefinition::new_forall(
 ///         TypedList::from_iter([
-///             Typed::new_object(Variable::from_str("a")),
-///             Typed::new_object(Variable::from_str("b")),
+///             Typed::new_object(Variable::new_string("a")),
+///             Typed::new_object(Variable::new_string("b")),
 ///         ]),
 ///         DurativeActionGoalDefinition::Timed(
 ///             PrefTimedGD::Required(
@@ -189,8 +189,8 @@ mod tests {
             DurativeActionGoalDefinition::parse("(forall (?a ?b) (at start (= a b)))").is_value(
                 DurativeActionGoalDefinition::new_forall(
                     TypedList::from_iter([
-                        Typed::new_object(Variable::from_str("a")),
-                        Typed::new_object(Variable::from_str("b")),
+                        Typed::new_object(Variable::new_string("a")),
+                        Typed::new_object(Variable::new_string("b")),
                     ]),
                     DurativeActionGoalDefinition::Timed(PrefTimedGD::Required(TimedGD::new_at(
                         TimeSpecifier::Start,

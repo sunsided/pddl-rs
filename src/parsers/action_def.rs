@@ -26,16 +26,16 @@ use crate::types::ActionDefinition;
 ///
 /// assert!(action.is_value(
 ///     ActionDefinition::new(
-///         ActionSymbol::from_str("take-out"),
+///         ActionSymbol::new_string("take-out"),
 ///         TypedList::from_iter([
-///             Variable::from_str("x").to_typed("physob")
+///             Variable::new_string("x").to_typed("physob")
 ///         ]),
 ///         PreconditionGoalDefinitions::from(
 ///             PreconditionGoalDefinition::Preference(PreferenceGD::from_gd(
 ///                 GoalDefinition::new_not(
 ///                     GoalDefinition::AtomicFormula(
 ///                         AtomicFormula::new_equality(
-///                             Term::Variable(Variable::from_str("x")),
+///                             Term::Variable(Variable::new_string("x")),
 ///                             Term::Name(Name::new("B"))
 ///                         )
 ///                     )
@@ -45,8 +45,8 @@ use crate::types::ActionDefinition;
 ///         Some(Effects::new(CEffect::new_p_effect(
 ///             PEffect::NotAtomicFormula(
 ///                 AtomicFormula::new_predicate(
-///                     Predicate::from_str("in"),
-///                     vec![Term::Variable(Variable::from_str("x"))]
+///                     Predicate::new_string("in"),
+///                     vec![Term::Variable(Variable::new_string("x"))]
 ///                 )
 ///             )
 ///         )))
@@ -106,9 +106,9 @@ impl crate::parsers::Parser for ActionDefinition {
     ///
     /// assert_eq!(action,
     ///     ActionDefinition::new(
-    ///         ActionSymbol::from_str("take-out"),
+    ///         ActionSymbol::new_string("take-out"),
     ///         TypedList::from_iter([
-    ///             Variable::from_str("x").to_typed("physob")
+    ///             Variable::new_string("x").to_typed("physob")
     ///         ]),
     ///         PreconditionGoalDefinitions::from_str("(not (= ?x B))").unwrap(),
     ///         Some(Effects::from_str("(not (in ?x))").unwrap())
@@ -143,8 +143,8 @@ mod tests {
         assert_eq!(
             action,
             ActionDefinition::new(
-                ActionSymbol::from_str("take-out"),
-                TypedList::from_iter([Variable::from_str("x").to_typed("physob")]),
+                ActionSymbol::new_string("take-out"),
+                TypedList::from_iter([Variable::new_string("x").to_typed("physob")]),
                 PreconditionGoalDefinitions::from_str("(not (= ?x B))").unwrap(),
                 Some(Effects::from_str("(not (in ?x))").unwrap())
             )

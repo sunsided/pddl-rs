@@ -17,15 +17,15 @@ use crate::types::FHead;
 /// # use pddl::parsers::{parse_f_head, preamble::*};
 /// # use pddl::{FunctionTerm, Variable, FunctionSymbol, Term, FHead};
 /// assert!(parse_f_head("fun-sym").is_value(
-///     FHead::new(FunctionSymbol::from_str("fun-sym"))
+///     FHead::new(FunctionSymbol::new_string("fun-sym"))
 /// ));
 ///
 /// assert!(parse_f_head("(fun-sym)").is_value(
-///     FHead::new(FunctionSymbol::from_str("fun-sym"))
+///     FHead::new(FunctionSymbol::new_string("fun-sym"))
 /// ));
 ///
 /// assert!(parse_f_head("(fun-sym term)").is_value(
-///     FHead::new_with_terms(FunctionSymbol::from_str("fun-sym"), [
+///     FHead::new_with_terms(FunctionSymbol::new_string("fun-sym"), [
 ///         Term::Name("term".into())
 ///     ])
 /// ));
@@ -60,13 +60,15 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        assert!(FHead::parse("fun-sym").is_value(FHead::new(FunctionSymbol::from_str("fun-sym"))));
+        assert!(FHead::parse("fun-sym").is_value(FHead::new(FunctionSymbol::new_string("fun-sym"))));
 
-        assert!(FHead::parse("(fun-sym)").is_value(FHead::new(FunctionSymbol::from_str("fun-sym"))));
+        assert!(
+            FHead::parse("(fun-sym)").is_value(FHead::new(FunctionSymbol::new_string("fun-sym")))
+        );
 
         assert!(
             FHead::parse("(fun-sym term)").is_value(FHead::new_with_terms(
-                FunctionSymbol::from_str("fun-sym"),
+                FunctionSymbol::new_string("fun-sym"),
                 [Term::Name("term".into())]
             ))
         );

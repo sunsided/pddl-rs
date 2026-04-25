@@ -42,7 +42,7 @@ use crate::types::FExp;
 ///
 /// assert!(parse_f_exp("fun-sym").is_value(
 ///     FExp::new_function(
-///         FHead::new(FunctionSymbol::from_str("fun-sym"))
+///         FHead::new(FunctionSymbol::new_string("fun-sym"))
 ///     )
 /// ));
 ///```
@@ -118,7 +118,7 @@ mod tests {
 
         assert!(
             FExp::parse("fun-sym").is_value(FExp::new_function(FHead::new(
-                FunctionSymbol::from_str("fun-sym")
+                FunctionSymbol::new_string("fun-sym")
             )))
         );
     }

@@ -10,8 +10,9 @@ use crate::types::FExp;
 ///
 /// ## Usage
 /// Used by [`TimedEffect`](crate::TimedEffect).
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum FExpT {
+    #[default]
     Now,
     Scaled(FExp),
 }
@@ -23,12 +24,6 @@ impl FExpT {
 
     pub fn new_scaled(exp: FExp) -> Self {
         Self::Scaled(exp)
-    }
-}
-
-impl Default for FExpT {
-    fn default() -> Self {
-        Self::Now
     }
 }
 

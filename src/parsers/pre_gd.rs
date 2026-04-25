@@ -54,8 +54,8 @@ use crate::PreconditionGoalDefinitions;
 /// assert!(parse_pre_gd(Span::new("(forall (?a ?b) (= a b))")).is_value(
 ///     PreconditionGoalDefinition::new_forall(
 ///         TypedList::from_iter([
-///             Typed::new(Variable::from_str("a"), Type::OBJECT),
-///             Typed::new(Variable::from_str("b"), Type::OBJECT),
+///             Typed::new(Variable::new_string("a"), Type::OBJECT),
+///             Typed::new(Variable::new_string("b"), Type::OBJECT),
 ///         ]),
 ///         PreconditionGoalDefinition::new_preference(PreferenceGD::Goal(
 ///             GoalDefinition::AtomicFormula(
@@ -149,8 +149,8 @@ mod tests {
             PreconditionGoalDefinitions::parse(Span::new("(forall (?a ?b) (= a b))")).is_value(
                 PreconditionGoalDefinition::new_forall(
                     TypedList::from_iter([
-                        Typed::new(Variable::from_str("a"), Type::OBJECT),
-                        Typed::new(Variable::from_str("b"), Type::OBJECT),
+                        Typed::new(Variable::new_string("a"), Type::OBJECT),
+                        Typed::new(Variable::new_string("b"), Type::OBJECT),
                     ]),
                     PreconditionGoalDefinition::new_preference(PreferenceGD::Goal(
                         GoalDefinition::AtomicFormula(AtomicFormula::new_equality(

@@ -18,7 +18,7 @@ impl FunctionSymbol {
     }
 
     #[inline(always)]
-    pub fn from_str(name: &str) -> Self {
+    pub fn new_string(name: &str) -> Self {
         Self(Name::new(name))
     }
 
@@ -28,7 +28,7 @@ impl FunctionSymbol {
     }
 }
 
-impl<'a, T> From<T> for FunctionSymbol
+impl<T> From<T> for FunctionSymbol
 where
     T: Into<Name>,
 {

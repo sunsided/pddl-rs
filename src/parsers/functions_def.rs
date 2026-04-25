@@ -19,7 +19,7 @@ use crate::types::Functions;
 ///     Functions::from_iter([
 ///         FunctionTyped::new_number(
 ///             AtomicFunctionSkeleton::new(
-///                 FunctionSymbol::from_str("battery-amount"),
+///                 FunctionSymbol::new_string("battery-amount"),
 ///                 TypedList::from_iter([
 ///                     Typed::new(Variable::from("r"), Type::Exactly("rover".into()))
 ///                 ])
@@ -61,7 +61,7 @@ mod tests {
         let input = "(:functions (battery-amount ?r - rover))";
         assert!(Functions::parse(input).is_value(Functions::from_iter([
             FunctionTyped::new_number(AtomicFunctionSkeleton::new(
-                FunctionSymbol::from_str("battery-amount"),
+                FunctionSymbol::new_string("battery-amount"),
                 TypedList::from_iter([Typed::new(
                     Variable::from("r"),
                     Type::Exactly("rover".into())

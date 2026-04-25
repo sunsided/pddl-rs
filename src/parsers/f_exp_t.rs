@@ -23,8 +23,8 @@ use crate::types::FExpT;
 ///     FExpT::new_scaled(
 ///         FExp::new_function(
 ///             FHead::new_with_terms(
-///                 FunctionSymbol::from_str("fuel"),
-///                 [Term::Variable(Variable::from_str("tank"))]
+///                 FunctionSymbol::new_string("fuel"),
+///                 [Term::Variable(Variable::new_string("tank"))]
 ///             )
 ///         )
 ///     )
@@ -34,8 +34,8 @@ use crate::types::FExpT;
 ///     FExpT::new_scaled(
 ///         FExp::new_function(
 ///             FHead::new_with_terms(
-///                 FunctionSymbol::from_str("fuel"),
-///                 [Term::Variable(Variable::from_str("tank"))]
+///                 FunctionSymbol::new_string("fuel"),
+///                 [Term::Variable(Variable::new_string("tank"))]
 ///             )
 ///         )
 ///     )
@@ -78,8 +78,8 @@ mod tests {
         assert!(
             FExpT::parse("(* (fuel ?tank) #t)").is_value(FExpT::new_scaled(FExp::new_function(
                 FHead::new_with_terms(
-                    FunctionSymbol::from_str("fuel"),
-                    [Term::Variable(Variable::from_str("tank"))]
+                    FunctionSymbol::new_string("fuel"),
+                    [Term::Variable(Variable::new_string("tank"))]
                 )
             )))
         );
@@ -87,8 +87,8 @@ mod tests {
         assert!(
             FExpT::parse("(* #t (fuel ?tank))").is_value(FExpT::new_scaled(FExp::new_function(
                 FHead::new_with_terms(
-                    FunctionSymbol::from_str("fuel"),
-                    [Term::Variable(Variable::from_str("tank"))]
+                    FunctionSymbol::new_string("fuel"),
+                    [Term::Variable(Variable::new_string("tank"))]
                 )
             )))
         );

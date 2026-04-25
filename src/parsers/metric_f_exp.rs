@@ -53,21 +53,21 @@ use nom::Parser;
 ///
 /// assert!(parse_metric_f_exp("fun-sym").is_value(
 ///     MetricFExp::new_function(
-///         FunctionSymbol::from_str("fun-sym"),
+///         FunctionSymbol::new_string("fun-sym"),
 ///         []
 ///     )
 /// ));
 ///
 /// assert!(parse_metric_f_exp("(fun-sym)").is_value(
 ///     MetricFExp::new_function(
-///         FunctionSymbol::from_str("fun-sym"),
+///         FunctionSymbol::new_string("fun-sym"),
 ///         []
 ///     )
 /// ));
 ///
 /// assert!(parse_metric_f_exp("(fun-sym a b c)").is_value(
 ///     MetricFExp::new_function(
-///         FunctionSymbol::from_str("fun-sym"),
+///         FunctionSymbol::new_string("fun-sym"),
 ///         [
 ///             Name::new("a"),
 ///             Name::new("b"),
@@ -174,21 +174,21 @@ mod tests {
 
         assert!(
             MetricFExp::parse("fun-sym").is_value(MetricFExp::new_function(
-                FunctionSymbol::from_str("fun-sym"),
+                FunctionSymbol::new_string("fun-sym"),
                 []
             ))
         );
 
         assert!(
             MetricFExp::parse("(fun-sym)").is_value(MetricFExp::new_function(
-                FunctionSymbol::from_str("fun-sym"),
+                FunctionSymbol::new_string("fun-sym"),
                 []
             ))
         );
 
         assert!(
             MetricFExp::parse("(fun-sym a b c)").is_value(MetricFExp::new_function(
-                FunctionSymbol::from_str("fun-sym"),
+                FunctionSymbol::new_string("fun-sym"),
                 [Name::new("a"), Name::new("b"), Name::new("c")]
             ))
         );

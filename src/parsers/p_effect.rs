@@ -40,7 +40,7 @@ use nom::Parser;
 /// assert!(parse_p_effect("(assign fun-sym 1.23)").is_value(
 ///     PEffect::new_numeric_fluent(
 ///         AssignOp::Assign,
-///         FHead::new(FunctionSymbol::from_str("fun-sym")),
+///         FHead::new(FunctionSymbol::new_string("fun-sym")),
 ///         FExp::new_number(1.23)
 ///     )
 /// ));
@@ -48,21 +48,21 @@ use nom::Parser;
 /// assert!(parse_p_effect("(assign fun-sym 1.23)").is_value(
 ///     PEffect::new_numeric_fluent(
 ///         AssignOp::Assign,
-///         FHead::new(FunctionSymbol::from_str("fun-sym")),
+///         FHead::new(FunctionSymbol::new_string("fun-sym")),
 ///         FExp::new_number(1.23)
 ///     )
 /// ));
 ///
 /// assert!(parse_p_effect("(assign (fun-sym) undefined)").is_value(
 ///     PEffect::new_object_fluent(
-///         FunctionTerm::new(FunctionSymbol::from_str("fun-sym"), []),
+///         FunctionTerm::new(FunctionSymbol::new_string("fun-sym"), []),
 ///         None
 ///     )
 /// ));
 ///
 /// assert!(parse_p_effect("(assign (fun-sym) something)").is_value(
 ///     PEffect::new_object_fluent(
-///         FunctionTerm::new(FunctionSymbol::from_str("fun-sym"), []),
+///         FunctionTerm::new(FunctionSymbol::new_string("fun-sym"), []),
 ///         Some(Term::Name("something".into()))
 ///     )
 /// ));
@@ -158,7 +158,7 @@ mod tests {
         assert!(
             PEffect::parse("(assign fun-sym 1.23)").is_value(PEffect::new_numeric_fluent(
                 AssignOp::Assign,
-                FHead::new(FunctionSymbol::from_str("fun-sym")),
+                FHead::new(FunctionSymbol::new_string("fun-sym")),
                 FExp::new_number(1.23)
             ))
         );
@@ -166,21 +166,21 @@ mod tests {
         assert!(
             PEffect::parse("(assign fun-sym 1.23)").is_value(PEffect::new_numeric_fluent(
                 AssignOp::Assign,
-                FHead::new(FunctionSymbol::from_str("fun-sym")),
+                FHead::new(FunctionSymbol::new_string("fun-sym")),
                 FExp::new_number(1.23)
             ))
         );
 
         assert!(PEffect::parse("(assign (fun-sym) undefined)").is_value(
             PEffect::new_object_fluent(
-                FunctionTerm::new(FunctionSymbol::from_str("fun-sym"), []),
+                FunctionTerm::new(FunctionSymbol::new_string("fun-sym"), []),
                 None
             )
         ));
 
         assert!(PEffect::parse("(assign (fun-sym) something)").is_value(
             PEffect::new_object_fluent(
-                FunctionTerm::new(FunctionSymbol::from_str("fun-sym"), []),
+                FunctionTerm::new(FunctionSymbol::new_string("fun-sym"), []),
                 Some(Term::Name("something".into()))
             )
         ));
