@@ -25,6 +25,46 @@ pub(crate) fn skip_whitespace_and_comments<'a>(input: Span<'a>) -> ParseResult<'
     value((), many0(alt((multispace1, eol_comment)))).parse(input)
 }
 
+/// Repeatedly parses `section` (skipping whitespace and comments before each)
+/// and hands every result to `apply` together with the position it started at.
+/// Stops at the first input `section` does not match.
+pub(crate) fn fold_sections<'a, O>(
+    mut input: Span<'a>,
+    mut section: impl Parser<Span<'a>, Output = O, Error = NomError<'a>>,
+    mut apply: impl FnMut(O, Span<'a>) -> Result<(), nom::Err<NomError<'a>>>,
+) -> ParseResult<'a, ()> {
+    loop {
+        let (start, _) = skip_whitespace_and_comments(input)?;
+        match section.parse(start) {
+            Ok((rest, value)) => {
+                apply(value, start)?;
+                input = rest;
+            }
+            Err(nom::Err::Error(_)) => return Ok((input, ())),
+            Err(e) => return Err(e),
+        }
+    }
+}
+
+/// Stores a section's `value`, failing at `at` if that section was already given.
+pub(crate) fn set_once<'a, T>(
+    slot: &mut Option<T>,
+    value: T,
+    at: Span<'a>,
+) -> Result<(), nom::Err<NomError<'a>>> {
+    if slot.is_some() {
+        return Err(failure_at(at));
+    }
+    *slot = Some(value);
+    Ok(())
+}
+
+/// A non-recoverable error at `at`, used for structural errors such as
+/// duplicate or missing sections.
+pub(crate) fn failure_at(at: Span<'_>) -> nom::Err<NomError<'_>> {
+    nom::Err::Failure(NomError::new(at, nom::error::ErrorKind::Verify))
+}
+
 /// A combinator that takes a parser `inner` and produces a parser that also consumes a leading `(name` and trailing `)`, returning the output of `inner`.
 #[allow(clippy::needless_lifetimes)]
 pub fn prefix_expr<'a, P, O>(

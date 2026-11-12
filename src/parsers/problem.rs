@@ -1,18 +1,22 @@
 //! Provides parsers for problem definitions.
 
-use nom::character::complete::multispace1;
-use nom::combinator::{map, opt};
-use nom::sequence::preceded;
+use nom::branch::alt;
+use nom::combinator::map;
 use nom::Parser;
 
-use crate::parsers::{parse_name, prefix_expr, ws2, ParseResult, Span};
+use crate::parsers::utilities::skip_whitespace_and_comments;
+use crate::parsers::{
+    failure_at, fold_sections, parse_name, prefix_expr, set_once, ws2, ParseResult, Span,
+};
 use crate::parsers::{
     parse_problem_constraints_def, parse_problem_goal_def, parse_problem_init_def,
     parse_problem_length_spec, parse_problem_metric_spec, parse_problem_objects_declaration,
     parse_require_def,
 };
-use crate::types::{Objects, Problem};
-use crate::types::{ProblemConstraintsDef, Requirements};
+use crate::types::{
+    InitElements, LengthSpec, MetricSpec, Name, Objects, Problem, ProblemConstraintsDef,
+    ProblemGoalDefinition, Requirements,
+};
 
 /// Parses a problem definitions.
 ///
@@ -38,39 +42,77 @@ use crate::types::{ProblemConstraintsDef, Requirements};
 /// assert_eq!(problem.goals().len(), 3);
 /// ```
 pub fn parse_problem<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Problem> {
-    map(
-        ws2(prefix_expr(
-            "define",
-            (
-                prefix_expr("problem", parse_name),
-                preceded(multispace1, prefix_expr(":domain", parse_name)),
-                opt(preceded(multispace1, parse_require_def)),
-                opt(preceded(multispace1, parse_problem_objects_declaration)),
-                preceded(multispace1, parse_problem_init_def),
-                preceded(multispace1, parse_problem_goal_def),
-                // :constraints
-                opt(preceded(multispace1, parse_problem_constraints_def)),
-                // :numeric-fluents
-                opt(preceded(multispace1, parse_problem_metric_spec)),
-                // Deprecated since PDDL 2.1
-                opt(preceded(multispace1, parse_problem_length_spec)),
-            ),
-        )),
-        |(name, domain, reqs, objects, init, goal, constraints, metric, length)| {
-            Problem::new(
-                name,
-                domain,
-                reqs.unwrap_or(Requirements::new([])), // TODO: Do we need to imply STRIPS if empty?
-                objects.unwrap_or(Objects::default()),
-                init,
-                goal,
-                constraints.unwrap_or(ProblemConstraintsDef::default()),
-                metric,
-                length,
-            )
-        },
-    )
-    .parse(input.into())
+    ws2(prefix_expr("define", parse_problem_body)).parse(input.into())
+}
+
+/// A top-level part of a problem definition.
+enum Section {
+    Domain(Name),
+    Requirements(Requirements),
+    Objects(Objects),
+    Init(InitElements),
+    Goal(ProblemGoalDefinition),
+    Constraints(ProblemConstraintsDef),
+    Metric(MetricSpec),
+    Length(LengthSpec),
+}
+
+/// Parses `(problem <name>)` followed by the sections in any order.
+///
+/// Each section may appear at most once; `:domain`, `:init` and `:goal` are required.
+fn parse_problem_body(input: Span) -> ParseResult<Problem> {
+    let (input, name) = prefix_expr("problem", parse_name).parse(input)?;
+
+    let mut domain = None;
+    let mut requirements = None;
+    let mut objects = None;
+    let mut init = None;
+    let mut goal = None;
+    let mut constraints = None;
+    let mut metric = None;
+    let mut length = None;
+
+    let section = alt((
+        map(prefix_expr(":domain", parse_name), Section::Domain),
+        map(parse_require_def, Section::Requirements),
+        map(parse_problem_objects_declaration, Section::Objects),
+        map(parse_problem_init_def, Section::Init),
+        map(parse_problem_goal_def, Section::Goal),
+        map(parse_problem_constraints_def, Section::Constraints),
+        // :numeric-fluents
+        map(parse_problem_metric_spec, Section::Metric),
+        // Deprecated since PDDL 2.1
+        map(parse_problem_length_spec, Section::Length),
+    ));
+    let (input, ()) = fold_sections(input, section, |section, at| match section {
+        Section::Domain(v) => set_once(&mut domain, v, at),
+        Section::Requirements(v) => set_once(&mut requirements, v, at),
+        Section::Objects(v) => set_once(&mut objects, v, at),
+        Section::Init(v) => set_once(&mut init, v, at),
+        Section::Goal(v) => set_once(&mut goal, v, at),
+        Section::Constraints(v) => set_once(&mut constraints, v, at),
+        Section::Metric(v) => set_once(&mut metric, v, at),
+        Section::Length(v) => set_once(&mut length, v, at),
+    })?;
+
+    // A missing required section is reported where the sections end.
+    let (Some(domain), Some(init), Some(goal)) = (domain, init, goal) else {
+        let (at, _) = skip_whitespace_and_comments(input)?;
+        return Err(failure_at(at));
+    };
+
+    let problem = Problem::new(
+        name,
+        domain,
+        requirements.unwrap_or_default(), // TODO: Do we need to imply STRIPS if empty?
+        objects.unwrap_or_default(),
+        init,
+        goal,
+        constraints.unwrap_or_default(),
+        metric,
+        length,
+    );
+    Ok((input, problem))
 }
 
 impl crate::parsers::Parser for Problem {
@@ -109,6 +151,36 @@ impl crate::parsers::Parser for Problem {
 mod tests {
     use crate::parsers::preamble::*;
     use crate::{Name, Problem};
+
+    #[test]
+    fn sections_in_any_order() {
+        let ordered = Problem::from_str(
+            "(define (problem p) (:domain d) (:requirements :strips) (:objects a) \
+             (:init (at a)) (:goal (at a)) (:metric minimize (total-time)))",
+        )
+        .unwrap();
+        let shuffled = Problem::from_str(
+            "(define (problem p) (:metric minimize (total-time)) (:goal (at a)) (:objects a) \
+             (:init (at a)) (:requirements :strips) (:domain d))",
+        )
+        .unwrap();
+        assert_eq!(ordered, shuffled);
+    }
+
+    #[test]
+    fn missing_required_section_is_reported_where_the_sections_end() {
+        let input = "(define (problem p) (:domain d) (:init (at a))\n)";
+        let error = Problem::from_str(input).unwrap_err();
+        assert_eq!((error.line(), error.column()), (2, 1));
+        assert_eq!(error.found(), Some(")"));
+    }
+
+    #[test]
+    fn duplicate_section_is_reported_at_the_second_occurrence() {
+        let input = "(define (problem p) (:domain d) (:init) (:goal (and)) (:init))";
+        let error = Problem::from_str(input).unwrap_err();
+        assert_eq!(Some(error.offset()), input.rfind("(:init)"));
+    }
 
     #[test]
     fn test_parse() {
