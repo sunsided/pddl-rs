@@ -50,7 +50,7 @@ fn parse_define_blocks<'a>(input: Span<'a>) -> ParseResult<'a, Vec<DefineBlock>>
         remaining = after_ws;
 
         // Check if there's a `(define` ahead
-        if value((), tag::<_, _, crate::parsers::ParseError<'a>>("(define"))
+        if value((), tag::<_, _, crate::parsers::NomError<'a>>("(define"))
             .parse(remaining)
             .is_err()
         {

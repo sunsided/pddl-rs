@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+
+- [#97](https://github.com/sunsided/pddl-rs/issues/97): `Parser::from_str` now returns the crate-owned
+  `pddl::ParseError` instead of `nom::Err<nom::error::Error<_>>`. It exposes `line()`, `column()`,
+  `offset()` and a bounded `found()` excerpt, and its `Display` no longer prints the whole remaining
+  input. Consumers no longer need a direct `nom` dependency to handle parse errors.
+- The nom error alias `pddl::parsers::ParseError<'a>` used by the `parse_*` combinators was renamed
+  to `pddl::parsers::NomError<'a>`.
+
 ## [0.1.0] - 2024-05-19
 
 [0.1.0]: https://github.com/sunsided/pddl-rs/releases/tag/v0.1.0

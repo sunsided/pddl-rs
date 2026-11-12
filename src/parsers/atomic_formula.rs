@@ -1,7 +1,7 @@
 //! Provides parsers for atomic formulae.
 
 use crate::parsers::{parens, space_separated_list0, ws};
-use crate::parsers::{parse_predicate, ParseError, Span};
+use crate::parsers::{parse_predicate, NomError, Span};
 use crate::types::AtomicFormula;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
@@ -27,9 +27,9 @@ use nom::Parser;
 /// ```
 pub fn atomic_formula<'a, F, O>(
     inner: F,
-) -> impl Parser<Span<'a>, Output = AtomicFormula<O>, Error = ParseError<'a>>
+) -> impl Parser<Span<'a>, Output = AtomicFormula<O>, Error = NomError<'a>>
 where
-    F: Clone + Parser<Span<'a>, Output = O, Error = ParseError<'a>>,
+    F: Clone + Parser<Span<'a>, Output = O, Error = NomError<'a>>,
 {
     let equality = map(
         delimited(

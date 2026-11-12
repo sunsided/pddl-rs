@@ -27,6 +27,7 @@ mod domain_constraints_def;
 mod duration_constraint;
 mod effects;
 mod empty_or;
+mod error;
 mod f_assign_da;
 mod f_comp;
 mod f_exp;
@@ -83,6 +84,8 @@ mod variable;
 pub(crate) use test_helpers::Match;
 pub use test_helpers::UnwrapValue;
 
+pub use error::ParseError;
+
 /// Provides the [`Parser::parse`] and [`Parser::from_str`] methods.
 pub trait Parser {
     type Item;
@@ -97,26 +100,32 @@ pub trait Parser {
 
     /// Uses the [`Parser::parse`] method to parse the input and, if successful,
     /// discards the unparsed remaining input.
-    fn from_str(input: &str) -> Result<Self::Item, nom::Err<ParseError<'_>>> {
-        let (_, value) = Self::parse(input)?;
-        Ok(value)
+    ///
+    /// On failure, returns a [`ParseError`] with the line, column and an
+    /// excerpt of the input at which parsing stopped.
+    fn from_str(input: &str) -> Result<Self::Item, ParseError> {
+        Self::parse(input)
+            .map(|(_, value)| value)
+            .map_err(|e| ParseError::from_nom(input, e))
     }
 }
 
 /// Input type for parsers.
 pub type Span<'a> = nom_locate::LocatedSpan<&'a str>;
 
-/// A parsing error.
-pub type ParseError<'a> = nom::error::Error<Span<'a>>;
+/// The nom error type used by the individual `parse_*` combinators.
+///
+/// [`Parser::from_str`] converts it into a [`ParseError`].
+pub type NomError<'a> = nom::error::Error<Span<'a>>;
 
 /// A result from a parser.
-pub type ParseResult<'a, T, E = ParseError<'a>> = nom::IResult<Span<'a>, T, E>;
+pub type ParseResult<'a, T, E = NomError<'a>> = nom::IResult<Span<'a>, T, E>;
 
 /// Re-exports commonly used types.
 pub mod preamble {
     pub use crate::parsers::test_helpers::UnwrapValue;
     pub use crate::parsers::Parser;
-    pub use crate::parsers::{ParseError, ParseResult, Span};
+    pub use crate::parsers::{NomError, ParseError, ParseResult, Span};
 }
 
 // Parsers.

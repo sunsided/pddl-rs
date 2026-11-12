@@ -316,7 +316,7 @@ pub mod visitor;
 // re-export Parser trait.
 #[cfg_attr(docsrs, doc(cfg(feature = "parser")))]
 #[cfg(feature = "parser")]
-pub use parsers::Parser;
+pub use parsers::{ParseError, Parser};
 
 // re-export types
 pub use types::*;

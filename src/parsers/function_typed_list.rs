@@ -5,7 +5,7 @@ use nom::sequence::preceded;
 use nom::Parser;
 
 use crate::parsers::{
-    parse_type, space_separated_list0, space_separated_list1, ws, ParseError, Span,
+    parse_type, space_separated_list0, space_separated_list1, ws, NomError, Span,
 };
 use crate::types::{FunctionType, FunctionTyped, FunctionTypedList};
 
@@ -35,9 +35,9 @@ use crate::types::{FunctionType, FunctionTyped, FunctionTypedList};
 /// ```
 pub fn function_typed_list<'a, F, O>(
     inner: F,
-) -> impl Parser<Span<'a>, Output = FunctionTypedList<O>, Error = ParseError<'a>>
+) -> impl Parser<Span<'a>, Output = FunctionTypedList<O>, Error = NomError<'a>>
 where
-    F: Clone + Parser<Span<'a>, Output = O, Error = ParseError<'a>>,
+    F: Clone + Parser<Span<'a>, Output = O, Error = NomError<'a>>,
 {
     // `x*`
     let implicitly_typed = map(inner.clone(), |o| FunctionTyped::number(o));
