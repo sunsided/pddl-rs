@@ -118,7 +118,10 @@ mod tests {
     fn excerpt_flattens_newlines() {
         let error = Domain::from_str("(define (domain d)\n(:bogus\n))").unwrap_err();
         assert_eq!(error.found(), Some("(:bogus ))"));
-        assert_eq!(error.to_string(), "line 2, column 1: unexpected `(:bogus ))`");
+        assert_eq!(
+            error.to_string(),
+            "line 2, column 1: unexpected `(:bogus ))`"
+        );
     }
 
     #[test]
