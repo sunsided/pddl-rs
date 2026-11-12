@@ -66,6 +66,8 @@ jobs:
         run: cargo test --no-default-features
       - name: Test with only the pretty feature
         run: cargo test --no-default-features --features pretty
+      - name: Test with only the parser feature
+        run: cargo test --no-default-features --features parser
 
   codecov:
     name: Code Coverage
