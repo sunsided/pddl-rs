@@ -55,10 +55,15 @@ use std::ops::Deref;
 /// [`Requirements::unknown`], separate from the known ones; dereferencing,
 /// [`len`](Vec::len) and [`Requirements::to_effective`] only see known ones.
 /// ```
+/// # #[cfg(feature = "parser")]
+/// # fn main() {
 /// # use pddl::{Parser, Requirement, Requirements};
 /// let requirements = Requirements::from_str("(:requirements :strips :foo-bar)").unwrap();
 /// assert_eq!(*requirements, [Requirement::Strips]);
 /// assert_eq!(requirements.unknown(), [":foo-bar"]);
+/// # }
+/// # #[cfg(not(feature = "parser"))]
+/// # fn main() {}
 /// ```
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
 pub struct Requirements(Vec<Requirement>, Vec<Name>);
