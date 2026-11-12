@@ -13,6 +13,9 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   input. Consumers no longer need a direct `nom` dependency to handle parse errors.
 - The nom error alias `pddl::parsers::ParseError<'a>` used by the `parse_*` combinators was renamed
   to `pddl::parsers::NomError<'a>`.
+- [#98](https://github.com/sunsided/pddl-rs/issues/98): `Parser::from_str` now rejects trailing input
+  instead of silently discarding it. Only whitespace and `;` comments may follow the parsed item. Use
+  `PddlFile::from_str` to read several `(define ...)` blocks from one input.
 
 ## [0.1.0] - 2024-05-19
 

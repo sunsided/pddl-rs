@@ -98,15 +98,32 @@ pub trait Parser {
         Self::parse(input)
     }
 
-    /// Uses the [`Parser::parse`] method to parse the input and, if successful,
-    /// discards the unparsed remaining input.
+    /// Uses the [`Parser::parse`] method to parse the entire input.
+    ///
+    /// Only whitespace and `;` comments may follow the parsed item; any other
+    /// trailing input is an error. To read several `(define ...)` blocks from
+    /// one input, parse it as a [`PddlFile`](crate::PddlFile) instead.
     ///
     /// On failure, returns a [`ParseError`] with the line, column and an
     /// excerpt of the input at which parsing stopped.
+    ///
+    /// ## Example
+    /// ```
+    /// # use pddl::{Name, Parser};
+    /// assert!(Name::from_str("abc ; comment\n").is_ok());
+    ///
+    /// let error = Name::from_str("abc def").unwrap_err();
+    /// assert_eq!(error.found(), Some("def"));
+    /// ```
     fn from_str(input: &str) -> Result<Self::Item, ParseError> {
-        Self::parse(input)
-            .map(|(_, value)| value)
-            .map_err(|e| ParseError::from_nom(input, e))
+        use nom::Parser as _;
+        nom::combinator::all_consuming(nom::sequence::terminated(
+            |input| Self::parse(input),
+            utilities::skip_whitespace_and_comments,
+        ))
+        .parse(Span::new(input))
+        .map(|(_, value)| value)
+        .map_err(|e| ParseError::from_nom(input, e))
     }
 }
 
@@ -218,7 +235,9 @@ pub(crate) use utilities::{
 
 #[cfg(test)]
 mod tests {
-    use crate::{BasicFunctionTerm, Parser};
+    use crate::{BasicFunctionTerm, Domain, Parser};
+
+    const DOMAIN: &str = "(define (domain d) (:requirements :strips) (:predicates (p)))";
 
     #[test]
     fn test_parse() {
@@ -236,5 +255,27 @@ mod tests {
     fn test_from_str() {
         let value = BasicFunctionTerm::from_str("abcde").unwrap();
         assert_eq!(value, BasicFunctionTerm::new("abcde".into(), []));
+    }
+
+    #[test]
+    fn from_str_allows_trailing_whitespace_and_comments() {
+        let input = format!("{DOMAIN}\n  ; trailing comment\n; another\n\n");
+        assert!(Domain::from_str(&input).is_ok());
+    }
+
+    #[test]
+    fn from_str_rejects_trailing_input() {
+        let input = format!("{DOMAIN}\n)))garbage");
+        let error = Domain::from_str(&input).unwrap_err();
+        assert_eq!((error.line(), error.column()), (2, 1));
+        assert_eq!(error.found(), Some(")))garbage"));
+    }
+
+    #[test]
+    fn from_str_rejects_a_second_define_block() {
+        let input = format!("{DOMAIN}\n(define (problem q) (:domain d))");
+        let error = Domain::from_str(&input).unwrap_err();
+        assert_eq!(Some(error.offset()), input.find("(define (problem"));
+        assert!(error.found().unwrap().starts_with("(define (problem q)"));
     }
 }
