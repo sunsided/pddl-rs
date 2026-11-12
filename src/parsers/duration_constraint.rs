@@ -14,7 +14,7 @@ use crate::types::DurationConstraint;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_duration_constraint, preamble::*};
-/// # use pddl::{DOp, DurationConstraint, DurationValue, FunctionType, SimpleDurationConstraint, TimeSpecifier};
+/// # use pddl::{DurationOperator, DurationConstraint, DurationValue, FunctionType, SimpleDurationConstraint, TimeSpecifier};
 /// let input = "()";
 /// assert!(parse_duration_constraint(input).is_value(None));
 ///
@@ -22,7 +22,7 @@ use crate::types::DurationConstraint;
 /// assert!(parse_duration_constraint(input).is_value(
 ///     Some(DurationConstraint::new(
 ///         SimpleDurationConstraint::Op(
-///             DOp::Equal,
+///             DurationOperator::Equal,
 ///             DurationValue::Number(5.into())
 ///         )
 ///     ))
@@ -34,7 +34,7 @@ use crate::types::DurationConstraint;
 ///         SimpleDurationConstraint::new_at(
 ///             TimeSpecifier::End,
 ///             SimpleDurationConstraint::Op(
-///                 DOp::LessThanOrEqual,
+///                 DurationOperator::LessThanOrEqual,
 ///                 DurationValue::Number(1.23.into())
 ///             )
 ///         )
@@ -47,12 +47,12 @@ use crate::types::DurationConstraint;
 ///         SimpleDurationConstraint::new_at(
 ///             TimeSpecifier::End,
 ///             SimpleDurationConstraint::Op(
-///                 DOp::LessThanOrEqual,
+///                 DurationOperator::LessThanOrEqual,
 ///                 DurationValue::Number(1.23.into())
 ///             )
 ///         ),
 ///         SimpleDurationConstraint::new_op(
-///             DOp::GreaterOrEqual,
+///             DurationOperator::GreaterOrEqual,
 ///             DurationValue::Number(1.0.into())
 ///         )
 ///     ]))

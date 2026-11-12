@@ -18,7 +18,7 @@ use nom::Parser;
 /// # use pddl::{Typed, TypedList};
 /// assert!(parse_da_effect("(at start (= x y))").is_value(
 ///     DurativeActionEffect::Timed(
-///         TimedEffect::new_conditional(
+///         TimedEffect::conditional(
 ///             TimeSpecifier::Start,
 ///             EffectCondition::new(
 ///                 PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
@@ -39,7 +39,7 @@ use nom::Parser;
 /// assert!(parse_da_effect("(and (at start (= x y)) (and ))").is_value(
 ///     DurativeActionEffect::new_and([
 ///         DurativeActionEffect::Timed(
-///             TimedEffect::new_conditional(
+///             TimedEffect::conditional(
 ///                 TimeSpecifier::Start,
 ///                 EffectCondition::new(
 ///                     PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
@@ -62,7 +62,7 @@ use nom::Parser;
 ///             Typed::object(Variable::new_string("b")),
 ///         ]),
 ///         DurativeActionEffect::Timed(
-///             TimedEffect::new_conditional(
+///             TimedEffect::conditional(
 ///                 TimeSpecifier::Start,
 ///                 EffectCondition::new(
 ///                     PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(

@@ -16,11 +16,11 @@ use crate::types::SimpleDurationConstraint;
 /// ## Example
 /// ```
 /// # use pddl::parsers::{parse_simple_duration_constraint, preamble::*};
-/// # use pddl::{DOp, DurationValue, FunctionType, SimpleDurationConstraint, TimeSpecifier};
+/// # use pddl::{DurationOperator, DurationValue, FunctionType, SimpleDurationConstraint, TimeSpecifier};
 /// let input = "(>= ?duration 1.23)";
 /// assert!(parse_simple_duration_constraint(input).is_value(
 ///     SimpleDurationConstraint::op(
-///         DOp::GreaterOrEqual,
+///         DurationOperator::GreaterOrEqual,
 ///         DurationValue::number(1.23)
 ///     )
 /// ));
@@ -30,7 +30,7 @@ use crate::types::SimpleDurationConstraint;
 ///     SimpleDurationConstraint::at(
 ///         TimeSpecifier::End,
 ///         SimpleDurationConstraint::Op(
-///             DOp::LessThanOrEqual,
+///             DurationOperator::LessThanOrEqual,
 ///             DurationValue::number(1.23)
 ///         )
 ///     )

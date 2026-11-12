@@ -42,10 +42,10 @@ use crate::{ForallConditionalEffect, WhenConditionalEffect};
 /// ));
 ///
 /// assert!(parse_c_effect(Span::new("(forall (?a ?b) (= ?a ?b))")).is_value(
-///     ConditionalEffect::new_forall(
+///     ConditionalEffect::forall(
 ///         TypedList::from_iter([
-///             Typed::new_object(Variable::new_string("a")),
-///             Typed::new_object(Variable::new_string("b")),
+///             Typed::object(Variable::new_string("a")),
+///             Typed::object(Variable::new_string("b")),
 ///         ]),
 ///         Effects::new(ConditionalEffect::Effect(
 ///             PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
@@ -62,7 +62,7 @@ use crate::{ForallConditionalEffect, WhenConditionalEffect};
 ///     (and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))
 ///     (and (person-is-happy ?p)))"#;
 /// assert!(parse_c_effect(Span::new(input)).is_value(
-///     ConditionalEffect::new_when(
+///     ConditionalEffect::when(
 ///         GoalDefinition::new_and([
 ///             GoalDefinition::new_atomic_formula(
 ///                 AtomicFormula::new_predicate(
@@ -114,8 +114,8 @@ pub fn parse_c_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Condit
 /// assert!(parse_forall_c_effect(Span::new("(forall (?a ?b) (= ?a ?b))")).is_value(
 ///     ForallConditionalEffect::new(
 ///         TypedList::from_iter([
-///             Typed::new_object(Variable::new_string("a")),
-///             Typed::new_object(Variable::new_string("b")),
+///             Typed::object(Variable::new_string("a")),
+///             Typed::object(Variable::new_string("b")),
 ///         ]),
 ///         Effects::new(ConditionalEffect::Effect(
 ///             PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
@@ -228,10 +228,10 @@ impl crate::parsers::Parser for ConditionalEffect {
     ///
     /// let (_, value) = ConditionalEffect::parse("(forall (?a ?b) (= ?a ?b))").unwrap();
     /// assert_eq!(value,
-    ///     ConditionalEffect::new_forall(
+    ///     ConditionalEffect::forall(
     ///         TypedList::from_iter([
-    ///             Typed::new_object(Variable::new_string("a")),
-    ///             Typed::new_object(Variable::new_string("b")),
+    ///             Typed::object(Variable::new_string("a")),
+    ///             Typed::object(Variable::new_string("b")),
     ///         ]),
     ///         Effects::from_str("(= ?a ?b)").unwrap()
     ///     )
@@ -242,7 +242,7 @@ impl crate::parsers::Parser for ConditionalEffect {
     ///     (and (person-is-happy ?p)))"#;
     /// let (_, value) = ConditionalEffect::parse(input).unwrap();
     /// assert_eq!(value,
-    ///     ConditionalEffect::new_when(
+    ///     ConditionalEffect::when(
     ///         GoalDefinition::from_str("(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))").unwrap(),
     ///         EffectCondition::from_str("(and (person-is-happy ?p))").unwrap()
     ///     )
@@ -268,8 +268,8 @@ impl crate::parsers::Parser for ForallConditionalEffect {
     /// assert_eq!(value,
     ///     ForallConditionalEffect::new(
     ///         TypedList::from_iter([
-    ///             Typed::new_object(Variable::new_string("a")),
-    ///             Typed::new_object(Variable::new_string("b")),
+    ///             Typed::object(Variable::new_string("a")),
+    ///             Typed::object(Variable::new_string("b")),
     ///         ]),
     ///         Effects::from_str("(= ?a ?b)").unwrap()
     ///     )
