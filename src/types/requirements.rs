@@ -1,6 +1,6 @@
 //! Provides function requirements.
 
-use crate::types::Requirement;
+use crate::types::{Name, Requirement};
 use std::collections::HashSet;
 use std::ops::Deref;
 
@@ -48,8 +48,20 @@ use std::ops::Deref;
 /// assert_eq!(effective.len(), 1);
 /// assert!(effective.contains(&Requirement::Strips));
 /// ```
+///
+/// ## Unknown requirements
+/// Requirement keys this crate does not know (e.g. newer or planner-specific
+/// flags) don't fail parsing. They are kept, with their leading `:`, in
+/// [`Requirements::unknown`], separate from the known ones; dereferencing,
+/// [`len`](Vec::len) and [`Requirements::to_effective`] only see known ones.
+/// ```
+/// # use pddl::{Parser, Requirement, Requirements};
+/// let requirements = Requirements::from_str("(:requirements :strips :foo-bar)").unwrap();
+/// assert_eq!(*requirements, [Requirement::Strips]);
+/// assert_eq!(requirements.unknown(), [":foo-bar"]);
+/// ```
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
-pub struct Requirements(Vec<Requirement>);
+pub struct Requirements(Vec<Requirement>, Vec<Name>);
 
 impl Requirements {
     /// Constructs a new set of requirements from the specified values.
@@ -59,7 +71,26 @@ impl Requirements {
     /// implicit `:strips` requirement will not be added when no values are provided.
     /// To get the effective set of requirements, call [`Requirements::to_effective`].
     pub fn new<I: IntoIterator<Item = Requirement>>(requirements: I) -> Self {
-        Self(requirements.into_iter().collect())
+        Self(requirements.into_iter().collect(), Vec::new())
+    }
+
+    /// Adds requirement keys this crate does not know, e.g. `:foo-bar`.
+    pub fn with_unknown<I: IntoIterator<Item = Name>>(mut self, unknown: I) -> Self {
+        self.1.extend(unknown);
+        self
+    }
+
+    /// Returns the requirement keys this crate does not know, including their leading `:`.
+    pub fn unknown(&self) -> &[Name] {
+        &self.1
+    }
+
+    /// Returns `true` if neither known nor unknown requirements are given.
+    ///
+    /// Unlike [`is_empty`](Vec::is_empty) through [`Deref`], this also considers
+    /// [`Requirements::unknown`].
+    pub fn is_empty_including_unknown(&self) -> bool {
+        self.0.is_empty() && self.1.is_empty()
     }
 
     /// Returns the set of effective requirements.

@@ -421,3 +421,26 @@ fn whitespace_before_parens_is_optional() {
         }
     }
 }
+
+/// Unknown requirement keys survive pretty-printing, also when they are the only ones.
+#[test]
+fn unknown_requirements_round_trip() {
+    for (requirements, expected) in [
+        (":strips :foo-bar", "(:requirements :strips :foo-bar)"),
+        (":foo-bar", "(:requirements :foo-bar)"),
+    ] {
+        let input = format!("(define (domain d) (:requirements {requirements}) (:predicates (p)))");
+        let domain = Domain::from_str(&input).unwrap();
+        let printed = domain.pretty(80).to_string();
+        assert!(printed.contains(expected), "{printed}");
+        assert_eq!(Domain::from_str(&printed).unwrap(), domain, "{printed}");
+
+        let input = format!(
+            "(define (problem p) (:domain d) (:requirements {requirements}) (:init) (:goal (and)))"
+        );
+        let problem = Problem::from_str(&input).unwrap();
+        let printed = problem.pretty(80).to_string();
+        assert!(printed.contains(expected), "{printed}");
+        assert_eq!(Problem::from_str(&printed).unwrap(), problem, "{printed}");
+    }
+}

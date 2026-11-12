@@ -1,13 +1,15 @@
 //! Provides parsers for requirements.
 
 use nom::branch::alt;
-use nom::bytes::complete::tag_no_case;
-use nom::combinator::map;
+use nom::character::complete::{alpha1, char};
+use nom::combinator::{map, recognize};
+use nom::multi::many0;
 use nom::Parser;
 
-use crate::parsers::{prefix_expr, space_separated_list1, ParseResult, Span};
+use crate::parsers::name::parse_any_char;
+use crate::parsers::{keyword, prefix_expr, space_separated_list1, ParseResult, Span};
 use crate::types::requirement::{names, Requirement};
-use crate::types::Requirements;
+use crate::types::{Name, Requirements};
 
 /// Parses a requirement definition, i.e. `(:requirements <require-key>)⁺`.
 ///
@@ -20,11 +22,41 @@ use crate::types::Requirements;
 /// assert!(parse_require_def("(:requirements\n:strips   :typing  )").is_value(Requirements::new([Requirement::Strips, Requirement::Typing])));
 ///```
 pub fn parse_require_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Requirements> {
+    let key = alt((
+        map(parse_require_key, Key::Known),
+        map(parse_unknown_require_key, Key::Unknown),
+    ));
     map(
-        prefix_expr(":requirements", space_separated_list1(parse_require_key)),
-        Requirements::new,
+        prefix_expr(":requirements", space_separated_list1(key)),
+        |keys| {
+            let mut known = Vec::new();
+            let mut unknown = Vec::new();
+            for key in keys {
+                match key {
+                    Key::Known(requirement) => known.push(requirement),
+                    Key::Unknown(name) => unknown.push(name),
+                }
+            }
+            Requirements::new(known).with_unknown(unknown)
+        },
     )
     .parse(input.into())
+}
+
+/// A requirement key, known to this crate or not.
+enum Key {
+    Known(Requirement),
+    Unknown(Name),
+}
+
+/// Parses a requirement key this crate does not know, such as `:foo-bar`.
+/// The returned name includes the leading `:`.
+fn parse_unknown_require_key(input: Span) -> ParseResult<Name> {
+    map(
+        recognize((char(':'), alpha1, many0(parse_any_char))),
+        |key: Span| Name::from(*key.fragment()),
+    )
+    .parse(input)
 }
 
 /// Parses a requirement key, i.e. `:strips`.
@@ -60,27 +92,27 @@ pub fn parse_require_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Req
 pub fn parse_require_key<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Requirement> {
     map(
         alt((
-            tag_no_case(names::STRIPS),
-            tag_no_case(names::TYPING),
-            tag_no_case(names::NEGATIVE_PRECONDITIONS),
-            tag_no_case(names::DISJUNCTIVE_PRECONDITIONS),
-            tag_no_case(names::EQUALITY),
-            tag_no_case(names::EXISTENTIAL_PRECONDITIONS),
-            tag_no_case(names::UNIVERSAL_PRECONDITIONS),
-            tag_no_case(names::QUANTIFIED_PRECONDITIONS),
-            tag_no_case(names::CONDITIONAL_EFFECTS),
-            tag_no_case(names::FLUENTS),
-            tag_no_case(names::NUMERIC_FLUENTS),
-            tag_no_case(names::OBJECT_FLUENTS),
-            tag_no_case(names::ADL),
-            tag_no_case(names::DURATIVE_ACTIONS),
-            tag_no_case(names::DURATION_INEQUALITIES),
-            tag_no_case(names::CONTINUOUS_EFFECTS),
-            tag_no_case(names::DERIVED_PREDICATES),
-            tag_no_case(names::TIMED_INITIAL_LITERALS),
-            tag_no_case(names::PREFERENCES),
-            tag_no_case(names::CONSTRAINTS),
-            tag_no_case(names::ACTION_COSTS),
+            keyword(names::STRIPS),
+            keyword(names::TYPING),
+            keyword(names::NEGATIVE_PRECONDITIONS),
+            keyword(names::DISJUNCTIVE_PRECONDITIONS),
+            keyword(names::EQUALITY),
+            keyword(names::EXISTENTIAL_PRECONDITIONS),
+            keyword(names::UNIVERSAL_PRECONDITIONS),
+            keyword(names::QUANTIFIED_PRECONDITIONS),
+            keyword(names::CONDITIONAL_EFFECTS),
+            keyword(names::FLUENTS),
+            keyword(names::NUMERIC_FLUENTS),
+            keyword(names::OBJECT_FLUENTS),
+            keyword(names::ADL),
+            keyword(names::DURATIVE_ACTIONS),
+            keyword(names::DURATION_INEQUALITIES),
+            keyword(names::CONTINUOUS_EFFECTS),
+            keyword(names::DERIVED_PREDICATES),
+            keyword(names::TIMED_INITIAL_LITERALS),
+            keyword(names::PREFERENCES),
+            keyword(names::CONSTRAINTS),
+            keyword(names::ACTION_COSTS),
         )),
         |x: Span| {
             Requirement::try_from(x.fragment().to_ascii_lowercase().as_str())
@@ -111,6 +143,35 @@ impl crate::parsers::Parser for Requirement {
 mod tests {
     use crate::parsers::preamble::*;
     use crate::{Requirement, Requirements};
+
+    #[test]
+    fn unknown_keys_are_kept_separately() {
+        let reqs =
+            Requirements::from_str("(:requirements :strips :foo-bar :TYPING :typing-x)").unwrap();
+        assert_eq!(*reqs, [Requirement::Strips, Requirement::Typing]);
+        // `:typing-x` is a different key, not `:typing` followed by garbage.
+        assert_eq!(reqs.unknown(), [":foo-bar", ":typing-x"]);
+    }
+
+    #[test]
+    fn only_unknown_keys() {
+        let reqs = Requirements::from_str("(:requirements :foo)").unwrap();
+        assert!(reqs.is_empty());
+        assert!(!reqs.is_empty_including_unknown());
+        assert_eq!(reqs.unknown(), [":foo"]);
+        // Unknown keys don't count as requirements, so `:strips` is still implied.
+        assert_eq!(
+            reqs.to_effective(),
+            [Requirement::Strips].into_iter().collect()
+        );
+    }
+
+    #[test]
+    fn a_key_must_still_look_like_a_key() {
+        assert!(Requirements::from_str("(:requirements strips)").is_err());
+        assert!(Requirements::from_str("(:requirements :)").is_err());
+        assert!(Requirements::from_str("(:requirements :1x)").is_err());
+    }
 
     #[test]
     fn test_parse_requirement() {

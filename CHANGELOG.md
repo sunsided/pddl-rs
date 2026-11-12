@@ -30,6 +30,11 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   where whitespace is. The exception is the constraint form `(at end <GD>)`, whose `at end` still needs
   exactly one space and no comment between the words. Keywords that open a form now match as whole words, so a
   predicate such as `(preferences ...)` is no longer parsed as a `preference`.
+- [#102](https://github.com/sunsided/pddl-rs/issues/102): Unknown `:requirements` keys (e.g. newer or
+  planner-specific flags) no longer fail the whole file. They are kept, with their leading `:`, in the
+  new `Requirements::unknown()`, separately from the known `Requirement`s, and are pretty-printed after
+  them. `Requirement` itself is unchanged. Known keys now match as whole words, so `:typing-x` is an
+  unknown key rather than `:typing`.
 
 ## [0.1.0] - 2024-05-19
 
