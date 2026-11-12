@@ -67,7 +67,14 @@ impl ParseError {
             let mut excerpt: String = rest
                 .chars()
                 .take(EXCERPT_CHARS)
-                .map(|c| if c.is_whitespace() { ' ' } else { c })
+                // Control characters (e.g. ANSI escapes) from untrusted input must not reach terminals or logs.
+                .map(|c| {
+                    if c.is_whitespace() || c.is_control() {
+                        ' '
+                    } else {
+                        c
+                    }
+                })
                 .collect();
             if rest.chars().nth(EXCERPT_CHARS).is_some() {
                 excerpt.push_str("...");
@@ -122,6 +129,14 @@ mod tests {
             error.to_string(),
             "line 2, column 1: unexpected `(:bogus ))`"
         );
+    }
+
+    #[test]
+    fn excerpt_replaces_control_characters() {
+        let error = Domain::from_str("(define (domain d)\n(:\x1b[2J\0\x07))").unwrap_err();
+        let found = error.found().unwrap();
+        assert!(!found.chars().any(char::is_control), "{found:?}");
+        assert_eq!(found, "(: [2J  ))");
     }
 
     #[test]
