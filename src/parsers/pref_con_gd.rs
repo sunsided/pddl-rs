@@ -1,12 +1,12 @@
 //! Provides parsers for preferred goal definitions.
 
+use crate::parsers::sep;
 use crate::parsers::{
     parens, parse_con_gd, parse_pref_name, parse_variable, prefix_expr, space_separated_list0,
     typed_list, ParseResult, Span,
 };
 use crate::PreferenceConstraintGoalDefinitions;
 use nom::branch::alt;
-use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
@@ -95,7 +95,7 @@ pub fn parse_pref_con_gd<'a, T: Into<Span<'a>>>(
             "forall",
             (
                 parens(typed_list(parse_variable)),
-                preceded(multispace1, parse_pref_con_gd),
+                preceded(sep, parse_pref_con_gd),
             ),
         ),
         |(vars, gd)| PreferenceConstraintGoalDefinitions::forall(vars, gd),
@@ -103,10 +103,7 @@ pub fn parse_pref_con_gd<'a, T: Into<Span<'a>>>(
 
     // :preferences
     let named_preference = map(
-        prefix_expr(
-            "preference",
-            (parse_pref_name, preceded(multispace1, parse_con_gd)),
-        ),
+        prefix_expr("preference", (parse_pref_name, preceded(sep, parse_con_gd))),
         |(name, gd)| PreferenceConstraintGoalDefinitions::preference(Some(name), gd),
     );
 

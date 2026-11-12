@@ -25,6 +25,20 @@ pub(crate) fn skip_whitespace_and_comments<'a>(input: Span<'a>) -> ParseResult<'
     value((), many0(alt((multispace1, eol_comment)))).parse(input)
 }
 
+/// Separates two tokens: whitespace and `;` comments, which may be omitted
+/// before a `(` (e.g. `:parameters(?x)` or `(and(p)(q))`).
+pub(crate) fn sep(input: Span) -> ParseResult<()> {
+    let (rest, ()) = skip_whitespace_and_comments(input)?;
+    if rest.location_offset() > input.location_offset() || rest.fragment().starts_with('(') {
+        Ok((rest, ()))
+    } else {
+        Err(nom::Err::Error(NomError::new(
+            input,
+            nom::error::ErrorKind::MultiSpace,
+        )))
+    }
+}
+
 /// Repeatedly parses `section` (skipping whitespace and comments before each)
 /// and hands every result to `apply` together with the position it started at.
 ///
@@ -86,10 +100,29 @@ where
     P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
 {
     delimited(
-        preceded(ws(tag_no_case("(")), tag_no_case(name)),
+        preceded(ws(tag_no_case("(")), keyword(name)),
         ws(inner),
         ws(tag_no_case(")")),
     )
+}
+
+/// Matches the keyword `name` (ignoring case) as a whole word: a keyword
+/// ending in a letter or digit must not be followed by a name character, so
+/// `preference` does not match the start of `preferences`.
+fn keyword<'a>(name: &'a str) -> impl Parser<Span<'a>, Output = Span<'a>, Error = NomError<'a>> {
+    let needs_boundary = name.ends_with(|c: char| c.is_ascii_alphanumeric());
+    move |input: Span<'a>| {
+        let (rest, matched) = tag_no_case(name).parse(input)?;
+        // Use the name grammar itself, so the boundary can't drift from what a name may contain.
+        let continues_name = super::name::parse_any_char(rest).is_ok();
+        if needs_boundary && continues_name {
+            return Err(nom::Err::Error(NomError::new(
+                input,
+                nom::error::ErrorKind::Tag,
+            )));
+        }
+        Ok((rest, matched))
+    }
 }
 
 /// A combinator that takes a parser `inner` and produces a parser that also consumes leading whitespace,
@@ -128,7 +161,7 @@ where
     P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
 {
     ws(separated_list0(
-        multispace1,
+        sep,
         preceded(skip_whitespace_and_comments, inner),
     ))
 }
@@ -142,7 +175,7 @@ where
     P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
 {
     ws(separated_list1(
-        multispace1,
+        sep,
         preceded(skip_whitespace_and_comments, inner),
     ))
 }
@@ -167,6 +200,16 @@ mod tests {
     use nom::multi::separated_list1;
 
     #[test]
+    fn sep_is_optional_only_before_a_paren() {
+        assert_eq!(*sep(Span::new("(p)")).unwrap().0.fragment(), "(p)");
+        assert_eq!(*sep(Span::new("  x")).unwrap().0.fragment(), "x");
+        assert_eq!(*sep(Span::new("; c\nx")).unwrap().0.fragment(), "x");
+        // Two names still need something between them.
+        assert!(sep(Span::new("x")).is_err());
+        assert!(sep(Span::new("")).is_err());
+    }
+
+    #[test]
     fn fold_sections_fails_on_a_section_that_consumes_nothing() {
         let input = Span::new("  (a)");
         let result = fold_sections(input, nom::combinator::success(()), |_, _| Ok(()));
@@ -174,6 +217,19 @@ mod tests {
             panic!("expected failure, got {result:?}");
         };
         assert_eq!(e.input.location_offset(), 2);
+    }
+
+    #[test]
+    fn keyword_matches_whole_words_only() {
+        let mut and = keyword("and");
+        assert!(and.parse(Span::new("and (p)")).is_ok());
+        assert!(and.parse(Span::new("AND(p)")).is_ok());
+        assert!(and.parse(Span::new("and)")).is_ok());
+        assert!(and.parse(Span::new("andy")).is_err());
+        assert!(and.parse(Span::new("and-or")).is_err());
+        assert!(and.parse(Span::new("and_2")).is_err());
+        // Keywords ending in a symbol need no boundary.
+        assert!(keyword("=").parse(Span::new("=?x")).is_ok());
     }
 
     #[test]

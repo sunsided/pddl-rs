@@ -1,11 +1,11 @@
 //! Provides parsers for goal definitions.
 
 use nom::branch::alt;
-use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
 
+use crate::parsers::sep;
 use crate::parsers::{
     atomic_formula, literal, parse_f_comp, parse_term, parse_variable, ParseResult, Span,
 };
@@ -158,7 +158,7 @@ pub fn parse_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, GoalDefiniti
 
     // :disjunctive-preconditions
     let imply = map(
-        prefix_expr("imply", (parse_gd, preceded(multispace1, parse_gd))),
+        prefix_expr("imply", (parse_gd, preceded(sep, parse_gd))),
         GoalDefinition::new_imply_tuple,
     );
 
@@ -166,10 +166,7 @@ pub fn parse_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, GoalDefiniti
     let exists = map(
         prefix_expr(
             "exists",
-            (
-                parens(typed_list(parse_variable)),
-                preceded(multispace1, parse_gd),
-            ),
+            (parens(typed_list(parse_variable)), preceded(sep, parse_gd)),
         ),
         GoalDefinition::new_exists_tuple,
     );
@@ -178,10 +175,7 @@ pub fn parse_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, GoalDefiniti
     let forall = map(
         prefix_expr(
             "forall",
-            (
-                parens(typed_list(parse_variable)),
-                preceded(multispace1, parse_gd),
-            ),
+            (parens(typed_list(parse_variable)), preceded(sep, parse_gd)),
         ),
         GoalDefinition::new_forall_tuple,
     );

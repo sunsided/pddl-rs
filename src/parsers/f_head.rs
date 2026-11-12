@@ -1,11 +1,11 @@
 //! Provides parsers for f-heads.
 
 use nom::branch::alt;
-use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
 
+use crate::parsers::sep;
 use crate::parsers::{parens, space_separated_list0, ParseResult, Span};
 use crate::parsers::{parse_function_symbol, parse_term};
 use crate::types::FunctionHead;
@@ -36,7 +36,7 @@ pub fn parse_f_head<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Function
     let with_terms = map(
         parens((
             parse_function_symbol,
-            preceded(multispace1, space_separated_list0(parse_term)),
+            preceded(sep, space_separated_list0(parse_term)),
         )),
         |(symbol, terms)| FunctionHead::with_terms(symbol, terms),
     );

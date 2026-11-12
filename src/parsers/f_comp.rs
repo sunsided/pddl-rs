@@ -1,10 +1,10 @@
 //! Provides parsers for f-comps.
 
-use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
 
+use crate::parsers::sep;
 use crate::parsers::{parens, ParseResult, Span};
 use crate::parsers::{parse_binary_comp, parse_f_exp};
 use crate::types::FluentComparison;
@@ -35,8 +35,8 @@ pub fn parse_f_comp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FluentCo
     map(
         parens((
             parse_binary_comp,
-            preceded(multispace1, parse_f_exp),
-            preceded(multispace1, parse_f_exp),
+            preceded(sep, parse_f_exp),
+            preceded(sep, parse_f_exp),
         )),
         FluentComparison::from,
     )

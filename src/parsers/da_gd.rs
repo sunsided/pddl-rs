@@ -1,10 +1,10 @@
 //! Provides parsers for durative action goal definitions.
 
+use crate::parsers::sep;
 use crate::parsers::{parens, prefix_expr, space_separated_list0, typed_list, ParseResult, Span};
 use crate::parsers::{parse_pref_timed_gd, parse_variable};
 use crate::types::DurativeActionGoalDefinition;
 use nom::branch::alt;
-use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
@@ -100,7 +100,7 @@ pub fn parse_da_gd<'a, T: Into<Span<'a>>>(
             "forall",
             (
                 parens(typed_list(parse_variable)),
-                preceded(multispace1, parse_da_gd),
+                preceded(sep, parse_da_gd),
             ),
         ),
         |(vars, gd)| DurativeActionGoalDefinition::forall(vars, gd),

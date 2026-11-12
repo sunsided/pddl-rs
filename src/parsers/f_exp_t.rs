@@ -2,12 +2,12 @@
 
 use nom::branch::alt;
 use nom::bytes::complete::tag_no_case;
-use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, terminated};
 use nom::Parser;
 
 use crate::parsers::prefix_expr;
+use crate::parsers::sep;
 use crate::parsers::{parse_f_exp, ParseResult, Span};
 use crate::types::TimedFluentExpression;
 
@@ -47,8 +47,8 @@ pub fn parse_f_exp_t<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedFl
         prefix_expr(
             "*",
             alt((
-                preceded((tag_no_case("#t"), multispace1), parse_f_exp),
-                terminated(parse_f_exp, (multispace1, tag_no_case("#t"))),
+                preceded((tag_no_case("#t"), sep), parse_f_exp),
+                terminated(parse_f_exp, (sep, tag_no_case("#t"))),
             )),
         ),
         TimedFluentExpression::new_scaled,

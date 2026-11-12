@@ -1,10 +1,10 @@
 //! Provides parsers for durative action effects.
 
+use crate::parsers::sep;
 use crate::parsers::{parens, prefix_expr, space_separated_list0, typed_list, ParseResult, Span};
 use crate::parsers::{parse_da_gd, parse_timed_effect, parse_variable};
 use crate::types::DurativeActionEffect;
 use nom::branch::alt;
-use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
@@ -91,7 +91,7 @@ pub fn parse_da_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Durat
             "forall",
             (
                 parens(typed_list(parse_variable)),
-                preceded(multispace1, parse_da_effect),
+                preceded(sep, parse_da_effect),
             ),
         ),
         DurativeActionEffect::from,
@@ -99,10 +99,7 @@ pub fn parse_da_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Durat
 
     // :conditional-effects
     let when = map(
-        prefix_expr(
-            "when",
-            (parse_da_gd, preceded(multispace1, parse_timed_effect)),
-        ),
+        prefix_expr("when", (parse_da_gd, preceded(sep, parse_timed_effect))),
         DurativeActionEffect::from,
     );
 

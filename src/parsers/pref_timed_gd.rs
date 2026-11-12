@@ -1,11 +1,11 @@
 //! Provides parsers for (preferred) timed goal definitions.
 
 use nom::branch::alt;
-use nom::character::complete::multispace1;
 use nom::combinator::{map, opt};
 use nom::sequence::terminated;
 use nom::Parser;
 
+use crate::parsers::sep;
 use crate::parsers::{parse_pref_name, parse_timed_gd};
 use crate::parsers::{prefix_expr, ParseResult, Span};
 use crate::types::PreferenceTimedGoalDefinition;
@@ -70,10 +70,7 @@ pub fn parse_pref_timed_gd<'a, T: Into<Span<'a>>>(
     let preference = map(
         prefix_expr(
             "preference",
-            (
-                opt(terminated(parse_pref_name, multispace1)),
-                parse_timed_gd,
-            ),
+            (opt(terminated(parse_pref_name, sep)), parse_timed_gd),
         ),
         PreferenceTimedGoalDefinition::from,
     );

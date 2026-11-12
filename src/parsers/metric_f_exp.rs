@@ -1,5 +1,6 @@
 //! Provides parsers for metric f-exps.
 
+use crate::parsers::sep;
 use crate::parsers::{
     parens, parse_function_symbol, parse_name, parse_number, parse_pref_name, prefix_expr,
     space_separated_list0, space_separated_list1, ws, ParseResult, Span,
@@ -8,7 +9,7 @@ use crate::parsers::{parse_binary_op, parse_multi_op};
 use crate::types::MetricFluentExpression;
 use nom::branch::alt;
 use nom::bytes::complete::tag_no_case;
-use nom::character::complete::{char, multispace0, multispace1};
+use nom::character::complete::{char, multispace0};
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
@@ -82,8 +83,8 @@ pub fn parse_metric_f_exp<'a, T: Into<Span<'a>>>(
     let binary_op = map(
         parens((
             parse_binary_op,
-            preceded(multispace1, parse_metric_f_exp),
-            preceded(multispace1, parse_metric_f_exp),
+            preceded(sep, parse_metric_f_exp),
+            preceded(sep, parse_metric_f_exp),
         )),
         |(op, lhs, rhs)| MetricFluentExpression::binary_op(op, lhs, rhs),
     );
@@ -91,8 +92,8 @@ pub fn parse_metric_f_exp<'a, T: Into<Span<'a>>>(
     let multi_op = map(
         parens((
             parse_multi_op,
-            preceded(multispace1, parse_metric_f_exp),
-            preceded(multispace1, space_separated_list1(parse_metric_f_exp)),
+            preceded(sep, parse_metric_f_exp),
+            preceded(sep, space_separated_list1(parse_metric_f_exp)),
         )),
         |(op, lhs, rhs)| MetricFluentExpression::multi_op(op, lhs, rhs),
     );

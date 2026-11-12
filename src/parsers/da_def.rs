@@ -1,12 +1,12 @@
 //! Provides parsers for durative action definitions.
 
+use crate::parsers::sep;
 use crate::parsers::{empty_or, parens, prefix_expr, typed_list, ParseResult, Span};
 use crate::parsers::{
     parse_da_effect, parse_da_gd, parse_da_symbol, parse_duration_constraint, parse_variable,
 };
 use crate::types::DurativeActionDefinition;
 use nom::bytes::complete::tag_no_case;
-use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
@@ -56,31 +56,31 @@ use nom::Parser;
 pub fn parse_da_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DurativeActionDefinition> {
     let parameters = preceded(
         tag_no_case(":parameters"),
-        preceded(multispace1, parens(typed_list(parse_variable))),
+        preceded(sep, parens(typed_list(parse_variable))),
     );
 
     let duration = preceded(
         tag_no_case(":duration"),
-        preceded(multispace1, parse_duration_constraint),
+        preceded(sep, parse_duration_constraint),
     );
     let condition = preceded(
         tag_no_case(":condition"),
-        preceded(multispace1, empty_or(parse_da_gd)),
+        preceded(sep, empty_or(parse_da_gd)),
     );
     let effect = preceded(
         tag_no_case(":effect"),
-        preceded(multispace1, empty_or(parse_da_effect)),
+        preceded(sep, empty_or(parse_da_effect)),
     );
 
     let da_def = prefix_expr(
         ":durative-action",
         (
             parse_da_symbol,
-            preceded(multispace1, parameters),
+            preceded(sep, parameters),
             // <da-def body>
-            preceded(multispace1, duration),
-            preceded(multispace1, condition),
-            preceded(multispace1, effect),
+            preceded(sep, duration),
+            preceded(sep, condition),
+            preceded(sep, effect),
         ),
     );
 

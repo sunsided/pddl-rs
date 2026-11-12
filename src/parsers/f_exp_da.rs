@@ -2,11 +2,12 @@
 
 use nom::branch::alt;
 use nom::bytes::complete::tag_no_case;
-use nom::character::complete::{char, multispace0, multispace1};
+use nom::character::complete::{char, multispace0};
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
 
+use crate::parsers::sep;
 use crate::parsers::{parens, space_separated_list1, ParseResult, Span};
 use crate::parsers::{parse_binary_op, parse_f_exp, parse_multi_op};
 use crate::types::DurativeActionFluentExpression;
@@ -48,8 +49,8 @@ pub fn parse_f_exp_da<'a, T: Into<Span<'a>>>(
     let binary_op = map(
         parens((
             parse_binary_op,
-            preceded(multispace1, parse_f_exp_da),
-            preceded(multispace1, parse_f_exp_da),
+            preceded(sep, parse_f_exp_da),
+            preceded(sep, parse_f_exp_da),
         )),
         |(op, lhs, rhs)| DurativeActionFluentExpression::new_binary_op(op, lhs, rhs),
     );
@@ -57,8 +58,8 @@ pub fn parse_f_exp_da<'a, T: Into<Span<'a>>>(
     let multi_op = map(
         parens((
             parse_multi_op,
-            preceded(multispace1, parse_f_exp_da),
-            preceded(multispace1, space_separated_list1(parse_f_exp_da)),
+            preceded(sep, parse_f_exp_da),
+            preceded(sep, space_separated_list1(parse_f_exp_da)),
         )),
         |(op, lhs, rhs)| DurativeActionFluentExpression::new_multi_op(op, lhs, rhs),
     );

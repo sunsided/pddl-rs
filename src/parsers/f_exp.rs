@@ -1,11 +1,12 @@
 //! Provides parsers for f-exps.
 
 use nom::branch::alt;
-use nom::character::complete::{char, multispace0, multispace1};
+use nom::character::complete::{char, multispace0};
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
 
+use crate::parsers::sep;
 use crate::parsers::{parens, parse_number, space_separated_list1, ParseResult, Span};
 use crate::parsers::{parse_binary_op, parse_f_head, parse_multi_op};
 use crate::types::FluentExpression;
@@ -54,8 +55,8 @@ pub fn parse_f_exp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FluentExp
     let binary_op = map(
         parens((
             parse_binary_op,
-            preceded(multispace1, parse_f_exp),
-            preceded(multispace1, parse_f_exp),
+            preceded(sep, parse_f_exp),
+            preceded(sep, parse_f_exp),
         )),
         |(op, lhs, rhs)| FluentExpression::new_binary_op(op, lhs, rhs),
     );
@@ -64,8 +65,8 @@ pub fn parse_f_exp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FluentExp
     let multi_op = map(
         parens((
             parse_multi_op,
-            preceded(multispace1, parse_f_exp),
-            preceded(multispace1, space_separated_list1(parse_f_exp)),
+            preceded(sep, parse_f_exp),
+            preceded(sep, space_separated_list1(parse_f_exp)),
         )),
         |(op, lhs, rhs)| FluentExpression::new_multi_op(op, lhs, rhs),
     );

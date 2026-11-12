@@ -1,5 +1,6 @@
 //! Provides parsers for p-effects.
 
+use crate::parsers::sep;
 use crate::parsers::{
     atomic_formula, parse_assign_op, parse_f_exp, parse_f_head, parse_function_term, parse_term,
     ParseResult, Span,
@@ -8,7 +9,6 @@ use crate::parsers::{parens, prefix_expr};
 use crate::types::PrimitiveEffect;
 use nom::branch::alt;
 use nom::bytes::complete::tag_no_case;
-use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, terminated};
 use nom::Parser;
@@ -77,8 +77,8 @@ pub fn parse_p_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Primit
     let numeric = map(
         parens((
             parse_assign_op,
-            preceded(multispace1, parse_f_head),
-            preceded(multispace1, parse_f_exp),
+            preceded(sep, parse_f_head),
+            preceded(sep, parse_f_exp),
         )),
         |(op, head, exp)| PrimitiveEffect::numeric_fluent(op, head, exp),
     );
@@ -87,15 +87,12 @@ pub fn parse_p_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Primit
     let object_undefined = map(
         prefix_expr(
             "assign",
-            terminated(parse_function_term, (multispace1, tag_no_case("undefined"))),
+            terminated(parse_function_term, (sep, tag_no_case("undefined"))),
         ),
         |f_term| PrimitiveEffect::object_fluent(f_term, None),
     );
     let object = map(
-        prefix_expr(
-            "assign",
-            (parse_function_term, preceded(multispace1, parse_term)),
-        ),
+        prefix_expr("assign", (parse_function_term, preceded(sep, parse_term))),
         |(f_term, term)| PrimitiveEffect::object_fluent(f_term, Some(term)),
     );
 

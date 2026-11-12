@@ -373,3 +373,51 @@ fn mixed_case_names_keep_their_spelling_when_printed() {
     assert!(printed.contains("(:requirements :strips)"), "{printed}");
     assert!(printed.contains("(On ?X ?Y)"), "{printed}");
 }
+
+/// Replaces every run of whitespace directly before a `(` with `separator`
+/// (after removing `;` comments, so no form ends up inside a comment).
+fn respace_before_parens(input: &str, separator: &str) -> String {
+    let uncommented: String = input
+        .lines()
+        .map(|line| line.split(';').next().unwrap_or_default())
+        .collect::<Vec<_>>()
+        .join("\n");
+    let mut out = String::with_capacity(uncommented.len());
+    let mut pending = String::new();
+    for c in uncommented.chars() {
+        if c.is_whitespace() {
+            pending.push(c);
+            continue;
+        }
+        if c == '(' && !pending.is_empty() {
+            out.push_str(separator);
+        } else {
+            out.push_str(&pending);
+        }
+        pending.clear();
+        out.push(c);
+    }
+    out.push_str(&pending);
+    out
+}
+
+/// Whitespace before a `(` is optional, and a `;` comment can stand in for it.
+#[test]
+fn whitespace_before_parens_is_optional() {
+    for separator in ["", " ; comment\n"] {
+        for (label, input) in ALL_DOMAINS {
+            let expected = Domain::from_str(input).unwrap();
+            let respaced = respace_before_parens(input, separator);
+            let actual = Domain::from_str(&respaced)
+                .unwrap_or_else(|e| panic!("{label} {separator:?}: {e}\n{respaced}"));
+            assert_eq!(expected, actual, "{label} {separator:?}");
+        }
+        for (label, input) in ALL_PROBLEMS {
+            let expected = Problem::from_str(input).unwrap();
+            let respaced = respace_before_parens(input, separator);
+            let actual = Problem::from_str(&respaced)
+                .unwrap_or_else(|e| panic!("{label} {separator:?}: {e}\n{respaced}"));
+            assert_eq!(expected, actual, "{label} {separator:?}");
+        }
+    }
+}

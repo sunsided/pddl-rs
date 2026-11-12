@@ -1,10 +1,10 @@
 //! Provides parsers for metric specification.
 
-use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
 
+use crate::parsers::sep;
 use crate::parsers::{parse_metric_f_exp, parse_optimization, prefix_expr, ParseResult, Span};
 use crate::types::MetricSpec;
 
@@ -26,10 +26,7 @@ pub fn parse_problem_metric_spec<'a, T: Into<Span<'a>>>(input: T) -> ParseResult
     map(
         prefix_expr(
             ":metric",
-            (
-                parse_optimization,
-                preceded(multispace1, parse_metric_f_exp),
-            ),
+            (parse_optimization, preceded(sep, parse_metric_f_exp)),
         ),
         |(optimization, exp)| MetricSpec::new(optimization, exp),
     )

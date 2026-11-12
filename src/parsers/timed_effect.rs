@@ -1,5 +1,6 @@
 //! Provides parsers for timed effects.
 
+use crate::parsers::sep;
 use crate::parsers::{parens, prefix_expr, ParseResult, Span};
 use crate::parsers::{
     parse_assign_op_t, parse_effect_condition, parse_f_assign_da, parse_f_exp_t, parse_f_head,
@@ -7,7 +8,6 @@ use crate::parsers::{
 };
 use crate::types::TimedEffect;
 use nom::branch::alt;
-use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
@@ -56,10 +56,7 @@ pub fn parse_timed_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Ti
     let cond = map(
         prefix_expr(
             "at",
-            (
-                parse_time_specifier,
-                preceded(multispace1, parse_effect_condition),
-            ),
+            (parse_time_specifier, preceded(sep, parse_effect_condition)),
         ),
         TimedEffect::from,
     );
@@ -68,10 +65,7 @@ pub fn parse_timed_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Ti
     let fluent = map(
         prefix_expr(
             "at",
-            (
-                parse_time_specifier,
-                preceded(multispace1, parse_f_assign_da),
-            ),
+            (parse_time_specifier, preceded(sep, parse_f_assign_da)),
         ),
         TimedEffect::from,
     );
@@ -80,8 +74,8 @@ pub fn parse_timed_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Ti
     let continuous = map(
         parens((
             parse_assign_op_t,
-            preceded(multispace1, parse_f_head),
-            preceded(multispace1, parse_f_exp_t),
+            preceded(sep, parse_f_head),
+            preceded(sep, parse_f_exp_t),
         )),
         TimedEffect::from,
     );
