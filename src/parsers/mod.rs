@@ -118,7 +118,7 @@ pub trait Parser {
     fn from_str(input: &str) -> Result<Self::Item, ParseError> {
         use nom::Parser as _;
         nom::combinator::all_consuming(nom::sequence::terminated(
-            Self::parse_span,
+            |input| Self::parse(input),
             utilities::skip_whitespace_and_comments,
         ))
         .parse(Span::new(input))
