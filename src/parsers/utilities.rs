@@ -113,9 +113,8 @@ fn keyword<'a>(name: &'a str) -> impl Parser<Span<'a>, Output = Span<'a>, Error 
     let needs_boundary = name.ends_with(|c: char| c.is_ascii_alphanumeric());
     move |input: Span<'a>| {
         let (rest, matched) = tag_no_case(name).parse(input)?;
-        let continues_name = rest
-            .fragment()
-            .starts_with(|c: char| c.is_ascii_alphanumeric() || c == '-' || c == '_');
+        // Use the name grammar itself, so the boundary can't drift from what a name may contain.
+        let continues_name = super::name::parse_any_char(rest).is_ok();
         if needs_boundary && continues_name {
             return Err(nom::Err::Error(NomError::new(
                 input,
