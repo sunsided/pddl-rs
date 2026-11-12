@@ -1,7 +1,7 @@
 //! Provides parsers for assignment operations.
 
 use nom::branch::alt;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::combinator::map;
 use nom::Parser;
 
@@ -21,14 +21,17 @@ use crate::types::AssignOp;
 pub fn parse_assign_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, AssignOp> {
     map(
         alt((
-            tag(names::CHANGE), // deprecated
-            tag(names::ASSIGN),
-            tag(names::SCALE_UP),
-            tag(names::SCALE_DOWN),
-            tag(names::INCREASE),
-            tag(names::DECREASE),
+            tag_no_case(names::CHANGE), // deprecated
+            tag_no_case(names::ASSIGN),
+            tag_no_case(names::SCALE_UP),
+            tag_no_case(names::SCALE_DOWN),
+            tag_no_case(names::INCREASE),
+            tag_no_case(names::DECREASE),
         )),
-        |x: Span| AssignOp::try_from(*x.fragment()).expect("unhandled variant"),
+        |x: Span| {
+            AssignOp::try_from(x.fragment().to_ascii_lowercase().as_str())
+                .expect("unhandled variant")
+        },
     )
     .parse(input.into())
 }

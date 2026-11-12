@@ -4,7 +4,7 @@ use crate::parsers::{parens, space_separated_list0, ws};
 use crate::parsers::{parse_predicate, NomError, Span};
 use crate::types::AtomicFormula;
 use nom::branch::alt;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::character::complete::char;
 use nom::combinator::map;
 use nom::sequence::delimited;
@@ -33,7 +33,7 @@ where
 {
     let equality = map(
         delimited(
-            ws(tag("(=")),
+            ws(tag_no_case("(=")),
             (ws(inner.clone()), ws(inner.clone())),
             ws(char(')')),
         ),

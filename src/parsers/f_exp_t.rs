@@ -1,7 +1,7 @@
 //! Provides parsers for f-exps.
 
 use nom::branch::alt;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, terminated};
@@ -42,13 +42,13 @@ use crate::types::TimedFluentExpression;
 /// ));
 ///```
 pub fn parse_f_exp_t<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedFluentExpression> {
-    let now = map(tag("#t"), |_| TimedFluentExpression::new());
+    let now = map(tag_no_case("#t"), |_| TimedFluentExpression::new());
     let scaled = map(
         prefix_expr(
             "*",
             alt((
-                preceded((tag("#t"), multispace1), parse_f_exp),
-                terminated(parse_f_exp, (multispace1, tag("#t"))),
+                preceded((tag_no_case("#t"), multispace1), parse_f_exp),
+                terminated(parse_f_exp, (multispace1, tag_no_case("#t"))),
             )),
         ),
         TimedFluentExpression::new_scaled,

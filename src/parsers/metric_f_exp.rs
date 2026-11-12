@@ -7,7 +7,7 @@ use crate::parsers::{
 use crate::parsers::{parse_binary_op, parse_multi_op};
 use crate::types::MetricFluentExpression;
 use nom::branch::alt;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::character::complete::{char, multispace0, multispace1};
 use nom::combinator::map;
 use nom::sequence::preceded;
@@ -112,7 +112,9 @@ pub fn parse_metric_f_exp<'a, T: Into<Span<'a>>>(
         |(sym, names)| MetricFluentExpression::function(sym, names),
     );
 
-    let total_time = map(tag("total-time"), |_| MetricFluentExpression::total_time());
+    let total_time = map(tag_no_case("total-time"), |_| {
+        MetricFluentExpression::total_time()
+    });
 
     // :preferences
     let is_violated = map(

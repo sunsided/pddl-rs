@@ -1,7 +1,7 @@
 //! Provides parsers for requirements.
 
 use nom::branch::alt;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::combinator::map;
 use nom::Parser;
 
@@ -60,29 +60,32 @@ pub fn parse_require_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Req
 pub fn parse_require_key<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Requirement> {
     map(
         alt((
-            tag(names::STRIPS),
-            tag(names::TYPING),
-            tag(names::NEGATIVE_PRECONDITIONS),
-            tag(names::DISJUNCTIVE_PRECONDITIONS),
-            tag(names::EQUALITY),
-            tag(names::EXISTENTIAL_PRECONDITIONS),
-            tag(names::UNIVERSAL_PRECONDITIONS),
-            tag(names::QUANTIFIED_PRECONDITIONS),
-            tag(names::CONDITIONAL_EFFECTS),
-            tag(names::FLUENTS),
-            tag(names::NUMERIC_FLUENTS),
-            tag(names::OBJECT_FLUENTS),
-            tag(names::ADL),
-            tag(names::DURATIVE_ACTIONS),
-            tag(names::DURATION_INEQUALITIES),
-            tag(names::CONTINUOUS_EFFECTS),
-            tag(names::DERIVED_PREDICATES),
-            tag(names::TIMED_INITIAL_LITERALS),
-            tag(names::PREFERENCES),
-            tag(names::CONSTRAINTS),
-            tag(names::ACTION_COSTS),
+            tag_no_case(names::STRIPS),
+            tag_no_case(names::TYPING),
+            tag_no_case(names::NEGATIVE_PRECONDITIONS),
+            tag_no_case(names::DISJUNCTIVE_PRECONDITIONS),
+            tag_no_case(names::EQUALITY),
+            tag_no_case(names::EXISTENTIAL_PRECONDITIONS),
+            tag_no_case(names::UNIVERSAL_PRECONDITIONS),
+            tag_no_case(names::QUANTIFIED_PRECONDITIONS),
+            tag_no_case(names::CONDITIONAL_EFFECTS),
+            tag_no_case(names::FLUENTS),
+            tag_no_case(names::NUMERIC_FLUENTS),
+            tag_no_case(names::OBJECT_FLUENTS),
+            tag_no_case(names::ADL),
+            tag_no_case(names::DURATIVE_ACTIONS),
+            tag_no_case(names::DURATION_INEQUALITIES),
+            tag_no_case(names::CONTINUOUS_EFFECTS),
+            tag_no_case(names::DERIVED_PREDICATES),
+            tag_no_case(names::TIMED_INITIAL_LITERALS),
+            tag_no_case(names::PREFERENCES),
+            tag_no_case(names::CONSTRAINTS),
+            tag_no_case(names::ACTION_COSTS),
         )),
-        |x: Span| Requirement::try_from(*x.fragment()).expect("unhandled variant"),
+        |x: Span| {
+            Requirement::try_from(x.fragment().to_ascii_lowercase().as_str())
+                .expect("unhandled variant")
+        },
     )
     .parse(input.into())
 }

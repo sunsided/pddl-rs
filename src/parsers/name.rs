@@ -3,7 +3,7 @@
 use crate::parsers::{ws, ParseResult, Span};
 use crate::types::Name;
 use nom::branch::alt;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::character::complete::{alpha1, digit1};
 use nom::combinator::{map, recognize};
 use nom::multi::many0;
@@ -34,7 +34,7 @@ pub fn parse_name<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Name> {
 
 /// Parses any accepted character.
 pub fn parse_any_char(input: Span) -> ParseResult<Span> {
-    recognize(alt((alpha1, digit1, tag("-"), tag("_")))).parse(input)
+    recognize(alt((alpha1, digit1, tag_no_case("-"), tag_no_case("_")))).parse(input)
 }
 
 impl crate::parsers::Parser for Name {

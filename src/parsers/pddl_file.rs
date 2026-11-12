@@ -1,7 +1,7 @@
 //! Provides parsers for multi-definition PDDL files.
 
 use nom::branch::alt;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::combinator::{map, value};
 use nom::Parser;
 
@@ -46,13 +46,16 @@ fn parse_define_blocks<'a>(input: Span<'a>) -> ParseResult<'a, Vec<DefineBlock>>
 
     loop {
         // Skip whitespace/comments
-        let (after_ws, _) = ws2::<_, ()>(value((), tag(""))).parse(remaining)?;
+        let (after_ws, _) = ws2::<_, ()>(value((), tag_no_case(""))).parse(remaining)?;
         remaining = after_ws;
 
         // Check if there's a `(define` ahead
-        if value((), tag::<_, _, crate::parsers::NomError<'a>>("(define"))
-            .parse(remaining)
-            .is_err()
+        if value(
+            (),
+            tag_no_case::<_, _, crate::parsers::NomError<'a>>("(define"),
+        )
+        .parse(remaining)
+        .is_err()
         {
             break;
         }

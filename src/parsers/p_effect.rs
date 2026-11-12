@@ -7,7 +7,7 @@ use crate::parsers::{
 use crate::parsers::{parens, prefix_expr};
 use crate::types::PrimitiveEffect;
 use nom::branch::alt;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::{preceded, terminated};
@@ -87,7 +87,7 @@ pub fn parse_p_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Primit
     let object_undefined = map(
         prefix_expr(
             "assign",
-            terminated(parse_function_term, (multispace1, tag("undefined"))),
+            terminated(parse_function_term, (multispace1, tag_no_case("undefined"))),
         ),
         |f_term| PrimitiveEffect::object_fluent(f_term, None),
     );

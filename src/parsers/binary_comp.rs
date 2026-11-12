@@ -1,7 +1,7 @@
 //! Provides parsers for binary comparison operations.
 
 use nom::branch::alt;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::combinator::map;
 use nom::Parser;
 
@@ -23,13 +23,16 @@ use crate::types::{binary_comp::names, BinaryComparison};
 pub fn parse_binary_comp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, BinaryComparison> {
     map(
         alt((
-            tag(names::GREATER_THAN_OR_EQUAL),
-            tag(names::LESS_THAN_OR_EQUAL),
-            tag(names::EQUAL),
-            tag(names::GREATER_THAN),
-            tag(names::LESS_THAN),
+            tag_no_case(names::GREATER_THAN_OR_EQUAL),
+            tag_no_case(names::LESS_THAN_OR_EQUAL),
+            tag_no_case(names::EQUAL),
+            tag_no_case(names::GREATER_THAN),
+            tag_no_case(names::LESS_THAN),
         )),
-        |x: Span| BinaryComparison::try_from(*x.fragment()).expect("unhandled variant"),
+        |x: Span| {
+            BinaryComparison::try_from(x.fragment().to_ascii_lowercase().as_str())
+                .expect("unhandled variant")
+        },
     )
     .parse(input.into())
 }

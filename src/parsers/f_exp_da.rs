@@ -1,7 +1,7 @@
 //! Provides parsers for f-exp-da values..
 
 use nom::branch::alt;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::character::complete::{char, multispace0, multispace1};
 use nom::combinator::map;
 use nom::sequence::preceded;
@@ -41,7 +41,7 @@ pub fn parse_f_exp_da<'a, T: Into<Span<'a>>>(
     input: T,
 ) -> ParseResult<'a, DurativeActionFluentExpression> {
     // :duration-inequalities
-    let duration = map(tag("?duration"), |_| {
+    let duration = map(tag_no_case("?duration"), |_| {
         DurativeActionFluentExpression::new_duration()
     });
 

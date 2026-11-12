@@ -16,6 +16,11 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - [#98](https://github.com/sunsided/pddl-rs/issues/98): `Parser::from_str` now rejects trailing input
   instead of silently discarding it. Only whitespace and `;` comments may follow the parsed item. Use
   `PddlFile::from_str` to read several `(define ...)` blocks from one input.
+- [#99](https://github.com/sunsided/pddl-rs/issues/99): Keywords are matched case-insensitively, so
+  files such as `(DEFINE (DOMAIN D) (:REQUIREMENTS :STRIPS) ...)` parse. `Name` keeps the spelling it
+  was written with (and pretty-prints it), but its `PartialEq`, `Eq` and `Hash` now ignore ASCII case,
+  so `AT` and `at` are the same name. This also applies to every type built on `Name`, such as
+  `Variable`, `Predicate` and `PrimitiveType`.
 
 ## [0.1.0] - 2024-05-19
 

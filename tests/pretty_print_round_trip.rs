@@ -318,3 +318,58 @@ fn timeless_round_trip() {
         round_trip_domain(TIMELESS_DOMAIN, width, "timeless-domain");
     }
 }
+
+const ALL_DOMAINS: &[(&str, &str)] = &[
+    ("strips", STRIPS_DOMAIN),
+    ("conditional-effects", CONDITIONAL_EFFECTS_DOMAIN),
+    ("durative-actions", DURATIVE_ACTIONS_DOMAIN),
+    ("briefcase-world", BRIEFCASE_WORLD),
+    ("metric", METRIC_DOMAIN),
+    ("length", LENGTH_DOMAIN),
+    ("constraints", CONSTRAINTS_DOMAIN),
+    ("derived", DERIVED_DOMAIN),
+    ("numeric-effects", NUMERIC_EFFECTS_DOMAIN),
+    ("preference", PREFERENCE_DOMAIN),
+    ("timeless", TIMELESS_DOMAIN),
+];
+
+const ALL_PROBLEMS: &[(&str, &str)] = &[
+    ("strips", STRIPS_PROBLEM),
+    ("briefcase-world", BRIEFCASE_WORLD_PROBLEM),
+    ("metric", METRIC_PROBLEM),
+    ("length", LENGTH_PROBLEM),
+    ("constraints", CONSTRAINTS_PROBLEM),
+    ("preference", PREFERENCE_PROBLEM),
+];
+
+/// PDDL is case-insensitive: an all-uppercase file must parse to an AST equal to the lowercase one.
+#[test]
+fn uppercase_input_parses_to_the_same_ast() {
+    for (label, input) in ALL_DOMAINS {
+        let lower = Domain::from_str(input).unwrap_or_else(|e| panic!("{label}: {e}"));
+        let upper = Domain::from_str(&input.to_ascii_uppercase())
+            .unwrap_or_else(|e| panic!("{label} (uppercase): {e}"));
+        assert_eq!(lower, upper, "{label}");
+    }
+    for (label, input) in ALL_PROBLEMS {
+        let lower = Problem::from_str(input).unwrap_or_else(|e| panic!("{label}: {e}"));
+        let upper = Problem::from_str(&input.to_ascii_uppercase())
+            .unwrap_or_else(|e| panic!("{label} (uppercase): {e}"));
+        assert_eq!(lower, upper, "{label}");
+    }
+}
+
+/// Names keep the spelling they were written with; keywords are printed in lowercase.
+#[test]
+fn mixed_case_names_keep_their_spelling_when_printed() {
+    let domain = Domain::from_str(
+        "(DEFINE (DOMAIN Blocks) (:REQUIREMENTS :STRIPS) (:PREDICATES (On ?X ?Y)))",
+    )
+    .unwrap();
+    assert_eq!(domain.name(), "blocks");
+    assert_eq!(domain.name().to_string(), "Blocks");
+    let printed = domain.pretty(80).to_string();
+    assert!(printed.contains("(domain Blocks)"), "{printed}");
+    assert!(printed.contains("(:requirements :strips)"), "{printed}");
+    assert!(printed.contains("(On ?X ?Y)"), "{printed}");
+}

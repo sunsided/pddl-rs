@@ -3,7 +3,7 @@
 use crate::parsers::{parse_function_symbol, parse_term};
 use crate::parsers::{space_separated_list0, ParseResult, Span};
 use crate::types::FunctionTerm;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::combinator::map;
 use nom::sequence::delimited;
 use nom::Parser;
@@ -32,9 +32,9 @@ use nom::Parser;
 pub fn parse_function_term<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FunctionTerm> {
     map(
         delimited(
-            tag("("),
+            tag_no_case("("),
             (parse_function_symbol, space_separated_list0(parse_term)),
-            tag(")"),
+            tag_no_case(")"),
         ),
         |(symbol, terms)| FunctionTerm::new(symbol, terms),
     )

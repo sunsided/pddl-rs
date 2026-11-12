@@ -1,7 +1,7 @@
 //! Provides parsers for duration constraints.
 
 use nom::branch::alt;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::combinator::map;
 use nom::Parser;
 
@@ -61,7 +61,7 @@ use crate::types::DurationConstraint;
 pub fn parse_duration_constraint<'a, T: Into<Span<'a>>>(
     input: T,
 ) -> ParseResult<'a, Option<DurationConstraint>> {
-    let none = map(tag("()"), |_| None);
+    let none = map(tag_no_case("()"), |_| None);
     let simple = map(parse_simple_duration_constraint, |c| {
         Some(DurationConstraint::from(c))
     });
