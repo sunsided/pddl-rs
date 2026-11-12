@@ -100,10 +100,30 @@ where
     P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
 {
     delimited(
-        preceded(ws(tag_no_case("(")), tag_no_case(name)),
+        preceded(ws(tag_no_case("(")), keyword(name)),
         ws(inner),
         ws(tag_no_case(")")),
     )
+}
+
+/// Matches the keyword `name` (ignoring case) as a whole word: a keyword
+/// ending in a letter or digit must not be followed by a name character, so
+/// `preference` does not match the start of `preferences`.
+fn keyword<'a>(name: &'a str) -> impl Parser<Span<'a>, Output = Span<'a>, Error = NomError<'a>> {
+    let needs_boundary = name.ends_with(|c: char| c.is_ascii_alphanumeric());
+    move |input: Span<'a>| {
+        let (rest, matched) = tag_no_case(name).parse(input)?;
+        let continues_name = rest
+            .fragment()
+            .starts_with(|c: char| c.is_ascii_alphanumeric() || c == '-' || c == '_');
+        if needs_boundary && continues_name {
+            return Err(nom::Err::Error(NomError::new(
+                input,
+                nom::error::ErrorKind::Tag,
+            )));
+        }
+        Ok((rest, matched))
+    }
 }
 
 /// A combinator that takes a parser `inner` and produces a parser that also consumes leading whitespace,
@@ -198,6 +218,19 @@ mod tests {
             panic!("expected failure, got {result:?}");
         };
         assert_eq!(e.input.location_offset(), 2);
+    }
+
+    #[test]
+    fn keyword_matches_whole_words_only() {
+        let mut and = keyword("and");
+        assert!(and.parse(Span::new("and (p)")).is_ok());
+        assert!(and.parse(Span::new("AND(p)")).is_ok());
+        assert!(and.parse(Span::new("and)")).is_ok());
+        assert!(and.parse(Span::new("andy")).is_err());
+        assert!(and.parse(Span::new("and-or")).is_err());
+        assert!(and.parse(Span::new("and_2")).is_err());
+        // Keywords ending in a symbol need no boundary.
+        assert!(keyword("=").parse(Span::new("=?x")).is_ok());
     }
 
     #[test]

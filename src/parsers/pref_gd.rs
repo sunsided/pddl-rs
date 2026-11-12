@@ -59,7 +59,7 @@ use crate::types::{Preference, PreferenceGoalDefinition};
 /// ));
 /// ```
 pub fn parse_pref_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PreferenceGoalDefinition> {
-    // :preferences
+    // :preferences; the name is optional, so this also covers `(preference <GD>)`.
     let pref_named = map(
         prefix_expr(
             "preference",
@@ -68,13 +68,9 @@ pub fn parse_pref_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Prefere
         |(pref, gd)| PreferenceGoalDefinition::from_preference(Preference::new(pref, gd)),
     );
 
-    let pref_unnamed = map(prefix_expr("preference", parse_gd), |gd| {
-        PreferenceGoalDefinition::from_preference(Preference::new(None, gd))
-    });
-
     let gd = map(parse_gd, PreferenceGoalDefinition::from_gd);
 
-    alt((pref_named, pref_unnamed, gd)).parse(input.into())
+    alt((pref_named, gd)).parse(input.into())
 }
 
 impl crate::parsers::Parser for PreferenceGoalDefinition {
@@ -92,6 +88,34 @@ mod tests {
     use crate::{
         AtomicFormula, GoalDefinition, Preference, PreferenceGoalDefinition, PreferenceName, Term,
     };
+
+    /// `preference` must match as a whole word, not as the start of a predicate name.
+    #[test]
+    fn predicate_starting_with_preference_is_not_a_preference() {
+        for input in ["(preferences(p))", "(preferences (p))"] {
+            let value = PreferenceGoalDefinition::from_str(input).unwrap();
+            let PreferenceGoalDefinition::Goal(GoalDefinition::AtomicFormula(formula)) = &value
+            else {
+                panic!("{input}: expected an atomic formula, got {value:?}");
+            };
+            assert!(
+                format!("{formula:?}").contains("preferences"),
+                "{input}: {formula:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn unnamed_preference_without_whitespace() {
+        let value = PreferenceGoalDefinition::from_str("(preference(p))").unwrap();
+        let PreferenceGoalDefinition::Preference(pref) = &value else {
+            panic!("expected a preference, got {value:?}");
+        };
+        assert_eq!(
+            pref,
+            &Preference::new(None, GoalDefinition::from_str("(p)").unwrap())
+        );
+    }
 
     #[test]
     fn test_parse() {
