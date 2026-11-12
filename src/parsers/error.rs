@@ -22,7 +22,7 @@ const EXCERPT_CHARS: usize = 40;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParseError {
     offset: usize,
-    line: u32,
+    line: usize,
     column: usize,
     found: Option<String>,
 }
@@ -34,7 +34,7 @@ impl ParseError {
     }
 
     /// The 1-based line at which parsing stopped.
-    pub const fn line(&self) -> u32 {
+    pub const fn line(&self) -> usize {
         self.line
     }
 
@@ -83,7 +83,7 @@ impl ParseError {
         };
         Self {
             offset: span.location_offset(),
-            line: span.location_line(),
+            line: span.location_line() as usize,
             column: span.get_utf8_column(),
             found,
         }
