@@ -40,13 +40,13 @@ mod tests {
     use nom::Parser;
 
     use crate::parsers::Match;
-    use crate::parsers::ParseError;
+    use crate::parsers::NomError;
 
     use super::*;
 
     #[test]
     fn empty_or_works() {
-        let mut parser = empty_or(alpha1::<Span<'static>, ParseError<'static>>);
+        let mut parser = empty_or(alpha1::<Span<'static>, NomError<'static>>);
         assert!(parser.parse(Span::new("()")).is_exactly(None));
         assert!(parser.parse(Span::new("abc")).is_exactly(Some("abc")));
     }

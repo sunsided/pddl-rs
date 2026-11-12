@@ -5,7 +5,7 @@ use nom::combinator::map;
 use nom::Parser;
 
 use crate::parsers::prefix_expr;
-use crate::parsers::{atomic_formula, ParseError, Span};
+use crate::parsers::{atomic_formula, NomError, Span};
 use crate::types::Literal;
 
 /// Parser combinator that parses a literal, i.e. `<atomic formula(t)> | (not <atomic formula(t)>)`.
@@ -39,9 +39,9 @@ use crate::types::Literal;
 /// ```
 pub fn literal<'a, F, O>(
     inner: F,
-) -> impl Parser<Span<'a>, Output = Literal<O>, Error = ParseError<'a>>
+) -> impl Parser<Span<'a>, Output = Literal<O>, Error = NomError<'a>>
 where
-    F: Clone + Parser<Span<'a>, Output = O, Error = ParseError<'a>>,
+    F: Clone + Parser<Span<'a>, Output = O, Error = NomError<'a>>,
 {
     let is = map(atomic_formula(inner.clone()), |af| Literal::new(af));
     let is_not = map(prefix_expr("not", atomic_formula(inner)), |af| {

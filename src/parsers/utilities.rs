@@ -1,6 +1,6 @@
 //! Utility parsers.
 
-use crate::parsers::{ParseError, ParseResult, Span};
+use crate::parsers::{NomError, ParseResult, Span};
 use nom::branch::alt;
 use nom::bytes::complete::{tag, take_while};
 use nom::character::complete::{char, multispace1};
@@ -30,9 +30,9 @@ fn skip_whitespace_and_comments<'a>(input: Span<'a>) -> ParseResult<'a, ()> {
 pub fn prefix_expr<'a, P, O>(
     name: &'a str,
     inner: P,
-) -> impl Parser<Span<'a>, Output = O, Error = ParseError<'a>>
+) -> impl Parser<Span<'a>, Output = O, Error = NomError<'a>>
 where
-    P: Parser<Span<'a>, Output = O, Error = ParseError<'a>>,
+    P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
 {
     delimited(preceded(ws(tag("(")), tag(name)), ws(inner), ws(tag(")")))
 }
@@ -41,9 +41,9 @@ where
 /// returning the output of `inner`.
 ///
 /// This parser also suppresses line comments.
-pub fn ws<'a, P, O>(inner: P) -> impl Parser<Span<'a>, Output = O, Error = ParseError<'a>>
+pub fn ws<'a, P, O>(inner: P) -> impl Parser<Span<'a>, Output = O, Error = NomError<'a>>
 where
-    P: Parser<Span<'a>, Output = O, Error = ParseError<'a>>,
+    P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
 {
     preceded(skip_whitespace_and_comments, inner)
 }
@@ -52,9 +52,9 @@ where
 /// and trailing whitespace, returning the output of `inner`.
 ///
 /// This parser also suppresses line comments.
-pub fn ws2<'a, P, O>(inner: P) -> impl Parser<Span<'a>, Output = O, Error = ParseError<'a>>
+pub fn ws2<'a, P, O>(inner: P) -> impl Parser<Span<'a>, Output = O, Error = NomError<'a>>
 where
-    P: Parser<Span<'a>, Output = O, Error = ParseError<'a>>,
+    P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
 {
     delimited(
         skip_whitespace_and_comments,
@@ -68,9 +68,9 @@ where
 #[allow(dead_code)]
 pub fn space_separated_list0<'a, P, O>(
     inner: P,
-) -> impl Parser<Span<'a>, Output = Vec<O>, Error = ParseError<'a>>
+) -> impl Parser<Span<'a>, Output = Vec<O>, Error = NomError<'a>>
 where
-    P: Parser<Span<'a>, Output = O, Error = ParseError<'a>>,
+    P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
 {
     ws(separated_list0(
         multispace1,
@@ -82,9 +82,9 @@ where
 /// consumes a whitespace separated list, returning the outputs of `inner`.
 pub fn space_separated_list1<'a, P, O>(
     inner: P,
-) -> impl Parser<Span<'a>, Output = Vec<O>, Error = ParseError<'a>>
+) -> impl Parser<Span<'a>, Output = Vec<O>, Error = NomError<'a>>
 where
-    P: Parser<Span<'a>, Output = O, Error = ParseError<'a>>,
+    P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
 {
     ws(separated_list1(
         multispace1,
@@ -94,9 +94,9 @@ where
 
 /// A combinator that takes a parser `inner` and produces a parser that consumes
 /// surrounding parentheses, returning the outputs of `inner`.
-pub fn parens<'a, P, O>(inner: P) -> impl Parser<Span<'a>, Output = O, Error = ParseError<'a>>
+pub fn parens<'a, P, O>(inner: P) -> impl Parser<Span<'a>, Output = O, Error = NomError<'a>>
 where
-    P: Parser<Span<'a>, Output = O, Error = ParseError<'a>>,
+    P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
 {
     preceded(
         skip_whitespace_and_comments,
