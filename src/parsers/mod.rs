@@ -275,7 +275,7 @@ mod tests {
     fn from_str_rejects_a_second_define_block() {
         let input = format!("{DOMAIN}\n(define (problem q) (:domain d))");
         let error = Domain::from_str(&input).unwrap_err();
-        assert_eq!(error.offset(), DOMAIN.len() + 1);
+        assert_eq!(Some(error.offset()), input.find("(define (problem"));
         assert!(error.found().unwrap().starts_with("(define (problem q)"));
     }
 }
