@@ -21,7 +21,7 @@ fn eol_comment<'a>(input: Span<'a>) -> ParseResult<'a, Span<'a>> {
 
 /// Skips all leading whitespace and semicolon comments.
 /// Handles multiple comment lines, including empty ones (`;\n`).
-fn skip_whitespace_and_comments<'a>(input: Span<'a>) -> ParseResult<'a, ()> {
+pub(crate) fn skip_whitespace_and_comments<'a>(input: Span<'a>) -> ParseResult<'a, ()> {
     value((), many0(alt((multispace1, eol_comment)))).parse(input)
 }
 
