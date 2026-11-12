@@ -28,7 +28,10 @@ pub(crate) fn skip_whitespace_and_comments<'a>(input: Span<'a>) -> ParseResult<'
 /// Repeatedly parses `section` (skipping whitespace and comments before each)
 /// and hands every result to `apply` together with the position it started at.
 ///
-/// Stops at the first input `section` does not match.
+/// Stops at the first input that does not start a new `(` form, e.g. the
+/// closing `)` of the enclosing definition. A `(` form that `section` does not
+/// match (an unknown or malformed section) is a non-recoverable error at that
+/// form, so callers such as `alt` don't fall back to unrelated alternatives.
 pub(crate) fn fold_sections<'a, O>(
     mut input: Span<'a>,
     mut section: impl Parser<Span<'a>, Output = O, Error = NomError<'a>>,
@@ -44,6 +47,9 @@ pub(crate) fn fold_sections<'a, O>(
             Ok((rest, value)) => {
                 apply(value, start)?;
                 input = rest;
+            }
+            Err(nom::Err::Error(_)) if start.fragment().starts_with('(') => {
+                return Err(failure_at(start));
             }
             Err(nom::Err::Error(_)) => return Ok((input, ())),
             Err(e) => return Err(e),

@@ -213,6 +213,33 @@ impl crate::parsers::Parser for PddlFile {
 mod tests {
     use crate::{Name, Parser, PddlFile};
 
+    /// Structural errors inside a definition must be reported where they are,
+    /// not as the fallback `problem` alternative failing at `(domain`.
+    #[test]
+    fn section_errors_are_reported_at_the_offending_section() {
+        let cases = [
+            (
+                "misspelled section",
+                "(define (domain d)\n  (:requirement :strips)\n  (:predicates (p)))",
+                "(:requirement",
+            ),
+            (
+                "duplicate section",
+                "(define (domain d)\n  (:predicates (p))\n  (:predicates (q)))",
+                "(:predicates (q)",
+            ),
+            (
+                "missing :goal",
+                "(define (problem p) (:domain d) (:init)\n)",
+                ")",
+            ),
+        ];
+        for (label, input, at) in cases {
+            let error = PddlFile::from_str(input).unwrap_err();
+            assert_eq!(Some(error.offset()), input.rfind(at), "{label}: {error}");
+        }
+    }
+
     #[test]
     fn parse_single_domain_and_problem() {
         let input = r#"
