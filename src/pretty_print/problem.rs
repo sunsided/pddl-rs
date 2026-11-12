@@ -75,12 +75,11 @@ impl Visitor<Problem, RcDoc<'static>> for PrettyRenderer {
     }
 }
 
-// The tests parse their input, so they need the `parser` feature.
+// These tests parse their input, so they need the `parser` feature.
 #[cfg(all(test, feature = "parser"))]
 mod tests {
     use crate::parsers::Parser;
     use crate::pretty_print::Pretty;
-    use crate::types::{PreferenceConstraintGoalDefinitions, ProblemConstraintsDef};
 
     #[test]
     fn problem_basic() {
@@ -161,6 +160,12 @@ mod tests {
         let output = problem.pretty(80).to_string();
         assert!(output.contains("(:length (:serial 10))"));
     }
+}
+
+#[cfg(test)]
+mod tests_without_parser {
+    use crate::pretty_print::Pretty;
+    use crate::types::{PreferenceConstraintGoalDefinitions, ProblemConstraintsDef};
 
     #[test]
     fn problem_constraints_def_empty_nil() {
