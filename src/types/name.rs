@@ -35,7 +35,8 @@ static STRING_INTERNING: LazyLock<Mutex<Vec<Arc<String>>>> = LazyLock::new(Mutex
 #[derive(Debug, Clone, Default)]
 pub struct Name(NameVariant);
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+/// Storage only: name identity (equality, hashing) is defined on [`Name`], which ignores case.
+#[derive(Clone)]
 enum NameVariant {
     String(InternedString),
     Static(&'static str),
@@ -254,24 +255,6 @@ impl Deref for NameVariant {
         match self {
             NameVariant::String(str) => str.as_str(),
             NameVariant::Static(str) => str,
-        }
-    }
-}
-
-impl PartialEq<str> for NameVariant {
-    fn eq(&self, other: &str) -> bool {
-        match self {
-            NameVariant::Static(str) => (*str).eq(other),
-            NameVariant::String(str) => {
-                #[cfg(feature = "interning")]
-                {
-                    str.as_ref().eq(other)
-                }
-                #[cfg(not(feature = "interning"))]
-                {
-                    str.eq(other)
-                }
-            }
         }
     }
 }
