@@ -62,6 +62,12 @@ jobs:
         run: cargo nextest run --verbose --all-features
       - name: Run doctests
         run: cargo test --doc --verbose --all-features
+      - name: Test without default features
+        run: cargo test --no-default-features
+      - name: Test with only the pretty feature
+        run: cargo test --no-default-features --features pretty
+      - name: Test with only the parser feature
+        run: cargo test --no-default-features --features parser
 
   codecov:
     name: Code Coverage
