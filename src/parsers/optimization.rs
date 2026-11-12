@@ -3,7 +3,7 @@
 use crate::parsers::{ParseResult, Span};
 use crate::types::{optimization::names, Optimization};
 use nom::branch::alt;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::combinator::map;
 use nom::Parser;
 
@@ -18,8 +18,11 @@ use nom::Parser;
 ///```
 pub fn parse_optimization<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Optimization> {
     map(
-        alt((tag(names::MINIMIZE), tag(names::MAXIMIZE))),
-        |x: Span| Optimization::try_from(*x.fragment()).expect("unhandled variant"),
+        alt((tag_no_case(names::MINIMIZE), tag_no_case(names::MAXIMIZE))),
+        |x: Span| {
+            Optimization::try_from(x.fragment().to_ascii_lowercase().as_str())
+                .expect("unhandled variant")
+        },
     )
     .parse(input.into())
 }

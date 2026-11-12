@@ -1,7 +1,7 @@
 //! Provides parsers for simple duration constraints.
 
 use nom::branch::alt;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::preceded;
@@ -42,7 +42,10 @@ pub fn parse_simple_duration_constraint<'a, T: Into<Span<'a>>>(
     let op = map(
         parens((
             parse_d_op,
-            preceded((multispace1, tag("?duration"), multispace1), parse_d_value),
+            preceded(
+                (multispace1, tag_no_case("?duration"), multispace1),
+                parse_d_value,
+            ),
         )),
         SimpleDurationConstraint::from,
     );

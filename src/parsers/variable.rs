@@ -1,6 +1,6 @@
 //! Provides parsers for variables.
 
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
@@ -23,7 +23,7 @@ use crate::types::Variable;
 /// assert!(parse_variable(Span::new("?1")).is_err());
 ///```
 pub fn parse_variable<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Variable> {
-    map(preceded(tag("?"), parse_name), Variable::from).parse(input.into())
+    map(preceded(tag_no_case("?"), parse_name), Variable::from).parse(input.into())
 }
 
 impl crate::parsers::Parser for Variable {

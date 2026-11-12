@@ -1,7 +1,7 @@
 //! Provides the [`empty_or`] parser combinator.
 
 use nom::branch::alt;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::combinator::map;
 use nom::error::ParseError;
 use nom::Parser;
@@ -28,7 +28,7 @@ pub fn empty_or<'a, P, O, E: ParseError<Span<'a>>>(
 where
     P: Parser<Span<'a>, Output = O, Error = E>,
 {
-    let empty_parser = map(tag("()"), |_: Span| None);
+    let empty_parser = map(tag_no_case("()"), |_: Span| None);
     let inner_parser = map(inner, |o: O| Some(o));
 
     alt((empty_parser, inner_parser))

@@ -1,7 +1,7 @@
 //! Provides parsers for primitive types.
 
 use nom::branch::alt;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::combinator::map;
 use nom::Parser;
 
@@ -23,7 +23,7 @@ pub fn parse_primitive_type<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, 
 }
 
 fn parse_object(input: Span) -> ParseResult<Name> {
-    map(tag("object"), |x: Span| Name::from(*x.fragment())).parse(input)
+    map(tag_no_case("object"), |x: Span| Name::from(*x.fragment())).parse(input)
 }
 
 impl crate::parsers::Parser for PrimitiveType {

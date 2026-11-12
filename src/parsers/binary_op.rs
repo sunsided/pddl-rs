@@ -1,7 +1,7 @@
 //! Provides parsers for binary-operand operations.
 
 use nom::branch::alt;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::combinator::map;
 use nom::Parser;
 
@@ -22,12 +22,15 @@ use crate::types::{binary_op::names, BinaryOp};
 pub fn parse_binary_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, BinaryOp> {
     map(
         alt((
-            tag(names::MULTIPLICATION),
-            tag(names::ADDITION),
-            tag(names::SUBTRACTION),
-            tag(names::DIVISION),
+            tag_no_case(names::MULTIPLICATION),
+            tag_no_case(names::ADDITION),
+            tag_no_case(names::SUBTRACTION),
+            tag_no_case(names::DIVISION),
         )),
-        |x: Span| BinaryOp::try_from(*x.fragment()).expect("unhandled variant"),
+        |x: Span| {
+            BinaryOp::try_from(x.fragment().to_ascii_lowercase().as_str())
+                .expect("unhandled variant")
+        },
     )
     .parse(input.into())
 }

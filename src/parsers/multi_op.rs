@@ -1,7 +1,7 @@
 //! Provides parsers for multi-operand operations.
 
 use nom::branch::alt;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::combinator::map;
 use nom::Parser;
 
@@ -19,8 +19,14 @@ use crate::types::{multi_op::names, MultiOp};
 ///```
 pub fn parse_multi_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, MultiOp> {
     map(
-        alt((tag(names::MULTIPLICATION), tag(names::ADDITION))),
-        |x: Span| MultiOp::try_from(*x.fragment()).expect("unhandled variant"),
+        alt((
+            tag_no_case(names::MULTIPLICATION),
+            tag_no_case(names::ADDITION),
+        )),
+        |x: Span| {
+            MultiOp::try_from(x.fragment().to_ascii_lowercase().as_str())
+                .expect("unhandled variant")
+        },
     )
     .parse(input.into())
 }

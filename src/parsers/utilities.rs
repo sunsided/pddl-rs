@@ -2,7 +2,7 @@
 
 use crate::parsers::{NomError, ParseResult, Span};
 use nom::branch::alt;
-use nom::bytes::complete::{tag, take_while};
+use nom::bytes::complete::{tag_no_case, take_while};
 use nom::character::complete::{char, multispace1};
 use nom::combinator::{recognize, value};
 use nom::multi::{many0, separated_list0, separated_list1};
@@ -34,7 +34,11 @@ pub fn prefix_expr<'a, P, O>(
 where
     P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
 {
-    delimited(preceded(ws(tag("(")), tag(name)), ws(inner), ws(tag(")")))
+    delimited(
+        preceded(ws(tag_no_case("(")), tag_no_case(name)),
+        ws(inner),
+        ws(tag_no_case(")")),
+    )
 }
 
 /// A combinator that takes a parser `inner` and produces a parser that also consumes leading whitespace,
@@ -121,7 +125,7 @@ mod tests {
     #[test]
     fn definition_section_works() {
         let input = "(either x y)";
-        let inner_parser = separated_list1(tag(" "), parse_name);
+        let inner_parser = separated_list1(tag_no_case(" "), parse_name);
         let mut parser = prefix_expr("either", inner_parser);
         assert!(parser
             .parse(Span::new(input))
@@ -155,7 +159,7 @@ mod tests {
     #[test]
     fn leading_empty_comment() {
         let input = ";\ncontent";
-        let mut parser = ws(tag("content"));
+        let mut parser = ws(tag_no_case("content"));
         let (remainder, _) = parser.parse(Span::new(input)).unwrap();
         assert!(remainder.fragment().is_empty());
     }
@@ -163,7 +167,7 @@ mod tests {
     #[test]
     fn multiple_leading_comments() {
         let input = "; comment 1\n; comment 2\n; comment 3\ncontent";
-        let mut parser = ws(tag("content"));
+        let mut parser = ws(tag_no_case("content"));
         let (remainder, _) = parser.parse(Span::new(input)).unwrap();
         assert!(remainder.fragment().is_empty());
     }
@@ -171,7 +175,7 @@ mod tests {
     #[test]
     fn mixed_comments_and_whitespace() {
         let input = "\n  ; comment\n\n  ; another\n\t\ncontent";
-        let mut parser = ws(tag("content"));
+        let mut parser = ws(tag_no_case("content"));
         let (remainder, _) = parser.parse(Span::new(input)).unwrap();
         assert!(remainder.fragment().is_empty());
     }

@@ -5,7 +5,7 @@ use crate::parsers::{
     parse_da_effect, parse_da_gd, parse_da_symbol, parse_duration_constraint, parse_variable,
 };
 use crate::types::DurativeActionDefinition;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::preceded;
@@ -55,20 +55,20 @@ use nom::Parser;
 /// ```
 pub fn parse_da_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DurativeActionDefinition> {
     let parameters = preceded(
-        tag(":parameters"),
+        tag_no_case(":parameters"),
         preceded(multispace1, parens(typed_list(parse_variable))),
     );
 
     let duration = preceded(
-        tag(":duration"),
+        tag_no_case(":duration"),
         preceded(multispace1, parse_duration_constraint),
     );
     let condition = preceded(
-        tag(":condition"),
+        tag_no_case(":condition"),
         preceded(multispace1, empty_or(parse_da_gd)),
     );
     let effect = preceded(
-        tag(":effect"),
+        tag_no_case(":effect"),
         preceded(multispace1, empty_or(parse_da_effect)),
     );
 

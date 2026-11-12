@@ -1,7 +1,7 @@
 //! Provides parsers for durative operations.
 
 use nom::branch::alt;
-use nom::bytes::complete::tag;
+use nom::bytes::complete::tag_no_case;
 use nom::combinator::map;
 use nom::Parser;
 
@@ -22,11 +22,14 @@ pub fn parse_d_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DurationOp
     // :duration-inequalities
     map(
         alt((
-            tag(names::LESS_THAN_OR_EQUAL),
-            tag(names::GREATER_OR_EQUAL),
-            tag(names::EQUAL),
+            tag_no_case(names::LESS_THAN_OR_EQUAL),
+            tag_no_case(names::GREATER_OR_EQUAL),
+            tag_no_case(names::EQUAL),
         )),
-        |x: Span| DurationOperator::try_from(*x.fragment()).expect("unhandled variant"),
+        |x: Span| {
+            DurationOperator::try_from(x.fragment().to_ascii_lowercase().as_str())
+                .expect("unhandled variant")
+        },
     )
     .parse(input.into())
 }
