@@ -103,7 +103,8 @@ impl Visitor<Domain, RcDoc<'static>> for PrettyRenderer {
     }
 }
 
-#[cfg(test)]
+// The tests parse their input, so they need the `parser` feature.
+#[cfg(all(test, feature = "parser"))]
 mod tests {
     use crate::parsers::Parser;
     use crate::pretty_print::Pretty;
