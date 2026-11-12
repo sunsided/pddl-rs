@@ -20,7 +20,7 @@ use nom::Parser;
 /// # use pddl::{AssignOp, TimedAssignOperator, AtomicFormula, EffectCondition, EqualityAtomicFormula, DurativeActionFunctionAssignment, DurativeActionFluentExpression, FunctionHead, PrimitiveEffect, Term, TimedEffect, TimedFluentExpression, TimeSpecifier};
 /// # use pddl::DurativeActionFluentExpression::Duration;
 /// assert!(parse_timed_effect("(at start (= x y))").is_value(
-///     TimedEffect::new_conditional(
+///     TimedEffect::conditional(
 ///         TimeSpecifier::Start,
 ///         EffectCondition::new(
 ///             PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
@@ -34,7 +34,7 @@ use nom::Parser;
 /// ));
 ///
 /// assert!(parse_timed_effect("(at end (assign fun-sym ?duration))").is_value(
-///     TimedEffect::new_fluent(
+///     TimedEffect::fluent(
 ///         TimeSpecifier::End,
 ///         DurativeActionFunctionAssignment::new(
 ///             AssignOp::Assign,
@@ -45,7 +45,7 @@ use nom::Parser;
 /// ));
 ///
 /// assert!(parse_timed_effect("(increase fun-sym #t)").is_value(
-///     TimedEffect::new_continuous(
+///     TimedEffect::continuous(
 ///         TimedAssignOperator::Increase,
 ///         FunctionHead::Simple("fun-sym".into()),
 ///         TimedFluentExpression::Now
