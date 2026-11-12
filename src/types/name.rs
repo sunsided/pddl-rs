@@ -26,6 +26,14 @@ static STRING_INTERNING: LazyLock<Mutex<Vec<Arc<String>>>> = LazyLock::new(Mutex
 /// created with (e.g. for pretty-printing), but compares and hashes
 /// ignoring ASCII case, so `AT` and `at` are the same name.
 ///
+/// Its hash is therefore that of the lowercased name, not that of
+/// [`as_ref()`](AsRef::as_ref): don't look up a `Name`-keyed map or set with
+/// `&str` keys (which is also why `Name` does not implement `Borrow<str>`).
+///
+/// Storage is per spelling: [`Name::new`] interns `AT` and `at` separately,
+/// and only the exact spellings `object` and `number` map to the built-in
+/// static names. The two values still compare equal.
+///
 /// ```
 /// # use pddl::Name;
 /// assert_eq!(Name::new("AT"), Name::new("at"));
@@ -53,7 +61,9 @@ impl Name {
     ///
     /// ## Interning
     /// If the `interning` crate feature is enabled, strings passed to this
-    /// method will be deduplicated, reducing memory footprint.
+    /// method will be deduplicated, reducing memory footprint. Deduplication
+    /// is by exact spelling, so `AT` and `at` are stored separately (but still
+    /// compare equal, see [`Name`]).
     ///
     /// ## Arguments
     /// * `name` - The name to wrap.
@@ -75,8 +85,8 @@ impl Name {
     /// ## Interning
     /// Note that strings passed to this method are not themselves interned
     /// even if the create feature `interning` is enabled, and they will be invisible
-    /// to other strings partaking in interning. To ensure that a name value
-    /// exists exactly once, use the (non-const) [`Name::new`] function instead.
+    /// to other strings partaking in interning. To ensure that each spelling
+    /// is stored only once, use the (non-const) [`Name::new`] function instead.
     ///
     /// ## Arguments
     /// * `name` - The name to wrap.
