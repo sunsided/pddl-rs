@@ -1,12 +1,12 @@
 //! Provides parsers for conditional goal definitions.
 
+use crate::parsers::sep;
 use crate::parsers::{
     parens, parse_gd, parse_number, parse_variable, prefix_expr, space_separated_list0, typed_list,
     ParseResult, Span,
 };
 use crate::types::{ConstraintGoalDefinition, ConstraintGoalDefinitionInner};
 use nom::branch::alt;
-use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
@@ -169,7 +169,7 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Constrai
             "forall",
             (
                 parens(typed_list(parse_variable)),
-                preceded(multispace1, parse_con_gd),
+                preceded(sep, parse_con_gd),
             ),
         ),
         |(vars, gd)| ConstraintGoalDefinition::forall(vars, gd),
@@ -191,10 +191,7 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Constrai
     );
 
     let within = map(
-        prefix_expr(
-            "within",
-            (parse_number, preceded(multispace1, parse_con2_gd)),
-        ),
+        prefix_expr("within", (parse_number, preceded(sep, parse_con2_gd))),
         |(num, gd)| ConstraintGoalDefinition::within(num, gd),
     );
 
@@ -206,7 +203,7 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Constrai
     let sometime_after = map(
         prefix_expr(
             "sometime-after",
-            (parse_con2_gd, preceded(multispace1, parse_con2_gd)),
+            (parse_con2_gd, preceded(sep, parse_con2_gd)),
         ),
         |(a, b)| ConstraintGoalDefinition::sometime_after(a, b),
     );
@@ -214,7 +211,7 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Constrai
     let sometime_before = map(
         prefix_expr(
             "sometime-before",
-            (parse_con2_gd, preceded(multispace1, parse_con2_gd)),
+            (parse_con2_gd, preceded(sep, parse_con2_gd)),
         ),
         |(a, b)| ConstraintGoalDefinition::sometime_before(a, b),
     );
@@ -224,8 +221,8 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Constrai
             "always-within",
             (
                 parse_number,
-                preceded(multispace1, parse_con2_gd),
-                preceded(multispace1, parse_con2_gd),
+                preceded(sep, parse_con2_gd),
+                preceded(sep, parse_con2_gd),
             ),
         ),
         |(num, a, b)| ConstraintGoalDefinition::always_within(num, a, b),
@@ -236,18 +233,15 @@ pub fn parse_con_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Constrai
             "hold-during",
             (
                 parse_number,
-                preceded(multispace1, parse_number),
-                preceded(multispace1, parse_con2_gd),
+                preceded(sep, parse_number),
+                preceded(sep, parse_con2_gd),
             ),
         ),
         |(t0, t1, gd)| ConstraintGoalDefinition::hold_during(t0, t1, gd),
     );
 
     let hold_after = map(
-        prefix_expr(
-            "hold-after",
-            (parse_number, preceded(multispace1, parse_con2_gd)),
-        ),
+        prefix_expr("hold-after", (parse_number, preceded(sep, parse_con2_gd))),
         |(time, gd)| ConstraintGoalDefinition::hold_after(time, gd),
     );
 

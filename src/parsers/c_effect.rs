@@ -1,11 +1,11 @@
 //! Provides parsers for conditional effects.
 
 use nom::branch::alt;
-use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
 
+use crate::parsers::sep;
 use crate::parsers::{parens, prefix_expr, typed_list, ParseResult, Span};
 use crate::parsers::{
     parse_effect, parse_effect_condition, parse_gd, parse_p_effect, parse_variable,
@@ -136,7 +136,7 @@ pub fn parse_forall_c_effect<'a, T: Into<Span<'a>>>(
             "forall",
             (
                 parens(typed_list(parse_variable)),
-                preceded(multispace1, parse_effect),
+                preceded(sep, parse_effect),
             ),
         ),
         ForallConditionalEffect::from,
@@ -194,10 +194,7 @@ pub fn parse_when_c_effect<'a, T: Into<Span<'a>>>(
     input: T,
 ) -> ParseResult<'a, WhenConditionalEffect> {
     map(
-        prefix_expr(
-            "when",
-            (parse_gd, preceded(multispace1, parse_effect_condition)),
-        ),
+        prefix_expr("when", (parse_gd, preceded(sep, parse_effect_condition))),
         WhenConditionalEffect::from,
     )
     .parse(input.into())

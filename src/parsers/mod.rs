@@ -230,7 +230,7 @@ pub use typed_list::typed_list;
 // Utility parser combinators.
 #[allow(unused_imports)]
 pub(crate) use utilities::{
-    failure_at, fold_sections, parens, prefix_expr, set_once, space_separated_list0,
+    failure_at, fold_sections, parens, prefix_expr, sep, set_once, space_separated_list0,
     space_separated_list1, ws, ws2,
 };
 

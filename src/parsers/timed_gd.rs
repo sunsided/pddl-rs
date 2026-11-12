@@ -1,10 +1,10 @@
 //! Provides parsers for timed goal definitions.
 
+use crate::parsers::sep;
 use crate::parsers::{parse_gd, parse_interval, parse_time_specifier};
 use crate::parsers::{prefix_expr, ParseResult, Span};
 use crate::types::TimedGoalDefinition;
 use nom::branch::alt;
-use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
@@ -41,15 +41,12 @@ use nom::Parser;
 /// ```
 pub fn parse_timed_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedGoalDefinition> {
     let at = map(
-        prefix_expr(
-            "at",
-            (parse_time_specifier, preceded(multispace1, parse_gd)),
-        ),
+        prefix_expr("at", (parse_time_specifier, preceded(sep, parse_gd))),
         TimedGoalDefinition::from,
     );
 
     let over = map(
-        prefix_expr("over", (parse_interval, preceded(multispace1, parse_gd))),
+        prefix_expr("over", (parse_interval, preceded(sep, parse_gd))),
         TimedGoalDefinition::from,
     );
 

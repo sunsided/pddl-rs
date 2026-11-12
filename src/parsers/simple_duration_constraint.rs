@@ -2,11 +2,11 @@
 
 use nom::branch::alt;
 use nom::bytes::complete::tag_no_case;
-use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
 
+use crate::parsers::sep;
 use crate::parsers::{parens, prefix_expr, ParseResult, Span};
 use crate::parsers::{parse_d_op, parse_d_value, parse_time_specifier};
 use crate::types::SimpleDurationConstraint;
@@ -42,10 +42,7 @@ pub fn parse_simple_duration_constraint<'a, T: Into<Span<'a>>>(
     let op = map(
         parens((
             parse_d_op,
-            preceded(
-                (multispace1, tag_no_case("?duration"), multispace1),
-                parse_d_value,
-            ),
+            preceded((sep, tag_no_case("?duration"), sep), parse_d_value),
         )),
         SimpleDurationConstraint::from,
     );
@@ -55,7 +52,7 @@ pub fn parse_simple_duration_constraint<'a, T: Into<Span<'a>>>(
             "at",
             (
                 parse_time_specifier,
-                preceded(multispace1, parse_simple_duration_constraint),
+                preceded(sep, parse_simple_duration_constraint),
             ),
         ),
         SimpleDurationConstraint::from,

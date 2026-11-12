@@ -1,9 +1,9 @@
 //! Provides parsers for f-assign-das.
 
+use crate::parsers::sep;
 use crate::parsers::{parens, ParseResult, Span};
 use crate::parsers::{parse_assign_op, parse_f_exp_da, parse_f_head};
 use crate::types::DurativeActionFunctionAssignment;
-use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
@@ -21,8 +21,8 @@ pub fn parse_f_assign_da<'a, T: Into<Span<'a>>>(
     map(
         parens((
             parse_assign_op,
-            preceded(multispace1, parse_f_head),
-            preceded(multispace1, parse_f_exp_da),
+            preceded(sep, parse_f_head),
+            preceded(sep, parse_f_exp_da),
         )),
         DurativeActionFunctionAssignment::from,
     )

@@ -25,6 +25,9 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   any order after the `(domain ...)` / `(problem ...)` header, and domain sections may be interleaved
   with actions (which keep their relative order). A section given twice is now an error at its second
   occurrence; a problem without `:domain`, `:init` or `:goal` is an error where its sections end.
+- [#101](https://github.com/sunsided/pddl-rs/issues/101): Whitespace before a `(` is optional, so
+  `:parameters(?x)` and `(and(p)(q))` parse. Wherever whitespace separates tokens, `;` comments are
+  accepted too.
 
 ## [0.1.0] - 2024-05-19
 

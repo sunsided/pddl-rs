@@ -25,6 +25,20 @@ pub(crate) fn skip_whitespace_and_comments<'a>(input: Span<'a>) -> ParseResult<'
     value((), many0(alt((multispace1, eol_comment)))).parse(input)
 }
 
+/// Separates two tokens: whitespace and `;` comments, which may be omitted
+/// before a `(` (e.g. `:parameters(?x)` or `(and(p)(q))`).
+pub(crate) fn sep(input: Span) -> ParseResult<()> {
+    let (rest, ()) = skip_whitespace_and_comments(input)?;
+    if rest.location_offset() > input.location_offset() || rest.fragment().starts_with('(') {
+        Ok((rest, ()))
+    } else {
+        Err(nom::Err::Error(NomError::new(
+            input,
+            nom::error::ErrorKind::MultiSpace,
+        )))
+    }
+}
+
 /// Repeatedly parses `section` (skipping whitespace and comments before each)
 /// and hands every result to `apply` together with the position it started at.
 ///
@@ -128,7 +142,7 @@ where
     P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
 {
     ws(separated_list0(
-        multispace1,
+        sep,
         preceded(skip_whitespace_and_comments, inner),
     ))
 }
@@ -142,7 +156,7 @@ where
     P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
 {
     ws(separated_list1(
-        multispace1,
+        sep,
         preceded(skip_whitespace_and_comments, inner),
     ))
 }
@@ -165,6 +179,16 @@ mod tests {
     use crate::parsers::{parse_name, Match};
     use crate::Name;
     use nom::multi::separated_list1;
+
+    #[test]
+    fn sep_is_optional_only_before_a_paren() {
+        assert_eq!(*sep(Span::new("(p)")).unwrap().0.fragment(), "(p)");
+        assert_eq!(*sep(Span::new("  x")).unwrap().0.fragment(), "x");
+        assert_eq!(*sep(Span::new("; c\nx")).unwrap().0.fragment(), "x");
+        // Two names still need something between them.
+        assert!(sep(Span::new("x")).is_err());
+        assert!(sep(Span::new("")).is_err());
+    }
 
     #[test]
     fn fold_sections_fails_on_a_section_that_consumes_nothing() {

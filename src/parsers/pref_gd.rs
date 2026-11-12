@@ -1,11 +1,11 @@
 //! Provides parsers for preference goal definitions.
 
 use nom::branch::alt;
-use nom::character::complete::multispace1;
 use nom::combinator::{map, opt};
 use nom::sequence::preceded;
 use nom::Parser;
 
+use crate::parsers::sep;
 use crate::parsers::{parse_gd, parse_pref_name};
 use crate::parsers::{prefix_expr, ParseResult, Span};
 use crate::types::{Preference, PreferenceGoalDefinition};
@@ -63,7 +63,7 @@ pub fn parse_pref_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Prefere
     let pref_named = map(
         prefix_expr(
             "preference",
-            (opt(parse_pref_name), preceded(multispace1, parse_gd)),
+            (opt(parse_pref_name), preceded(sep, parse_gd)),
         ),
         |(pref, gd)| PreferenceGoalDefinition::from_preference(Preference::new(pref, gd)),
     );

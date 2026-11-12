@@ -1,11 +1,11 @@
 //! Provides parsers for goal definitions.
 
 use nom::branch::alt;
-use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
 
+use crate::parsers::sep;
 use crate::parsers::{parens, prefix_expr, space_separated_list0, typed_list, ParseResult, Span};
 use crate::parsers::{parse_pref_gd, parse_variable};
 use crate::types::PreconditionGoalDefinition;
@@ -85,7 +85,7 @@ pub fn parse_pre_gd<'a, T: Into<Span<'a>>>(
             "forall",
             (
                 parens(typed_list(parse_variable)),
-                preceded(multispace1, parse_pre_gd),
+                preceded(sep, parse_pre_gd),
             ),
         ),
         |(vars, gd)| {

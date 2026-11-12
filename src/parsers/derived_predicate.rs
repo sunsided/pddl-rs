@@ -1,10 +1,10 @@
 //! Provides parsers for derived predicates.
 
-use nom::character::complete::multispace1;
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
 
+use crate::parsers::sep;
 use crate::parsers::{parse_atomic_formula_skeleton, parse_gd};
 use crate::parsers::{prefix_expr, ParseResult, Span};
 use crate::types::DerivedPredicate;
@@ -32,10 +32,7 @@ pub fn parse_derived_predicate<'a, T: Into<Span<'a>>>(
     map(
         prefix_expr(
             ":derived",
-            (
-                parse_atomic_formula_skeleton,
-                preceded(multispace1, parse_gd),
-            ),
+            (parse_atomic_formula_skeleton, preceded(sep, parse_gd)),
         ),
         DerivedPredicate::from,
     )
