@@ -1,17 +1,19 @@
 //! Provides parsers for domain definitions.
 
-use nom::character::complete::multispace1;
-use nom::combinator::{map, opt};
-use nom::sequence::preceded;
+use nom::branch::alt;
+use nom::combinator::map;
 use nom::Parser;
 
+use crate::parsers::{
+    fold_sections, parse_name, parse_types_def, prefix_expr, set_once, space_separated_list1, ws2,
+};
 use crate::parsers::{
     parse_constants_def, parse_domain_constraints_def, parse_functions_def, parse_predicates_def,
     parse_require_def, parse_structure_def, parse_timeless_def, ParseResult, Span,
 };
-use crate::parsers::{parse_name, parse_types_def, prefix_expr, space_separated_list1, ws2};
 use crate::types::{
-    Constants, Domain, Functions, PredicateDefinitions, Requirements, StructureDefs,
+    Constants, Domain, Functions, Name, PredicateDefinitions, Requirements, StructureDef,
+    StructureDefs,
 };
 use crate::types::{DomainConstraintsDef, Timeless, Types};
 
@@ -61,59 +63,78 @@ use crate::types::{DomainConstraintsDef, Timeless, Types};
 /// assert_eq!(domain.structure().len(), 3);
 /// ```
 pub fn parse_domain<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Domain> {
-    map(
-        ws2(prefix_expr(
-            "define",
-            (
-                prefix_expr("domain", parse_name),
-                opt(preceded(
-                    multispace1,
-                    prefix_expr(":extends", space_separated_list1(parse_name)),
-                )),
-                opt(preceded(multispace1, parse_require_def)),
-                // :typing
-                opt(preceded(multispace1, parse_types_def)),
-                opt(preceded(multispace1, parse_constants_def)),
-                opt(preceded(multispace1, parse_predicates_def)),
-                // :fluents
-                opt(preceded(multispace1, parse_functions_def)),
-                // :constraints
-                opt(preceded(multispace1, parse_domain_constraints_def)),
-                // :timeless (PDDL 1.2)
-                opt(preceded(multispace1, parse_timeless_def)),
-                opt(preceded(
-                    multispace1,
-                    map(
-                        space_separated_list1(parse_structure_def),
-                        StructureDefs::new,
-                    ),
-                )),
-            ),
-        )),
-        |(
-            name,
-            extends,
-            require,
-            types,
-            constants,
-            predicates,
-            functions,
-            constraints,
-            timeless,
-            structure,
-        )| {
-            Domain::builder(name, structure.unwrap_or(StructureDefs::default()))
-                .with_extends(extends.unwrap_or(Vec::default()))
-                .with_requirements(require.unwrap_or(Requirements::default()))
-                .with_types(types.unwrap_or(Types::default()))
-                .with_constants(constants.unwrap_or(Constants::default()))
-                .with_predicates(predicates.unwrap_or(PredicateDefinitions::default()))
-                .with_functions(functions.unwrap_or(Functions::default()))
-                .with_constraints(constraints.unwrap_or(DomainConstraintsDef::default()))
-                .with_timeless(timeless.unwrap_or(Timeless::default()))
-        },
-    )
-    .parse(input.into())
+    ws2(prefix_expr("define", parse_domain_body)).parse(input.into())
+}
+
+/// A top-level part of a domain definition.
+enum Section {
+    Extends(Vec<Name>),
+    Requirements(Requirements),
+    Types(Types),
+    Constants(Constants),
+    Predicates(PredicateDefinitions),
+    Functions(Functions),
+    Constraints(DomainConstraintsDef),
+    Timeless(Timeless),
+    Structure(StructureDef),
+}
+
+/// Parses `(domain <name>)` followed by the sections in any order.
+///
+/// Each section may appear at most once; structure definitions (actions etc.)
+/// keep their relative order and may be interleaved with the sections.
+fn parse_domain_body(input: Span) -> ParseResult<Domain> {
+    let (input, name) = prefix_expr("domain", parse_name).parse(input)?;
+
+    let mut extends = None;
+    let mut requirements = None;
+    let mut types = None;
+    let mut constants = None;
+    let mut predicates = None;
+    let mut functions = None;
+    let mut constraints = None;
+    let mut timeless = None;
+    let mut structure = Vec::new();
+
+    let section = alt((
+        map(
+            prefix_expr(":extends", space_separated_list1(parse_name)),
+            Section::Extends,
+        ),
+        map(parse_require_def, Section::Requirements),
+        map(parse_types_def, Section::Types),
+        map(parse_constants_def, Section::Constants),
+        map(parse_predicates_def, Section::Predicates),
+        map(parse_functions_def, Section::Functions),
+        map(parse_domain_constraints_def, Section::Constraints),
+        map(parse_timeless_def, Section::Timeless),
+        map(parse_structure_def, Section::Structure),
+    ));
+    let (input, ()) = fold_sections(input, section, |section, at| match section {
+        Section::Extends(v) => set_once(&mut extends, v, at),
+        Section::Requirements(v) => set_once(&mut requirements, v, at),
+        Section::Types(v) => set_once(&mut types, v, at),
+        Section::Constants(v) => set_once(&mut constants, v, at),
+        Section::Predicates(v) => set_once(&mut predicates, v, at),
+        Section::Functions(v) => set_once(&mut functions, v, at),
+        Section::Constraints(v) => set_once(&mut constraints, v, at),
+        Section::Timeless(v) => set_once(&mut timeless, v, at),
+        Section::Structure(v) => {
+            structure.push(v);
+            Ok(())
+        }
+    })?;
+
+    let domain = Domain::builder(name, StructureDefs::new(structure))
+        .with_extends(extends.unwrap_or_default())
+        .with_requirements(requirements.unwrap_or_default())
+        .with_types(types.unwrap_or_default())
+        .with_constants(constants.unwrap_or_default())
+        .with_predicates(predicates.unwrap_or_default())
+        .with_functions(functions.unwrap_or_default())
+        .with_constraints(constraints.unwrap_or_default())
+        .with_timeless(timeless.unwrap_or_default());
+    Ok((input, domain))
 }
 
 impl crate::parsers::Parser for Domain {
@@ -179,6 +200,29 @@ impl crate::parsers::Parser for Domain {
 #[cfg(test)]
 mod tests {
     use crate::{Domain, Name, Parser};
+
+    #[test]
+    fn sections_in_any_order() {
+        let ordered = Domain::from_str(
+            "(define (domain d) (:requirements :strips) (:types t) (:predicates (p)) (:functions (c)) \
+             (:action a :parameters () :effect (p)) (:action b :parameters () :effect (p)))",
+        )
+        .unwrap();
+        let shuffled = Domain::from_str(
+            "(define (domain d) (:functions (c)) (:action a :parameters () :effect (p)) \
+             (:predicates (p)) (:types t) (:action b :parameters () :effect (p)) (:requirements :strips))",
+        )
+        .unwrap();
+        assert_eq!(ordered, shuffled);
+    }
+
+    #[test]
+    fn duplicate_section_is_reported_at_the_second_occurrence() {
+        let input = "(define (domain d)\n  (:predicates (p))\n  (:predicates (q)))";
+        let error = Domain::from_str(input).unwrap_err();
+        assert_eq!((error.line(), error.column()), (3, 3));
+        assert_eq!(error.found(), Some("(:predicates (q)))"));
+    }
 
     #[test]
     fn test_parse() {

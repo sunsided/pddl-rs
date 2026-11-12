@@ -127,14 +127,12 @@ mod tests {
   (:domain test)
   (:init)
   (:goal (and))
-  (:constraints (and))
+  (:constraints (always (p)))
   (:requirements :constraints)
 )"#;
-        let problem = crate::Problem::from_str(input);
-        if let Ok(problem) = problem {
-            let output = problem.pretty(80).to_string();
-            assert!(output.contains("(:constraints"));
-        }
+        let problem = crate::Problem::from_str(input).unwrap();
+        let output = problem.pretty(80).to_string();
+        assert!(output.contains("(:constraints"), "{output}");
     }
 
     #[test]

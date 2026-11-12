@@ -21,6 +21,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   was written with (and pretty-prints it), but its `PartialEq`, `Eq` and `Hash` now ignore ASCII case,
   so `AT` and `at` are the same name. This also applies to every type built on `Name`, such as
   `Variable`, `Predicate` and `PrimitiveType`.
+- [#100](https://github.com/sunsided/pddl-rs/issues/100): Domain and problem sections may appear in
+  any order after the `(domain ...)` / `(problem ...)` header, and domain sections may be interleaved
+  with actions (which keep their relative order). A section given twice is now an error at its second
+  occurrence; a problem without `:domain`, `:init` or `:goal` is an error where its sections end.
 
 ## [0.1.0] - 2024-05-19
 
