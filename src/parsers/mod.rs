@@ -240,6 +240,49 @@ mod tests {
 
     const DOMAIN: &str = "(define (domain d) (:requirements :strips) (:predicates (p)))";
 
+    /// Every keyword parser must map each keyword, in any case, to the same
+    /// variant as the type's `TryFrom<&str>`, and consume it completely.
+    #[test]
+    fn keyword_parsers_agree_with_try_from() {
+        macro_rules! check {
+            ($parse:path, $ty:ty, $names:path: $($name:ident),+ $(,)?) => {{
+                use $names as names;
+                $(
+                    let expected = <$ty>::try_from(names::$name).unwrap();
+                    for input in [names::$name.to_string(), names::$name.to_ascii_uppercase()] {
+                        let (rest, parsed) = $parse(input.as_str()).unwrap();
+                        assert!(rest.is_empty(), "{input}: left {rest}");
+                        assert_eq!(parsed, expected, "{input}");
+                    }
+                )+
+            }};
+        }
+        use crate::types::*;
+        check!(super::parse_assign_op, AssignOp, crate::types::assign_op::names:
+            CHANGE, ASSIGN, SCALE_UP, SCALE_DOWN, INCREASE, DECREASE);
+        check!(super::parse_assign_op_t, TimedAssignOperator, crate::types::assign_op_t::names:
+            INCREASE, DECREASE);
+        check!(super::parse_binary_op, BinaryOp, crate::types::binary_op::names:
+            MULTIPLICATION, ADDITION, SUBTRACTION, DIVISION);
+        check!(super::parse_binary_comp, BinaryComparison, crate::types::binary_comp::names:
+            GREATER_THAN, LESS_THAN, EQUAL, GREATER_THAN_OR_EQUAL, LESS_THAN_OR_EQUAL);
+        check!(super::parse_d_op, DurationOperator, crate::types::d_op::names:
+            EQUAL, GREATER_OR_EQUAL, LESS_THAN_OR_EQUAL);
+        check!(super::parse_interval, Interval, crate::types::interval::names: ALL);
+        check!(super::parse_multi_op, MultiOp, crate::types::multi_op::names:
+            MULTIPLICATION, ADDITION);
+        check!(super::parse_optimization, Optimization, crate::types::optimization::names:
+            MINIMIZE, MAXIMIZE);
+        check!(super::parse_time_specifier, TimeSpecifier, crate::types::time_specifier::names:
+            START, END);
+        check!(super::parse_require_key, Requirement, crate::types::requirement::names:
+            STRIPS, TYPING, NEGATIVE_PRECONDITIONS, DISJUNCTIVE_PRECONDITIONS, EQUALITY,
+            EXISTENTIAL_PRECONDITIONS, UNIVERSAL_PRECONDITIONS, QUANTIFIED_PRECONDITIONS,
+            CONDITIONAL_EFFECTS, FLUENTS, NUMERIC_FLUENTS, OBJECT_FLUENTS, ADL,
+            DURATIVE_ACTIONS, DURATION_INEQUALITIES, CONTINUOUS_EFFECTS, DERIVED_PREDICATES,
+            TIMED_INITIAL_LITERALS, PREFERENCES, CONSTRAINTS, ACTION_COSTS);
+    }
+
     #[test]
     fn test_parse() {
         let (_, value) = BasicFunctionTerm::parse("abcde").unwrap();

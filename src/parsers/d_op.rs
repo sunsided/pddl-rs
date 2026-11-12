@@ -2,7 +2,7 @@
 
 use nom::branch::alt;
 use nom::bytes::complete::tag_no_case;
-use nom::combinator::map;
+use nom::combinator::value;
 use nom::Parser;
 
 use crate::parsers::{ParseResult, Span};
@@ -20,17 +20,17 @@ use crate::types::{d_op::names, DurationOperator};
 ///```
 pub fn parse_d_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DurationOperator> {
     // :duration-inequalities
-    map(
-        alt((
+    alt((
+        value(
+            DurationOperator::LessThanOrEqual,
             tag_no_case(names::LESS_THAN_OR_EQUAL),
+        ),
+        value(
+            DurationOperator::GreaterOrEqual,
             tag_no_case(names::GREATER_OR_EQUAL),
-            tag_no_case(names::EQUAL),
-        )),
-        |x: Span| {
-            DurationOperator::try_from(x.fragment().to_ascii_lowercase().as_str())
-                .expect("unhandled variant")
-        },
-    )
+        ),
+        value(DurationOperator::Equal, tag_no_case(names::EQUAL)),
+    ))
     .parse(input.into())
 }
 

@@ -2,7 +2,7 @@
 
 use nom::branch::alt;
 use nom::bytes::complete::tag_no_case;
-use nom::combinator::map;
+use nom::combinator::value;
 use nom::Parser;
 
 use crate::parsers::{ParseResult, Span};
@@ -19,13 +19,10 @@ use crate::types::TimeSpecifier;
 /// assert!(parse_time_specifier("end").is_value(TimeSpecifier::End));
 ///```
 pub fn parse_time_specifier<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimeSpecifier> {
-    map(
-        alt((tag_no_case(names::START), tag_no_case(names::END))),
-        |x: Span| {
-            TimeSpecifier::try_from(x.fragment().to_ascii_lowercase().as_str())
-                .expect("unhandled variant")
-        },
-    )
+    alt((
+        value(TimeSpecifier::Start, tag_no_case(names::START)),
+        value(TimeSpecifier::End, tag_no_case(names::END)),
+    ))
     .parse(input.into())
 }
 

@@ -2,7 +2,7 @@
 
 use nom::branch::alt;
 use nom::bytes::complete::tag_no_case;
-use nom::combinator::map;
+use nom::combinator::value;
 use nom::Parser;
 
 use crate::parsers::{ParseResult, Span};
@@ -18,16 +18,10 @@ use crate::types::{multi_op::names, MultiOp};
 /// assert!(parse_multi_op("+").is_value(MultiOp::Addition));
 ///```
 pub fn parse_multi_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, MultiOp> {
-    map(
-        alt((
-            tag_no_case(names::MULTIPLICATION),
-            tag_no_case(names::ADDITION),
-        )),
-        |x: Span| {
-            MultiOp::try_from(x.fragment().to_ascii_lowercase().as_str())
-                .expect("unhandled variant")
-        },
-    )
+    alt((
+        value(MultiOp::Multiplication, tag_no_case(names::MULTIPLICATION)),
+        value(MultiOp::Addition, tag_no_case(names::ADDITION)),
+    ))
     .parse(input.into())
 }
 
