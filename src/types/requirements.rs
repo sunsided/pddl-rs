@@ -75,7 +75,10 @@ impl Requirements {
     }
 
     /// Adds requirement keys this crate does not know, e.g. `:foo-bar`.
-    pub fn with_unknown<I: IntoIterator<Item = Name>>(mut self, unknown: I) -> Self {
+    ///
+    /// Crate-private: the caller must pass valid keys (a `:` followed by a name)
+    /// that aren't known requirements, which the parser guarantees.
+    pub(crate) fn with_unknown<I: IntoIterator<Item = Name>>(mut self, unknown: I) -> Self {
         self.1.extend(unknown);
         self
     }
