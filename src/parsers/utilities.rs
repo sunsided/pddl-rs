@@ -109,7 +109,9 @@ where
 /// Matches the keyword `name` (ignoring case) as a whole word: a keyword
 /// ending in a letter or digit must not be followed by a name character, so
 /// `preference` does not match the start of `preferences`.
-fn keyword<'a>(name: &'a str) -> impl Parser<Span<'a>, Output = Span<'a>, Error = NomError<'a>> {
+pub(crate) fn keyword<'a>(
+    name: &'a str,
+) -> impl Parser<Span<'a>, Output = Span<'a>, Error = NomError<'a>> {
     let needs_boundary = name.ends_with(|c: char| c.is_ascii_alphanumeric());
     move |input: Span<'a>| {
         let (rest, matched) = tag_no_case(name).parse(input)?;

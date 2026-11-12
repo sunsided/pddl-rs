@@ -28,11 +28,10 @@ impl Visitor<Problem, RcDoc<'static>> for PrettyRenderer {
             .append(value.domain().accept(self))
             .append(")");
 
-        if !value.requirements().is_empty() {
-            doc = doc.append(RcDoc::hardline()).append(self.section(
-                "requirements",
-                value.requirements().iter().map(|r| r.accept(self)),
-            ));
+        if !value.requirements().is_empty_including_unknown() {
+            doc = doc
+                .append(RcDoc::hardline())
+                .append(self.section("requirements", self.requirement_docs(value.requirements())));
         }
 
         if !value.objects().is_empty() {

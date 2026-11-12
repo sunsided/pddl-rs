@@ -22,7 +22,18 @@ impl sealed::Sealed for InitElement {}
 
 impl Visitor<Requirements, RcDoc<'static>> for PrettyRenderer {
     fn visit(&self, value: &Requirements) -> RcDoc<'static> {
-        RcDoc::intersperse(value.iter().map(|r| r.accept(self)), RcDoc::softline())
+        RcDoc::intersperse(self.requirement_docs(value), RcDoc::softline())
+    }
+}
+
+impl PrettyRenderer {
+    /// The known requirement keys, followed by the unknown ones.
+    pub(crate) fn requirement_docs(&self, value: &Requirements) -> Vec<RcDoc<'static>> {
+        value
+            .iter()
+            .map(|r| r.accept(self))
+            .chain(value.unknown().iter().map(|n| RcDoc::text(n.to_string())))
+            .collect()
     }
 }
 
