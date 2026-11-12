@@ -27,6 +27,7 @@ pub(crate) fn skip_whitespace_and_comments<'a>(input: Span<'a>) -> ParseResult<'
 
 /// Repeatedly parses `section` (skipping whitespace and comments before each)
 /// and hands every result to `apply` together with the position it started at.
+///
 /// Stops at the first input `section` does not match.
 pub(crate) fn fold_sections<'a, O>(
     mut input: Span<'a>,
@@ -36,6 +37,10 @@ pub(crate) fn fold_sections<'a, O>(
     loop {
         let (start, _) = skip_whitespace_and_comments(input)?;
         match section.parse(start) {
+            // A section that consumes nothing would make this loop spin forever.
+            Ok((rest, _)) if rest.location_offset() == start.location_offset() => {
+                return Err(failure_at(start));
+            }
             Ok((rest, value)) => {
                 apply(value, start)?;
                 input = rest;
@@ -154,6 +159,16 @@ mod tests {
     use crate::parsers::{parse_name, Match};
     use crate::Name;
     use nom::multi::separated_list1;
+
+    #[test]
+    fn fold_sections_fails_on_a_section_that_consumes_nothing() {
+        let input = Span::new("  (a)");
+        let result = fold_sections(input, nom::combinator::success(()), |_, _| Ok(()));
+        let Err(nom::Err::Failure(e)) = result else {
+            panic!("expected failure, got {result:?}");
+        };
+        assert_eq!(e.input.location_offset(), 2);
+    }
 
     #[test]
     fn parens_works() {
