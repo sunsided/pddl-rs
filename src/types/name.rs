@@ -2,6 +2,7 @@
 
 use crate::types::{PrimitiveType, ToTyped, Type, Typed};
 use std::fmt::{Debug, Display, Formatter};
+use std::hash::{Hash, Hasher};
 use std::ops::Deref;
 
 #[cfg(feature = "interning")]
@@ -19,7 +20,19 @@ static STRING_INTERNING: LazyLock<Mutex<Vec<Arc<String>>>> = LazyLock::new(Mutex
 /// [`FunctionSymbol`](crate::FunctionSymbol), [`ActionSymbol`](crate::ActionSymbol),
 /// [`PreferenceName`](crate::PreferenceName), [`Term`](crate::Term),
 /// [`DurativeActionSymbol`](crate::DurativeActionSymbol) and [`Objects`](crate::Objects).
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
+///
+/// ## Case
+/// PDDL names are case-insensitive. A [`Name`] keeps the spelling it was
+/// created with (e.g. for pretty-printing), but compares and hashes
+/// ignoring ASCII case, so `AT` and `at` are the same name.
+///
+/// ```
+/// # use pddl::Name;
+/// assert_eq!(Name::new("AT"), Name::new("at"));
+/// assert_eq!(Name::new("AT"), "at");
+/// assert_eq!(Name::new("AT").to_string(), "AT");
+/// ```
+#[derive(Debug, Clone, Default)]
 pub struct Name(NameVariant);
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -159,24 +172,44 @@ impl Deref for Name {
     }
 }
 
+impl PartialEq for Name {
+    #[inline(always)]
+    fn eq(&self, other: &Self) -> bool {
+        self.eq_ignore_ascii_case(other)
+    }
+}
+
+impl Eq for Name {}
+
+impl Hash for Name {
+    /// Hashes the ASCII-lowercased name, consistent with the case-insensitive [`PartialEq`].
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        for byte in self.bytes() {
+            state.write_u8(byte.to_ascii_lowercase());
+        }
+        // Terminator, as `str`'s own `Hash` does, so ("ab", "c") and ("a", "bc") differ in tuples.
+        state.write_u8(0xff);
+    }
+}
+
 impl PartialEq<str> for Name {
     #[inline(always)]
     fn eq(&self, other: &str) -> bool {
-        self.0.eq(other)
+        self.eq_ignore_ascii_case(other)
     }
 }
 
 impl PartialEq<&str> for Name {
     #[inline(always)]
     fn eq(&self, other: &&str) -> bool {
-        self.0.eq(*other)
+        self.eq_ignore_ascii_case(other)
     }
 }
 
 impl PartialEq<String> for Name {
     #[inline(always)]
     fn eq(&self, other: &String) -> bool {
-        self.0.eq(other.as_str())
+        self.eq_ignore_ascii_case(other)
     }
 }
 
@@ -261,6 +294,24 @@ impl Display for NameVariant {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn eq_and_hash_ignore_ascii_case() {
+        use std::collections::HashSet;
+        let names: HashSet<Name> = ["AT", "at", "At", "next", "NEXT"]
+            .into_iter()
+            .map(Name::from)
+            .collect();
+        assert_eq!(names.len(), 2);
+        assert!(names.contains(&Name::from("aT")));
+        assert_ne!(Name::from("ab"), Name::from("abc"));
+    }
+
+    #[test]
+    fn keeps_original_spelling() {
+        assert_eq!(&*Name::from("NeXt"), "NeXt");
+        assert_eq!(Name::from("NeXt").to_string(), "NeXt");
+    }
 
     #[test]
     fn test_display() {
