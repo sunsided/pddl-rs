@@ -444,3 +444,49 @@ fn unknown_requirements_round_trip() {
         assert_eq!(Problem::from_str(&printed).unwrap(), problem, "{printed}");
     }
 }
+
+/// Inserts `separator` before every `)` (after removing `;` comments, so no
+/// `)` ends up inside a comment).
+fn space_before_closing_parens(input: &str, separator: &str) -> String {
+    input
+        .lines()
+        .map(|line| line.split(';').next().unwrap_or_default())
+        .collect::<Vec<_>>()
+        .join("\n")
+        .replace(')', &format!("{separator})"))
+}
+
+/// Whitespace and `;` comments may stand before any `)` (#119).
+#[test]
+fn whitespace_before_closing_parens_is_allowed() {
+    for separator in [" ", "\n  ", " ; comment\n"] {
+        for (label, input) in ALL_DOMAINS {
+            let expected = Domain::from_str(input).unwrap();
+            let spaced = space_before_closing_parens(input, separator);
+            let actual = Domain::from_str(&spaced)
+                .unwrap_or_else(|e| panic!("{label} {separator:?}: {e}\n{spaced}"));
+            assert_eq!(expected, actual, "{label} {separator:?}");
+        }
+        for (label, input) in ALL_PROBLEMS {
+            let expected = Problem::from_str(input).unwrap();
+            let spaced = space_before_closing_parens(input, separator);
+            let actual = Problem::from_str(&spaced)
+                .unwrap_or_else(|e| panic!("{label} {separator:?}: {e}\n{spaced}"));
+            assert_eq!(expected, actual, "{label} {separator:?}");
+        }
+    }
+}
+
+/// The reports from #119, verbatim.
+#[test]
+fn whitespace_before_closing_paren_of_term_and_variable_lists() {
+    for input in [
+        "(define (domain d) (:predicates (p ?x)) (:action a :parameters (?x) :precondition (p ?x ) :effect (p ?x)))",
+        "(define (domain d) (:predicates (p ?x )))",
+        "(define (domain d) (:predicates (p ?x)) (:action a :parameters (?x ) :precondition (p ?x) :effect (p ?x)))",
+        "(define (domain d) (:predicates (p ?x)) (:action a :parameters (?x) :precondition (p ?x) :effect (p ?x ) ))",
+        "(define (domain d) (:predicates (at ?x\n  )))",
+    ] {
+        Domain::from_str(input).unwrap_or_else(|e| panic!("{input}: {e}"));
+    }
+}

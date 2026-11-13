@@ -1,7 +1,7 @@
 //! Provides parsers for function terms.
 
 use crate::parsers::{parse_function_symbol, parse_term};
-use crate::parsers::{space_separated_list0, ParseResult, Span};
+use crate::parsers::{space_separated_list0, ws, ParseResult, Span};
 use crate::types::FunctionTerm;
 use nom::bytes::complete::tag_no_case;
 use nom::combinator::map;
@@ -34,7 +34,7 @@ pub fn parse_function_term<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, F
         delimited(
             tag_no_case("("),
             (parse_function_symbol, space_separated_list0(parse_term)),
-            tag_no_case(")"),
+            ws(tag_no_case(")")),
         ),
         |(symbol, terms)| FunctionTerm::new(symbol, terms),
     )
@@ -76,5 +76,15 @@ mod tests {
         let ft = Term::Function(FunctionTerm::new(FunctionSymbol::from("fn"), vec![a]));
         assert!(FunctionTerm::parse("(fun-sym ?y x (fn a))")
             .is_value(FunctionTerm::new("fun-sym".into(), vec![y, x, ft])));
+    }
+
+    #[test]
+    fn whitespace_before_closing_paren() {
+        for input in ["(fun-sym x )", "(fun-sym x\n  )", "(fun-sym x ; c\n)"] {
+            let x = Term::Name("x".into());
+            assert!(
+                FunctionTerm::parse(input).is_value(FunctionTerm::new("fun-sym".into(), vec![x]))
+            );
+        }
     }
 }

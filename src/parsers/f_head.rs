@@ -66,6 +66,10 @@ mod tests {
         assert!(FunctionHead::parse("(fun-sym)")
             .is_value(FunctionHead::new(FunctionSymbol::string("fun-sym"))));
 
+        // Whitespace before `)` gives the same head as `(fun-sym)` (#119).
+        assert!(FunctionHead::parse("(fun-sym )")
+            .is_value(FunctionHead::new(FunctionSymbol::string("fun-sym"))));
+
         assert!(
             FunctionHead::parse("(fun-sym term)").is_value(FunctionHead::with_terms(
                 FunctionSymbol::string("fun-sym"),
