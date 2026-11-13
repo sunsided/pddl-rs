@@ -5,6 +5,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [0.3.0] - 2026-11-13
+
+[0.3.0]: https://github.com/sunsided/pddl-rs/releases/tag/v0.3.0
+
 ### Changed
 
 - [#97](https://github.com/sunsided/pddl-rs/issues/97): `Parser::from_str` now returns the crate-owned
