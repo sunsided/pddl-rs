@@ -13,15 +13,3 @@ pub enum Definition {
     /// A `(define (problem ...))` block.
     Problem(Problem),
 }
-
-impl From<Domain> for Definition {
-    fn from(value: Domain) -> Self {
-        Self::Domain(value)
-    }
-}
-
-impl From<Problem> for Definition {
-    fn from(value: Problem) -> Self {
-        Self::Problem(value)
-    }
-}
