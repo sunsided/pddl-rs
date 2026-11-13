@@ -95,25 +95,26 @@ fn parse_problem_body(input: Span) -> ParseResult<Problem> {
         Section::Length(v) => set_once(&mut length, v, at),
     })?;
 
-    let missing = match (&domain, &init, &goal) {
-        (None, _, _) => Some("missing `:domain`"),
-        (_, None, _) => Some("missing `:init`"),
-        (_, _, None) => Some("missing `:goal`"),
-        _ => None,
-    };
-    if let Some(missing) = missing {
-        let (at, _) = skip_whitespace_and_comments(input)?;
-        // Only call a section missing where the sections really end; anything
-        // else (e.g. `:goal (and)` without parentheses) is just unexpected.
-        let error = if at.fragment().is_empty() || at.fragment().starts_with(')') {
-            failure_at(at, missing)
-        } else {
-            nom::Err::Failure(NomError::new(at, nom::error::ErrorKind::Tag))
-        };
-        return Err(error);
-    }
-    let (Some(domain), Some(init), Some(goal)) = (domain, init, goal) else {
-        unreachable!("all required sections are present");
+    let (domain, init, goal) = match (domain, init, goal) {
+        (Some(domain), Some(init), Some(goal)) => (domain, init, goal),
+        (domain, init, _) => {
+            let missing = if domain.is_none() {
+                "missing `:domain`"
+            } else if init.is_none() {
+                "missing `:init`"
+            } else {
+                "missing `:goal`"
+            };
+            let (at, _) = skip_whitespace_and_comments(input)?;
+            // Only call a section missing where the sections really end; anything
+            // else (e.g. `:goal (and)` without parentheses) is just unexpected.
+            let error = if at.fragment().is_empty() || at.fragment().starts_with(')') {
+                failure_at(at, missing)
+            } else {
+                nom::Err::Failure(NomError::new(at, nom::error::ErrorKind::Tag))
+            };
+            return Err(error);
+        }
     };
 
     let problem = Problem::new(
