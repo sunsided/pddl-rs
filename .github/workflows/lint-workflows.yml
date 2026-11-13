@@ -1,0 +1,41 @@
+---
+name: Lint workflows
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - '.github/**'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - '.github/**'
+
+permissions: {}
+
+jobs:
+  lint:
+    name: actionlint and zizmor
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install zizmor
+        uses: taiki-e/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39 # v2.90.3
+        with:
+          tool: zizmor
+      # install-action has no actionlint package; Dependabot doesn't bump this version.
+      - name: Install actionlint
+        run: |
+          go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - name: Run actionlint
+        run: actionlint
+      - name: Run zizmor
+        run: zizmor --format=github .github/workflows/
+        env:
+          # Enables zizmor's online audits (e.g. known-vulnerable actions, impostor commits).
+          GH_TOKEN: ${{ github.token }}
