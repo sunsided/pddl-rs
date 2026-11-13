@@ -21,6 +21,30 @@ struct Interner {
     purge_at: usize,
 }
 
+#[cfg(feature = "interning")]
+impl Interner {
+    /// Returns the shared copy of `name`, inserting it if it is new.
+    ///
+    /// Spellings no [`Name`] uses any more are dropped only here, on a miss, whenever
+    /// the set has doubled since the last purge. Reclamation is lazy: names dropped
+    /// while no new spellings are interned stay resident until later inserts.
+    fn intern(&mut self, name: &str) -> Arc<str> {
+        if let Some(interned) = self.names.get(name) {
+            return interned.clone();
+        }
+
+        // A count of 1 means only the set holds it; no `Name` exists to clone it meanwhile.
+        if self.names.len() >= self.purge_at {
+            self.names.retain(|s| Arc::strong_count(s) > 1);
+            self.purge_at = (2 * self.names.len()).max(1024);
+        }
+
+        let interned: Arc<str> = Arc::from(name);
+        self.names.insert(interned.clone());
+        interned
+    }
+}
+
 /// A name.
 ///
 /// ## Usage
@@ -116,28 +140,15 @@ impl Name {
 
     /// Takes the provided `name` and interns the string.
     ///
-    /// Looks the spelling up in a hash set and inserts it if it wasn't found before.
-    /// Spellings no [`Name`] uses any more are dropped whenever the set has doubled
-    /// since the last purge, so memory follows the names alive, not all names ever seen.
+    /// Looks the spelling up in a global hash set and inserts it if it wasn't found
+    /// before. Unused spellings are dropped lazily on later inserts, so memory stays
+    /// within about twice the names alive while interning continues.
     #[cfg_attr(not(feature = "interning"), inline(always))]
     fn new_string_interned<S: Into<String> + AsRef<str>>(name: S) -> Self {
         #[cfg(feature = "interning")]
         {
-            let mut guard = STRING_INTERNING.lock().expect("failed to obtain lock");
-            let interner = &mut *guard;
-            if let Some(interned) = interner.names.get(name.as_ref()) {
-                return Self(NameVariant::String(interned.clone()));
-            }
-
-            // A count of 1 means only the set holds it; no `Name` exists to clone it meanwhile.
-            if interner.names.len() >= interner.purge_at {
-                interner.names.retain(|s| Arc::strong_count(s) > 1);
-                interner.purge_at = (2 * interner.names.len()).max(1024);
-            }
-
-            let interned: Arc<str> = Arc::from(name.as_ref());
-            interner.names.insert(interned.clone());
-            Self(NameVariant::String(interned))
+            let mut interner = STRING_INTERNING.lock().expect("failed to obtain lock");
+            Self(NameVariant::String(interner.intern(name.as_ref())))
         }
 
         #[cfg(not(feature = "interning"))]
@@ -323,12 +334,15 @@ mod tests {
     #[cfg(feature = "interning")]
     #[test]
     fn unused_spellings_are_dropped() {
+        // A local interner, so tests interning names in parallel can't interfere.
+        let mut interner = Interner::default();
+        let kept = interner.intern("kept");
         for i in 0..10_000 {
-            drop(Name::new(format!("unused-spelling-{i}")));
+            drop(interner.intern(&format!("unused-{i}")));
         }
-        // Other tests intern names in parallel, so only check that most are gone.
-        let interned = STRING_INTERNING.lock().unwrap().names.len();
-        assert!(interned < 5_000, "{interned} spellings still interned");
+        assert!(interner.names.len() <= 1024, "{}", interner.names.len());
+        assert!(!interner.names.contains("unused-0"));
+        assert!(Arc::ptr_eq(&kept, &interner.intern("kept")));
     }
 
     #[cfg(feature = "interning")]
