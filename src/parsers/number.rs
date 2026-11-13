@@ -27,7 +27,8 @@ pub fn parse_number<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Number> 
     let input = input.into();
     let pattern = recognize((digit1, many_m_n(0, 1, parse_decimal)));
     let (rest, value) = pattern.and_then(float).parse(input)?;
-    // Too many digits overflow to infinity, which `Number` rejects.
+    // Too many digits overflow to infinity, which `Number` rejects. A `Failure`, not an
+    // `Error`: no other token starts with a digit, and backtracking would lose the reason.
     match Number::try_new(value) {
         Ok(number) => Ok((rest, number)),
         Err(_) => Err(failure_at(input, "number out of range")),
@@ -70,8 +71,11 @@ mod tests {
 
     #[test]
     fn too_many_digits_is_an_error_not_a_panic() {
-        let digits = "9".repeat(50);
-        assert!(Number::parse(digits.as_str()).is_err());
-        assert!(Number::from_str(&digits).is_err());
+        let error = Number::from_str(&"9".repeat(50)).unwrap_err();
+        assert_eq!(error.reason(), Some("number out of range"));
+        assert_eq!(
+            (error.offset(), error.found().map(|f| &f[..3])),
+            (0, Some("999"))
+        );
     }
 }
