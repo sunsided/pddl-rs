@@ -69,10 +69,8 @@ impl FromStr for Number {
     type Err = NumberError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match UnderlyingType::from_str(s) {
-            Ok(x) => Ok(Number::new(x)),
-            Err(e) => Err(NumberError::InvalidFormat(e)),
-        }
+        let value = UnderlyingType::from_str(s).map_err(NumberError::InvalidFormat)?;
+        Number::try_new(value)
     }
 }
 
@@ -97,8 +95,8 @@ impl Eq for Number {}
 
 impl<I: Into<Number> + Copy> PartialEq<I> for Number {
     fn eq(&self, other: &I) -> bool {
-        let value: Number = (*other).into();
-        self.total_cmp(&value) == Ordering::Equal
+        // Plain `f32` equality: `-0.0 == 0.0`, as in `Ord` and `Hash`.
+        self.0 == (*other).into().0
     }
 }
 
@@ -229,6 +227,28 @@ impl From<f64> for Number {
 mod tests {
     use super::*;
     use std::panic;
+
+    #[test]
+    fn from_str_rejects_infinity() {
+        assert!(matches!(
+            "inf".parse::<Number>(),
+            Err(NumberError::NotFinite)
+        ));
+    }
+
+    #[test]
+    fn signed_zeros_are_equal() {
+        use std::collections::hash_map::DefaultHasher;
+        let (neg, pos) = (Number::from(-0.0f32), Number::from(0.0f32));
+        let hash = |n: Number| {
+            let mut h = DefaultHasher::new();
+            n.hash(&mut h);
+            h.finish()
+        };
+        assert_eq!(neg, pos);
+        assert_eq!(neg.cmp(&pos), Ordering::Equal);
+        assert_eq!(hash(neg), hash(pos));
+    }
 
     #[test]
     fn new_works() {

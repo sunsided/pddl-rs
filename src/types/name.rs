@@ -6,10 +6,44 @@ use std::hash::{Hash, Hasher};
 use std::ops::Deref;
 
 #[cfg(feature = "interning")]
+use std::collections::HashSet;
+#[cfg(feature = "interning")]
 use std::sync::{Arc, LazyLock, Mutex};
 
 #[cfg(feature = "interning")]
-static STRING_INTERNING: LazyLock<Mutex<Vec<Arc<String>>>> = LazyLock::new(Mutex::default);
+static STRING_INTERNING: LazyLock<Mutex<Interner>> = LazyLock::new(Mutex::default);
+
+/// The interned spellings, and the size at which unused ones are dropped next.
+#[cfg(feature = "interning")]
+#[derive(Default)]
+struct Interner {
+    names: HashSet<Arc<str>>,
+    purge_at: usize,
+}
+
+#[cfg(feature = "interning")]
+impl Interner {
+    /// Returns the shared copy of `name`, inserting it if it is new.
+    ///
+    /// Spellings no [`Name`] uses any more are dropped only here, on a miss, whenever
+    /// the set has doubled since the last purge. Reclamation is lazy: names dropped
+    /// while no new spellings are interned stay resident until later inserts.
+    fn intern(&mut self, name: &str) -> Arc<str> {
+        if let Some(interned) = self.names.get(name) {
+            return interned.clone();
+        }
+
+        // A count of 1 means only the set holds it; no `Name` exists to clone it meanwhile.
+        if self.names.len() >= self.purge_at {
+            self.names.retain(|s| Arc::strong_count(s) > 1);
+            self.purge_at = (2 * self.names.len()).max(1024);
+        }
+
+        let interned: Arc<str> = Arc::from(name);
+        self.names.insert(interned.clone());
+        interned
+    }
+}
 
 /// A name.
 ///
@@ -51,7 +85,7 @@ enum NameVariant {
 }
 
 #[cfg(feature = "interning")]
-type InternedString = Arc<String>;
+type InternedString = Arc<str>;
 
 #[cfg(not(feature = "interning"))]
 type InternedString = String;
@@ -106,24 +140,15 @@ impl Name {
 
     /// Takes the provided `name` and interns the string.
     ///
-    /// This uses a simple binary search approach to identify the correct position of
-    /// the input in question and inserts the element if it wasn't found before.
+    /// Looks the spelling up in a global hash set and inserts it if it wasn't found
+    /// before. Unused spellings are dropped lazily on later inserts, so memory stays
+    /// within about twice the names alive while interning continues.
     #[cfg_attr(not(feature = "interning"), inline(always))]
     fn new_string_interned<S: Into<String> + AsRef<str>>(name: S) -> Self {
         #[cfg(feature = "interning")]
         {
-            let mut guard = STRING_INTERNING.lock().expect("failed to obtain lock");
-            let name_ref = name.as_ref();
-            let pos = guard.binary_search_by(|name| name_ref.cmp(name.as_str()));
-            let pos = match pos {
-                Ok(pos) => pos,
-                Err(pos) => {
-                    guard.insert(pos, Arc::new(name.into()));
-                    pos
-                }
-            };
-
-            Self(NameVariant::String(guard[pos].clone()))
+            let mut interner = STRING_INTERNING.lock().expect("failed to obtain lock");
+            Self(NameVariant::String(interner.intern(name.as_ref())))
         }
 
         #[cfg(not(feature = "interning"))]
@@ -263,7 +288,7 @@ impl Deref for NameVariant {
 
     fn deref(&self) -> &Self::Target {
         match self {
-            NameVariant::String(str) => str.as_str(),
+            NameVariant::String(str) => str,
             NameVariant::Static(str) => str,
         }
     }
@@ -304,6 +329,27 @@ mod tests {
     fn keeps_original_spelling() {
         assert_eq!(&*Name::from("NeXt"), "NeXt");
         assert_eq!(Name::from("NeXt").to_string(), "NeXt");
+    }
+
+    #[cfg(feature = "interning")]
+    #[test]
+    fn unused_spellings_are_dropped() {
+        // A local interner, so tests interning names in parallel can't interfere.
+        let mut interner = Interner::default();
+        let kept = interner.intern("kept");
+        for i in 0..10_000 {
+            drop(interner.intern(&format!("unused-{i}")));
+        }
+        assert!(interner.names.len() <= 1024, "{}", interner.names.len());
+        assert!(!interner.names.contains("unused-0"));
+        assert!(Arc::ptr_eq(&kept, &interner.intern("kept")));
+    }
+
+    #[cfg(feature = "interning")]
+    #[test]
+    fn same_spelling_shares_storage() {
+        let (a, b) = (Name::new("shared-spelling"), Name::new("shared-spelling"));
+        assert!(std::ptr::eq(a.as_ptr(), b.as_ptr()));
     }
 
     #[test]
