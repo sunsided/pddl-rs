@@ -56,12 +56,18 @@ impl ParseError {
 
     /// The PDDL keyword of the innermost form in which parsing stopped, if known,
     /// e.g. `:precondition` for a mistake inside an action's precondition.
+    ///
+    /// Made safe for display like [`found`](Self::found): characters outside
+    /// printable ASCII are escaped, and long values are cut and end in `...`.
     pub fn keyword(&self) -> Option<&str> {
         self.keyword.as_deref()
     }
 
     /// Why parsing stopped, if known, e.g. `duplicate section`, ``missing `:goal` ``
     /// or ``expected `)` `` for a form that isn't closed.
+    ///
+    /// Made safe for display like [`found`](Self::found): characters outside
+    /// printable ASCII are escaped, and long values are cut and end in `...`.
     pub fn reason(&self) -> Option<&str> {
         self.reason.as_deref()
     }
@@ -123,38 +129,29 @@ impl fmt::Display for ParseError {
 
 impl std::error::Error for ParseError {}
 
-/// Makes text that may come from untrusted input safe for an error message:
-/// characters that could alter or hide what a terminal or log shows become
-/// spaces, and the result is cut to [`EXCERPT_CHARS`] characters plus `...`.
+/// Makes text that may come from untrusted input safe for an error message.
+///
+/// Printable ASCII is kept, ASCII whitespace becomes a space, and every other
+/// character is shown as an escape such as `\u{202e}`. Nothing can then alter
+/// or hide what a terminal or log shows (ANSI escapes, bidi overrides,
+/// zero-width or tag characters, ...); PDDL itself is pure ASCII. The result
+/// covers at most [`EXCERPT_CHARS`] characters of `text`, followed by `...`
+/// if it was cut.
 fn sanitize(text: &str) -> String {
-    let mut safe: String = text
-        .chars()
-        .take(EXCERPT_CHARS)
-        .map(|c| if is_unsafe(c) { ' ' } else { c })
-        .collect();
+    let mut safe = String::new();
+    for c in text.chars().take(EXCERPT_CHARS) {
+        if c.is_ascii_graphic() || c == ' ' {
+            safe.push(c);
+        } else if c.is_ascii_whitespace() {
+            safe.push(' ');
+        } else {
+            safe.extend(c.escape_unicode());
+        }
+    }
     if text.chars().nth(EXCERPT_CHARS).is_some() {
         safe.push_str("...");
     }
     safe
-}
-
-/// Whitespace, control characters (e.g. ANSI escapes), and invisible format
-/// characters that can reorder or hide text ("Trojan Source"): bidi marks,
-/// embeddings, overrides and isolates, zero-width characters and the BOM.
-fn is_unsafe(c: char) -> bool {
-    c.is_whitespace()
-        || c.is_control()
-        || matches!(
-            c,
-            '\u{00AD}'
-                | '\u{061C}'
-                | '\u{180E}'
-                | '\u{200B}'..='\u{200F}'
-                | '\u{202A}'..='\u{202E}'
-                | '\u{2060}'..='\u{2064}'
-                | '\u{2066}'..='\u{2069}'
-                | '\u{FEFF}'
-        )
 }
 
 /// The error type of the individual `parse_*` combinators.
@@ -365,8 +362,8 @@ mod tests {
         let mut error = NomError::with_context(Span::new("x"), "bad\x1b[2J\nreason");
         error.keyword = Some(":act\x07ion");
         let parsed = ParseError::from_nom("x", nom::Err::Failure(error.clone()));
-        assert_eq!(parsed.keyword(), Some(":act ion"));
-        assert_eq!(parsed.reason(), Some("bad [2J reason"));
+        assert_eq!(parsed.keyword(), Some(r":act\u{7}ion"));
+        assert_eq!(parsed.reason(), Some(r"bad\u{1b}[2J reason"));
         assert!(!error.to_string().chars().any(char::is_control), "{error}");
         assert!(
             !parsed.to_string().chars().any(char::is_control),
@@ -374,15 +371,27 @@ mod tests {
         );
     }
 
-    /// Bidi overrides, isolates and zero-width characters can't spoof the message.
+    /// Bidi overrides, isolates and zero-width characters show up as escapes instead of
+    /// spoofing the message.
     #[test]
-    fn invisible_format_characters_are_replaced() {
+    fn invisible_format_characters_are_escaped() {
         let input = "(define (domain d)\n(:\u{202E}evil\u{2066}\u{200B}\u{FEFF}))";
         let error = Domain::from_str(input).unwrap_err();
         let found = error.found().unwrap();
-        let invisible = ['\u{202E}', '\u{2066}', '\u{200B}', '\u{FEFF}'];
-        assert!(!found.chars().any(|c| invisible.contains(&c)), "{found:?}");
-        assert!(found.starts_with("(: evil"), "{found:?}");
+        assert!(found.is_ascii(), "{found:?}");
+        assert_eq!(found, r"(:\u{202e}evil\u{2066}\u{200b}\u{feff}))");
+    }
+
+    /// Characters a hand-written list would miss are escaped too.
+    #[test]
+    fn every_non_ascii_character_is_escaped() {
+        let input = "(define (domain d)\n(:\u{E0041}\u{FFF9}\u{206A}\u{FE0F}\u{00A0}x))";
+        let found = Domain::from_str(input)
+            .unwrap_err()
+            .found()
+            .unwrap()
+            .to_string();
+        assert_eq!(found, r"(:\u{e0041}\u{fff9}\u{206a}\u{fe0f}\u{a0}x))");
     }
 
     /// Keywords and reasons are bounded like the excerpt.
@@ -493,11 +502,11 @@ mod tests {
     }
 
     #[test]
-    fn excerpt_replaces_control_characters() {
+    fn excerpt_escapes_control_characters() {
         let error = Domain::from_str("(define (domain d)\n(:\x1b[2J\0\x07))").unwrap_err();
         let found = error.found().unwrap();
         assert!(!found.chars().any(char::is_control), "{found:?}");
-        assert_eq!(found, "(: [2J  ))");
+        assert_eq!(found, r"(:\u{1b}[2J\u{0}\u{7}))");
     }
 
     #[test]
