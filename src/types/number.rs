@@ -95,8 +95,8 @@ impl Eq for Number {}
 
 impl<I: Into<Number> + Copy> PartialEq<I> for Number {
     fn eq(&self, other: &I) -> bool {
-        // Same rule as `Ord` and `Hash`, so `-0.0 == 0.0`.
-        self.cmp(&(*other).into()) == Ordering::Equal
+        // Plain `f32` equality: `-0.0 == 0.0`, as in `Ord` and `Hash`.
+        self.0 == (*other).into().0
     }
 }
 
