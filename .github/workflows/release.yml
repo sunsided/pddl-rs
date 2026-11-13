@@ -45,8 +45,13 @@ jobs:
             exit 1
           fi
           echo "VERSION=$version" >> "$GITHUB_ENV"
+      # The same feature combinations as the Rust CI workflow.
       - name: Run tests
-        run: cargo test --all-features
+        run: |
+          cargo test --all-features
+          cargo test --no-default-features
+          cargo test --no-default-features --features pretty
+          cargo test --no-default-features --features parser
       - name: Check whether this version is already on crates.io
         id: crates-io
         run: |
