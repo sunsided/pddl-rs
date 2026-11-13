@@ -35,6 +35,15 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   new `Requirements::unknown()`, separately from the known `Requirement`s, and are pretty-printed after
   them. `Requirement` itself is unchanged. Known keys now match as whole words, so `:typing-x` is an
   unknown key rather than `:typing`.
+- [#103](https://github.com/sunsided/pddl-rs/issues/103): Parse errors point at the actual mistake
+  instead of the start of the enclosing form, and say where and why: the new `ParseError::keyword()`
+  names the innermost PDDL form (e.g. `:precondition`), and `ParseError::reason()` returns e.g.
+  `duplicate section`, `unknown section`, ``missing `:goal` `` or ``expected `)` `` for a form that
+  isn't closed. `Display` includes both. Once a `:keyword` such as `:action`, `:precondition` or
+  `:requirements` has matched, a failure inside it is no longer backtracked.
+- `pddl::parsers::NomError<'a>`, the error type of the `parse_*` combinators, is now a crate-defined
+  struct instead of an alias for `nom::error::Error`. It keeps the public `input` and `code` fields and
+  adds `keyword` and `context`.
 
 ### Internal
 

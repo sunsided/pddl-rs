@@ -1,12 +1,12 @@
 //! Provides parsers for durative action definitions.
 
+use crate::parsers::keyword_arg;
 use crate::parsers::sep;
 use crate::parsers::{empty_or, parens, prefix_expr, typed_list, ParseResult, Span};
 use crate::parsers::{
     parse_da_effect, parse_da_gd, parse_da_symbol, parse_duration_constraint, parse_variable,
 };
 use crate::types::DurativeActionDefinition;
-use nom::bytes::complete::tag_no_case;
 use nom::combinator::map;
 use nom::sequence::preceded;
 use nom::Parser;
@@ -54,23 +54,11 @@ use nom::Parser;
 /// assert!(da_def.effect().is_some());
 /// ```
 pub fn parse_da_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DurativeActionDefinition> {
-    let parameters = preceded(
-        tag_no_case(":parameters"),
-        preceded(sep, parens(typed_list(parse_variable))),
-    );
+    let parameters = keyword_arg(":parameters", parens(typed_list(parse_variable)));
 
-    let duration = preceded(
-        tag_no_case(":duration"),
-        preceded(sep, parse_duration_constraint),
-    );
-    let condition = preceded(
-        tag_no_case(":condition"),
-        preceded(sep, empty_or(parse_da_gd)),
-    );
-    let effect = preceded(
-        tag_no_case(":effect"),
-        preceded(sep, empty_or(parse_da_effect)),
-    );
+    let duration = keyword_arg(":duration", parse_duration_constraint);
+    let condition = keyword_arg(":condition", empty_or(parse_da_gd));
+    let effect = keyword_arg(":effect", empty_or(parse_da_effect));
 
     let da_def = prefix_expr(
         ":durative-action",

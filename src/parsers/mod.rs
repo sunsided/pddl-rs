@@ -84,7 +84,7 @@ mod variable;
 pub(crate) use test_helpers::Match;
 pub use test_helpers::UnwrapValue;
 
-pub use error::ParseError;
+pub use error::{NomError, ParseError};
 
 /// Provides the [`Parser::parse`] and [`Parser::from_str`] methods.
 pub trait Parser {
@@ -129,11 +129,6 @@ pub trait Parser {
 
 /// Input type for parsers.
 pub type Span<'a> = nom_locate::LocatedSpan<&'a str>;
-
-/// The nom error type used by the individual `parse_*` combinators.
-///
-/// [`Parser::from_str`] converts it into a [`ParseError`].
-pub type NomError<'a> = nom::error::Error<Span<'a>>;
 
 /// A result from a parser.
 pub type ParseResult<'a, T, E = NomError<'a>> = nom::IResult<Span<'a>, T, E>;
@@ -230,8 +225,8 @@ pub use typed_list::typed_list;
 // Utility parser combinators.
 #[allow(unused_imports)]
 pub(crate) use utilities::{
-    failure_at, fold_sections, keyword, parens, prefix_expr, sep, set_once, space_separated_list0,
-    space_separated_list1, ws, ws2,
+    failure_at, fold_sections, keyword, keyword_arg, parens, prefix_expr, sep, set_once,
+    space_separated_list0, space_separated_list1, ws, ws2,
 };
 
 #[cfg(test)]

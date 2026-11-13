@@ -6,7 +6,7 @@ use nom::Parser;
 
 use crate::parsers::utilities::skip_whitespace_and_comments;
 use crate::parsers::{
-    failure_at, fold_sections, parse_name, prefix_expr, set_once, ws2, ParseResult, Span,
+    failure_at, fold_sections, parse_name, prefix_expr, set_once, ws2, NomError, ParseResult, Span,
 };
 use crate::parsers::{
     parse_problem_constraints_def, parse_problem_goal_def, parse_problem_init_def,
@@ -95,10 +95,25 @@ fn parse_problem_body(input: Span) -> ParseResult<Problem> {
         Section::Length(v) => set_once(&mut length, v, at),
     })?;
 
-    // A missing required section is reported where the sections end.
-    let (Some(domain), Some(init), Some(goal)) = (domain, init, goal) else {
+    let missing = match (&domain, &init, &goal) {
+        (None, _, _) => Some("missing `:domain`"),
+        (_, None, _) => Some("missing `:init`"),
+        (_, _, None) => Some("missing `:goal`"),
+        _ => None,
+    };
+    if let Some(missing) = missing {
         let (at, _) = skip_whitespace_and_comments(input)?;
-        return Err(failure_at(at));
+        // Only call a section missing where the sections really end; anything
+        // else (e.g. `:goal (and)` without parentheses) is just unexpected.
+        let error = if at.fragment().is_empty() || at.fragment().starts_with(')') {
+            failure_at(at, missing)
+        } else {
+            nom::Err::Failure(NomError::new(at, nom::error::ErrorKind::Tag))
+        };
+        return Err(error);
+    }
+    let (Some(domain), Some(init), Some(goal)) = (domain, init, goal) else {
+        unreachable!("all required sections are present");
     };
 
     let problem = Problem::new(
