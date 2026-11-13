@@ -105,16 +105,25 @@ where
     // must keep backtracking: `(at a b)` is also an ordinary atomic formula.
     let commits = name.starts_with(':');
     let mut open = preceded(ws(tag_no_case("(")), keyword(name));
-    let mut body = (ws(inner), ws(tag_no_case(")")));
+    let mut inner = ws(inner);
+    let mut close = ws(tag_no_case(")"));
     move |input: Span<'a>| {
         let (rest, _) = open.parse(input)?;
-        match body.parse(rest) {
-            Ok((rest, (value, _))) => Ok((rest, value)),
+        let (rest, value) = match inner.parse(rest) {
             Err(nom::Err::Error(mut e) | nom::Err::Failure(mut e)) if commits => {
-                e.context.get_or_insert(name);
+                e.keyword.get_or_insert(name);
+                return Err(nom::Err::Failure(e));
+            }
+            result => result?,
+        };
+        match close.parse(rest) {
+            // The form is complete but not closed, e.g. a missing `)` or extra input.
+            Err(nom::Err::Error(mut e) | nom::Err::Failure(mut e)) if commits => {
+                e.keyword = Some(name);
+                e.context = Some("expected `)`");
                 Err(nom::Err::Failure(e))
             }
-            Err(e) => Err(e),
+            result => result.map(|(rest, _)| (rest, value)),
         }
     }
 }
@@ -136,7 +145,7 @@ where
         let (rest, _) = key.parse(input)?;
         body.parse(rest).map_err(|e| match e {
             nom::Err::Error(mut e) | nom::Err::Failure(mut e) => {
-                e.context.get_or_insert(name);
+                e.keyword.get_or_insert(name);
                 nom::Err::Failure(e)
             }
             incomplete => incomplete,
