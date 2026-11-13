@@ -1,4 +1,5 @@
-//! Provides parsers for multi-definition PDDL files.
+//! Provides parsers for `(define ...)` blocks: exactly one via [`Definition`],
+//! or any number of them via [`PddlFile`].
 
 use nom::branch::alt;
 use nom::bytes::complete::tag_no_case;
@@ -249,6 +250,8 @@ mod tests {
             format!("{DOMAIN}\n{PROBLEM}"),
             format!("{PROBLEM}\n{PROBLEM}"),
             format!("{DOMAIN}\ngarbage"),
+            format!("text {DOMAIN}"),
+            "(define (foo x))".into(),
             "(define (domain".into(),
         ] {
             assert!(Definition::from_str(&input).is_err(), "accepted {input:?}");
