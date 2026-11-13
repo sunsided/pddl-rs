@@ -5,6 +5,12 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+### Fixed
+
+- [#119](https://github.com/sunsided/pddl-rs/issues/119): Whitespace and `;` comments before the `)`
+  that closes an atomic formula, predicate skeleton, parameter list or function term are accepted, so
+  `(p ?x )` and `:parameters (?x\n  )` parse.
+
 ## [0.3.0] - 2026-11-13
 
 [0.3.0]: https://github.com/sunsided/pddl-rs/releases/tag/v0.3.0

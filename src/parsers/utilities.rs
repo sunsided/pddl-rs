@@ -237,7 +237,7 @@ where
 {
     preceded(
         skip_whitespace_and_comments,
-        delimited(char('('), ws(inner), char(')')),
+        delimited(char('('), ws(inner), ws(char(')'))),
     )
 }
 
@@ -286,6 +286,18 @@ mod tests {
         let input = "(content)";
         let mut parser = parens(parse_name);
         assert!(parser.parse(Span::new(input)).is_exactly("content"));
+    }
+
+    #[test]
+    fn parens_allow_whitespace_and_comments_before_closing() {
+        let mut parser = parens(parse_name);
+        assert!(parser.parse(Span::new("(content )")).is_exactly("content"));
+        assert!(parser
+            .parse(Span::new("(content\n  )"))
+            .is_exactly("content"));
+        assert!(parser
+            .parse(Span::new("(content ; c\n)"))
+            .is_exactly("content"));
     }
 
     #[test]
