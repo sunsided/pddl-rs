@@ -92,11 +92,7 @@ impl ParseError {
         let found = if rest.is_empty() {
             None
         } else {
-            let mut excerpt = sanitize(&rest.chars().take(EXCERPT_CHARS).collect::<String>());
-            if rest.chars().nth(EXCERPT_CHARS).is_some() {
-                excerpt.push_str("...");
-            }
-            Some(excerpt)
+            Some(sanitize(rest))
         };
         Self {
             offset: span.location_offset(),
@@ -127,19 +123,38 @@ impl fmt::Display for ParseError {
 
 impl std::error::Error for ParseError {}
 
-/// Replaces whitespace and control characters with spaces, so that text which
-/// may come from untrusted input (e.g. ANSI escapes) can't reach terminals or
-/// logs through an error message.
+/// Makes text that may come from untrusted input safe for an error message:
+/// characters that could alter or hide what a terminal or log shows become
+/// spaces, and the result is cut to [`EXCERPT_CHARS`] characters plus `...`.
 fn sanitize(text: &str) -> String {
-    text.chars()
-        .map(|c| {
-            if c.is_whitespace() || c.is_control() {
-                ' '
-            } else {
-                c
-            }
-        })
-        .collect()
+    let mut safe: String = text
+        .chars()
+        .take(EXCERPT_CHARS)
+        .map(|c| if is_unsafe(c) { ' ' } else { c })
+        .collect();
+    if text.chars().nth(EXCERPT_CHARS).is_some() {
+        safe.push_str("...");
+    }
+    safe
+}
+
+/// Whitespace, control characters (e.g. ANSI escapes), and invisible format
+/// characters that can reorder or hide text ("Trojan Source"): bidi marks,
+/// embeddings, overrides and isolates, zero-width characters and the BOM.
+fn is_unsafe(c: char) -> bool {
+    c.is_whitespace()
+        || c.is_control()
+        || matches!(
+            c,
+            '\u{00AD}'
+                | '\u{061C}'
+                | '\u{180E}'
+                | '\u{200B}'..='\u{200F}'
+                | '\u{202A}'..='\u{202E}'
+                | '\u{2060}'..='\u{2064}'
+                | '\u{2066}'..='\u{2069}'
+                | '\u{FEFF}'
+        )
 }
 
 /// The error type of the individual `parse_*` combinators.
@@ -357,6 +372,29 @@ mod tests {
             !parsed.to_string().chars().any(char::is_control),
             "{parsed}"
         );
+    }
+
+    /// Bidi overrides, isolates and zero-width characters can't spoof the message.
+    #[test]
+    fn invisible_format_characters_are_replaced() {
+        let input = "(define (domain d)\n(:\u{202E}evil\u{2066}\u{200B}\u{FEFF}))";
+        let error = Domain::from_str(input).unwrap_err();
+        let found = error.found().unwrap();
+        let invisible = ['\u{202E}', '\u{2066}', '\u{200B}', '\u{FEFF}'];
+        assert!(!found.chars().any(|c| invisible.contains(&c)), "{found:?}");
+        assert!(found.starts_with("(: evil"), "{found:?}");
+    }
+
+    /// Keywords and reasons are bounded like the excerpt.
+    #[test]
+    fn keyword_and_reason_are_bounded() {
+        let long = "x".repeat(10_000);
+        let mut error = NomError::with_context(Span::new("x"), &long);
+        error.keyword = Some(&long);
+        let parsed = ParseError::from_nom("x", nom::Err::Failure(error.clone()));
+        assert_eq!(parsed.keyword().unwrap().chars().count(), EXCERPT_CHARS + 3);
+        assert_eq!(parsed.reason().unwrap().chars().count(), EXCERPT_CHARS + 3);
+        assert!(error.to_string().len() < 200, "{}", error.to_string().len());
     }
 
     /// When alternatives fail at the same position, the one with a reason wins.
