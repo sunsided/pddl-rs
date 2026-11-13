@@ -80,8 +80,11 @@ mod tests {
 
     #[test]
     fn whitespace_before_closing_paren() {
-        let x = Term::Name("x".into());
-        assert!(FunctionTerm::parse("(fun-sym x\n  )")
-            .is_value(FunctionTerm::new("fun-sym".into(), vec![x])));
+        for input in ["(fun-sym x )", "(fun-sym x\n  )", "(fun-sym x ; c\n)"] {
+            let x = Term::Name("x".into());
+            assert!(
+                FunctionTerm::parse(input).is_value(FunctionTerm::new("fun-sym".into(), vec![x]))
+            );
+        }
     }
 }
