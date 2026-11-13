@@ -56,12 +56,18 @@ impl ParseError {
 
     /// The PDDL keyword of the innermost form in which parsing stopped, if known,
     /// e.g. `:precondition` for a mistake inside an action's precondition.
+    ///
+    /// Made safe for display like [`found`](Self::found): characters outside
+    /// printable ASCII are escaped, and long values are cut and end in `...`.
     pub fn keyword(&self) -> Option<&str> {
         self.keyword.as_deref()
     }
 
     /// Why parsing stopped, if known, e.g. `duplicate section`, ``missing `:goal` ``
     /// or ``expected `)` `` for a form that isn't closed.
+    ///
+    /// Made safe for display like [`found`](Self::found): characters outside
+    /// printable ASCII are escaped, and long values are cut and end in `...`.
     pub fn reason(&self) -> Option<&str> {
         self.reason.as_deref()
     }
@@ -82,8 +88,8 @@ impl ParseError {
             at = token;
         }
         let mut error = Self::at(at);
-        error.keyword = keyword.map(str::to_string);
-        error.reason = reason.map(str::to_string);
+        error.keyword = keyword.map(sanitize);
+        error.reason = reason.map(sanitize);
         error
     }
 
@@ -92,22 +98,7 @@ impl ParseError {
         let found = if rest.is_empty() {
             None
         } else {
-            let mut excerpt: String = rest
-                .chars()
-                .take(EXCERPT_CHARS)
-                // Control characters (e.g. ANSI escapes) from untrusted input must not reach terminals or logs.
-                .map(|c| {
-                    if c.is_whitespace() || c.is_control() {
-                        ' '
-                    } else {
-                        c
-                    }
-                })
-                .collect();
-            if rest.chars().nth(EXCERPT_CHARS).is_some() {
-                excerpt.push_str("...");
-            }
-            Some(excerpt)
+            Some(sanitize(rest))
         };
         Self {
             offset: span.location_offset(),
@@ -137,6 +128,31 @@ impl fmt::Display for ParseError {
 }
 
 impl std::error::Error for ParseError {}
+
+/// Makes text that may come from untrusted input safe for an error message.
+///
+/// Printable ASCII is kept, ASCII whitespace becomes a space, and every other
+/// character is shown as an escape such as `\u{202e}`. Nothing can then alter
+/// or hide what a terminal or log shows (ANSI escapes, bidi overrides,
+/// zero-width or tag characters, ...); PDDL itself is pure ASCII. The result
+/// covers at most [`EXCERPT_CHARS`] characters of `text`, followed by `...`
+/// if it was cut.
+fn sanitize(text: &str) -> String {
+    let mut safe = String::new();
+    for c in text.chars().take(EXCERPT_CHARS) {
+        if c.is_ascii_graphic() || c == ' ' {
+            safe.push(c);
+        } else if c.is_ascii_whitespace() {
+            safe.push(' ');
+        } else {
+            safe.extend(c.escape_unicode());
+        }
+    }
+    if text.chars().nth(EXCERPT_CHARS).is_some() {
+        safe.push_str("...");
+    }
+    safe
+}
 
 /// The error type of the individual `parse_*` combinators.
 ///
@@ -217,10 +233,10 @@ impl fmt::Display for NomError<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let at = ParseError::at(self.input);
         if let Some(keyword) = self.keyword {
-            write!(f, "in `{keyword}`: ")?;
+            write!(f, "in `{}`: ", sanitize(keyword))?;
         }
         match self.context {
-            Some(context) => write!(f, "{context} ({:?}) at {at}", self.code),
+            Some(context) => write!(f, "{} ({:?}) at {at}", sanitize(context), self.code),
             None => write!(f, "{:?} at {at}", self.code),
         }
     }
@@ -339,6 +355,57 @@ mod tests {
         assert_eq!(error.reason(), Some("duplicate section"));
     }
 
+    /// Keywords and reasons are sanitized like the excerpt, even though the
+    /// crate only ever passes literals.
+    #[test]
+    fn keyword_and_reason_are_sanitized() {
+        let mut error = NomError::with_context(Span::new("x"), "bad\x1b[2J\nreason");
+        error.keyword = Some(":act\x07ion");
+        let parsed = ParseError::from_nom("x", nom::Err::Failure(error.clone()));
+        assert_eq!(parsed.keyword(), Some(r":act\u{7}ion"));
+        assert_eq!(parsed.reason(), Some(r"bad\u{1b}[2J reason"));
+        assert!(!error.to_string().chars().any(char::is_control), "{error}");
+        assert!(
+            !parsed.to_string().chars().any(char::is_control),
+            "{parsed}"
+        );
+    }
+
+    /// Bidi overrides, isolates and zero-width characters show up as escapes instead of
+    /// spoofing the message.
+    #[test]
+    fn invisible_format_characters_are_escaped() {
+        let input = "(define (domain d)\n(:\u{202E}evil\u{2066}\u{200B}\u{FEFF}))";
+        let error = Domain::from_str(input).unwrap_err();
+        let found = error.found().unwrap();
+        assert!(found.is_ascii(), "{found:?}");
+        assert_eq!(found, r"(:\u{202e}evil\u{2066}\u{200b}\u{feff}))");
+    }
+
+    /// Characters a hand-written list would miss are escaped too.
+    #[test]
+    fn every_non_ascii_character_is_escaped() {
+        let input = "(define (domain d)\n(:\u{E0041}\u{FFF9}\u{206A}\u{FE0F}\u{00A0}x))";
+        let found = Domain::from_str(input)
+            .unwrap_err()
+            .found()
+            .unwrap()
+            .to_string();
+        assert_eq!(found, r"(:\u{e0041}\u{fff9}\u{206a}\u{fe0f}\u{a0}x))");
+    }
+
+    /// Keywords and reasons are bounded like the excerpt.
+    #[test]
+    fn keyword_and_reason_are_bounded() {
+        let long = "x".repeat(10_000);
+        let mut error = NomError::with_context(Span::new("x"), &long);
+        error.keyword = Some(&long);
+        let parsed = ParseError::from_nom("x", nom::Err::Failure(error.clone()));
+        assert_eq!(parsed.keyword().unwrap().chars().count(), EXCERPT_CHARS + 3);
+        assert_eq!(parsed.reason().unwrap().chars().count(), EXCERPT_CHARS + 3);
+        assert!(error.to_string().len() < 200, "{}", error.to_string().len());
+    }
+
     /// When alternatives fail at the same position, the one with a reason wins.
     #[test]
     fn or_prefers_the_described_error_on_a_tie() {
@@ -435,11 +502,11 @@ mod tests {
     }
 
     #[test]
-    fn excerpt_replaces_control_characters() {
+    fn excerpt_escapes_control_characters() {
         let error = Domain::from_str("(define (domain d)\n(:\x1b[2J\0\x07))").unwrap_err();
         let found = error.found().unwrap();
         assert!(!found.chars().any(char::is_control), "{found:?}");
-        assert_eq!(found, "(: [2J  ))");
+        assert_eq!(found, r"(:\u{1b}[2J\u{0}\u{7}))");
     }
 
     #[test]

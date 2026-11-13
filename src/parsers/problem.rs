@@ -95,25 +95,12 @@ fn parse_problem_body(input: Span) -> ParseResult<Problem> {
         Section::Length(v) => set_once(&mut length, v, at),
     })?;
 
-    let missing = match (&domain, &init, &goal) {
-        (None, _, _) => Some("missing `:domain`"),
-        (_, None, _) => Some("missing `:init`"),
-        (_, _, None) => Some("missing `:goal`"),
-        _ => None,
-    };
-    if let Some(missing) = missing {
-        let (at, _) = skip_whitespace_and_comments(input)?;
-        // Only call a section missing where the sections really end; anything
-        // else (e.g. `:goal (and)` without parentheses) is just unexpected.
-        let error = if at.fragment().is_empty() || at.fragment().starts_with(')') {
-            failure_at(at, missing)
-        } else {
-            nom::Err::Failure(NomError::new(at, nom::error::ErrorKind::Tag))
-        };
-        return Err(error);
-    }
-    let (Some(domain), Some(init), Some(goal)) = (domain, init, goal) else {
-        unreachable!("all required sections are present");
+    // Exhaustive per section, so a new required section can't be reported as another one.
+    let (domain, init, goal) = match (domain, init, goal) {
+        (Some(domain), Some(init), Some(goal)) => (domain, init, goal),
+        (None, _, _) => return Err(missing_section(input, "missing `:domain`")),
+        (_, None, _) => return Err(missing_section(input, "missing `:init`")),
+        (_, _, None) => return Err(missing_section(input, "missing `:goal`")),
     };
 
     let problem = Problem::new(
@@ -128,6 +115,21 @@ fn parse_problem_body(input: Span) -> ParseResult<Problem> {
         length,
     );
     Ok((input, problem))
+}
+
+/// The error for a required section that's absent where the sections end at `input`.
+fn missing_section<'a>(input: Span<'a>, reason: &'a str) -> nom::Err<NomError<'a>> {
+    let at = match skip_whitespace_and_comments(input) {
+        Ok((at, ())) => at,
+        Err(e) => return e,
+    };
+    // Only call a section missing where the sections really end; anything
+    // else (e.g. `:goal (and)` without parentheses) is just unexpected.
+    if at.fragment().is_empty() || at.fragment().starts_with(')') {
+        failure_at(at, reason)
+    } else {
+        nom::Err::Failure(NomError::new(at, nom::error::ErrorKind::Tag))
+    }
 }
 
 impl crate::parsers::Parser for Problem {
