@@ -5,6 +5,12 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+### Added
+
+- `pddl::Definition`, a single domain or problem. `Definition::from_str` parses exactly one
+  `(define ...)` block and takes its kind from the header, so callers no longer parse a `PddlFile`
+  and check that it holds exactly one definition.
+
 ## [0.3.1] - 2026-11-13
 
 [0.3.1]: https://github.com/sunsided/pddl-rs/releases/tag/v0.3.1

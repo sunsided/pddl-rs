@@ -79,6 +79,7 @@ mod typed_list;
 mod types;
 mod variable;
 
+mod definition;
 mod pddl_file;
 
 pub use action_definition::ActionDefinition;
@@ -109,6 +110,7 @@ pub use da_def::DurativeActionDefinition;
 pub use da_effect::DurativeActionEffect;
 pub use da_gd::DurativeActionGoalDefinition;
 pub use da_symbol::DurativeActionSymbol;
+pub use definition::Definition;
 pub use derived_predicate::DerivedPredicate;
 pub use domain::Domain;
 pub use domain_constraints_def::DomainConstraintsDef;

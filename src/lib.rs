@@ -110,6 +110,23 @@
 //! # fn main() {}
 //! ```
 //!
+//! When the input must hold exactly one definition of either kind, parse it as a [`Definition`].
+//! Its kind comes from the `(define (domain ...))` / `(define (problem ...))` header:
+//!
+//! ```
+//! # #[cfg(feature = "parser")]
+//! # fn main() {
+//! use pddl::{Definition, Parser};
+//!
+//! match Definition::from_str("(define (domain d) (:predicates (p)))").unwrap() {
+//!     Definition::Domain(domain) => assert_eq!(domain.name(), "d"),
+//!     Definition::Problem(_) => unreachable!(),
+//! }
+//! # }
+//! # #[cfg(not(feature = "parser"))]
+//! # fn main() {}
+//! ```
+//!
 //! ## PDDL Type System Guide
 //!
 //! This crate provides a comprehensive type system that models the PDDL 3.1 specification.
