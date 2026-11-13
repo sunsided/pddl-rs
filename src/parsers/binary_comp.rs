@@ -2,7 +2,7 @@
 
 use nom::branch::alt;
 use nom::bytes::complete::tag_no_case;
-use nom::combinator::map;
+use nom::combinator::value;
 use nom::Parser;
 
 use crate::parsers::{ParseResult, Span};
@@ -21,19 +21,22 @@ use crate::types::{binary_comp::names, BinaryComparison};
 /// assert!(parse_binary_comp(Span::new("<=")).is_value(BinaryComparison::LessThanOrEqual));
 ///```
 pub fn parse_binary_comp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, BinaryComparison> {
-    map(
-        alt((
+    alt((
+        value(
+            BinaryComparison::GreaterOrEqual,
             tag_no_case(names::GREATER_THAN_OR_EQUAL),
+        ),
+        value(
+            BinaryComparison::LessThanOrEqual,
             tag_no_case(names::LESS_THAN_OR_EQUAL),
-            tag_no_case(names::EQUAL),
+        ),
+        value(BinaryComparison::Equal, tag_no_case(names::EQUAL)),
+        value(
+            BinaryComparison::GreaterThan,
             tag_no_case(names::GREATER_THAN),
-            tag_no_case(names::LESS_THAN),
-        )),
-        |x: Span| {
-            BinaryComparison::try_from(x.fragment().to_ascii_lowercase().as_str())
-                .expect("unhandled variant")
-        },
-    )
+        ),
+        value(BinaryComparison::LessThan, tag_no_case(names::LESS_THAN)),
+    ))
     .parse(input.into())
 }
 

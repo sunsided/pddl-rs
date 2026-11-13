@@ -2,7 +2,7 @@
 
 use nom::branch::alt;
 use nom::bytes::complete::tag_no_case;
-use nom::combinator::map;
+use nom::combinator::value;
 use nom::Parser;
 
 use crate::parsers::{ParseResult, Span};
@@ -19,13 +19,10 @@ use crate::types::TimedAssignOperator;
 /// assert!(parse_assign_op_t(Span::new("decrease")).is_value(TimedAssignOperator::Decrease));
 ///```
 pub fn parse_assign_op_t<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedAssignOperator> {
-    map(
-        alt((tag_no_case(names::INCREASE), tag_no_case(names::DECREASE))),
-        |x: Span| {
-            TimedAssignOperator::try_from(x.fragment().to_ascii_lowercase().as_str())
-                .expect("unhandled variant")
-        },
-    )
+    alt((
+        value(TimedAssignOperator::Increase, tag_no_case(names::INCREASE)),
+        value(TimedAssignOperator::Decrease, tag_no_case(names::DECREASE)),
+    ))
     .parse(input.into())
 }
 

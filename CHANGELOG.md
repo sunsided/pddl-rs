@@ -36,6 +36,12 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   them. `Requirement` itself is unchanged. Known keys now match as whole words, so `:typing-x` is an
   unknown key rather than `:typing`.
 
+### Internal
+
+- [#109](https://github.com/sunsided/pddl-rs/issues/109): Keyword parsers (operators, time specifiers,
+  requirement keys, …) map each keyword directly to its enum variant instead of converting the matched
+  text with `try_from(...).expect(...)`, which removes a per-keyword allocation and a panic path.
+
 ## [0.1.0] - 2024-05-19
 
 [0.1.0]: https://github.com/sunsided/pddl-rs/releases/tag/v0.1.0

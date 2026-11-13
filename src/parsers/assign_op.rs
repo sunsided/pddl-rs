@@ -2,7 +2,7 @@
 
 use nom::branch::alt;
 use nom::bytes::complete::tag_no_case;
-use nom::combinator::map;
+use nom::combinator::value;
 use nom::Parser;
 
 use crate::parsers::{ParseResult, Span};
@@ -19,20 +19,14 @@ use crate::types::AssignOp;
 /// assert!(parse_assign_op(Span::new("scale-up")).is_value(AssignOp::ScaleUp));
 ///```
 pub fn parse_assign_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, AssignOp> {
-    map(
-        alt((
-            tag_no_case(names::CHANGE), // deprecated
-            tag_no_case(names::ASSIGN),
-            tag_no_case(names::SCALE_UP),
-            tag_no_case(names::SCALE_DOWN),
-            tag_no_case(names::INCREASE),
-            tag_no_case(names::DECREASE),
-        )),
-        |x: Span| {
-            AssignOp::try_from(x.fragment().to_ascii_lowercase().as_str())
-                .expect("unhandled variant")
-        },
-    )
+    alt((
+        value(AssignOp::Assign, tag_no_case(names::CHANGE)), // deprecated
+        value(AssignOp::Assign, tag_no_case(names::ASSIGN)),
+        value(AssignOp::ScaleUp, tag_no_case(names::SCALE_UP)),
+        value(AssignOp::ScaleDown, tag_no_case(names::SCALE_DOWN)),
+        value(AssignOp::Increase, tag_no_case(names::INCREASE)),
+        value(AssignOp::Decrease, tag_no_case(names::DECREASE)),
+    ))
     .parse(input.into())
 }
 

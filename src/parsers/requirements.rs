@@ -2,7 +2,7 @@
 
 use nom::branch::alt;
 use nom::character::complete::{alpha1, char};
-use nom::combinator::{map, recognize};
+use nom::combinator::{map, recognize, value};
 use nom::multi::many0;
 use nom::Parser;
 
@@ -90,35 +90,62 @@ fn parse_unknown_require_key(input: Span) -> ParseResult<Name> {
 /// assert!(parse_require_key("invalid").is_err());
 ///```
 pub fn parse_require_key<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Requirement> {
-    map(
-        alt((
-            keyword(names::STRIPS),
-            keyword(names::TYPING),
+    alt((
+        value(Requirement::Strips, keyword(names::STRIPS)),
+        value(Requirement::Typing, keyword(names::TYPING)),
+        value(
+            Requirement::NegativePreconditions,
             keyword(names::NEGATIVE_PRECONDITIONS),
+        ),
+        value(
+            Requirement::DisjunctivePreconditions,
             keyword(names::DISJUNCTIVE_PRECONDITIONS),
-            keyword(names::EQUALITY),
+        ),
+        value(Requirement::Equality, keyword(names::EQUALITY)),
+        value(
+            Requirement::ExistentialPreconditions,
             keyword(names::EXISTENTIAL_PRECONDITIONS),
+        ),
+        value(
+            Requirement::UniversalPreconditions,
             keyword(names::UNIVERSAL_PRECONDITIONS),
+        ),
+        value(
+            Requirement::QuantifiedPreconditions,
             keyword(names::QUANTIFIED_PRECONDITIONS),
+        ),
+        value(
+            Requirement::ConditionalEffects,
             keyword(names::CONDITIONAL_EFFECTS),
-            keyword(names::FLUENTS),
-            keyword(names::NUMERIC_FLUENTS),
-            keyword(names::OBJECT_FLUENTS),
-            keyword(names::ADL),
+        ),
+        value(Requirement::Fluents, keyword(names::FLUENTS)),
+        value(Requirement::NumericFluents, keyword(names::NUMERIC_FLUENTS)),
+        value(Requirement::ObjectFluents, keyword(names::OBJECT_FLUENTS)),
+        value(Requirement::Adl, keyword(names::ADL)),
+        value(
+            Requirement::DurativeActions,
             keyword(names::DURATIVE_ACTIONS),
+        ),
+        value(
+            Requirement::DurationInequalities,
             keyword(names::DURATION_INEQUALITIES),
+        ),
+        value(
+            Requirement::ContinuousEffects,
             keyword(names::CONTINUOUS_EFFECTS),
+        ),
+        value(
+            Requirement::DerivedPredicates,
             keyword(names::DERIVED_PREDICATES),
+        ),
+        value(
+            Requirement::TimedInitialLiterals,
             keyword(names::TIMED_INITIAL_LITERALS),
-            keyword(names::PREFERENCES),
-            keyword(names::CONSTRAINTS),
-            keyword(names::ACTION_COSTS),
-        )),
-        |x: Span| {
-            Requirement::try_from(x.fragment().to_ascii_lowercase().as_str())
-                .expect("unhandled variant")
-        },
-    )
+        ),
+        value(Requirement::Preferences, keyword(names::PREFERENCES)),
+        value(Requirement::Constraints, keyword(names::CONSTRAINTS)),
+        value(Requirement::ActionCosts, keyword(names::ACTION_COSTS)),
+    ))
     .parse(input.into())
 }
 

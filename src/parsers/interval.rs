@@ -1,7 +1,7 @@
 //! Provides parsers for assignment operations.
 
 use nom::bytes::complete::tag_no_case;
-use nom::combinator::map;
+use nom::combinator::value;
 use nom::Parser;
 
 use crate::parsers::{ParseResult, Span};
@@ -17,10 +17,7 @@ use crate::types::Interval;
 /// assert!(parse_interval("all").is_value(Interval::All));
 ///```
 pub fn parse_interval<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Interval> {
-    map(tag_no_case(names::ALL), |x: Span| {
-        Interval::try_from(x.fragment().to_ascii_lowercase().as_str()).expect("unhandled variant")
-    })
-    .parse(input.into())
+    value(Interval::All, tag_no_case(names::ALL)).parse(input.into())
 }
 
 impl crate::parsers::Parser for Interval {

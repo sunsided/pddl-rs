@@ -4,7 +4,7 @@ use crate::parsers::{ParseResult, Span};
 use crate::types::{optimization::names, Optimization};
 use nom::branch::alt;
 use nom::bytes::complete::tag_no_case;
-use nom::combinator::map;
+use nom::combinator::value;
 use nom::Parser;
 
 /// Parses an optimization goal, i.e. `minimize | maximize`.
@@ -17,13 +17,10 @@ use nom::Parser;
 /// assert!(parse_optimization("maximize").is_value(Optimization::Maximize));
 ///```
 pub fn parse_optimization<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Optimization> {
-    map(
-        alt((tag_no_case(names::MINIMIZE), tag_no_case(names::MAXIMIZE))),
-        |x: Span| {
-            Optimization::try_from(x.fragment().to_ascii_lowercase().as_str())
-                .expect("unhandled variant")
-        },
-    )
+    alt((
+        value(Optimization::Minimize, tag_no_case(names::MINIMIZE)),
+        value(Optimization::Maximize, tag_no_case(names::MAXIMIZE)),
+    ))
     .parse(input.into())
 }
 

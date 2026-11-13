@@ -2,7 +2,7 @@
 
 use nom::branch::alt;
 use nom::bytes::complete::tag_no_case;
-use nom::combinator::map;
+use nom::combinator::value;
 use nom::Parser;
 
 use crate::parsers::{ParseResult, Span};
@@ -20,18 +20,12 @@ use crate::types::{binary_op::names, BinaryOp};
 /// assert!(parse_binary_op(Span::new("/")).is_value(BinaryOp::Division));
 ///```
 pub fn parse_binary_op<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, BinaryOp> {
-    map(
-        alt((
-            tag_no_case(names::MULTIPLICATION),
-            tag_no_case(names::ADDITION),
-            tag_no_case(names::SUBTRACTION),
-            tag_no_case(names::DIVISION),
-        )),
-        |x: Span| {
-            BinaryOp::try_from(x.fragment().to_ascii_lowercase().as_str())
-                .expect("unhandled variant")
-        },
-    )
+    alt((
+        value(BinaryOp::Multiplication, tag_no_case(names::MULTIPLICATION)),
+        value(BinaryOp::Addition, tag_no_case(names::ADDITION)),
+        value(BinaryOp::Subtraction, tag_no_case(names::SUBTRACTION)),
+        value(BinaryOp::Division, tag_no_case(names::DIVISION)),
+    ))
     .parse(input.into())
 }
 
