@@ -95,8 +95,8 @@ impl Eq for Number {}
 
 impl<I: Into<Number> + Copy> PartialEq<I> for Number {
     fn eq(&self, other: &I) -> bool {
-        let value: Number = (*other).into();
-        self.total_cmp(&value) == Ordering::Equal
+        // Same rule as `Ord` and `Hash`, so `-0.0 == 0.0`.
+        self.cmp(&(*other).into()) == Ordering::Equal
     }
 }
 
@@ -234,6 +234,20 @@ mod tests {
             "inf".parse::<Number>(),
             Err(NumberError::NotFinite)
         ));
+    }
+
+    #[test]
+    fn signed_zeros_are_equal() {
+        use std::collections::hash_map::DefaultHasher;
+        let (neg, pos) = (Number::from(-0.0f32), Number::from(0.0f32));
+        let hash = |n: Number| {
+            let mut h = DefaultHasher::new();
+            n.hash(&mut h);
+            h.finish()
+        };
+        assert_eq!(neg, pos);
+        assert_eq!(neg.cmp(&pos), Ordering::Equal);
+        assert_eq!(hash(neg), hash(pos));
     }
 
     #[test]
