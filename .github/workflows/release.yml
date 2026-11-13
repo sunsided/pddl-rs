@@ -50,11 +50,20 @@ jobs:
       - name: Check whether this version is already on crates.io
         id: crates-io
         run: |
-          status=$(curl -s -o /dev/null -w '%{http_code}' \
+          response="$RUNNER_TEMP/crates-io.json"
+          # --retry covers timeouts, 429 and 5xx; a 404 means "not published yet".
+          status=$(curl -s --max-time 10 --retry 3 -o "$response" -w '%{http_code}' \
             -A "pddl-rs release workflow (https://github.com/sunsided/pddl-rs)" \
             "https://crates.io/api/v1/crates/pddl/$VERSION")
           case "$status" in
-            200) echo "published=true" >> "$GITHUB_OUTPUT"; echo "$VERSION is already on crates.io, skipping publish" ;;
+            200)
+              if [ "$(jq -r '.version.yanked' "$response")" != "false" ]; then
+                echo "::error::$VERSION is on crates.io but yanked; it can't be published again"
+                exit 1
+              fi
+              jq -r '"\(.version.num) is already on crates.io (published \(.version.created_at), checksum \(.version.checksum)); skipping publish"' "$response"
+              echo "published=true" >> "$GITHUB_OUTPUT"
+              ;;
             404) echo "published=false" >> "$GITHUB_OUTPUT" ;;
             *) echo "::error::Unexpected HTTP $status from crates.io"; exit 1 ;;
           esac
