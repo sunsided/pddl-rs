@@ -1,6 +1,8 @@
 use std::fmt;
 
-use crate::parsers::{NomError, Span};
+use nom::error::{ContextError, ErrorKind};
+
+use crate::parsers::Span;
 
 /// Maximum number of characters of the remaining input kept in a [`ParseError`].
 const EXCERPT_CHARS: usize = 40;
@@ -17,7 +19,8 @@ const EXCERPT_CHARS: usize = 40;
 /// let error = Domain::from_str("(define (domain d)\n  (:bogus))").unwrap_err();
 /// assert_eq!((error.line(), error.column()), (2, 3));
 /// assert_eq!(error.found(), Some("(:bogus))"));
-/// assert_eq!(error.to_string(), "line 2, column 3: unexpected `(:bogus))`");
+/// assert_eq!(error.reason(), Some("unknown section"));
+/// assert_eq!(error.to_string(), "line 2, column 3: unknown section: unexpected `(:bogus))`");
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParseError {
@@ -25,6 +28,7 @@ pub struct ParseError {
     line: usize,
     column: usize,
     found: Option<String>,
+    reason: Option<String>,
 }
 
 impl ParseError {
@@ -49,14 +53,34 @@ impl ParseError {
         self.found.as_deref()
     }
 
+    /// Why parsing stopped, if known, e.g. `duplicate section`, `missing `:goal``
+    /// or `in `:action`` for a mistake inside an action definition.
+    pub fn reason(&self) -> Option<&str> {
+        self.reason.as_deref()
+    }
+
     /// Converts a nom error for `input` into a [`ParseError`].
     pub(crate) fn from_nom(input: &str, error: nom::Err<NomError<'_>>) -> Self {
-        let at = match error {
-            nom::Err::Error(e) | nom::Err::Failure(e) => e.input,
+        let (mut at, reason) = match error {
+            nom::Err::Error(e) | nom::Err::Failure(e) => (e.input, e.context),
             // The parsers are complete, but report the end of input if one ever is not.
-            nom::Err::Incomplete(_) => nom::Input::take_from(&Span::new(input), input.len()),
+            nom::Err::Incomplete(_) => {
+                (nom::Input::take_from(&Span::new(input), input.len()), None)
+            }
         };
-        Self::at(at)
+        // Point at the next token rather than at whitespace or comments before it.
+        if let Ok((token, ())) = crate::parsers::utilities::skip_whitespace_and_comments(at) {
+            at = token;
+        }
+        let mut error = Self::at(at);
+        error.reason = reason.map(|reason| {
+            if reason.starts_with(':') {
+                format!("in `{reason}`")
+            } else {
+                reason.to_string()
+            }
+        });
+        error
     }
 
     fn at(span: Span<'_>) -> Self {
@@ -86,6 +110,7 @@ impl ParseError {
             line: span.location_line() as usize,
             column: span.get_utf8_column(),
             found,
+            reason: None,
         }
     }
 }
@@ -93,6 +118,9 @@ impl ParseError {
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "line {}, column {}: ", self.line, self.column)?;
+        if let Some(reason) = &self.reason {
+            write!(f, "{reason}: ")?;
+        }
         match &self.found {
             Some(found) => write!(f, "unexpected `{found}`"),
             None => f.write_str("unexpected end of input"),
@@ -102,10 +130,204 @@ impl fmt::Display for ParseError {
 
 impl std::error::Error for ParseError {}
 
+/// The error type of the individual `parse_*` combinators.
+///
+/// [`Parser::from_str`](crate::parsers::Parser::from_str) converts it into a [`ParseError`].
+/// Like `nom::error::Error`, it records where (`input`) and in which combinator
+/// (`code`) parsing failed; it additionally carries an optional `context`:
+/// either a reason such as `duplicate section`, or the PDDL keyword of the
+/// enclosing form (starting with `:`, e.g. `:action`) in which parsing failed.
+#[derive(Debug, Clone, PartialEq)]
+pub struct NomError<'a> {
+    /// The remaining input at the position of the error.
+    pub input: Span<'a>,
+    /// The nom combinator that failed.
+    pub code: ErrorKind,
+    /// Why parsing failed, if known.
+    pub context: Option<&'a str>,
+}
+
+impl<'a> NomError<'a> {
+    /// Creates an error at `input` without a context.
+    pub const fn new(input: Span<'a>, code: ErrorKind) -> Self {
+        Self {
+            input,
+            code,
+            context: None,
+        }
+    }
+
+    /// Creates an error at `input` with the given reason.
+    pub(crate) const fn with_context(input: Span<'a>, context: &'a str) -> Self {
+        Self {
+            input,
+            code: ErrorKind::Verify,
+            context: Some(context),
+        }
+    }
+}
+
+impl<'a> nom::error::ParseError<Span<'a>> for NomError<'a> {
+    fn from_error_kind(input: Span<'a>, kind: ErrorKind) -> Self {
+        Self::new(input, kind)
+    }
+
+    /// Keeps the innermost error, which points closest to the actual mistake.
+    fn append(_input: Span<'a>, _kind: ErrorKind, other: Self) -> Self {
+        other
+    }
+
+    /// When all alternatives failed, keeps the error that got furthest into
+    /// the input: that alternative most likely was the one intended.
+    fn or(self, other: Self) -> Self {
+        if self.input.location_offset() > other.input.location_offset() {
+            self
+        } else {
+            other
+        }
+    }
+}
+
+impl<'a> ContextError<Span<'a>> for NomError<'a> {
+    /// Keeps the innermost context, which describes the mistake most precisely.
+    fn add_context(_input: Span<'a>, context: &'static str, mut other: Self) -> Self {
+        other.context.get_or_insert(context);
+        other
+    }
+}
+
+impl fmt::Display for NomError<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let at = ParseError::at(self.input);
+        match self.context {
+            Some(context) => write!(f, "{context} ({:?}) at {at}", self.code),
+            None => write!(f, "{:?} at {at}", self.code),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Domain, Parser};
+    use crate::{Domain, Parser, PddlFile, Problem};
+
+    /// Typical mistakes are reported at the mistake itself, with a reason.
+    #[test]
+    fn typical_mistakes_are_reported_where_they_are() {
+        const HEAD: &str = "(define (domain d) (:requirements :strips) (:predicates (p ?x) (q))\n";
+        let action = |body: &str| format!("{HEAD}  (:action a {body}))");
+        let domain = |s: &str| Domain::from_str(s).unwrap_err();
+        let problem = |s: &str| Problem::from_str(s).unwrap_err();
+        let file = |s: &str| PddlFile::from_str(s).unwrap_err();
+        type Case<'a> = (
+            &'a str,
+            &'a dyn Fn(&str) -> ParseError,
+            String,
+            (usize, usize),
+            &'a str,
+            &'a str,
+        );
+        let cases: [Case; 9] = [
+            (
+                "incomplete typed parameter",
+                &domain,
+                action(":parameters (?x - ) :precondition (p ?x) :effect (q)"),
+                (2, 32),
+                "in `:parameters`",
+                ")",
+            ),
+            (
+                "bad element in a precondition",
+                &domain,
+                action(":parameters (?x) :precondition (and (p ?x) 5) :effect (q)"),
+                (2, 57),
+                "in `:precondition`",
+                "5)",
+            ),
+            (
+                "misspelled action keyword",
+                &domain,
+                action(":parameters (?x) :precondition (p ?x) :efect (q)"),
+                (2, 52),
+                "in `:action`",
+                ":efect",
+            ),
+            (
+                "requirement without colon",
+                &domain,
+                "(define (domain d) (:requirements strips))".to_string(),
+                (1, 35),
+                "in `:requirements`",
+                "strips",
+            ),
+            (
+                "duplicate section",
+                &domain,
+                "(define (domain d) (:predicates (p)) (:predicates (q)))".to_string(),
+                (1, 38),
+                "duplicate section",
+                "(:predicates (q)",
+            ),
+            (
+                "unknown section",
+                &domain,
+                "(define (domain d) (:predicats (p)))".to_string(),
+                (1, 20),
+                "unknown section",
+                "(:predicats",
+            ),
+            (
+                "missing :goal",
+                &problem,
+                "(define (problem p) (:domain d) (:init (p a))\n)".to_string(),
+                (2, 1),
+                "missing `:goal`",
+                ")",
+            ),
+            (
+                "bad init element",
+                &problem,
+                "(define (problem p) (:domain d) (:init (p a) 5) (:goal (p a)))".to_string(),
+                (1, 46),
+                "in `:init`",
+                "5)",
+            ),
+            (
+                "domain read as part of a file",
+                &file,
+                format!(
+                    "(define (problem q) (:domain d) (:init) (:goal (q)))\n{}",
+                    action(":parameters (?x - ) :effect (q)")
+                ),
+                (3, 32),
+                "in `:parameters`",
+                ")",
+            ),
+        ];
+        for (label, parse, input, (line, column), reason, found) in cases {
+            let error = parse(&input);
+            assert_eq!(
+                (error.line(), error.column()),
+                (line, column),
+                "{label}: {error}"
+            );
+            assert_eq!(error.reason(), Some(reason), "{label}: {error}");
+            assert!(
+                error.found().unwrap().starts_with(found),
+                "{label}: {error}"
+            );
+        }
+    }
+
+    /// Committing after `:keywords` must not break keywords that are also predicate names.
+    #[test]
+    fn at_is_still_both_a_predicate_and_a_timed_literal() {
+        let problem = Problem::from_str(
+            "(define (problem p) (:domain d) (:init (at a b) (at 5 (p a))) (:goal (at a b)))",
+        )
+        .unwrap();
+        assert_eq!(problem.init().len(), 2);
+    }
 
     #[test]
     fn reports_line_column_and_bounded_excerpt() {
@@ -127,7 +349,7 @@ mod tests {
         assert_eq!(error.found(), Some("(:bogus ))"));
         assert_eq!(
             error.to_string(),
-            "line 2, column 1: unexpected `(:bogus ))`"
+            "line 2, column 1: unknown section: unexpected `(:bogus ))`"
         );
     }
 

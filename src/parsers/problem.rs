@@ -96,9 +96,15 @@ fn parse_problem_body(input: Span) -> ParseResult<Problem> {
     })?;
 
     // A missing required section is reported where the sections end.
+    let missing = match (&domain, &init, &goal) {
+        (None, _, _) => Some("missing `:domain`"),
+        (_, None, _) => Some("missing `:init`"),
+        (_, _, None) => Some("missing `:goal`"),
+        _ => None,
+    };
     let (Some(domain), Some(init), Some(goal)) = (domain, init, goal) else {
         let (at, _) = skip_whitespace_and_comments(input)?;
-        return Err(failure_at(at));
+        return Err(failure_at(at, missing.unwrap_or_default()));
     };
 
     let problem = Problem::new(

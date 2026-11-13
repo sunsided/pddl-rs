@@ -56,14 +56,14 @@ pub(crate) fn fold_sections<'a, O>(
         match section.parse(start) {
             // A section that consumes nothing would make this loop spin forever.
             Ok((rest, _)) if rest.location_offset() == start.location_offset() => {
-                return Err(failure_at(start));
+                return Err(failure_at(start, "section consumed no input"));
             }
             Ok((rest, value)) => {
                 apply(value, start)?;
                 input = rest;
             }
             Err(nom::Err::Error(_)) if start.fragment().starts_with('(') => {
-                return Err(failure_at(start));
+                return Err(failure_at(start, "unknown section"));
             }
             Err(nom::Err::Error(_)) => return Ok((input, ())),
             Err(e) => return Err(e),
@@ -78,16 +78,16 @@ pub(crate) fn set_once<'a, T>(
     at: Span<'a>,
 ) -> Result<(), nom::Err<NomError<'a>>> {
     if slot.is_some() {
-        return Err(failure_at(at));
+        return Err(failure_at(at, "duplicate section"));
     }
     *slot = Some(value);
     Ok(())
 }
 
-/// A non-recoverable error at `at`, used for structural errors such as
-/// duplicate or missing sections.
-pub(crate) fn failure_at(at: Span<'_>) -> nom::Err<NomError<'_>> {
-    nom::Err::Failure(NomError::new(at, nom::error::ErrorKind::Verify))
+/// A non-recoverable error at `at` with the given `reason`, used for
+/// structural errors such as duplicate or missing sections.
+pub(crate) fn failure_at<'a>(at: Span<'a>, reason: &'a str) -> nom::Err<NomError<'a>> {
+    nom::Err::Failure(NomError::with_context(at, reason))
 }
 
 /// A combinator that takes a parser `inner` and produces a parser that also consumes a leading `(name` and trailing `)`, returning the output of `inner`.
@@ -99,11 +99,49 @@ pub fn prefix_expr<'a, P, O>(
 where
     P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
 {
-    delimited(
-        preceded(ws(tag_no_case("(")), keyword(name)),
-        ws(inner),
-        ws(tag_no_case(")")),
-    )
+    // A `:keyword` (e.g. `:action`) can't start anything else, so once it matched,
+    // a failure inside the form is reported where it happened instead of
+    // backtracking to the form's start. Other keywords such as `at` or `=`
+    // must keep backtracking: `(at a b)` is also an ordinary atomic formula.
+    let commits = name.starts_with(':');
+    let mut open = preceded(ws(tag_no_case("(")), keyword(name));
+    let mut body = (ws(inner), ws(tag_no_case(")")));
+    move |input: Span<'a>| {
+        let (rest, _) = open.parse(input)?;
+        match body.parse(rest) {
+            Ok((rest, (value, _))) => Ok((rest, value)),
+            Err(nom::Err::Error(mut e) | nom::Err::Failure(mut e)) if commits => {
+                e.context.get_or_insert(name);
+                Err(nom::Err::Failure(e))
+            }
+            Err(e) => Err(e),
+        }
+    }
+}
+
+/// Parses `<keyword> <inner>` inside a form, e.g. `:precondition (and ...)`.
+///
+/// Like [`prefix_expr`] for `:keywords`, it commits once the keyword matched,
+/// so a mistake in `inner` is reported where it is, tagged with the keyword.
+pub(crate) fn keyword_arg<'a, P, O>(
+    name: &'a str,
+    inner: P,
+) -> impl Parser<Span<'a>, Output = O, Error = NomError<'a>>
+where
+    P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
+{
+    let mut key = keyword(name);
+    let mut body = preceded(sep, inner);
+    move |input: Span<'a>| {
+        let (rest, _) = key.parse(input)?;
+        body.parse(rest).map_err(|e| match e {
+            nom::Err::Error(mut e) | nom::Err::Failure(mut e) => {
+                e.context.get_or_insert(name);
+                nom::Err::Failure(e)
+            }
+            incomplete => incomplete,
+        })
+    }
 }
 
 /// Matches the keyword `name` (ignoring case) as a whole word: a keyword

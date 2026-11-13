@@ -1,10 +1,10 @@
 //! Provides parsers for action definitions.
 
-use nom::bytes::complete::tag_no_case;
 use nom::combinator::{map, opt};
 use nom::sequence::preceded;
 use nom::Parser;
 
+use crate::parsers::keyword_arg;
 use crate::parsers::sep;
 use crate::parsers::{empty_or, parens, prefix_expr, typed_list, ws, ParseResult, Span};
 use crate::parsers::{parse_action_symbol, parse_effect, parse_pre_gd, parse_variable};
@@ -54,19 +54,10 @@ use crate::types::ActionDefinition;
 /// ));
 /// ```
 pub fn parse_action_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ActionDefinition> {
-    let precondition = preceded(
-        tag_no_case(":precondition"),
-        preceded(sep, empty_or(parse_pre_gd)),
-    );
-    let effect = preceded(
-        tag_no_case(":effect"),
-        preceded(sep, empty_or(parse_effect)),
-    );
+    let precondition = keyword_arg(":precondition", empty_or(parse_pre_gd));
+    let effect = keyword_arg(":effect", empty_or(parse_effect));
     let action_def_body = (opt(ws(precondition)), opt(ws(effect)));
-    let parameters = preceded(
-        tag_no_case(":parameters"),
-        preceded(sep, parens(typed_list(parse_variable))),
-    );
+    let parameters = keyword_arg(":parameters", parens(typed_list(parse_variable)));
     let action_def = prefix_expr(
         ":action",
         (
