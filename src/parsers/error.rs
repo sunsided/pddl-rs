@@ -319,6 +319,52 @@ mod tests {
         }
     }
 
+    #[test]
+    fn each_missing_required_problem_section_is_named() {
+        for (input, reason) in [
+            (
+                "(define (problem p) (:init) (:goal (and)))",
+                "missing `:domain`",
+            ),
+            (
+                "(define (problem p) (:domain d) (:goal (and)))",
+                "missing `:init`",
+            ),
+            (
+                "(define (problem p) (:domain d) (:init))",
+                "missing `:goal`",
+            ),
+        ] {
+            let error = Problem::from_str(input).unwrap_err();
+            assert_eq!(error.reason(), Some(reason), "{input}");
+            assert_eq!(error.found(), Some(")"), "{input}");
+        }
+    }
+
+    /// `NomError` works with nom's `context` combinator and keeps the innermost context.
+    #[test]
+    fn nom_error_context_and_display() {
+        use nom::bytes::complete::tag;
+        use nom::error::context;
+        use nom::Parser as _;
+
+        let mut parser = context("outer", context("inner", tag::<_, _, NomError>("a")));
+        let Err(nom::Err::Error(error)) = parser.parse(Span::new("b")) else {
+            panic!("expected an error");
+        };
+        assert_eq!(error.context, Some("inner"));
+        assert_eq!(
+            error.to_string(),
+            "inner (Tag) at line 1, column 1: unexpected `b`"
+        );
+
+        let plain = NomError::new(Span::new(""), ErrorKind::Eof);
+        assert_eq!(
+            plain.to_string(),
+            "Eof at line 1, column 1: unexpected end of input"
+        );
+    }
+
     /// Committing after `:keywords` must not break keywords that are also predicate names.
     #[test]
     fn at_is_still_both_a_predicate_and_a_timed_literal() {
