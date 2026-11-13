@@ -82,8 +82,8 @@ impl ParseError {
             at = token;
         }
         let mut error = Self::at(at);
-        error.keyword = keyword.map(str::to_string);
-        error.reason = reason.map(str::to_string);
+        error.keyword = keyword.map(sanitize);
+        error.reason = reason.map(sanitize);
         error
     }
 
@@ -92,18 +92,7 @@ impl ParseError {
         let found = if rest.is_empty() {
             None
         } else {
-            let mut excerpt: String = rest
-                .chars()
-                .take(EXCERPT_CHARS)
-                // Control characters (e.g. ANSI escapes) from untrusted input must not reach terminals or logs.
-                .map(|c| {
-                    if c.is_whitespace() || c.is_control() {
-                        ' '
-                    } else {
-                        c
-                    }
-                })
-                .collect();
+            let mut excerpt = sanitize(&rest.chars().take(EXCERPT_CHARS).collect::<String>());
             if rest.chars().nth(EXCERPT_CHARS).is_some() {
                 excerpt.push_str("...");
             }
@@ -137,6 +126,21 @@ impl fmt::Display for ParseError {
 }
 
 impl std::error::Error for ParseError {}
+
+/// Replaces whitespace and control characters with spaces, so that text which
+/// may come from untrusted input (e.g. ANSI escapes) can't reach terminals or
+/// logs through an error message.
+fn sanitize(text: &str) -> String {
+    text.chars()
+        .map(|c| {
+            if c.is_whitespace() || c.is_control() {
+                ' '
+            } else {
+                c
+            }
+        })
+        .collect()
+}
 
 /// The error type of the individual `parse_*` combinators.
 ///
@@ -217,10 +221,10 @@ impl fmt::Display for NomError<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let at = ParseError::at(self.input);
         if let Some(keyword) = self.keyword {
-            write!(f, "in `{keyword}`: ")?;
+            write!(f, "in `{}`: ", sanitize(keyword))?;
         }
         match self.context {
-            Some(context) => write!(f, "{context} ({:?}) at {at}", self.code),
+            Some(context) => write!(f, "{} ({:?}) at {at}", sanitize(context), self.code),
             None => write!(f, "{:?} at {at}", self.code),
         }
     }
@@ -337,6 +341,22 @@ mod tests {
             .unwrap_err();
         assert_eq!(error.keyword(), None);
         assert_eq!(error.reason(), Some("duplicate section"));
+    }
+
+    /// Keywords and reasons are sanitized like the excerpt, even though the
+    /// crate only ever passes literals.
+    #[test]
+    fn keyword_and_reason_are_sanitized() {
+        let mut error = NomError::with_context(Span::new("x"), "bad\x1b[2J\nreason");
+        error.keyword = Some(":act\x07ion");
+        let parsed = ParseError::from_nom("x", nom::Err::Failure(error.clone()));
+        assert_eq!(parsed.keyword(), Some(":act ion"));
+        assert_eq!(parsed.reason(), Some("bad [2J reason"));
+        assert!(!error.to_string().chars().any(char::is_control), "{error}");
+        assert!(
+            !parsed.to_string().chars().any(char::is_control),
+            "{parsed}"
+        );
     }
 
     /// When alternatives fail at the same position, the one with a reason wins.
