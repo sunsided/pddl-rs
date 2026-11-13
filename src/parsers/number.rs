@@ -1,12 +1,12 @@
 //! Provides parsers for numbers, decimals and digits.
 
 use nom::character::complete::{char, digit1};
-use nom::combinator::{map, recognize};
+use nom::combinator::recognize;
 use nom::multi::many_m_n;
 use nom::number::complete::float;
 use nom::Parser;
 
-use crate::parsers::{ParseResult, Span};
+use crate::parsers::{failure_at, ParseResult, Span};
 use crate::types::Number;
 
 /// Parses a number, i.e. `<digit>⁺[<decimal>]`.
@@ -24,9 +24,14 @@ use crate::types::Number;
 /// assert!(parse_number("-1").is_err());
 ///```
 pub fn parse_number<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Number> {
+    let input = input.into();
     let pattern = recognize((digit1, many_m_n(0, 1, parse_decimal)));
-    let float = pattern.and_then(float);
-    map(float, Number::new).parse(input.into())
+    let (rest, value) = pattern.and_then(float).parse(input)?;
+    // Too many digits overflow to infinity, which `Number` rejects.
+    match Number::try_new(value) {
+        Ok(number) => Ok((rest, number)),
+        Err(_) => Err(failure_at(input, "number out of range")),
+    }
 }
 
 /// Parses a decimal, i.e. `.<digit>⁺`.
@@ -61,5 +66,12 @@ mod tests {
     fn test_parse() {
         let (_, value) = Number::parse("1.20").unwrap();
         assert_eq!(value, Number::from(1.2));
+    }
+
+    #[test]
+    fn too_many_digits_is_an_error_not_a_panic() {
+        let digits = "9".repeat(50);
+        assert!(Number::parse(digits.as_str()).is_err());
+        assert!(Number::from_str(&digits).is_err());
     }
 }

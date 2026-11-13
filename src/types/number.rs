@@ -69,10 +69,8 @@ impl FromStr for Number {
     type Err = NumberError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match UnderlyingType::from_str(s) {
-            Ok(x) => Ok(Number::new(x)),
-            Err(e) => Err(NumberError::InvalidFormat(e)),
-        }
+        let value = UnderlyingType::from_str(s).map_err(NumberError::InvalidFormat)?;
+        Number::try_new(value)
     }
 }
 
@@ -229,6 +227,14 @@ impl From<f64> for Number {
 mod tests {
     use super::*;
     use std::panic;
+
+    #[test]
+    fn from_str_rejects_infinity() {
+        assert!(matches!(
+            "inf".parse::<Number>(),
+            Err(NumberError::NotFinite)
+        ));
+    }
 
     #[test]
     fn new_works() {
