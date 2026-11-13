@@ -7,16 +7,10 @@ use nom::Parser;
 
 use crate::parsers::{parse_domain, parse_problem};
 use crate::parsers::{ws2, ParseResult, Span};
-use crate::types::{Domain, PddlFile, Problem};
-
-/// Intermediate representation for a single define block.
-enum DefineBlock {
-    Domain(Domain),
-    Problem(Problem),
-}
+use crate::types::{Definition, Domain, PddlFile, Problem};
 
 /// Parses a single `(define ...)` block, determining whether it's a domain or problem.
-fn parse_define_block<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DefineBlock> {
+fn parse_define_block<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Definition> {
     let input = input.into();
 
     // First, skip whitespace/comments, then parse `(define`
@@ -32,15 +26,15 @@ fn parse_define_block<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Define
     // it backtracks and tries parse_problem
 
     alt((
-        map(parse_domain, DefineBlock::Domain),
-        map(parse_problem, DefineBlock::Problem),
+        map(parse_domain, Definition::Domain),
+        map(parse_problem, Definition::Problem),
     ))
     .parse(input)
 }
 
 /// Parses zero or more `(define ...)` blocks, failing if a malformed
 /// define block is encountered after valid ones.
-fn parse_define_blocks<'a>(input: Span<'a>) -> ParseResult<'a, Vec<DefineBlock>> {
+fn parse_define_blocks<'a>(input: Span<'a>) -> ParseResult<'a, Vec<Definition>> {
     let mut blocks = Vec::new();
     let mut remaining = input;
 
@@ -110,8 +104,8 @@ pub fn parse_pddl_file<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PddlF
 
     for block in blocks {
         match block {
-            DefineBlock::Domain(d) => domains.push(d),
-            DefineBlock::Problem(p) => problems.push(p),
+            Definition::Domain(d) => domains.push(d),
+            Definition::Problem(p) => problems.push(p),
         }
     }
 
@@ -141,7 +135,7 @@ pub fn parse_domains<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Vec<Dom
     let domains = blocks
         .into_iter()
         .filter_map(|block| match block {
-            DefineBlock::Domain(d) => Some(d),
+            Definition::Domain(d) => Some(d),
             _ => None,
         })
         .collect();
@@ -169,12 +163,33 @@ pub fn parse_problems<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Vec<Pr
     let problems = blocks
         .into_iter()
         .filter_map(|block| match block {
-            DefineBlock::Problem(p) => Some(p),
+            Definition::Problem(p) => Some(p),
             _ => None,
         })
         .collect();
 
     Ok((remainder, problems))
+}
+
+impl crate::parsers::Parser for Definition {
+    type Item = Definition;
+
+    /// Parses a single domain or problem definition, determining its kind
+    /// from the `(define (domain ...))` / `(define (problem ...))` header.
+    ///
+    /// ## Example
+    /// ```
+    /// # use pddl::{Definition, Parser};
+    /// let input = "; Uses (domain d)\n(define (problem q) (:domain d) (:init) (:goal (p)))";
+    /// assert!(matches!(Definition::from_str(input), Ok(Definition::Problem(_))));
+    ///
+    /// // A second definition is trailing input, not part of this one.
+    /// let two = "(define (domain d) (:predicates (p)))\n(define (domain e) (:predicates (q)))";
+    /// assert!(Definition::from_str(two).is_err());
+    /// ```
+    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
+        ws2(parse_define_block).parse(input.into())
+    }
 }
 
 impl crate::parsers::Parser for PddlFile {
@@ -211,7 +226,34 @@ impl crate::parsers::Parser for PddlFile {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Name, Parser, PddlFile};
+    use crate::{Definition, Name, Parser, PddlFile};
+
+    const DOMAIN: &str = "(define (domain d) (:predicates (p)))";
+    const PROBLEM: &str = "(define (problem q) (:domain d) (:init) (:goal (p)))";
+
+    #[test]
+    fn definition_kind_comes_from_the_header_not_comments() {
+        for comment in ["", "; Uses (domain d)\n", "; Example (problem q)\n"] {
+            let domain = Definition::from_str(&format!("{comment}{DOMAIN} ; end\n"));
+            assert!(matches!(domain, Ok(Definition::Domain(_))), "{domain:?}");
+            let problem = Definition::from_str(&format!("{comment}{PROBLEM}"));
+            assert!(matches!(problem, Ok(Definition::Problem(_))), "{problem:?}");
+        }
+    }
+
+    #[test]
+    fn definition_rejects_empty_multiple_or_trailing_input() {
+        for input in [
+            String::new(),
+            "; comment only\n".into(),
+            format!("{DOMAIN}\n{PROBLEM}"),
+            format!("{PROBLEM}\n{PROBLEM}"),
+            format!("{DOMAIN}\ngarbage"),
+            "(define (domain".into(),
+        ] {
+            assert!(Definition::from_str(&input).is_err(), "accepted {input:?}");
+        }
+    }
 
     /// Structural errors inside a definition must be reported where they are,
     /// not as the fallback `problem` alternative failing at `(domain`.
