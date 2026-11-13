@@ -50,6 +50,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - [#109](https://github.com/sunsided/pddl-rs/issues/109): Keyword parsers (operators, time specifiers,
   requirement keys, …) map each keyword directly to its enum variant instead of converting the matched
   text with `try_from(...).expect(...)`, which removes a per-keyword allocation and a panic path.
+- Releases are cut with `cargo release` (see `release.toml`); pushing the `vX.Y.Z` tag publishes to
+  crates.io via trusted publishing and creates the GitHub Release from this changelog.
+- GitHub Actions workflows are checked with actionlint and zizmor, pin all actions to commit SHAs, and
+  run with minimal token permissions.
 
 ## [0.1.0] - 2024-05-19
 
