@@ -365,6 +365,25 @@ mod tests {
     }
 
     #[test]
+    fn forall_is_empty_when_its_body_is() {
+        use crate::types::{Typed, TypedList, Variable};
+        let variables = TypedList::from_iter([Typed::object(Variable::from("x"))]);
+        let empty = ConstraintGoalDescription::forall(
+            variables.clone(),
+            ConstraintGoalDescription::default(),
+        );
+        check!(empty.is_empty());
+
+        let body = ConstraintGoalDescription::always(ConstraintGoalDescriptionInner::goal(
+            GoalDescription::atomic_formula(crate::types::AtomicFormula::new_predicate(
+                "p".into(),
+                [],
+            )),
+        ));
+        check!(!ConstraintGoalDescription::forall(variables, body).is_empty());
+    }
+
+    #[test]
     fn constraint_goal_description_inner_is_empty() {
         let goal_inner = ConstraintGoalDescriptionInner::goal(GoalDescription::and(Vec::new()));
         check!(goal_inner.is_empty());
