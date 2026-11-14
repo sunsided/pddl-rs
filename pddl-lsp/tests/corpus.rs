@@ -124,3 +124,28 @@ fn keeps_content_and_is_idempotent_on_the_corpus() {
     }
     check!(checked > 80);
 }
+
+#[test]
+fn the_multiple_definitions_example_has_no_problems() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../examples/multiple-definitions.pddl");
+    let text = std::fs::read_to_string(&path).unwrap();
+    let uri = Url::from_file_path(&path).unwrap();
+    let mut workspace = Workspace::default();
+    workspace.documents.insert(
+        uri.clone(),
+        Document::new(text.clone(), Encoding::Utf8, true),
+    );
+    let messages: Vec<_> = workspace
+        .problems(&uri)
+        .into_iter()
+        .map(|p| p.message)
+        .collect();
+    check!(messages.is_empty(), "{messages:?}");
+
+    // `at` in the ferry problem is the ferry's predicate, not the logistics one.
+    let analysis = &workspace.documents[&uri].analysis;
+    let offset = text.find("(at car1 north)").unwrap() + 1;
+    let target = workspace.target_at(&uri, offset).unwrap();
+    let definition = workspace.definition(&target).unwrap();
+    check!(analysis.contexts[definition.context].name == "ferry");
+}
