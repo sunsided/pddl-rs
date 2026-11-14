@@ -74,8 +74,8 @@
   "scripts": {
     "compile": "tsc -p .",
     "watch": "tsc -watch -p .",
-    "package": "vsce package",
-    "vscode:prepublish": "npm run compile"
+    "package": "vsce package --yarn --allow-missing-repository",
+    "vscode:prepublish": "yarn run compile"
   },
   "dependencies": {
     "vscode-languageclient": "9.0.1"
@@ -85,5 +85,6 @@
     "@types/vscode": "1.82.0",
     "@vscode/vsce": "3.2.1",
     "typescript": "5.6.3"
-  }
+  },
+  "packageManager": "yarn@1.22.22"
 }

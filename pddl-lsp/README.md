@@ -63,17 +63,17 @@ binary's full path instead.
 
 Use the extension in [`editors/vscode`](../editors/vscode). It adds syntax
 highlighting and starts the server. It isn't on the Marketplace yet, so build
-and install it yourself (this needs Node.js):
+and install it yourself. This needs Node.js, [Yarn](https://classic.yarnpkg.com/)
+and [Task](https://taskfile.dev). From the repository root, run:
 
 ```shell
-cd editors/vscode
-npm ci
-npx vsce package
-code --install-extension pddl-lsp-0.1.0.vsix
+task vscode:install
 ```
 
-With [Task](https://taskfile.dev), run `task vscode:install` from the
-repository root instead.
+This packages the extension as a `.vsix` file and installs it into VS Code.
+To only build the `.vsix`, run `task vscode:package`. The
+[extension README](../editors/vscode/README.md#building) lists every task and
+the equivalent Yarn commands.
 
 To use a binary that isn't on `PATH`, set `pddl.server.path` in your settings.
 

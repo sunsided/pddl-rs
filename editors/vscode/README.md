@@ -13,21 +13,44 @@ signature help, formatting and quick fixes.
    cargo install --git https://github.com/sunsided/pddl-rs pddl-lsp
    ```
 
-2. Build and install the extension, which needs Node.js:
+2. Build and install the extension. This needs Node.js, [Yarn](https://classic.yarnpkg.com/)
+   (run `corepack enable` if `yarn` is missing) and [Task](https://taskfile.dev):
 
    ```shell
-   npm ci
-   npx vsce package
-   code --install-extension pddl-lsp-0.1.0.vsix
+   task install
    ```
 
-   With [Task](https://taskfile.dev), `task install` in this folder does the
-   same, or `task vscode:install` from the repository root.
+   Run it in this folder, or run `task vscode:install` from the repository root.
+   It installs the dependencies, compiles the extension, packages it as
+   `pddl-lsp-<version>.vsix` and installs that into VS Code.
 
 3. Open a `.pddl` file.
 
 If the extension can't find the server, it shows an error with a button that
 opens the settings.
+
+## Building
+
+The [Taskfile](Taskfile.dist.yaml) has a task for each step. From the
+repository root, put `vscode:` in front of each name, as in `task vscode:package`.
+
+| Task           | What it does                                                   |
+|----------------|----------------------------------------------------------------|
+| `task deps`    | Installs the dependencies with `yarn install --frozen-lockfile` |
+| `task build`   | Compiles `src/` to `out/`                                      |
+| `task watch`   | Recompiles on every change (alias: `task dev`)                 |
+| `task package` | Packages the extension as `pddl-lsp-<version>.vsix`            |
+| `task install` | Packages the extension and installs it into VS Code            |
+| `task clean`   | Removes `out/`, `node_modules/` and `.vsix` files              |
+
+Without Task, run the same steps with Yarn:
+
+```shell
+yarn install --frozen-lockfile
+yarn run compile
+yarn run package
+code --install-extension pddl-lsp-0.1.0.vsix
+```
 
 ## Settings
 
