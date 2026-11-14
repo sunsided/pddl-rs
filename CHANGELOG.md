@@ -52,6 +52,8 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- `(assign <function-term> undefined)` pretty-prints with `undefined` again. It printed as
+  `(assign <function-term>)`, which doesn't parse.
 - A function term without terms pretty-prints as `(f)` instead of `f`, which parsed back as the
   name `f`: `(at (loc) y)` printed as `(at loc y)`, and `(assign (loc) y)` turned into a numeric
   assignment.

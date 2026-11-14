@@ -35,7 +35,9 @@ impl Visitor<PrimitiveEffect, RcDoc<'static>> for PrettyRenderer {
                     .append(" ")
                     .append(t.accept(self))
                     .append(")"),
-                None => RcDoc::text("(assign ").append(ft.accept(self)).append(")"),
+                None => RcDoc::text("(assign ")
+                    .append(ft.accept(self))
+                    .append(" undefined)"),
             },
         }
     }
@@ -179,7 +181,7 @@ mod tests {
         use crate::{FunctionSymbol, FunctionTerm};
         let ft = FunctionTerm::new(FunctionSymbol::from("loc"), vec![]);
         let pe = PrimitiveEffect::object_fluent(ft, None);
-        assert_eq!(prettify!(pe, 30), "(assign (loc))");
+        assert_eq!(prettify!(pe, 30), "(assign (loc) undefined)");
     }
 
     #[test]

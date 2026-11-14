@@ -510,3 +510,12 @@ fn nullary_function_terms_round_trip() {
     let term = Term::from_str("(loc)").unwrap();
     assert_eq!(Term::from_str(&term.pretty(80).to_string()), Ok(term));
 }
+
+/// An object fluent assigned `undefined` keeps the keyword.
+#[test]
+fn undefined_object_fluent_round_trips() {
+    assert_eq!(
+        round_trip_p_effect("(assign (loc x) undefined)"),
+        "(assign (loc x) undefined)"
+    );
+}
