@@ -55,6 +55,21 @@ mod tests {
 
     use crate::*;
 
+    /// `(at a b)` is a predicate and `(at 5 (p a))` a timed initial literal; the
+    /// literal alternative must come first for both to parse in one `:init`.
+    #[test]
+    fn at_is_both_a_predicate_and_a_timed_literal() {
+        let problem = Problem::from_str(
+            "(define (problem p) (:domain d) (:init (at a b) (at 5 (p a))) (:goal (g)))",
+        )
+        .unwrap();
+        let [first, second] = problem.init().values() else {
+            panic!("expected two init elements, got {:?}", problem.init());
+        };
+        check!(let InitElement::Literal(_) = first);
+        check!(let InitElement::At(_, _) = second);
+    }
+
     #[test]
     fn test_parse() {
         check!(InitElement::from_str("(train-not-in-use train1)").is_value(
