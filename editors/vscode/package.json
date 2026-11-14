@@ -153,8 +153,7 @@
     "watch": "tsc -watch -p .",
     "package": "vsce package --yarn --baseContentUrl https://github.com/sunsided/pddl-rs/blob/main/editors/vscode --baseImagesUrl https://github.com/sunsided/pddl-rs/raw/main/editors/vscode",
     "vscode:prepublish": "yarn run compile",
-    "test": "node test/run.js",
-    "publish:marketplace": "vsce publish --yarn --baseContentUrl https://github.com/sunsided/pddl-rs/blob/main/editors/vscode --baseImagesUrl https://github.com/sunsided/pddl-rs/raw/main/editors/vscode"
+    "test": "node test/run.js"
   },
   "dependencies": {
     "@vscode/wasm-wasi": "1.0.2",

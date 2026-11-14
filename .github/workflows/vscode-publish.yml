@@ -15,7 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      # Trusted Publishing, and signing the build provenance attestation.
       id-token: write
+      attestations: write
     defaults:
       run:
         working-directory: editors/vscode
@@ -37,5 +39,12 @@ jobs:
           cp ../../target/wasm32-wasip1-threads/release/pddl-lsp.wasm server/
       - name: Install dependencies
         run: yarn install --frozen-lockfile --ignore-scripts
+      - name: Package
+        run: yarn run package --out pddl-lsp.vsix
+      # Package once and publish that file, so the attestation covers what is uploaded.
+      - name: Attest build provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: editors/vscode/pddl-lsp.vsix
       - name: Publish
-        run: yarn run publish:marketplace --oidc
+        run: yarn vsce publish --packagePath pddl-lsp.vsix --oidc
