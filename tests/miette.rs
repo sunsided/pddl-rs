@@ -87,3 +87,12 @@ fn the_innermost_unclosed_parenthesis_is_marked() {
     let out = render("(define (domain d)\n  (:predicates (p ?x)");
     check!(out.contains("2 │   (:predicates (p ?x)\n   ·   ┬\n   ·   ╰── this `(` is never closed"));
 }
+
+/// Also when the grammar, not the reader, finds the input ending too early.
+#[test]
+fn an_unclosed_parenthesis_is_marked_when_a_form_is_cut_short() {
+    let out = render("(define (domain d)\n  (:action a :parameters () :effect");
+    check!(out.contains(
+        "2 │   (:action a :parameters () :effect\n   ·   ┬\n   ·   ╰── this `(` is never closed"
+    ));
+}

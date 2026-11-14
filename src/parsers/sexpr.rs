@@ -205,9 +205,13 @@ impl<'a> Node<'a> {
         Error::at(self.start, end - self.start)
     }
 
-    /// An error at this list's `)`, or at the end of the input if it has none.
+    /// An error at this list's `)`, or at the end of the input if it has none,
+    /// in which case the error marks this list's `(` as never closed.
     pub fn error_at_close(&self) -> Error {
-        Error::at(self.end, usize::from(self.closed))
+        Error {
+            unclosed: (!self.closed).then_some(self.start),
+            ..Error::at(self.end, usize::from(self.closed))
+        }
     }
 }
 
