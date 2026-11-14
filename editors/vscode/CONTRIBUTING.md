@@ -100,7 +100,8 @@ stored anywhere.
    repository's Actions tab; it only runs on `main`. The workflow builds the
    server and the extension, publishes the `.vsix`, tags the commit
    `vscode-vX.Y.Z` and creates a GitHub Release with that changelog section
-   and the `.vsix` attached. Check a downloaded `.vsix` with
+   and the `.vsix` attached; if only that last part fails, use "Re-run failed
+   jobs" on the run. Check a downloaded `.vsix` with
    `gh attestation verify <file> --repo sunsided/pddl-rs`.
 
 Relative links in README.md become GitHub URLs on `main` when the extension is
