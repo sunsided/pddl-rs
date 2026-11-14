@@ -1,495 +1,229 @@
-//! Utility parsers.
+//! Building blocks the grammar rules share.
 
-use crate::parsers::{NomError, ParseResult, Span};
-use nom::branch::alt;
-use nom::bytes::complete::{tag_no_case, take_while};
-use nom::character::complete::{char, multispace1};
-use nom::combinator::{recognize, value};
-use nom::multi::{many0, separated_list0, separated_list1};
-use nom::sequence::{delimited, pair, preceded, terminated};
-use nom::Parser;
-use std::cell::Cell;
+use crate::parsers::error::{Error, R};
+use crate::parsers::sexpr::Node;
 
-/// Recognizes a semicolon comment up to, but not including, the line ending.
-/// Accepts empty comments such as `;` followed immediately by `\n` or `\r\n`.
-fn eol_comment<'a>(input: Span<'a>) -> ParseResult<'a, Span<'a>> {
-    recognize(pair(
-        char(';'),
-        take_while(|c: char| c != '\n' && c != '\r'),
-    ))
-    .parse(input)
+/// The children of a list, read one at a time.
+pub(crate) struct Args<'n, 'a> {
+    /// The list being read, for errors at its `)`.
+    list: &'n Node<'a>,
+    /// The children not read yet.
+    items: &'n [Node<'a>],
 }
 
-/// Skips all leading whitespace and semicolon comments.
-/// Handles multiple comment lines, including empty ones (`;\n`).
-pub(crate) fn skip_whitespace_and_comments<'a>(input: Span<'a>) -> ParseResult<'a, ()> {
-    value((), many0(alt((multispace1, eol_comment)))).parse(input)
-}
+impl<'n, 'a> Args<'n, 'a> {
+    /// Reads `items`, the children of `list` (possibly without its head).
+    fn new(list: &'n Node<'a>, items: &'n [Node<'a>]) -> Self {
+        Self { list, items }
+    }
 
-/// Separates two tokens: whitespace and `;` comments, which may be omitted
-/// before a `(` (e.g. `:parameters(?x)` or `(and(p)(q))`).
-pub(crate) fn sep(input: Span) -> ParseResult<()> {
-    let (rest, ()) = skip_whitespace_and_comments(input)?;
-    if rest.location_offset() > input.location_offset() || rest.fragment().starts_with('(') {
-        Ok((rest, ()))
-    } else {
-        Err(nom::Err::Error(NomError::new(
-            input,
-            nom::error::ErrorKind::MultiSpace,
-        )))
+    /// The next child, or an error at the list's `)` if there is none.
+    pub fn next(&mut self) -> R<&'n Node<'a>> {
+        let (first, rest) = self
+            .items
+            .split_first()
+            .ok_or_else(|| self.list.error_at_close())?;
+        self.items = rest;
+        Ok(first)
+    }
+
+    /// The next child, without taking it.
+    pub fn peek(&self) -> Option<&'n Node<'a>> {
+        self.items.first()
+    }
+
+    /// Takes the atom `word`, or fails at whatever is there instead.
+    pub fn expect(&mut self, word: &str) -> R<()> {
+        let node = self.next()?;
+        if node.is(word) {
+            Ok(())
+        } else {
+            Err(node.error())
+        }
+    }
+
+    /// Takes all remaining children.
+    pub fn rest(&mut self) -> &'n [Node<'a>] {
+        std::mem::take(&mut self.items)
+    }
+
+    /// Parses each remaining child with `rule`.
+    pub fn list0<T>(&mut self, rule: impl Fn(&'n Node<'a>) -> R<T>) -> R<Vec<T>> {
+        self.rest().iter().map(rule).collect()
+    }
+
+    /// Like [`list0`](Self::list0), but at least one child must remain.
+    pub fn list1<T>(&mut self, rule: impl Fn(&'n Node<'a>) -> R<T>) -> R<Vec<T>> {
+        if self.items.is_empty() {
+            return Err(self.list.error_at_close());
+        }
+        self.list0(rule)
+    }
+
+    /// An error at the list's `)`, for a form that ends too early.
+    pub fn error_at_close(&self) -> Error {
+        self.list.error_at_close()
+    }
+
+    /// Fails at the first child nothing has read.
+    fn finish(self) -> R<()> {
+        match self.items.first() {
+            None => Ok(()),
+            Some(extra) => Err(extra.error().reason("expected `)`")),
+        }
     }
 }
 
-/// Repeatedly parses `section` (skipping whitespace and comments before each)
-/// and hands every result to `apply` together with the position it started at.
+/// Parses a list with `body`, which must read all of its children.
+pub(crate) fn parens<'n, 'a, T>(
+    node: &'n Node<'a>,
+    body: impl FnOnce(&mut Args<'n, 'a>) -> R<T>,
+) -> R<T> {
+    let items = node.children().ok_or_else(|| node.error())?;
+    let mut args = Args::new(node, items);
+    let value = body(&mut args)?;
+    args.finish()?;
+    Ok(value)
+}
+
+/// Parses a list `(head ...)` with `body`, which must read all children after `head`.
 ///
-/// Stops at the first input that does not start a new `(` form, e.g. the
-/// closing `)` of the enclosing definition. A `(` form that `section` does not
-/// match (an unknown or malformed section) is a non-recoverable error at that
-/// form, so callers such as `alt` don't fall back to unrelated alternatives.
-pub(crate) fn fold_sections<'a, O>(
-    mut input: Span<'a>,
-    mut section: impl Parser<Span<'a>, Output = O, Error = NomError<'a>>,
-    mut apply: impl FnMut(O, Span<'a>) -> Result<(), nom::Err<NomError<'a>>>,
-) -> ParseResult<'a, ()> {
-    loop {
-        let (start, _) = skip_whitespace_and_comments(input)?;
-        match section.parse(start) {
-            // A section that consumes nothing would make this loop spin forever.
-            Ok((rest, _)) if rest.location_offset() == start.location_offset() => {
-                return Err(failure_at(start, "section consumed no input"));
-            }
-            Ok((rest, value)) => {
-                apply(value, start)?;
-                input = rest;
-            }
-            Err(nom::Err::Error(_)) if start.fragment().starts_with('(') => {
-                return Err(failure_at(start, "unknown section"));
-            }
-            Err(nom::Err::Error(_)) => return Ok((input, ())),
-            Err(e) => return Err(e),
-        }
-    }
-}
-
-/// Stores a section's `value`, failing at `at` if that section was already given.
-pub(crate) fn set_once<'a, T>(
-    slot: &mut Option<T>,
-    value: T,
-    at: Span<'a>,
-) -> Result<(), nom::Err<NomError<'a>>> {
-    if slot.is_some() {
-        return Err(failure_at(at, "duplicate section"));
-    }
-    *slot = Some(value);
-    Ok(())
-}
-
-/// A non-recoverable error at `at` with the given `reason`, used for
-/// structural errors such as duplicate or missing sections.
-pub(crate) fn failure_at<'a>(at: Span<'a>, reason: &'a str) -> nom::Err<NomError<'a>> {
-    nom::Err::Failure(NomError::with_context(at, reason))
-}
-
-/// The deepest `(` nesting the parsers accept: each `(` still open counts once,
-/// whichever form it starts. Each level costs stack, and a
-/// stack overflow aborts the process, so deeper input is an error instead.
-/// Real files nest about 8 deep. At 64, a release build needs well under the
-/// 2 MiB of a spawned thread; a debug build needs about 4 MiB (8 MiB main thread).
-pub(crate) const MAX_NESTING_DEPTH: u32 = 64;
-
-thread_local! {
-    static NESTING_DEPTH: Cell<u32> = const { Cell::new(0) };
-}
-
-/// Runs `body` one `(` level deeper; `at` is the opening parenthesis.
-/// Fails with a `Failure` past [`MAX_NESTING_DEPTH`] so no `alt` retries the subtree.
-pub(crate) fn nested<'a, O>(
-    at: Span<'a>,
-    body: impl FnOnce() -> ParseResult<'a, O>,
-) -> ParseResult<'a, O> {
-    struct Leave;
-    impl Drop for Leave {
-        fn drop(&mut self) {
-            NESTING_DEPTH.with(|d| d.set(d.get() - 1));
-        }
-    }
-    let depth = NESTING_DEPTH.with(|d| {
-        d.set(d.get() + 1);
-        d.get()
-    });
-    let _leave = Leave;
-    if depth > MAX_NESTING_DEPTH {
-        return Err(failure_at(at, "nesting too deep"));
-    }
-    body()
-}
-
-/// A combinator that takes a parser `inner` and produces a parser that also consumes a leading `(name` and trailing `)`, returning the output of `inner`.
-#[allow(clippy::needless_lifetimes)]
-pub fn prefix_expr<'a, P, O>(
-    name: &'a str,
-    inner: P,
-) -> impl Parser<Span<'a>, Output = O, Error = NomError<'a>>
-where
-    P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
-{
-    // A `:keyword` (e.g. `:action`) can't start anything else, so once it matched,
-    // a failure inside the form is reported where it happened instead of
-    // backtracking to the form's start. Other keywords such as `at` or `=`
-    // must keep backtracking: `(at a b)` is also an ordinary atomic formula.
-    let commits = name.starts_with(':');
-    let mut open = preceded(ws(tag_no_case("(")), keyword(name));
-    let mut inner = ws(inner);
-    let mut close = ws(tag_no_case(")"));
-    move |input: Span<'a>| {
-        let (rest, _) = open.parse(input)?;
-        nested(input, || {
-            let (rest, value) = match inner.parse(rest) {
-                Err(nom::Err::Error(mut e) | nom::Err::Failure(mut e)) if commits => {
-                    e.keyword.get_or_insert(name);
-                    return Err(nom::Err::Failure(e));
-                }
-                result => result?,
-            };
-            match close.parse(rest) {
-                // The form is complete but not closed, e.g. a missing `)` or extra input.
-                Err(nom::Err::Error(mut e) | nom::Err::Failure(mut e)) if commits => {
-                    e.keyword = Some(name);
-                    e.context = Some("expected `)`");
-                    Err(nom::Err::Failure(e))
-                }
-                result => result.map(|(rest, _)| (rest, value)),
-            }
+/// A `:keyword` such as `:action` can't start anything else, so once it matched,
+/// a failure inside the form is fatal and names the keyword, instead of letting
+/// the grammar try other alternatives. Other heads such as `at` or `=` stay open
+/// to alternatives: `(at a b)` is also an ordinary atomic formula.
+pub(crate) fn prefix<'n, 'a, T>(
+    node: &'n Node<'a>,
+    head: &'static str,
+    body: impl FnOnce(&mut Args<'n, 'a>) -> R<T>,
+) -> R<T> {
+    let items = match node.children() {
+        Some([first, rest @ ..]) if first.is(head) => rest,
+        _ => return Err(node.error()),
+    };
+    let mut args = Args::new(node, items);
+    let result = body(&mut args).and_then(|value| args.finish().map(|()| value));
+    if head.starts_with(':') {
+        result.map_err(|mut e| {
+            e.keyword.get_or_insert(head.into());
+            e.fatal()
         })
+    } else {
+        result
     }
 }
 
 /// Parses `<keyword> <inner>` inside a form, e.g. `:precondition (and ...)`.
 ///
-/// Like [`prefix_expr`] for `:keywords`, it commits once the keyword matched,
-/// so a mistake in `inner` is reported where it is, tagged with the keyword.
-pub(crate) fn keyword_arg<'a, P, O>(
-    name: &'a str,
-    inner: P,
-) -> impl Parser<Span<'a>, Output = O, Error = NomError<'a>>
-where
-    P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
-{
-    let mut key = keyword(name);
-    let mut body = preceded(sep, inner);
-    move |input: Span<'a>| {
-        let (rest, _) = key.parse(input)?;
-        body.parse(rest).map_err(|e| match e {
-            nom::Err::Error(mut e) | nom::Err::Failure(mut e) => {
-                e.keyword.get_or_insert(name);
-                nom::Err::Failure(e)
-            }
-            incomplete => incomplete,
-        })
+/// Like [`prefix`] for `:keywords`, it commits once the keyword matched, so a
+/// mistake in `inner` is fatal and tagged with the keyword.
+pub(crate) fn keyword_arg<'n, 'a, T>(
+    args: &mut Args<'n, 'a>,
+    keyword: &'static str,
+    inner: impl FnOnce(&'n Node<'a>) -> R<T>,
+) -> R<T> {
+    args.expect(keyword)?;
+    args.next().and_then(inner).map_err(|mut e| {
+        e.keyword.get_or_insert(keyword.into());
+        e.fatal()
+    })
+}
+
+/// Like [`keyword_arg`], but `None` if the next child isn't `keyword`.
+pub(crate) fn opt_keyword_arg<'n, 'a, T>(
+    args: &mut Args<'n, 'a>,
+    keyword: &'static str,
+    inner: impl FnOnce(&'n Node<'a>) -> R<T>,
+) -> R<Option<T>> {
+    if args.peek().is_some_and(|n| n.is(keyword)) {
+        keyword_arg(args, keyword, inner).map(Some)
+    } else {
+        Ok(None)
     }
 }
 
-/// Matches the keyword `name` (ignoring case) as a whole word: a keyword
-/// ending in a letter or digit must not be followed by a name character, so
-/// `preference` does not match the start of `preferences`.
-pub(crate) fn keyword<'a>(
-    name: &'a str,
-) -> impl Parser<Span<'a>, Output = Span<'a>, Error = NomError<'a>> {
-    let needs_boundary = name.ends_with(|c: char| c.is_ascii_alphanumeric());
-    move |input: Span<'a>| {
-        let (rest, matched) = tag_no_case(name).parse(input)?;
-        // Use the name grammar itself, so the boundary can't drift from what a name may contain.
-        let continues_name = super::name::parse_any_char(rest).is_ok();
-        if needs_boundary && continues_name {
-            return Err(nom::Err::Error(NomError::new(
-                input,
-                nom::error::ErrorKind::Tag,
-            )));
+/// Tries each rule in order and returns the first success.
+///
+/// A fatal error ends the search. If every rule fails, returns the error that
+/// got furthest, see [`Error::or`].
+pub(crate) fn alt<'n, 'a, T>(node: &'n Node<'a>, rules: &[&dyn Fn(&'n Node<'a>) -> R<T>]) -> R<T> {
+    let mut error: Option<Error> = None;
+    for rule in rules {
+        match rule(node) {
+            Ok(value) => return Ok(value),
+            Err(e) if e.fatal => return Err(e),
+            Err(e) => error = Some(error.map_or(e.clone(), |prev| prev.or(e))),
         }
-        Ok((rest, matched))
+    }
+    Err(error.unwrap_or_else(|| node.error()))
+}
+
+/// `None` for an empty list `()`, otherwise `rule` applied to `node`.
+pub(crate) fn empty_or<'n, 'a, T>(
+    node: &'n Node<'a>,
+    rule: impl FnOnce(&'n Node<'a>) -> R<T>,
+) -> R<Option<T>> {
+    match node.children() {
+        Some([]) => Ok(None),
+        _ => rule(node).map(Some),
     }
 }
 
-/// A combinator that takes a parser `inner` and produces a parser that also consumes leading whitespace,
-/// returning the output of `inner`.
-///
-/// This parser also suppresses line comments.
-pub fn ws<'a, P, O>(inner: P) -> impl Parser<Span<'a>, Output = O, Error = NomError<'a>>
-where
-    P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
-{
-    preceded(skip_whitespace_and_comments, inner)
-}
-
-/// A combinator that takes a parser `inner` and produces a parser that also consumes leading
-/// and trailing whitespace, returning the output of `inner`.
-///
-/// This parser also suppresses line comments.
-pub fn ws2<'a, P, O>(inner: P) -> impl Parser<Span<'a>, Output = O, Error = NomError<'a>>
-where
-    P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
-{
-    delimited(
-        skip_whitespace_and_comments,
-        inner,
-        skip_whitespace_and_comments,
-    )
-}
-
-/// A combinator that takes a parser `inner` and produces a parser that also
-/// consumes a whitespace separated list, returning the outputs of `inner`.
-pub fn space_separated_list0<'a, P, O>(
-    inner: P,
-) -> impl Parser<Span<'a>, Output = Vec<O>, Error = NomError<'a>>
-where
-    P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
-{
-    ws(separated_list0(
-        sep,
-        preceded(skip_whitespace_and_comments, inner),
-    ))
-}
-
-/// A combinator that takes a parser `inner` and produces a parser that also
-/// consumes a whitespace separated list, returning the outputs of `inner`.
-pub fn space_separated_list1<'a, P, O>(
-    inner: P,
-) -> impl Parser<Span<'a>, Output = Vec<O>, Error = NomError<'a>>
-where
-    P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
-{
-    ws(separated_list1(
-        sep,
-        preceded(skip_whitespace_and_comments, inner),
-    ))
-}
-
-/// A combinator that takes a parser `inner` and produces a parser that consumes
-/// surrounding parentheses, returning the outputs of `inner`.
-pub fn parens<'a, P, O>(inner: P) -> impl Parser<Span<'a>, Output = O, Error = NomError<'a>>
-where
-    P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
-{
-    let mut open = preceded(skip_whitespace_and_comments, char('('));
-    let mut body = terminated(ws(inner), ws(char(')')));
-    move |input: Span<'a>| {
-        let (rest, _) = open.parse(input)?;
-        nested(input, || body.parse(rest))
+/// Stores a section's `value`, failing at `section` if that section was already given.
+pub(crate) fn set_once<T>(slot: &mut Option<T>, value: T, section: &Node) -> R<()> {
+    if slot.is_some() {
+        return Err(section.error().reason("duplicate section").fatal());
     }
+    *slot = Some(value);
+    Ok(())
+}
+
+/// Maps the atom `node` through `words`, ignoring ASCII case.
+pub(crate) fn word<T: Clone>(node: &Node, words: &[(&str, T)]) -> R<T> {
+    words
+        .iter()
+        .find(|(w, _)| node.is(w))
+        .map(|(_, value)| value.clone())
+        .ok_or_else(|| node.error())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parsers::{parse_name, Match};
-    use crate::Name;
-    use nom::multi::separated_list1;
+    use crate::parsers::sexpr::read;
+    use assert2::check;
 
     #[test]
-    fn sep_is_optional_only_before_a_paren() {
-        assert_eq!(*sep(Span::new("(p)")).unwrap().0.fragment(), "(p)");
-        assert_eq!(*sep(Span::new("  x")).unwrap().0.fragment(), "x");
-        assert_eq!(*sep(Span::new("; c\nx")).unwrap().0.fragment(), "x");
-        // Two names still need something between them.
-        assert!(sep(Span::new("x")).is_err());
-        assert!(sep(Span::new("")).is_err());
+    fn prefix_commits_on_keywords_only() {
+        let forest = read("(:k a b) (k a b)").unwrap();
+        let one = |args: &mut Args| args.next().map(|_| ());
+        let error = prefix(&forest.nodes[0], ":k", one).unwrap_err();
+        check!(error.fatal);
+        check!(error.keyword.as_deref() == Some(":k"));
+        check!(error.reason == Some("expected `)`"));
+        check!(error.offset == 6);
+        let error = prefix(&forest.nodes[1], "k", one).unwrap_err();
+        check!(!error.fatal);
+        check!(error.keyword == None);
     }
 
     #[test]
-    fn fold_sections_fails_on_a_section_that_consumes_nothing() {
-        let input = Span::new("  (a)");
-        let result = fold_sections(input, nom::combinator::success(()), |_, _| Ok(()));
-        let Err(nom::Err::Failure(e)) = result else {
-            panic!("expected failure, got {result:?}");
-        };
-        assert_eq!(e.input.location_offset(), 2);
+    fn alt_returns_the_furthest_error() {
+        let forest = read("(a b c)").unwrap();
+        let node = &forest.nodes[0];
+        let near = |_: &Node| -> R<()> { Err(Error::at(1, 1)) };
+        let far = |_: &Node| -> R<()> { Err(Error::at(5, 1)) };
+        check!(alt(node, &[&far, &near]).unwrap_err().offset == 5);
+        check!(alt(node, &[&near, &far]).unwrap_err().offset == 5);
+        let fatal = |_: &Node| -> R<()> { Err(Error::at(0, 1).fatal()) };
+        let ok = |_: &Node| -> R<()> { Ok(()) };
+        check!(alt(node, &[&fatal, &ok]).is_err());
     }
 
     #[test]
-    fn deep_nesting_is_an_error_not_a_stack_overflow() {
-        // Debug builds need ~55 KiB of stack per level, more than a test thread's 2 MiB.
-        std::thread::Builder::new()
-            .stack_size(8 << 20)
-            .spawn(deep_nesting_checks)
-            .unwrap()
-            .join()
-            .unwrap();
-    }
-
-    fn deep_nesting_checks() {
-        use crate::{
-            DurativeActionFluentExpression, Effects, FluentExpression, FunctionTerm,
-            GoalDefinition, MetricFluentExpression, ParseError, Parser,
-        };
-        fn nest(open: &str, leaf: &str, levels: usize) -> String {
-            format!("{}{leaf}{}", open.repeat(levels), ")".repeat(levels))
-        }
-        // `build(n)` has exactly `n` parentheses open at its deepest point.
-        fn check<T>(
-            shape: &str,
-            build: impl Fn(usize) -> String,
-            parse: impl Fn(&str) -> Result<T, ParseError>,
-        ) {
-            let max = MAX_NESTING_DEPTH as usize;
-            assert!(parse(&build(max)).is_ok(), "{shape} at the limit");
-            for depth in [max + 1, 100_000] {
-                let Err(error) = parse(&build(depth)) else {
-                    panic!("{shape} at {depth} parsed");
-                };
-                assert_eq!(error.reason(), Some("nesting too deep"), "{shape}");
-            }
-        }
-
-        check(
-            "and",
-            |n| nest("(and ", "(p)", n - 1),
-            GoalDefinition::from_str,
-        );
-        check(
-            "not",
-            |n| nest("(not ", "(p)", n - 1),
-            GoalDefinition::from_str,
-        );
-        check(
-            "negation",
-            |n| nest("(- ", "x", n),
-            FluentExpression::from_str,
-        );
-        check("sum", |n| nest("(+ 1 ", "x", n), FluentExpression::from_str);
-        check(
-            "duration product",
-            |n| nest("(* ", "?duration", n).replace(')', " 2)"),
-            DurativeActionFluentExpression::from_str,
-        );
-        check(
-            "metric",
-            |n| nest("(- ", "x", n),
-            MetricFluentExpression::from_str,
-        );
-        check(
-            "function term",
-            |n| nest("(f ", "x", n),
-            FunctionTerm::from_str,
-        );
-        check(
-            "function term in a formula",
-            |n| format!("(p {})", nest("(f ", "x", n - 1)),
-            GoalDefinition::from_str,
-        );
-        check(
-            "function term in an equality",
-            |n| format!("(= x {})", nest("(f ", "x", n - 1)),
-            GoalDefinition::from_str,
-        );
-        // `(?x)` closes before the next level opens, so it doesn't add depth.
-        check(
-            "forall",
-            |n| nest("(forall (?x) ", "(p)", n - 1),
-            Effects::from_str,
-        );
-    }
-
-    #[test]
-    fn keyword_matches_whole_words_only() {
-        let mut and = keyword("and");
-        assert!(and.parse(Span::new("and (p)")).is_ok());
-        assert!(and.parse(Span::new("AND(p)")).is_ok());
-        assert!(and.parse(Span::new("and)")).is_ok());
-        assert!(and.parse(Span::new("andy")).is_err());
-        assert!(and.parse(Span::new("and-or")).is_err());
-        assert!(and.parse(Span::new("and_2")).is_err());
-        // Keywords ending in a symbol need no boundary.
-        assert!(keyword("=").parse(Span::new("=?x")).is_ok());
-    }
-
-    #[test]
-    fn parens_works() {
-        let input = "(content)";
-        let mut parser = parens(parse_name);
-        assert!(parser.parse(Span::new(input)).is_exactly("content"));
-    }
-
-    #[test]
-    fn parens_allow_whitespace_and_comments_before_closing() {
-        let mut parser = parens(parse_name);
-        assert!(parser.parse(Span::new("(content )")).is_exactly("content"));
-        assert!(parser
-            .parse(Span::new("(content\n  )"))
-            .is_exactly("content"));
-        assert!(parser
-            .parse(Span::new("(content ; c\n)"))
-            .is_exactly("content"));
-    }
-
-    #[test]
-    fn definition_section_works() {
-        let input = "(either x y)";
-        let inner_parser = separated_list1(tag_no_case(" "), parse_name);
-        let mut parser = prefix_expr("either", inner_parser);
-        assert!(parser
-            .parse(Span::new(input))
-            .is_exactly(vec![Name::from("x"), Name::from("y")]));
-    }
-
-    #[test]
-    fn space_separated_list0_works() {
-        let mut parser = space_separated_list0(parse_name);
-        assert!(parser
-            .parse(Span::new("x y"))
-            .is_exactly(vec![Name::from("x"), Name::from("y")]));
-        assert!(parser
-            .parse(Span::new("x"))
-            .is_exactly(vec![Name::from("x")]));
-        assert!(parser.parse(Span::new("")).is_exactly(vec![]));
-    }
-
-    #[test]
-    fn space_separated_list1_works() {
-        let mut parser = space_separated_list1(parse_name);
-        assert!(parser
-            .parse(Span::new("x y"))
-            .is_exactly(vec![Name::from("x"), Name::from("y")]));
-        assert!(parser
-            .parse(Span::new("x"))
-            .is_exactly(vec![Name::from("x")]));
-        assert!(parser.parse(Span::new("")).is_err());
-    }
-
-    #[test]
-    fn leading_empty_comment() {
-        let input = ";\ncontent";
-        let mut parser = ws(tag_no_case("content"));
-        let (remainder, _) = parser.parse(Span::new(input)).unwrap();
-        assert!(remainder.fragment().is_empty());
-    }
-
-    #[test]
-    fn multiple_leading_comments() {
-        let input = "; comment 1\n; comment 2\n; comment 3\ncontent";
-        let mut parser = ws(tag_no_case("content"));
-        let (remainder, _) = parser.parse(Span::new(input)).unwrap();
-        assert!(remainder.fragment().is_empty());
-    }
-
-    #[test]
-    fn mixed_comments_and_whitespace() {
-        let input = "\n  ; comment\n\n  ; another\n\t\ncontent";
-        let mut parser = ws(tag_no_case("content"));
-        let (remainder, _) = parser.parse(Span::new(input)).unwrap();
-        assert!(remainder.fragment().is_empty());
-    }
-
-    #[test]
-    fn domain_with_leading_comments() {
-        let input = r#"; This is a comment
-; Another comment
-(define (domain test)
-    (:requirements :strips)
-    (:predicates (p))
-)
-"#;
-        let (_, domain) = crate::parsers::parse_domain(Span::new(input)).unwrap();
-        assert_eq!(domain.name(), &crate::Name::new("test"));
+    fn missing_arguments_are_reported_at_the_close() {
+        let forest = read("(k)").unwrap();
+        let error = prefix(&forest.nodes[0], "k", |args| args.next().map(|_| ())).unwrap_err();
+        check!((error.offset, error.len) == (2, 1));
     }
 }

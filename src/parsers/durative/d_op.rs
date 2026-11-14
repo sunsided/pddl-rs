@@ -1,0 +1,35 @@
+//! Provides parsers for duration operators (`<d-op>`).
+
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::word;
+use crate::types::durative::d_op::names;
+use crate::types::DurationOperator;
+
+/// Parses a duration operator (`<d-op>`), ignoring case.
+pub(crate) fn parse_d_op(node: &Node) -> R<DurationOperator> {
+    word(
+        node,
+        &[
+            (names::LESS_THAN_OR_EQUAL, DurationOperator::LessThanOrEqual),
+            (names::GREATER_OR_EQUAL, DurationOperator::GreaterOrEqual),
+            (names::EQUAL, DurationOperator::Equal),
+        ],
+    )
+}
+
+crate::parsers::impl_parser!(DurationOperator => parse_d_op);
+
+#[cfg(test)]
+mod tests {
+    use crate::parsers::UnwrapValue;
+    use crate::{DurationOperator, Parser};
+    use assert2::check;
+
+    #[test]
+    fn test_parse() {
+        check!(DurationOperator::from_str("<=").is_value(DurationOperator::LessThanOrEqual));
+        check!(DurationOperator::from_str("<").is_err());
+        check!(DurationOperator::from_str("(<=)").is_err());
+    }
+}

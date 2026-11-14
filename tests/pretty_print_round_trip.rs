@@ -1,25 +1,29 @@
+//! Pretty-printed domains and problems parse back to equal ASTs, at several line widths.
+
 #![cfg(feature = "pretty")]
 
-use pddl::{Domain, Parser, Pretty, Problem};
+use assert2::check;
+
+use pddl::{Domain, Parser, Pretty, PrimitiveEffect, Problem, Term};
 
 fn round_trip_domain(input: &str, width: usize, label: &str) {
-    let (_, original) = Domain::parse(input).unwrap_or_else(|_| panic!("{label}: parse original"));
+    let original = Domain::from_str(input).unwrap_or_else(|_| panic!("{label}: parse original"));
     let printed = original.pretty(width).to_string();
-    let (_, reparsed) =
-        Domain::parse(&*printed).unwrap_or_else(|e| panic!("{label}: parse printed output at width {width}\n--- Printed ---\n{printed}\n--- Error ---\n{e:?}"));
-    assert_eq!(
-        original, reparsed,
+    let reparsed =
+        Domain::from_str(&printed).unwrap_or_else(|e| panic!("{label}: parse printed output at width {width}\n--- Printed ---\n{printed}\n--- Error ---\n{e:?}"));
+    check!(
+        original == reparsed,
         "{label}: AST mismatch at width {width}\n--- Printed ---\n{printed}"
     );
 }
 
 fn round_trip_problem(input: &str, width: usize, label: &str) {
-    let (_, original) = Problem::parse(input).unwrap_or_else(|_| panic!("{label}: parse original"));
+    let original = Problem::from_str(input).unwrap_or_else(|_| panic!("{label}: parse original"));
     let printed = original.pretty(width).to_string();
-    let (_, reparsed) =
-        Problem::parse(&*printed).unwrap_or_else(|e| panic!("{label}: parse printed output at width {width}\n--- Printed ---\n{printed}\n--- Error ---\n{e:?}"));
-    assert_eq!(
-        original, reparsed,
+    let reparsed =
+        Problem::from_str(&printed).unwrap_or_else(|e| panic!("{label}: parse printed output at width {width}\n--- Printed ---\n{printed}\n--- Error ---\n{e:?}"));
+    check!(
+        original == reparsed,
         "{label}: AST mismatch at width {width}\n--- Printed ---\n{printed}"
     );
 }
@@ -349,13 +353,13 @@ fn uppercase_input_parses_to_the_same_ast() {
         let lower = Domain::from_str(input).unwrap_or_else(|e| panic!("{label}: {e}"));
         let upper = Domain::from_str(&input.to_ascii_uppercase())
             .unwrap_or_else(|e| panic!("{label} (uppercase): {e}"));
-        assert_eq!(lower, upper, "{label}");
+        check!(lower == upper, "{label}");
     }
     for (label, input) in ALL_PROBLEMS {
         let lower = Problem::from_str(input).unwrap_or_else(|e| panic!("{label}: {e}"));
         let upper = Problem::from_str(&input.to_ascii_uppercase())
             .unwrap_or_else(|e| panic!("{label} (uppercase): {e}"));
-        assert_eq!(lower, upper, "{label}");
+        check!(lower == upper, "{label}");
     }
 }
 
@@ -366,12 +370,12 @@ fn mixed_case_names_keep_their_spelling_when_printed() {
         "(DEFINE (DOMAIN Blocks) (:REQUIREMENTS :STRIPS) (:PREDICATES (On ?X ?Y)))",
     )
     .unwrap();
-    assert_eq!(domain.name(), "blocks");
-    assert_eq!(domain.name().to_string(), "Blocks");
+    check!(domain.name() == "blocks");
+    check!(domain.name().to_string() == "Blocks");
     let printed = domain.pretty(80).to_string();
-    assert!(printed.contains("(domain Blocks)"), "{printed}");
-    assert!(printed.contains("(:requirements :strips)"), "{printed}");
-    assert!(printed.contains("(On ?X ?Y)"), "{printed}");
+    check!(printed.contains("(domain Blocks)"), "{printed}");
+    check!(printed.contains("(:requirements :strips)"), "{printed}");
+    check!(printed.contains("(On ?X ?Y)"), "{printed}");
 }
 
 /// Replaces every run of whitespace directly before a `(` with `separator`
@@ -410,14 +414,14 @@ fn whitespace_before_parens_is_optional() {
             let respaced = respace_before_parens(input, separator);
             let actual = Domain::from_str(&respaced)
                 .unwrap_or_else(|e| panic!("{label} {separator:?}: {e}\n{respaced}"));
-            assert_eq!(expected, actual, "{label} {separator:?}");
+            check!(expected == actual, "{label} {separator:?}");
         }
         for (label, input) in ALL_PROBLEMS {
             let expected = Problem::from_str(input).unwrap();
             let respaced = respace_before_parens(input, separator);
             let actual = Problem::from_str(&respaced)
                 .unwrap_or_else(|e| panic!("{label} {separator:?}: {e}\n{respaced}"));
-            assert_eq!(expected, actual, "{label} {separator:?}");
+            check!(expected == actual, "{label} {separator:?}");
         }
     }
 }
@@ -432,16 +436,16 @@ fn unknown_requirements_round_trip() {
         let input = format!("(define (domain d) (:requirements {requirements}) (:predicates (p)))");
         let domain = Domain::from_str(&input).unwrap();
         let printed = domain.pretty(80).to_string();
-        assert!(printed.contains(expected), "{printed}");
-        assert_eq!(Domain::from_str(&printed).unwrap(), domain, "{printed}");
+        check!(printed.contains(expected), "{printed}");
+        check!(Domain::from_str(&printed).unwrap() == domain, "{printed}");
 
         let input = format!(
             "(define (problem p) (:domain d) (:requirements {requirements}) (:init) (:goal (and)))"
         );
         let problem = Problem::from_str(&input).unwrap();
         let printed = problem.pretty(80).to_string();
-        assert!(printed.contains(expected), "{printed}");
-        assert_eq!(Problem::from_str(&printed).unwrap(), problem, "{printed}");
+        check!(printed.contains(expected), "{printed}");
+        check!(Problem::from_str(&printed).unwrap() == problem, "{printed}");
     }
 }
 
@@ -465,14 +469,14 @@ fn whitespace_before_closing_parens_is_allowed() {
             let spaced = space_before_closing_parens(input, separator);
             let actual = Domain::from_str(&spaced)
                 .unwrap_or_else(|e| panic!("{label} {separator:?}: {e}\n{spaced}"));
-            assert_eq!(expected, actual, "{label} {separator:?}");
+            check!(expected == actual, "{label} {separator:?}");
         }
         for (label, input) in ALL_PROBLEMS {
             let expected = Problem::from_str(input).unwrap();
             let spaced = space_before_closing_parens(input, separator);
             let actual = Problem::from_str(&spaced)
                 .unwrap_or_else(|e| panic!("{label} {separator:?}: {e}\n{spaced}"));
-            assert_eq!(expected, actual, "{label} {separator:?}");
+            check!(expected == actual, "{label} {separator:?}");
         }
     }
 }
@@ -489,4 +493,28 @@ fn whitespace_before_closing_paren_of_term_and_variable_lists() {
     ] {
         Domain::from_str(input).unwrap_or_else(|e| panic!("{input}: {e}"));
     }
+}
+
+/// Parses `input` as a primitive effect, prints it and parses the output again.
+fn round_trip_p_effect(input: &str) -> String {
+    let original = PrimitiveEffect::from_str(input).unwrap_or_else(|e| panic!("{input}: {e}"));
+    let printed = original.pretty(80).to_string();
+    let reparsed = PrimitiveEffect::from_str(&printed).unwrap_or_else(|e| panic!("{printed}: {e}"));
+    check!(original == reparsed, "{input} printed as {printed}");
+    printed
+}
+
+/// A function term without terms keeps its parentheses, or it would parse back as a name.
+#[test]
+fn nullary_function_terms_round_trip() {
+    check!(round_trip_p_effect("(assign (loc) y)") == "(assign (loc) y)");
+    check!(round_trip_p_effect("(at (loc) y)") == "(at (loc) y)");
+    let term = Term::from_str("(loc)").unwrap();
+    check!(Term::from_str(&term.pretty(80).to_string()) == Ok(term));
+}
+
+/// An object fluent assigned `undefined` keeps the keyword.
+#[test]
+fn undefined_object_fluent_round_trips() {
+    check!(round_trip_p_effect("(assign (loc x) undefined)") == "(assign (loc x) undefined)");
 }

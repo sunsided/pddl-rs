@@ -50,8 +50,8 @@ jobs:
           persist-credentials: false
       - name: Install Rust
         run: |
-          rustup toolchain install 1.80.0 --profile minimal --no-self-update
-          rustup default 1.80.0
+          rustup toolchain install 1.86.0 --profile minimal --no-self-update
+          rustup default 1.86.0
       - name: Build with MSRV
         run: cargo build --all-features
       - name: Test with MSRV

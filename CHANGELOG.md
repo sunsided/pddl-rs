@@ -10,9 +10,41 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `pddl::Definition`, a single domain or problem. `Definition::from_str` parses exactly one
   `(define ...)` block and takes its kind from the header, so callers no longer parse a `PddlFile`
   and check that it holds exactly one definition.
+- `ParseError::span()`, the byte range of the input that parsing stopped at: an atom, the start of a
+  list up to its first atom (e.g. `(:bogus`), a single parenthesis, or an empty range at the end.
+- The optional `miette` feature implements `miette::Diagnostic` for `ParseError`, labelling that
+  span. Render an error with `miette::Report::new(error).with_source_code(input)`.
 
 ### Changed
 
+- The goal types are named after PDDL's *goal description* (GD) instead of "goal definition":
+  `GoalDescription`, `PreconditionGoalDescription(s)`, `PreferenceGoalDescription`,
+  `ConstraintGoalDescription(Inner)`, `PreferenceConstraintGoalDescription(s)`,
+  `TimedGoalDescription`, `PreferenceTimedGoalDescription`, `DurativeActionGoalDescription` and
+  `ProblemGoalDescription`. The old `...GoalDefinition...` names remain as deprecated type aliases.
+- `Requirement::expand` returns `&'static [Requirement]` instead of a `Vec`, so it no longer
+  allocates. Iterating over it yields `&Requirement`; call `.to_vec()` for an owned list.
+- [#104](https://github.com/sunsided/pddl-rs/issues/104): The parser is hand-written instead of
+  built from `nom` combinators. It reads the input into a tree of atoms and parenthesized lists,
+  then turns the tree into the AST, trying the grammar's alternatives in the same order as before.
+  The example corpus parses to the same ASTs and errors, about five times as fast (6.3 ms → 1.2 ms
+  for 88 files). `nom` and `nom_locate` are no longer dependencies. Where the old parser's token
+  boundaries were accidental, the new rules are:
+  - Whitespace may follow any `(`. `( and (p) (q))` used to be read as a predicate named `and`, and
+    `( define ...)` was an error.
+  - Whitespace is optional after a `)` as well as before a `(`, so `(at b roomb)x` reads as two items.
+  - A `?` or `:` starts a new atom, so `(on?x ?y)` and `(:requirements:strips)` parse everywhere. The
+    old parser accepted them only in some positions.
+  - A variable can't contain whitespace: `? x` used to be read as `?x` and is now an error.
+  - `(at end <GD>)` in constraints allows any whitespace and comments between `at` and `end`, not
+    just one space.
+  - `( )` is the empty list like `()`, e.g. for an action without precondition.
+- An invalid element of a list, such as `5` in `(:init (p a) 5)`, is reported at that element
+  without the reason ``expected `)` ``. A missing `)` is reported at the end of the input, but only
+  if no other mistake comes first.
+
+- The minimum supported Rust version is now 1.86 (was 1.80), as required by the `criterion`
+  benchmark dependency.
 - `Number` stores an `f64` instead of an `f32`, so `Deref` and `Number::new` / `try_new` use `f64`.
   Whole numbers are exact up to 2^53 instead of 2^24: `16777217` used to parse as `16777216`.
   `Number::from` an `f64` beyond the `f32` range, such as `1e300`, used to overflow to infinity and
@@ -27,6 +59,14 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- `(assign <function-term> undefined)` pretty-prints with `undefined` again. It printed as
+  `(assign <function-term>)`, which doesn't parse.
+- A function term without terms pretty-prints as `(f)` instead of `f`, which parsed back as the
+  name `f`: `(at (loc) y)` printed as `(at loc y)`, and `(assign (loc) y)` turned into a numeric
+  assignment.
+- `Requirement::Adl.contains` claimed `:continuous-effects` instead of `:conditional-effects`, and
+  missed `:existential-preconditions` and `:universal-preconditions`. It now agrees with
+  `Requirement::expand`.
 - [#143](https://github.com/sunsided/pddl-rs/pull/143): Deeply nested input no longer overflows the
   stack and aborts the process. More than 64 open parentheses is a `ParseError` with the reason
   `nesting too deep`. Nested `(- ...)` in fluent, durative and `:metric` expressions parses in linear
@@ -34,6 +74,12 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Removed
 
+- [#104](https://github.com/sunsided/pddl-rs/issues/104): The nom-based parsing API: the
+  `pddl::parsers::parse_*` functions, the combinators `typed_list`, `function_typed_list`,
+  `literal`, `atomic_formula` and `empty_or`, `Parser::parse` and `Parser::parse_span`, and the
+  types `Span`, `ParseResult`, `NomError` and `UnwrapValue` with `pddl::parsers::preamble`. Parse
+  with `T::from_str`; `PddlFile::from_str(input)?.domains` (or `.problems`) replaces
+  `parse_domains` and `parse_problems`.
 - The inherent `Name::len` and `Name::is_empty`. Method calls still work through `Deref` to `str`;
   path calls such as `Name::len(&name)` don't.
 - [#138](https://github.com/sunsided/pddl-rs/issues/138): `pddl::parsers::ignore_eol_comment`. The

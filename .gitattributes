@@ -1,0 +1,2 @@
+# Test data is compared byte for byte; keep it exactly as committed on every platform.
+tests/data/** -text

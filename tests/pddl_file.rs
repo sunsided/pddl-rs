@@ -1,5 +1,10 @@
+//! Parses files that hold several `(define ...)` blocks.
+
+use assert2::check;
+
 use pddl::{Name, Parser, PddlFile, Problem};
 
+/// A file with several domain and problem definitions, interleaved.
 pub const MULTI_DEF_FILE: &str = r#"
 ; Multi-definition PDDL file containing multiple domains and problems.
 ;
@@ -96,22 +101,20 @@ pub const MULTI_DEF_FILE: &str = r#"
 
 #[test]
 fn parse_multi_definition_file() {
-    let (remainder, file) = PddlFile::parse(MULTI_DEF_FILE).unwrap();
-
-    assert!(remainder.is_empty());
+    let file = PddlFile::from_str(MULTI_DEF_FILE).unwrap();
 
     // 2 domains, 5 problems — alternating order in the file
-    assert_eq!(file.domain_count(), 2);
-    assert_eq!(file.problem_count(), 5);
-    assert!(!file.is_empty());
+    check!(file.domain_count() == 2);
+    check!(file.problem_count() == 5);
+    check!(!file.is_empty());
 }
 
 #[test]
 fn parse_multi_definition_file_via_from_str() {
     let file = PddlFile::from_str(MULTI_DEF_FILE).unwrap();
 
-    assert_eq!(file.domain_count(), 2);
-    assert_eq!(file.problem_count(), 5);
+    check!(file.domain_count() == 2);
+    check!(file.problem_count() == 5);
 }
 
 #[test]
@@ -120,17 +123,17 @@ fn domains_are_correct() {
 
     // blocks-world comes first in the file
     let blocks = &file.domains[0];
-    assert_eq!(blocks.name(), &Name::new("blocks-world"));
-    assert_eq!(blocks.predicates().len(), 5);
-    assert_eq!(blocks.structure().len(), 4);
+    check!(blocks.name() == &Name::new("blocks-world"));
+    check!(blocks.predicates().len() == 5);
+    check!(blocks.structure().len() == 4);
 
     // briefcase-world comes second
     let briefcase = &file.domains[1];
-    assert_eq!(briefcase.name(), &Name::new("briefcase-world"));
-    assert_eq!(briefcase.types().len(), 2);
-    assert_eq!(briefcase.constants().len(), 3);
-    assert_eq!(briefcase.predicates().len(), 2);
-    assert_eq!(briefcase.structure().len(), 3);
+    check!(briefcase.name() == &Name::new("briefcase-world"));
+    check!(briefcase.types().len() == 2);
+    check!(briefcase.constants().len() == 3);
+    check!(briefcase.predicates().len() == 2);
+    check!(briefcase.structure().len() == 3);
 }
 
 #[test]
@@ -138,45 +141,41 @@ fn problems_correct_order_and_domain_refs() {
     let file = PddlFile::from_str(MULTI_DEF_FILE).unwrap();
     let problems: Vec<&Problem> = file.problems.iter().collect();
 
-    assert_eq!(problems.len(), 5);
+    check!(problems.len() == 5);
 
     // Problems appear in file order — blocks-world-problem-1 before briefcase problems
-    assert_eq!(problems[0].name(), &Name::new("blocks-world-problem-1"));
-    assert_eq!(problems[0].domain(), &Name::new("blocks-world"));
-    assert_eq!(problems[0].goals().len(), 2);
+    check!(problems[0].name() == &Name::new("blocks-world-problem-1"));
+    check!(problems[0].domain() == &Name::new("blocks-world"));
+    check!(problems[0].goals().len() == 2);
 
-    assert_eq!(problems[1].name(), &Name::new("briefcase-problem-1"));
-    assert_eq!(problems[1].domain(), &Name::new("briefcase-world"));
-    assert_eq!(problems[1].goals().len(), 3);
+    check!(problems[1].name() == &Name::new("briefcase-problem-1"));
+    check!(problems[1].domain() == &Name::new("briefcase-world"));
+    check!(problems[1].goals().len() == 3);
 
-    assert_eq!(problems[2].name(), &Name::new("briefcase-problem-2"));
-    assert_eq!(problems[2].goals().len(), 3);
+    check!(problems[2].name() == &Name::new("briefcase-problem-2"));
+    check!(problems[2].goals().len() == 3);
 
-    assert_eq!(problems[3].name(), &Name::new("briefcase-problem-3"));
-    assert_eq!(problems[3].goals().len(), 2);
+    check!(problems[3].name() == &Name::new("briefcase-problem-3"));
+    check!(problems[3].goals().len() == 2);
 
     // blocks-world-problem-2 comes after all briefcase problems
-    assert_eq!(problems[4].name(), &Name::new("blocks-world-problem-2"));
-    assert_eq!(problems[4].domain(), &Name::new("blocks-world"));
-    assert_eq!(problems[4].goals().len(), 2);
+    check!(problems[4].name() == &Name::new("blocks-world-problem-2"));
+    check!(problems[4].domain() == &Name::new("blocks-world"));
+    check!(problems[4].goals().len() == 2);
 }
 
 #[test]
 fn parse_domains_only_from_multi_file() {
-    let (remainder, domains) = pddl::parsers::parse_domains(MULTI_DEF_FILE).unwrap();
-
-    assert!(remainder.is_empty());
-    assert_eq!(domains.len(), 2);
-    assert_eq!(domains[0].name(), &Name::new("blocks-world"));
-    assert_eq!(domains[1].name(), &Name::new("briefcase-world"));
+    let domains = PddlFile::from_str(MULTI_DEF_FILE).unwrap().domains;
+    check!(domains.len() == 2);
+    check!(domains[0].name() == &Name::new("blocks-world"));
+    check!(domains[1].name() == &Name::new("briefcase-world"));
 }
 
 #[test]
 fn parse_problems_only_from_multi_file() {
-    let (remainder, problems) = pddl::parsers::parse_problems(MULTI_DEF_FILE).unwrap();
-
-    assert!(remainder.is_empty());
-    assert_eq!(problems.len(), 5);
-    assert_eq!(problems[0].name(), &Name::new("blocks-world-problem-1"));
-    assert_eq!(problems[4].name(), &Name::new("blocks-world-problem-2"));
+    let problems = PddlFile::from_str(MULTI_DEF_FILE).unwrap().problems;
+    check!(problems.len() == 5);
+    check!(problems[0].name() == &Name::new("blocks-world-problem-1"));
+    check!(problems[4].name() == &Name::new("blocks-world-problem-2"));
 }

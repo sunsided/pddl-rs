@@ -1,6 +1,6 @@
 //! # A PDDL 3.1 parser, strongly typed
 //!
-//! This crates provides a PDDL 3.1 parser implementation based on [nom](https://crates.io/crates/nom).
+//! This crate provides a PDDL 3.1 parser and a strongly typed syntax tree.
 //!
 //! ## Default crate features
 //!
@@ -9,6 +9,11 @@
 //! * `pretty` - Enables pretty-printing of PDDL types via the
 //!   `Pretty` extension trait. The feature provides round-trip-safe
 //!   rendering: `parse → pretty() → parse` preserves AST equality.
+//!
+//! ## Optional crate features
+//!
+//! * `miette` - Implements `miette::Diagnostic` for [`ParseError`], so parse errors
+//!   render with the offending input marked.
 //!
 //! ## Example
 //!
@@ -135,7 +140,7 @@
 //! **Every type name maps directly to a BNF non-terminal from the PDDL 3.1 spec.**
 //!
 //! For example, the BNF rule `<c-effect>` becomes [`ConditionalEffect`], `<da-gd>` becomes
-//! [`DurativeActionGoalDefinition`], and `<con-GD>` becomes [`ConstraintGoalDefinition`]. This 1:1 mapping
+//! [`DurativeActionGoalDescription`], and `<con-GD>` becomes [`ConstraintGoalDescription`]. This 1:1 mapping
 //! makes it trivial to cross-reference the spec while reading or writing code.
 //!
 //! ### BNF Naming Convention
@@ -146,14 +151,14 @@
 //!
 //! | BNF Non-Terminal | Rust Type | Notes |
 //! |------------------|-----------|-------|
-//! | `<gd>` | [`GoalDefinition`] | Goal definition (the core logical formula type) |
-//! | `<pre-GD>` | [`PreconditionGoalDefinition`] | Precondition-specific wrapper |
-//! | `<precondition>` | [`PreconditionGoalDefinitions`] | Collection of preconditions |
-//! | `<da-gd>` | [`DurativeActionGoalDefinition`] | Durative action goals (timed) |
-//! | `<con-GD>` | [`ConstraintGoalDefinition`] | Constraint goals (temporal constraints) |
-//! | `<con2-GD>` | [`ConstraintGoalDefinitionInner`] | Inner constraint goal (goal or nested con-GD) |
-//! | `<pref-con-GD>` | [`PreferenceConstraintGoalDefinition`] | Preference constraint goals |
-//! | `<pref-GD>` | [`PreferenceGoalDefinition`] | Preferred goal (goal or named preference) |
+//! | `<gd>` | [`GoalDescription`] | Goal description (the core logical formula type) |
+//! | `<pre-GD>` | [`PreconditionGoalDescription`] | Precondition-specific wrapper |
+//! | `<precondition>` | [`PreconditionGoalDescriptions`] | Collection of preconditions |
+//! | `<da-gd>` | [`DurativeActionGoalDescription`] | Durative action goals (timed) |
+//! | `<con-GD>` | [`ConstraintGoalDescription`] | Constraint goals (temporal constraints) |
+//! | `<con2-GD>` | [`ConstraintGoalDescriptionInner`] | Inner constraint goal (goal or nested con-GD) |
+//! | `<pref-con-GD>` | [`PreferenceConstraintGoalDescription`] | Preference constraint goals |
+//! | `<pref-GD>` | [`PreferenceGoalDescription`] | Preferred goal (goal or named preference) |
 //! | `<c-effect>` | [`ConditionalEffect`] | Conditional effect |
 //! | `<p-effect>` | [`PrimitiveEffect`] | Primitive effect |
 //! | `<effect>` | [`Effects`] | Collection of effects (the `(and ...)` block) |
@@ -189,34 +194,34 @@
 //! This is where the naming proliferation is most apparent. Each variant serves a
 //! distinct purpose in the PDDL spec:
 //!
-//! - [`GoalDefinition`] (`<gd>`) — The core logical formula type. Supports `and`, `or`,
+//! - [`GoalDescription`] (`<gd>`) — The core logical formula type. Supports `and`, `or`,
 //!   `not`, `imply`, `exists`, `forall`, atomic formulas, literals, and fluent comparisons.
-//!   Used in action preconditions, goal definitions, and effect conditions.
+//!   Used in action preconditions, goal descriptions, and effect conditions.
 //!
-//! - [`PreconditionGoalDefinition`] (`<pre-GD>`) — A simplified variant used specifically
-//!   for action preconditions. Contains either a [`PreferenceGoalDefinition`] or a `forall` quantifier.
-//!   Multiple are collected in [`PreconditionGoalDefinitions`].
+//! - [`PreconditionGoalDescription`] (`<pre-GD>`) — A simplified variant used specifically
+//!   for action preconditions. Contains either a [`PreferenceGoalDescription`] or a `forall` quantifier.
+//!   Multiple are collected in [`PreconditionGoalDescriptions`].
 //!
-//! - [`ProblemGoalDefinition`] (`<goal>` in problem context) — A thin wrapper around [`PreconditionGoalDefinitions`] used by
+//! - [`ProblemGoalDescription`] (`<goal>` in problem context) — A thin wrapper around [`PreconditionGoalDescriptions`] used by
 //!   [`Problem`] for the `(:goal ...)` section.
 //!
-//! - [`DurativeActionGoalDefinition`] (`<da-gd>`) — Goals for durative actions. Uses
-//!   [`TimedGoalDefinition`] (time-qualified goals like `(at start (on a b))`) instead of plain
-//!   [`GoalDefinition`].
+//! - [`DurativeActionGoalDescription`] (`<da-gd>`) — Goals for durative actions. Uses
+//!   [`TimedGoalDescription`] (time-qualified goals like `(at start (on a b))`) instead of plain
+//!   [`GoalDescription`].
 //!
-//! - [`ConstraintGoalDefinition`] (`<con-GD>`) — Temporal constraint goals for problem-level constraints.
+//! - [`ConstraintGoalDescription`] (`<con-GD>`) — Temporal constraint goals for problem-level constraints.
 //!   Supports `always`, `sometime`, `within`, `at-most-once`, `sometime-after`,
 //!   `sometime-before`, `always-within`, `hold-during`, `hold-after`. Used by
 //!   [`ProblemConstraintsDef`].
 //!
-//! - [`ConstraintGoalDefinitionInner`] (`<con2-GD>`) — An inner component of [`ConstraintGoalDefinition`], representing either
-//!   a plain [`GoalDefinition`] or a nested [`ConstraintGoalDefinition`].
+//! - [`ConstraintGoalDescriptionInner`] (`<con2-GD>`) — An inner component of [`ConstraintGoalDescription`], representing either
+//!   a plain [`GoalDescription`] or a nested [`ConstraintGoalDescription`].
 //!
-//! - [`PreferenceConstraintGoalDefinition`] (`<pref-con-GD>`) — Constraint goals with optional preference names.
+//! - [`PreferenceConstraintGoalDescription`] (`<pref-con-GD>`) — Constraint goals with optional preference names.
 //!   Used in [`ProblemConstraintsDef`].
 //!
-//! - [`PreferenceGoalDefinition`] — Either a plain [`GoalDefinition`] or a named [`Preference`].
-//!   Used in [`PreconditionGoalDefinition`].
+//! - [`PreferenceGoalDescription`] — Either a plain [`GoalDescription`] or a named [`Preference`].
+//!   Used in [`PreconditionGoalDescription`].
 //!
 //! #### Effects
 //!
@@ -275,11 +280,11 @@
 //! |---------------|------------|
 //! | [`AtomicFormulaSkeleton`] vs [`AtomicFormula`] | Skeleton declares a predicate's signature (used in `:predicates`); Formula applies it to concrete terms (used in goals/init). |
 //! | [`PrimitiveEffect`] vs [`ConditionalEffect`] vs [`Effects`] | `PrimitiveEffect` is a single primitive effect; `ConditionalEffect` may add conditions/quantifiers; `Effects` is the `(and ...)` collection. |
-//! | [`GoalDefinition`] vs [`PreconditionGoalDefinition`] | `GoalDefinition` is the full logical formula; `PreconditionGoalDefinition` is a simplified wrapper used only in action preconditions. |
-//! | [`GoalDefinition`] vs [`DurativeActionGoalDefinition`] | `GoalDefinition` is timeless; `DurativeActionGoalDefinition` uses [`TimedGoalDefinition`] for time-qualified goals `(at start ...)`. |
-//! | [`ConstraintGoalDefinition`] vs [`GoalDefinition`] | `ConstraintGoalDefinition` is for problem-level temporal constraints (`always`, `sometime`); `GoalDefinition` is the standard logical formula. |
-//! | [`ProblemGoalDefinition`] vs [`GoalDefinition`] | `ProblemGoalDefinition` wraps [`PreconditionGoalDefinitions`] for the problem's `(:goal ...)`; `GoalDefinition` is the individual formula. |
-//! | [`PreferenceGoalDefinition`] vs [`PreferenceConstraintGoalDefinition`] | `PreferenceGoalDefinition` is for action-level preferences; `PreferenceConstraintGoalDefinition` is for problem-level constraint preferences. |
+//! | [`GoalDescription`] vs [`PreconditionGoalDescription`] | `GoalDescription` is the full logical formula; `PreconditionGoalDescription` is a simplified wrapper used only in action preconditions. |
+//! | [`GoalDescription`] vs [`DurativeActionGoalDescription`] | `GoalDescription` is timeless; `DurativeActionGoalDescription` uses [`TimedGoalDescription`] for time-qualified goals `(at start ...)`. |
+//! | [`ConstraintGoalDescription`] vs [`GoalDescription`] | `ConstraintGoalDescription` is for problem-level temporal constraints (`always`, `sometime`); `GoalDescription` is the standard logical formula. |
+//! | [`ProblemGoalDescription`] vs [`GoalDescription`] | `ProblemGoalDescription` wraps [`PreconditionGoalDescriptions`] for the problem's `(:goal ...)`; `GoalDescription` is the individual formula. |
+//! | [`PreferenceGoalDescription`] vs [`PreferenceConstraintGoalDescription`] | `PreferenceGoalDescription` is for action-level preferences; `PreferenceConstraintGoalDescription` is for problem-level constraint preferences. |
 //! | [`Effects`] vs [`ConditionalEffect`] vs [`EffectCondition`] | `Effects` is the top-level `(and ...)` collection of [`ConditionalEffect`]s (action `:effect` body); `ConditionalEffect` is one element that may be primitive, `forall`-quantified, or `when`-conditional; `EffectCondition` is the recursive `ConditionalEffect` tree nested inside `when` clauses. |
 //! | [`FluentExpression`] vs [`FunctionHead`] | `FluentExpression` is any numeric expression; `FunctionHead` is specifically a function reference (with or without args). |
 //! | [`Literal<T>`] vs [`AtomicFormula<T>`] | `Literal` can be negated; `AtomicFormula` is always positive. |
@@ -294,16 +299,16 @@
 //!
 //!   (:action pick-up
 //!     :parameters (?x)            ← TypedList<Variable>
-//!     :precondition (and          ← PreconditionGoalDefinitions
-//!       (clear ?x)                ← GoalDefinition::AtomicFormula
-//!       (handempty))              ← GoalDefinition::AtomicFormula
+//!     :precondition (and          ← PreconditionGoalDescriptions
+//!       (clear ?x)                ← GoalDescription::AtomicFormula
+//!       (handempty))              ← GoalDescription::AtomicFormula
 //!     :effect (and                ← Effects
 //!       (not (clear ?x))          ← ConditionalEffect::Effect(PrimitiveEffect::NotAtomicFormula)
 //!       (holding ?x)))            ← ConditionalEffect::Effect(PrimitiveEffect::AtomicFormula)
 //!
-//!   (:goal (and                   ← ProblemGoalDefinition → PreconditionGoalDefinitions
-//!     (on a b)                    ← GoalDefinition::AtomicFormula
-//!     (on b c)))                  ← GoalDefinition::AtomicFormula
+//!   (:goal (and                   ← ProblemGoalDescription → PreconditionGoalDescriptions
+//!     (on a b)                    ← GoalDescription::AtomicFormula
+//!     (on b c)))                  ← GoalDescription::AtomicFormula
 //! )
 //!
 //! ;; PDDL problem initial state

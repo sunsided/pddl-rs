@@ -1,0 +1,72 @@
+//! Contains function symbols via the [`FunctionSymbol`] type..
+
+use crate::types::Name;
+use std::ops::Deref;
+
+/// A function symbol name.
+///
+/// ## Usage
+/// Used by [`FunctionTerm`](crate::FunctionTerm), [`FHead`](crate::FHead),
+/// [`BasicFunctionTerm`](crate::BasicFunctionTerm) and [`MetricFluentExpression`](crate::MetricFluentExpression).
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
+pub struct FunctionSymbol(Name);
+
+impl FunctionSymbol {
+    /// Creates a new function symbol from a name.
+    #[inline(always)]
+    pub fn new(name: Name) -> Self {
+        Self(name)
+    }
+
+    /// Creates a new function symbol from a string.
+    #[inline(always)]
+    #[doc(alias = "new_string")]
+    pub fn string(name: &str) -> Self {
+        Self(Name::new(name))
+    }
+
+    /// Creates a new function symbol from a string.
+    #[inline(always)]
+    pub fn new_string(name: &str) -> Self {
+        Self::string(name)
+    }
+
+    /// Creates a new function symbol from a name.
+    #[inline(always)]
+    pub const fn from_name(name: Name) -> Self {
+        Self(name)
+    }
+}
+
+impl<T> From<T> for FunctionSymbol
+where
+    T: Into<Name>,
+{
+    #[inline(always)]
+    fn from(value: T) -> Self {
+        FunctionSymbol::new(value.into())
+    }
+}
+
+impl AsRef<Name> for FunctionSymbol {
+    #[inline(always)]
+    fn as_ref(&self) -> &Name {
+        &self.0
+    }
+}
+
+impl AsRef<str> for FunctionSymbol {
+    #[inline(always)]
+    fn as_ref(&self) -> &str {
+        self.0.as_ref()
+    }
+}
+
+impl Deref for FunctionSymbol {
+    type Target = Name;
+
+    #[inline(always)]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}

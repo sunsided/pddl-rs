@@ -1,8 +1,13 @@
+//! Parses the briefcase world domain and problem and checks the resulting AST.
+
+use assert2::check;
+
 use pddl::{
-    AtomicFormula, Domain, GoalDefinition, Parser, PreconditionGoalDefinition,
-    PreferenceGoalDefinition, Problem, TermLiteral,
+    AtomicFormula, Domain, GoalDescription, Parser, PreconditionGoalDescription,
+    PreferenceGoalDescription, Problem, TermLiteral,
 };
 
+/// The briefcase world domain from the PDDL 1.2 manual.
 pub const BRIEFCASE_WORLD: &str = r#"
     (define (domain briefcase-world)
       (:requirements :strips :equality :typing :conditional-effects)
@@ -40,6 +45,7 @@ pub const BRIEFCASE_WORLD: &str = r#"
     )
     "#;
 
+/// A problem for [`BRIEFCASE_WORLD`]: bring the briefcase and dictionary (`D`) to the office and leave the paycheck at home.
 pub const BRIEFCASE_WORLD_PROBLEM: &str = r#"
     (define (problem get-paid)
         (:domain briefcase-world)
@@ -56,44 +62,42 @@ pub const BRIEFCASE_WORLD_PROBLEM: &str = r#"
 
 #[test]
 fn parse_domain_works() {
-    let (remainder, domain) = Domain::parse(BRIEFCASE_WORLD).unwrap();
+    let domain = Domain::from_str(BRIEFCASE_WORLD).unwrap();
 
     // The input was parsed completely, nothing followed the domain definition.
-    assert!(remainder.is_empty());
 
     // All elements were parsed.
-    assert_eq!(domain.name(), "briefcase-world");
-    assert_eq!(domain.requirements().len(), 4);
-    assert_eq!(domain.types().len(), 2);
-    assert_eq!(domain.constants().len(), 3);
-    assert_eq!(domain.predicates().len(), 2);
-    assert_eq!(domain.structure().len(), 3);
+    check!(domain.name() == "briefcase-world");
+    check!(domain.requirements().len() == 4);
+    check!(domain.types().len() == 2);
+    check!(domain.constants().len() == 3);
+    check!(domain.predicates().len() == 2);
+    check!(domain.structure().len() == 3);
 }
 
 #[test]
 fn parse_problem_works() {
-    let (remainder, problem) = Problem::parse(BRIEFCASE_WORLD_PROBLEM).unwrap();
+    let problem = Problem::from_str(BRIEFCASE_WORLD_PROBLEM).unwrap();
 
     // The input was parsed completely, nothing followed the problem definition.
-    assert!(remainder.is_empty(), "{}", remainder);
 
     // All elements were parsed.
-    assert_eq!(problem.name(), "get-paid");
-    assert_eq!(problem.domain(), "briefcase-world");
-    assert!(problem.requirements().is_empty());
-    assert_eq!(problem.init().len(), 9);
-    assert_eq!(problem.goals().len(), 3);
+    check!(problem.name() == "get-paid");
+    check!(problem.domain() == "briefcase-world");
+    check!(problem.requirements().is_empty());
+    check!(problem.init().len() == 9);
+    check!(problem.goals().len() == 3);
 
     let mut atomic_formulas = 0;
     for goal in problem.goals().iter() {
         match goal {
-            PreconditionGoalDefinition::Preference(pref) => match pref {
-                PreferenceGoalDefinition::Goal(goal) => match goal {
-                    GoalDefinition::AtomicFormula(af) => match af {
+            PreconditionGoalDescription::Preference(pref) => match pref {
+                PreferenceGoalDescription::Goal(goal) => match goal {
+                    GoalDescription::AtomicFormula(af) => match af {
                         AtomicFormula::Predicate(_) => atomic_formulas += 1,
                         AtomicFormula::Equality(_) => {}
                     },
-                    GoalDefinition::Literal(literal) => match literal {
+                    GoalDescription::Literal(literal) => match literal {
                         TermLiteral::AtomicFormula(_) => {
                             // The AtomicFormula variant takes precedence over the Literal variant
                             // because a Literal in the context of a Goal Description can only
@@ -101,18 +105,18 @@ fn parse_problem_works() {
                         }
                         TermLiteral::NotAtomicFormula(_) => {}
                     },
-                    GoalDefinition::And(_) => {}
-                    GoalDefinition::Or(_) => {}
-                    GoalDefinition::Not(_) => {}
-                    GoalDefinition::Imply(_, _) => {}
-                    GoalDefinition::Exists(_, _) => {}
-                    GoalDefinition::ForAll(_, _) => {}
-                    GoalDefinition::FluentComparison(_) => {}
+                    GoalDescription::And(_) => {}
+                    GoalDescription::Or(_) => {}
+                    GoalDescription::Not(_) => {}
+                    GoalDescription::Imply(_, _) => {}
+                    GoalDescription::Exists(_, _) => {}
+                    GoalDescription::ForAll(_, _) => {}
+                    GoalDescription::FluentComparison(_) => {}
                 },
-                PreferenceGoalDefinition::Preference(_) => {}
+                PreferenceGoalDescription::Preference(_) => {}
             },
-            PreconditionGoalDefinition::Forall(_, _) => {}
+            PreconditionGoalDescription::Forall(_, _) => {}
         }
     }
-    assert_eq!(atomic_formulas, 3);
+    check!(atomic_formulas == 3);
 }

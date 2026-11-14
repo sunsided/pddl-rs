@@ -1,3 +1,5 @@
+//! Pretty-printing of terms and function terms.
+
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{BasicFunctionTerm, FunctionTerm, Term};
 use crate::visitor::{Accept, Visitor};
@@ -19,8 +21,11 @@ impl Visitor<Term, RcDoc<'static>> for PrettyRenderer {
 
 impl Visitor<FunctionTerm, RcDoc<'static>> for PrettyRenderer {
     fn visit(&self, value: &FunctionTerm) -> RcDoc<'static> {
+        // Even without terms: a bare symbol would parse back as a name.
         if value.terms().is_empty() {
-            return value.symbol().accept(self);
+            return RcDoc::text("(")
+                .append(value.symbol().accept(self))
+                .append(")");
         }
         RcDoc::text("(")
             .append(value.symbol().accept(self))
@@ -59,17 +64,18 @@ mod tests {
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
     use crate::{BasicFunctionTerm, FunctionSymbol, FunctionTerm, Name, Variable};
+    use assert2::check;
 
     #[test]
     fn term_name_works() {
         let x = Term::new_name(Name::new("foo"));
-        assert_eq!(prettify!(x, 10), "foo");
+        check!(prettify!(x, 10) == "foo");
     }
 
     #[test]
     fn term_variable_works() {
         let x = Term::new_variable(Variable::from("x"));
-        assert_eq!(prettify!(x, 10), "?x");
+        check!(prettify!(x, 10) == "?x");
     }
 
     #[test]
@@ -81,7 +87,7 @@ mod tests {
                 Term::new_variable(Variable::from("x")),
             ],
         );
-        assert_eq!(prettify!(ft, 20), "(f a ?x)");
+        check!(prettify!(ft, 20) == "(f a ?x)");
     }
 
     #[test]
@@ -91,19 +97,19 @@ mod tests {
             vec![Term::new_name(Name::new("x"))],
         );
         let t = Term::new_function(ft);
-        assert_eq!(prettify!(t, 20), "(g x)");
+        check!(prettify!(t, 20) == "(g x)");
     }
 
     #[test]
     fn function_term_empty_terms_works() {
         let ft = FunctionTerm::new(FunctionSymbol::from("f"), Vec::<Term>::new());
-        assert_eq!(prettify!(ft, 20), "f");
+        check!(prettify!(ft, 20) == "(f)");
     }
 
     #[test]
     fn basic_function_term_empty_works() {
         let bft = BasicFunctionTerm::new(FunctionSymbol::from("x"), Vec::<Name>::new());
-        assert_eq!(prettify!(bft, 20), "x");
+        check!(prettify!(bft, 20) == "x");
     }
 
     #[test]
@@ -112,6 +118,6 @@ mod tests {
             FunctionSymbol::from("x"),
             vec![Name::new("a"), Name::new("b")],
         );
-        assert_eq!(prettify!(bft, 20), "(x a b)");
+        check!(prettify!(bft, 20) == "(x a b)");
     }
 }

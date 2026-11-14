@@ -1,3 +1,5 @@
+//! Pretty-printing of types, including `(either ...)`.
+
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{PrimitiveType, Type};
 use crate::visitor::{Accept, Visitor};
@@ -36,24 +38,25 @@ mod tests {
     use super::*;
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
+    use assert2::check;
 
     #[test]
     fn primitive_type_works() {
         let x = PrimitiveType::from("pt");
-        assert_eq!(prettify!(x, 10), "pt");
+        check!(prettify!(x, 10) == "pt");
     }
 
     #[test]
     fn simple_type_works() {
         let x = Type::from("a");
-        assert_eq!(prettify!(x, 10), "a");
+        check!(prettify!(x, 10) == "a");
     }
 
     #[test]
     fn either_type_works() {
         let x = Type::from_iter(["a", "b"]);
-        assert_eq!(prettify!(x, 12), "(either a b)");
-        assert_eq!(prettify!(x, 10), "(either a\n    b)");
-        assert_eq!(prettify!(x, 8), "(either\n    a b)");
+        check!(prettify!(x, 12) == "(either a b)");
+        check!(prettify!(x, 10) == "(either a\n    b)");
+        check!(prettify!(x, 8) == "(either\n    a b)");
     }
 }

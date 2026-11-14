@@ -1,8 +1,8 @@
+//! The public [`ParseError`] and the grammar's internal [`Error`].
+
+use std::borrow::Cow;
 use std::fmt;
-
-use nom::error::{ContextError, ErrorKind};
-
-use crate::parsers::Span;
+use std::ops::Range;
 
 /// Maximum number of characters of the remaining input kept in a [`ParseError`].
 const EXCERPT_CHARS: usize = 40;
@@ -13,22 +13,35 @@ const EXCERPT_CHARS: usize = 40;
 /// excerpt is bounded, so formatting the error never echoes the whole
 /// remaining input.
 ///
+/// With the `miette` feature, `ParseError` implements `miette::Diagnostic`.
+/// Attach the parsed text to render the error with the offending input marked:
+/// `miette::Report::new(error).with_source_code(input)`.
+///
 /// ## Example
 /// ```
 /// # use pddl::{Domain, Parser};
 /// let error = Domain::from_str("(define (domain d)\n  (:bogus))").unwrap_err();
 /// assert_eq!((error.line(), error.column()), (2, 3));
+/// assert_eq!(error.span(), 21..28);
 /// assert_eq!(error.found(), Some("(:bogus))"));
 /// assert_eq!(error.reason(), Some("unknown section"));
 /// assert_eq!(error.to_string(), "line 2, column 3: unknown section: unexpected `(:bogus))`");
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParseError {
+    /// Byte offset of the error in the input.
     offset: usize,
+    /// Length in bytes of the input the error covers; see [`ParseError::span`].
+    len: usize,
+    /// 1-based line of `offset`.
     line: usize,
+    /// 1-based column of `offset`, in characters.
     column: usize,
+    /// Sanitized excerpt of the input from `offset`, or `None` at the end of the input.
     found: Option<String>,
+    /// Sanitized `:keyword` of the innermost form containing the error.
     keyword: Option<String>,
+    /// Sanitized description of why parsing stopped.
     reason: Option<String>,
 }
 
@@ -36,6 +49,13 @@ impl ParseError {
     /// The byte offset into the input at which parsing stopped.
     pub const fn offset(&self) -> usize {
         self.offset
+    }
+
+    /// The byte range of the input that parsing stopped at: an atom, the start
+    /// of a list up to its first atom (e.g. `(:bogus`), a single parenthesis,
+    /// or an empty range at the end of the input.
+    pub const fn span(&self) -> Range<usize> {
+        self.offset..self.offset + self.len
     }
 
     /// The 1-based line at which parsing stopped.
@@ -72,41 +92,20 @@ impl ParseError {
         self.reason.as_deref()
     }
 
-    /// Converts a nom error for `input` into a [`ParseError`].
-    pub(crate) fn from_nom(input: &str, error: nom::Err<NomError<'_>>) -> Self {
-        let (mut at, keyword, reason) = match error {
-            nom::Err::Error(e) | nom::Err::Failure(e) => (e.input, e.keyword, e.context),
-            // The parsers are complete, but report the end of input if one ever is not.
-            nom::Err::Incomplete(_) => (
-                nom::Input::take_from(&Span::new(input), input.len()),
-                None,
-                None,
-            ),
-        };
-        // Point at the next token rather than at whitespace or comments before it.
-        if let Ok((token, ())) = crate::parsers::utilities::skip_whitespace_and_comments(at) {
-            at = token;
-        }
-        let mut error = Self::at(at);
-        error.keyword = keyword.map(sanitize);
-        error.reason = reason.map(sanitize);
-        error
-    }
-
-    fn at(span: Span<'_>) -> Self {
-        let rest = span.fragment();
-        let found = if rest.is_empty() {
-            None
-        } else {
-            Some(sanitize(rest))
-        };
+    /// Describes `error` within `input`.
+    pub(crate) fn new(input: &str, error: Error) -> Self {
+        let offset = error.offset.min(input.len());
+        let before = &input[..offset];
+        let line_start = before.rfind('\n').map_or(0, |i| i + 1);
+        let rest = &input[offset..];
         Self {
-            offset: span.location_offset(),
-            line: span.location_line() as usize,
-            column: span.get_utf8_column(),
-            found,
-            keyword: None,
-            reason: None,
+            offset,
+            len: error.len.min(rest.len()),
+            line: before.matches('\n').count() + 1,
+            column: before[line_start..].chars().count() + 1,
+            found: (!rest.is_empty()).then(|| sanitize(rest)),
+            keyword: error.keyword.as_deref().map(sanitize),
+            reason: error.reason.map(sanitize),
         }
     }
 }
@@ -128,6 +127,23 @@ impl fmt::Display for ParseError {
 }
 
 impl std::error::Error for ParseError {}
+
+#[cfg(feature = "miette")]
+#[cfg_attr(docsrs, doc(cfg(feature = "miette")))]
+impl miette::Diagnostic for ParseError {
+    fn code<'a>(&'a self) -> Option<Box<dyn fmt::Display + 'a>> {
+        Some(Box::new("pddl::parse"))
+    }
+
+    fn labels(&self) -> Option<Box<dyn Iterator<Item = miette::LabeledSpan> + '_>> {
+        let text = self.reason.clone().unwrap_or_else(|| match &self.found {
+            Some(_) => "unexpected".to_string(),
+            None => "unexpected end of input".to_string(),
+        });
+        let label = miette::LabeledSpan::new_primary_with_span(Some(text), self.span());
+        Some(Box::new(std::iter::once(label)))
+    }
+}
 
 /// Makes text that may come from untrusted input safe for an error message.
 ///
@@ -154,64 +170,64 @@ fn sanitize(text: &str) -> String {
     safe
 }
 
-/// The error type of the individual `parse_*` combinators.
+/// A grammar error: where it happened and, if known, in which form and why.
 ///
-/// [`Parser::from_str`](crate::parsers::Parser::from_str) converts it into a [`ParseError`].
-/// Like `nom::error::Error`, it records where (`input`) and in which combinator
-/// (`code`) parsing failed. It additionally carries the PDDL `keyword` of the
-/// innermost form in which parsing failed (e.g. `:action`) and a `context`
-/// describing why (e.g. `duplicate section`), if known.
-#[derive(Debug, Clone, PartialEq)]
-pub struct NomError<'a> {
-    /// The remaining input at the position of the error.
-    pub input: Span<'a>,
-    /// The nom combinator that failed.
-    pub code: ErrorKind,
-    /// The PDDL keyword of the innermost form in which parsing failed, if known.
-    pub keyword: Option<&'a str>,
-    /// Why parsing failed, if known.
-    pub context: Option<&'a str>,
+/// [`Parser::from_str`](crate::parsers::Parser::from_str) turns it into a [`ParseError`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct Error {
+    /// Byte offset of the error in the input.
+    pub offset: usize,
+    /// Length in bytes of the input the error covers.
+    pub len: usize,
+    /// The `:keyword` of the innermost form the error is in, such as `:action`.
+    pub keyword: Option<Cow<'static, str>>,
+    /// Why parsing failed, such as `duplicate section`.
+    pub reason: Option<&'static str>,
+    /// A fatal error ends parsing; otherwise the grammar may try another alternative.
+    /// Errors inside a `:keyword` form are fatal: nothing else can start with it.
+    pub fatal: bool,
 }
 
-impl<'a> NomError<'a> {
-    /// Creates an error at `input` without a context.
-    pub const fn new(input: Span<'a>, code: ErrorKind) -> Self {
+/// The result of a grammar rule.
+pub(crate) type R<T> = Result<T, Error>;
+
+impl Error {
+    /// An error covering `len` bytes at `offset`.
+    pub const fn at(offset: usize, len: usize) -> Self {
         Self {
-            input,
-            code,
+            offset,
+            len,
             keyword: None,
-            context: None,
+            reason: None,
+            fatal: false,
         }
     }
 
-    /// Creates an error at `input` with the given reason.
-    pub(crate) const fn with_context(input: Span<'a>, context: &'a str) -> Self {
-        Self {
-            input,
-            code: ErrorKind::Verify,
-            keyword: None,
-            context: Some(context),
-        }
-    }
-}
-
-impl<'a> nom::error::ParseError<Span<'a>> for NomError<'a> {
-    fn from_error_kind(input: Span<'a>, kind: ErrorKind) -> Self {
-        Self::new(input, kind)
+    /// Sets why parsing failed.
+    pub fn reason(mut self, reason: &'static str) -> Self {
+        self.reason = Some(reason);
+        self
     }
 
-    /// Keeps the innermost error, which points closest to the actual mistake.
-    fn append(_input: Span<'a>, _kind: ErrorKind, other: Self) -> Self {
-        other
+    /// Sets the `:keyword` of the form the error is in.
+    pub fn keyword(mut self, keyword: impl Into<Cow<'static, str>>) -> Self {
+        self.keyword = Some(keyword.into());
+        self
+    }
+
+    /// Makes the error fatal, so no alternative is tried after it.
+    pub const fn fatal(mut self) -> Self {
+        self.fatal = true;
+        self
     }
 
     /// When all alternatives failed, keeps the error that got furthest into
     /// the input: that alternative most likely was the one intended. On a tie,
-    /// prefers the error that knows more about why it failed.
-    fn or(self, other: Self) -> Self {
+    /// prefers the error that knows more about why it failed, then the later one.
+    pub fn or(self, other: Self) -> Self {
         let rank = |e: &Self| {
-            let described = e.context.is_some() || e.keyword.is_some();
-            (e.input.location_offset(), described)
+            let described = e.reason.is_some() || e.keyword.is_some();
+            (e.offset, described)
         };
         if rank(&self) > rank(&other) {
             self
@@ -221,31 +237,11 @@ impl<'a> nom::error::ParseError<Span<'a>> for NomError<'a> {
     }
 }
 
-impl<'a> ContextError<Span<'a>> for NomError<'a> {
-    /// Keeps the innermost context, which describes the mistake most precisely.
-    fn add_context(_input: Span<'a>, context: &'static str, mut other: Self) -> Self {
-        other.context.get_or_insert(context);
-        other
-    }
-}
-
-impl fmt::Display for NomError<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let at = ParseError::at(self.input);
-        if let Some(keyword) = self.keyword {
-            write!(f, "in `{}`: ", sanitize(keyword))?;
-        }
-        match self.context {
-            Some(context) => write!(f, "{} ({:?}) at {at}", sanitize(context), self.code),
-            None => write!(f, "{:?} at {at}", self.code),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::{Domain, Parser, PddlFile, Problem};
+    use assert2::check;
 
     /// Typical mistakes are reported at the mistake itself, with the enclosing
     /// keyword and a reason where known.
@@ -256,6 +252,7 @@ mod tests {
         let domain = |s: &str| Domain::from_str(s).unwrap_err();
         let problem = |s: &str| Problem::from_str(s).unwrap_err();
         let file = |s: &str| PddlFile::from_str(s).unwrap_err();
+
         // (label, parser, input, expected start of the error message)
         type Case<'a> = (&'a str, &'a dyn Fn(&str) -> ParseError, String, &'a str);
         let cases: [Case; 11] = [
@@ -317,7 +314,7 @@ mod tests {
                 "bad init element",
                 &problem,
                 "(define (problem p) (:domain d) (:init (p a) 5) (:goal (p a)))".to_string(),
-                "line 1, column 46: in `:init`: expected `)`: unexpected `5) (:goal",
+                "line 1, column 46: in `:init`: unexpected `5) (:goal",
             ),
             (
                 "domain read as part of a file",
@@ -331,7 +328,7 @@ mod tests {
         ];
         for (label, parse, input, expected) in cases {
             let message = parse(&input).to_string();
-            assert!(
+            check!(
                 message.starts_with(expected),
                 "{label}:\n  got {message}\n want {expected}"
             );
@@ -345,30 +342,41 @@ mod tests {
             "(define (domain d) (:predicates (p)) (:action a :parameters () :effect (p)",
         )
         .unwrap_err();
-        assert_eq!(error.keyword(), Some(":action"));
-        assert_eq!(error.reason(), Some("expected `)`"));
-        assert_eq!(error.found(), None);
+        check!(error.keyword() == Some(":action"));
+        check!(error.reason() == Some("expected `)`"));
+        check!(error.found() == None);
 
         let error = Domain::from_str("(define (domain d) (:predicates (p)) (:predicates (q)))")
             .unwrap_err();
-        assert_eq!(error.keyword(), None);
-        assert_eq!(error.reason(), Some("duplicate section"));
+        check!(error.keyword() == None);
+        check!(error.reason() == Some("duplicate section"));
     }
 
-    /// Keywords and reasons are sanitized like the excerpt, even though the
-    /// crate only ever passes literals.
+    /// Keywords and reasons are sanitized like the excerpt.
     #[test]
     fn keyword_and_reason_are_sanitized() {
-        let mut error = NomError::with_context(Span::new("x"), "bad\x1b[2J\nreason");
-        error.keyword = Some(":act\x07ion");
-        let parsed = ParseError::from_nom("x", nom::Err::Failure(error.clone()));
-        assert_eq!(parsed.keyword(), Some(r":act\u{7}ion"));
-        assert_eq!(parsed.reason(), Some(r"bad\u{1b}[2J reason"));
-        assert!(!error.to_string().chars().any(char::is_control), "{error}");
-        assert!(
+        let error = Error::at(0, 1)
+            .reason("bad\x1b[2J\nreason")
+            .keyword(":act\x07ion");
+        let parsed = ParseError::new("x", error);
+        check!(parsed.keyword() == Some(r":act\u{7}ion"));
+        check!(parsed.reason() == Some(r"bad\u{1b}[2J reason"));
+        check!(
             !parsed.to_string().chars().any(char::is_control),
             "{parsed}"
         );
+    }
+
+    /// The keyword of an unclosed form comes from the input, so it is sanitized too.
+    #[test]
+    fn keyword_of_an_unclosed_form_is_sanitized() {
+        let input = "(:\u{202E}x";
+        let unclosed = crate::parsers::sexpr::read(input)
+            .unwrap()
+            .unbalanced
+            .unwrap();
+        let error = ParseError::new(input, unclosed);
+        check!(error.keyword() == Some(r":\u{202e}x"));
     }
 
     /// Bidi overrides, isolates and zero-width characters show up as escapes instead of
@@ -378,8 +386,8 @@ mod tests {
         let input = "(define (domain d)\n(:\u{202E}evil\u{2066}\u{200B}\u{FEFF}))";
         let error = Domain::from_str(input).unwrap_err();
         let found = error.found().unwrap();
-        assert!(found.is_ascii(), "{found:?}");
-        assert_eq!(found, r"(:\u{202e}evil\u{2066}\u{200b}\u{feff}))");
+        check!(found.is_ascii(), "{found:?}");
+        check!(found == r"(:\u{202e}evil\u{2066}\u{200b}\u{feff}))");
     }
 
     /// Characters a hand-written list would miss are escaped too.
@@ -391,34 +399,26 @@ mod tests {
             .found()
             .unwrap()
             .to_string();
-        assert_eq!(found, r"(:\u{e0041}\u{fff9}\u{206a}\u{fe0f}\u{a0}x))");
+        check!(found == r"(:\u{e0041}\u{fff9}\u{206a}\u{fe0f}\u{a0}x))");
     }
 
     /// Keywords and reasons are bounded like the excerpt.
     #[test]
     fn keyword_and_reason_are_bounded() {
-        let long = "x".repeat(10_000);
-        let mut error = NomError::with_context(Span::new("x"), &long);
-        error.keyword = Some(&long);
-        let parsed = ParseError::from_nom("x", nom::Err::Failure(error.clone()));
-        assert_eq!(parsed.keyword().unwrap().chars().count(), EXCERPT_CHARS + 3);
-        assert_eq!(parsed.reason().unwrap().chars().count(), EXCERPT_CHARS + 3);
-        assert!(error.to_string().len() < 200, "{}", error.to_string().len());
+        let long: &'static str = "x".repeat(10_000).leak();
+        let parsed = ParseError::new("x", Error::at(0, 1).reason(long).keyword(long));
+        check!(parsed.keyword().unwrap().chars().count() == EXCERPT_CHARS + 3);
+        check!(parsed.reason().unwrap().chars().count() == EXCERPT_CHARS + 3);
     }
 
     /// When alternatives fail at the same position, the one with a reason wins.
     #[test]
-    fn or_prefers_the_described_error_on_a_tie() {
-        use nom::branch::alt;
-        use nom::bytes::complete::tag;
-        use nom::error::context;
-        use nom::Parser as _;
-
-        let mut parser = alt((context("first", tag::<_, _, NomError>("x")), tag("y")));
-        let Err(nom::Err::Error(error)) = parser.parse(Span::new("z")) else {
-            panic!("expected an error");
-        };
-        assert_eq!(error.context, Some("first"));
+    fn or_prefers_the_furthest_then_the_described_error() {
+        let plain = Error::at(3, 1);
+        let described = Error::at(3, 1).reason("why");
+        check!(plain.clone().or(described.clone()) == described);
+        check!(described.clone().or(plain.clone()) == described);
+        check!(described.or(Error::at(4, 1)) == Error::at(4, 1));
     }
 
     #[test]
@@ -438,43 +438,9 @@ mod tests {
             ),
         ] {
             let error = Problem::from_str(input).unwrap_err();
-            assert_eq!(error.reason(), Some(reason), "{input}");
-            assert_eq!(error.found(), Some(")"), "{input}");
+            check!(error.reason() == Some(reason), "{input}");
+            check!(error.found() == Some(")"), "{input}");
         }
-    }
-
-    /// `NomError` works with nom's `context` combinator and keeps the innermost context.
-    #[test]
-    fn nom_error_context_and_display() {
-        use nom::bytes::complete::tag;
-        use nom::error::context;
-        use nom::Parser as _;
-
-        let mut parser = context("outer", context("inner", tag::<_, _, NomError>("a")));
-        let Err(nom::Err::Error(error)) = parser.parse(Span::new("b")) else {
-            panic!("expected an error");
-        };
-        assert_eq!(error.context, Some("inner"));
-        assert_eq!(
-            error.to_string(),
-            "inner (Tag) at line 1, column 1: unexpected `b`"
-        );
-
-        let plain = NomError::new(Span::new(""), ErrorKind::Eof);
-        assert_eq!(
-            plain.to_string(),
-            "Eof at line 1, column 1: unexpected end of input"
-        );
-    }
-
-    /// Committing after `:keywords` must not break keywords that are also predicate names.
-    #[test]
-    fn at_is_still_both_a_predicate_and_a_timed_literal() {
-        let problem = Problem::from_str(
-            "(define (problem p) (:domain d) (:init (at a b) (at 5 (p a))) (:goal (at a b)))",
-        )
-        .unwrap();
-        assert_eq!(problem.init().len(), 2);
     }
 
     #[test]
@@ -482,38 +448,56 @@ mod tests {
         let tail = "x".repeat(10_000);
         let input = format!("(define (domain d)\n  (:bogus {tail}))");
         let error = Domain::from_str(&input).unwrap_err();
-        assert_eq!(error.line(), 2);
-        assert_eq!(error.column(), 3);
-        assert_eq!(error.offset(), 21);
+        check!(error.line() == 2);
+        check!(error.column() == 3);
+        check!(error.offset() == 21);
+        check!(error.span() == (21..28));
         let found = error.found().unwrap();
-        assert!(found.starts_with("(:bogus xxx"));
-        assert_eq!(found.chars().count(), EXCERPT_CHARS + 3);
-        assert!(error.to_string().len() < 100);
+        check!(found.starts_with("(:bogus xxx"));
+        check!(found.chars().count() == EXCERPT_CHARS + 3);
+        check!(error.to_string().len() < 100);
     }
 
     #[test]
     fn excerpt_flattens_newlines() {
         let error = Domain::from_str("(define (domain d)\n(:bogus\n))").unwrap_err();
-        assert_eq!(error.found(), Some("(:bogus ))"));
-        assert_eq!(
-            error.to_string(),
-            "line 2, column 1: unknown section: unexpected `(:bogus ))`"
-        );
+        check!(error.found() == Some("(:bogus ))"));
+        check!(error.to_string() == "line 2, column 1: unknown section: unexpected `(:bogus ))`");
     }
 
     #[test]
     fn excerpt_escapes_control_characters() {
         let error = Domain::from_str("(define (domain d)\n(:\x1b[2J\0\x07))").unwrap_err();
         let found = error.found().unwrap();
-        assert!(!found.chars().any(char::is_control), "{found:?}");
-        assert_eq!(found, r"(:\u{1b}[2J\u{0}\u{7}))");
+        check!(!found.chars().any(char::is_control), "{found:?}");
+        check!(found == r"(:\u{1b}[2J\u{0}\u{7}))");
     }
 
     #[test]
-    fn incomplete_maps_to_end_of_input() {
-        let input = "ab\ncd";
-        let error = ParseError::from_nom(input, nom::Err::Incomplete(nom::Needed::Unknown));
-        assert_eq!((error.line(), error.column(), error.offset()), (2, 3, 5));
-        assert_eq!(error.found(), None);
+    fn end_of_input_has_no_excerpt() {
+        let error = Domain::from_str("ab\n").unwrap_err();
+        check!(error.found() == Some("ab "));
+        let error = ParseError::new("ab\ncd", Error::at(5, 0));
+        check!((error.line(), error.column(), error.offset()) == (2, 3, 5));
+        check!(error.found() == None);
+        check!(error.span() == (5..5));
+    }
+
+    #[cfg(feature = "miette")]
+    #[test]
+    fn diagnostic_labels_the_span() {
+        use miette::Diagnostic;
+        let error = Domain::from_str("(define (domain d) (:bogus))").unwrap_err();
+        let labels: Vec<_> = error.labels().unwrap().collect();
+        check!(labels.len() == 1);
+        check!((labels[0].offset(), labels[0].len()) == (19, 7));
+        check!(labels[0].label() == Some("unknown section"));
+        check!(error.code().unwrap().to_string() == "pddl::parse");
+    }
+
+    #[test]
+    fn column_counts_characters() {
+        let error = ParseError::new("ä(x", Error::at(3, 1));
+        check!(error.column() == 3);
     }
 }

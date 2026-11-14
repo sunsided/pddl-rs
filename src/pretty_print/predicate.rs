@@ -1,3 +1,5 @@
+//! Pretty-printing of predicate, action and preference names.
+
 use std::ops::Deref;
 
 use crate::pretty_print::{sealed, PrettyRenderer};
@@ -39,16 +41,17 @@ mod tests {
     use super::*;
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
+    use assert2::check;
 
     #[test]
     fn predicate_works() {
         let x = Predicate::new_string("at");
-        assert_eq!(prettify!(x, 10), "at");
+        check!(prettify!(x, 10) == "at");
     }
 
     #[test]
     fn action_symbol_works() {
         let x = ActionSymbol::new_string("mov-B");
-        assert_eq!(prettify!(x, 10), "mov-B");
+        check!(prettify!(x, 10) == "mov-B");
     }
 }

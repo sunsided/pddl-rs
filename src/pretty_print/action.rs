@@ -1,3 +1,5 @@
+//! Pretty-printing of actions, durative actions and derived predicates.
+
 use std::ops::Deref;
 
 use crate::pretty_print::{sealed, PrettyRenderer};
@@ -116,6 +118,7 @@ impl Visitor<StructureDefs, RcDoc<'static>> for PrettyRenderer {
 mod tests {
     use crate::parsers::Parser;
     use crate::pretty_print::Pretty;
+    use assert2::check;
 
     #[test]
     fn action_with_effect() {
@@ -130,8 +133,8 @@ mod tests {
 )"#;
         let domain = crate::Domain::from_str(input).unwrap();
         let output = domain.pretty(80).to_string();
-        assert!(output.contains(":effect"));
-        assert!(output.contains("(and (p))"));
+        check!(output.contains(":effect"));
+        check!(output.contains("(and (p))"));
     }
 
     #[test]
@@ -146,7 +149,7 @@ mod tests {
 )"#;
         let domain = crate::Domain::from_str(input).unwrap();
         let output = domain.pretty(80).to_string();
-        assert!(output.contains(":effect (and)"));
+        check!(output.contains(":effect (and)"));
     }
 
     #[test]
@@ -163,9 +166,9 @@ mod tests {
 )"#;
         let domain = crate::Domain::from_str(input).unwrap();
         let output = domain.pretty(80).to_string();
-        assert!(output.contains(":duration"));
-        assert!(output.contains(":condition"));
-        assert!(output.contains(":effect"));
+        check!(output.contains(":duration"));
+        check!(output.contains(":condition"));
+        check!(output.contains(":effect"));
     }
 
     #[test]
@@ -183,9 +186,9 @@ mod tests {
         // May or may not parse depending on parser implementation
         if let Ok(domain) = domain {
             let output = domain.pretty(80).to_string();
-            assert!(!output.contains(":duration"));
-            assert!(output.contains(":condition"));
-            assert!(output.contains(":effect"));
+            check!(!output.contains(":duration"));
+            check!(output.contains(":condition"));
+            check!(output.contains(":effect"));
         }
     }
 
@@ -200,7 +203,7 @@ mod tests {
         let domain = crate::Domain::from_str(input);
         if let Ok(domain) = domain {
             let output = domain.pretty(80).to_string();
-            assert!(output.contains("(:durative-action noop"));
+            check!(output.contains("(:durative-action noop"));
         }
     }
 
@@ -213,7 +216,7 @@ mod tests {
 )"#;
         let domain = crate::Domain::from_str(input).unwrap();
         let output = domain.pretty(80).to_string();
-        assert!(output.contains("(:derived"));
+        check!(output.contains("(:derived"));
     }
 
     #[test]
@@ -228,6 +231,6 @@ mod tests {
 )"#;
         let domain = crate::Domain::from_str(input).unwrap();
         let output = domain.pretty(80).to_string();
-        assert!(output.contains("(:action a"));
+        check!(output.contains("(:action a"));
     }
 }

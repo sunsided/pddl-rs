@@ -9,25 +9,32 @@ keywords = ["pddl", "planning", "parser"]
 repository = "https://github.com/sunsided/pddl-rs"
 readme = "README.md"
 # Third-party test inputs under their own licences; not part of the published crate.
-exclude = ["tests/data/", "tests/example_files.rs"]
+exclude = ["tests/data/", "tests/example_files.rs", "tests/corpus_snapshots.rs", "benches/"]
 authors = ["Markus Mayer <widemeadows@gmail.com>"]
 edition = "2021"
-rust-version = "1.80.0"
+rust-version = "1.86.0"
 
 # Features
 
 [features]
 default = ["parser", "interning"]
-## Enables parsing of PDDL types through the `Parser` trait (nom-based).
-parser = ["dep:nom", "dep:nom_locate"]
+## Enables parsing of PDDL types through the `Parser` trait.
+parser = []
+## Implements `miette::Diagnostic` for `ParseError`.
+miette = ["parser", "dep:miette"]
 ## Enables string interning for `Name` types to reduce memory footprint.
 interning = []
 ## Enables pretty-printing of PDDL types via the `pretty` crate.
 pretty = ["dep:pretty"]
 
+[lints.rust]
+missing_docs = "warn"
+
+[lints.clippy]
+missing_docs_in_private_items = "warn"
+
 [dependencies]
-nom = { version = "8.0.0", optional = true }
-nom_locate = { version = "5.0.0", optional = true }
+miette = { version = "7", optional = true, default-features = false }
 pretty = { version = "0.12.1", optional = true }
 thiserror = "2.0.18"
 
@@ -51,10 +58,27 @@ required-features = ["parser"]
 name = "example_files"
 required-features = ["parser"]
 
+[[test]]
+name = "deprecated_names"
+required-features = ["parser"]
+
+[[test]]
+name = "corpus_snapshots"
+required-features = ["pretty", "parser"]
+
 [[example]]
 name = "pretty_print"
 required-features = ["pretty", "parser"]
 
+[dev-dependencies]
+assert2 = "0.4.1"
+criterion = { version = "0.8", default-features = false, features = ["cargo_bench_support"] }
+
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+
+[[bench]]
+name = "parse"
+harness = false
+required-features = ["parser"]

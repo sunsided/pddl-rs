@@ -1,3 +1,5 @@
+//! Pretty-printing of predicate and function declarations.
+
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{AtomicFormulaSkeleton, AtomicFunctionSkeleton};
 use crate::visitor::{Accept, Visitor};
@@ -46,11 +48,12 @@ mod tests {
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
     use crate::{AtomicFormulaSkeleton, FunctionSymbol, Predicate, ToTyped, Type, Variable};
+    use assert2::check;
 
     #[test]
     fn atomic_formula_skeleton_no_vars() {
         let x = AtomicFormulaSkeleton::new(Predicate::new_string("block"), vec![].into());
-        assert_eq!(prettify!(x, 20), "(block)");
+        check!(prettify!(x, 20) == "(block)");
     }
 
     #[test]
@@ -63,7 +66,7 @@ mod tests {
             ]
             .into(),
         );
-        assert_eq!(prettify!(x, 40), "(at ?x - physob ?y - location)");
+        check!(prettify!(x, 40) == "(at ?x - physob ?y - location)");
     }
 
     #[test]
@@ -72,6 +75,6 @@ mod tests {
             FunctionSymbol::from("battery-level"),
             vec![Variable::new_string("r").to_typed(Type::new_exactly("rover"))].into(),
         );
-        assert_eq!(prettify!(x, 40), "(battery-level ?r - rover)");
+        check!(prettify!(x, 40) == "(battery-level ?r - rover)");
     }
 }
