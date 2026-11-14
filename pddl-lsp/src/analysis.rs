@@ -285,6 +285,18 @@ pub fn is_number(atom: &str) -> bool {
     atom.parse::<f64>().is_ok() && !atom.chars().any(char::is_alphabetic)
 }
 
+/// Whether the sides `args` of a fluent `=` or `assign` are numbers
+/// (`Some(true)`) or objects (`Some(false)`), or `None` if only fluents say.
+fn fluent_value(args: &[Node]) -> Option<bool> {
+    args.iter().find_map(|arg| match arg.atom() {
+        Some(atom) => Some(is_number(atom) || atom.eq_ignore_ascii_case("?duration")),
+        None => ["+", "-", "*", "/"]
+            .iter()
+            .any(|op| arg.head() == Some(op))
+            .then_some(true),
+    })
+}
+
 /// Collects the names of a file, one form at a time.
 struct Walker<'t> {
     /// The text the tree was read from, for details.
@@ -315,6 +327,9 @@ enum Mode {
 /// Formulas that are not atomic: `(not <this>)` with one of these needs
 /// `:disjunctive-preconditions` rather than `:negative-preconditions`.
 const CONNECTIVES: [&str; 6] = ["and", "or", "not", "imply", "forall", "exists"];
+
+/// Numeric comparisons, which are goals but not atomic formulas.
+const COMPARISONS: [&str; 4] = ["<", ">", "<=", ">="];
 
 /// The type names in a type node: an atom, or the atoms of `(either a b ...)`, in lowercase.
 fn type_names(ty: &Node) -> Vec<String> {
@@ -550,6 +565,7 @@ impl Walker<'_> {
         match head.atom().map(str::to_ascii_lowercase).as_deref() {
             Some(":requirements") => self.requirements(section, args),
             Some(":types") => {
+                self.need(&[Requirement::Typing], head);
                 self.typed_defs(Kind::Type, args, &range, None);
             }
             Some(":constants") => {
@@ -561,15 +577,19 @@ impl Walker<'_> {
                 }
             }
             Some(":functions") => {
-                self.need(
-                    &[
-                        Requirement::NumericFluents,
-                        Requirement::ObjectFluents,
-                        Requirement::ActionCosts,
-                    ],
-                    head,
-                );
                 let items = typed_list(args);
+                // Untyped functions are numeric.
+                let numeric = items
+                    .iter()
+                    .filter(|(_, ty)| ty.is_none_or(|t| t.is("number")))
+                    .count();
+                if numeric > 0 {
+                    let any_of = &[Requirement::NumericFluents, Requirement::ActionCosts];
+                    self.need(any_of, head);
+                }
+                if numeric < items.len() {
+                    self.need(&[Requirement::ObjectFluents], head);
+                }
                 for &(skeleton, ty) in &items {
                     self.skeleton(Kind::Function, skeleton, ty);
                 }
@@ -686,13 +706,18 @@ impl Walker<'_> {
         self.scope.truncate(scope_start);
     }
 
-    /// A durative action's `:duration`: anything but `(= ?duration ...)` needs
-    /// `:duration-inequalities`.
+    /// A durative action's `:duration`: anything but `(= ?duration ...)`,
+    /// also within `(at <time> ...)`, needs `:duration-inequalities`.
     fn duration(&mut self, value: &Node) {
-        if let Some(head) = value.children().and_then(<[Node]>::first) {
-            if ["<=", ">=", "and"].iter().any(|w| head.is(w)) {
-                self.need(&[Requirement::DurationInequalities], head);
+        let Some([head, args @ ..]) = value.children() else {
+            return;
+        };
+        if head.is("at") {
+            if let Some(inner) = args.get(1) {
+                self.duration(inner);
             }
+        } else if ["<=", ">=", "and"].iter().any(|w| head.is(w)) {
+            self.need(&[Requirement::DurationInequalities], head);
         }
     }
 
@@ -772,8 +797,10 @@ impl Walker<'_> {
                 // `(not (= ?x ?y))` is how domains with only `:equality` say
                 // "different"; planners accept it, so only the `=` needs a requirement.
                 if goal && negated.is_none_or(|h| h != "=") {
-                    let atomic = negated
-                        .is_some_and(|h| !CONNECTIVES.iter().any(|c| h.eq_ignore_ascii_case(c)));
+                    let atomic = negated.is_some_and(|h| {
+                        !CONNECTIVES.iter().any(|c| h.eq_ignore_ascii_case(c))
+                            && !COMPARISONS.contains(&h)
+                    });
                     // `:disjunctive-preconditions` allows `(not <GD>)` for any goal.
                     let any_of: &'static [Requirement] = if atomic {
                         &[
@@ -850,11 +877,19 @@ impl Walker<'_> {
             (Mode::Goal, "=") if args.iter().all(|a| a.atom().is_some_and(|a| !is_number(a))) => {
                 Some(&[Equality])
             }
-            (Mode::Goal, "=") | (Mode::Effect, "assign") => Some(&[NumericFluents, ObjectFluents]),
+            (Mode::Goal, "=") | (Mode::Effect, "assign") => match fluent_value(args) {
+                Some(true) => Some(&[NumericFluents]),
+                Some(false) => Some(&[ObjectFluents]),
+                None => Some(&[NumericFluents, ObjectFluents]),
+            },
             (Mode::Goal, "<" | ">" | "<=" | ">=") | (Mode::Effect, "scale-up" | "scale-down") => {
                 Some(&[NumericFluents])
             }
-            (Mode::Init, "=") => Some(&[NumericFluents, ObjectFluents, ActionCosts]),
+            (Mode::Init, "=") => match fluent_value(args) {
+                Some(true) => Some(&[NumericFluents, ActionCosts]),
+                Some(false) => Some(&[ObjectFluents]),
+                None => Some(&[NumericFluents, ActionCosts, ObjectFluents]),
+            },
             (Mode::Effect, "increase" | "decrease") => Some(&[NumericFluents, ActionCosts]),
             _ => None,
         }

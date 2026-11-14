@@ -191,7 +191,17 @@ fn an_editor_session() {
     // Two uses of one missing requirement give one fix that adds it.
     let untyped = "(define (domain u) (:types a - object b - object))";
     client.open("file:///w/untyped.pddl", untyped);
-    check!(client.diagnostics("file:///w/untyped.pddl").len() == 4);
+    let warnings = client.diagnostics("file:///w/untyped.pddl");
+    let warnings: Vec<_> = warnings
+        .iter()
+        .filter(|d| d["severity"] == 2)
+        .map(|d| d["message"].as_str().unwrap())
+        .collect();
+    check!(warnings.len() == 3);
+    check!(warnings
+        .iter()
+        .all(|m| *m == "`:types` needs `:typing` in `:requirements`"
+            || *m == "`-` needs `:typing` in `:requirements`"));
     let whole =
         json!({ "start": { "line": 0, "character": 0 }, "end": { "line": 0, "character": 50 } });
     let params = json!({ "textDocument": { "uri": "file:///w/untyped.pddl" }, "range": whole, "context": { "diagnostics": [] } });
@@ -201,6 +211,16 @@ fn an_editor_session() {
     let edit = &actions[0]["edit"]["changes"]["file:///w/untyped.pddl"][0];
     check!(edit["newText"] == "\n  (:requirements :typing)");
     check!(edit["range"]["start"]["character"] == 18);
+
+    // Two domains that both miss it each get their own fix.
+    let two = "(define (domain u) (:types a - object))\n(define (domain v) (:types b - object))";
+    client.open("file:///w/two.pddl", two);
+    client.diagnostics("file:///w/two.pddl");
+    let both =
+        json!({ "start": { "line": 0, "character": 0 }, "end": { "line": 1, "character": 40 } });
+    let params = json!({ "textDocument": { "uri": "file:///w/two.pddl" }, "range": both, "context": { "diagnostics": [] } });
+    let actions = client.request("textDocument/codeAction", params);
+    check!(actions.as_array().unwrap().len() == 2);
     let options = json!({ "tabSize": 2, "insertSpaces": true });
     let params = json!({ "textDocument": { "uri": "file:///w/messy.pddl" }, "options": options });
     let edits = client.request("textDocument/formatting", params);

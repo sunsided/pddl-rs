@@ -392,12 +392,10 @@ impl Workspace {
             if callee.parameters.len() != reference.argument_starts.len() {
                 continue;
             }
+            // The hierarchy of the domain the callee is defined in.
             let parents = hierarchies
-                .entry(reference.context)
-                .or_insert_with(|| self.type_parents(uri, reference.context));
-            let Some(parents) = parents else {
-                continue;
-            };
+                .entry((&target.uri, callee.context))
+                .or_insert_with(|| self.type_parents(&target.uri, callee.context));
             let callee_definitions = &self.documents[&target.uri].analysis.definitions;
             for (start, &parameter) in reference.argument_starts.iter().zip(&callee.parameters) {
                 let argument = if let Some(variable) = variables.get(start) {
@@ -440,23 +438,16 @@ impl Workspace {
         problems
     }
 
-    /// The parent types of each type in the domain that `context` of `uri`
-    /// sees, by lowercase name, or `None` if that domain is not known.
-    fn type_parents(&self, uri: &Url, context: usize) -> Option<HashMap<String, Vec<String>>> {
-        let domain = self.documents[uri].analysis.contexts[context]
-            .domain
-            .as_deref()?;
-        let (_, document, context) = self.domains(uri, domain).next()?;
-        let types = document
+    /// The parent types of each type defined in `context` of `uri`, by
+    /// lowercase name.
+    fn type_parents(&self, uri: &Url, context: usize) -> HashMap<String, Vec<String>> {
+        self.documents[uri]
             .analysis
             .definitions
             .iter()
-            .filter(|d| d.context == context && d.kind == Kind::Type);
-        Some(
-            types
-                .map(|d| (d.name.to_ascii_lowercase(), d.of.clone()))
-                .collect(),
-        )
+            .filter(|d| d.context == context && d.kind == Kind::Type)
+            .map(|d| (d.name.to_ascii_lowercase(), d.of.clone()))
+            .collect()
     }
 
     /// Constructs in `uri` that need a requirement its domain or problem
@@ -830,6 +821,7 @@ mod tests {
         check!(
             messages(&ws, "d.pddl")
                 == [
+                    "`:types` needs `:typing` in `:requirements`",
                     "type `box` is never used",
                     "`-` needs `:typing` in `:requirements`",
                     "`not` needs `:negative-preconditions` or `:disjunctive-preconditions` in `:requirements`",
@@ -861,6 +853,28 @@ mod tests {
         let durative = "(define (domain t) (:requirements :timed-initial-literals)
   (:durative-action a :parameters () :duration (= ?duration 1) :condition () :effect ()))";
         check!(messages(&workspace(&[("t.pddl", durative)]), "t.pddl").is_empty());
+
+        // Each construct asks for the requirement it really needs.
+        let fluents = "(define (domain f) (:requirements :negative-preconditions :typing)
+  (:types place)
+  (:functions (fuel) - number (loc) - place)
+  (:durative-action d :parameters () :duration (at start (<= ?duration 2)) :condition () :effect ())
+  (:action a :parameters (?p - place)
+    :precondition (and (not (> (fuel) 1)) (not (= (loc) ?p)))
+    :effect (assign (loc) ?p)))";
+        check!(
+            messages(&workspace(&[("f.pddl", fluents)]), "f.pddl")
+                == [
+                    "`:functions` needs `:numeric-fluents` or `:action-costs` in `:requirements`",
+                    "`:functions` needs `:object-fluents` in `:requirements`",
+                    "`:durative-action` needs `:durative-actions` in `:requirements`",
+                    "`<=` needs `:duration-inequalities` in `:requirements`",
+                    "`not` needs `:disjunctive-preconditions` in `:requirements`",
+                    "`>` needs `:numeric-fluents` in `:requirements`",
+                    "`=` needs `:object-fluents` in `:requirements`",
+                    "`assign` needs `:object-fluents` in `:requirements`",
+                ]
+        );
     }
 
     #[test]

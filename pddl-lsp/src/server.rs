@@ -827,14 +827,16 @@ impl Server {
         let start = document.lines.offset(&document.text, params.range.start);
         let end = document.lines.offset(&document.text, params.range.end);
         // Several uses of one missing requirement share a fix; offer it once.
-        let mut titles = HashSet::new();
+        let mut seen = HashSet::new();
         let actions = self
             .workspace
             .problems(&uri)
             .into_iter()
             .filter(|p| p.span.start <= end && start <= p.span.end)
             .filter_map(|problem| {
-                let fix = problem.fix.filter(|f| titles.insert(f.title.clone()))?;
+                let fix = problem
+                    .fix
+                    .filter(|f| seen.insert((f.span.clone(), f.text.clone())))?;
                 let edit = TextEdit::new(self.range(document, fix.span), fix.text);
                 Some(CodeActionOrCommand::CodeAction(CodeAction {
                     title: fix.title,
