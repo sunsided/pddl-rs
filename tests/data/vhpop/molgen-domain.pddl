@@ -1,0 +1,56 @@
+; the molgen domain from the ucpop distribution.
+
+(define (domain molgen-domain)
+  (:requirements :equality :conditional-effects)
+  (:constants linker)
+  (:predicates (mrna ?x) (connected-cdna-mrna ?x) (single-strand ?x)
+	       (hair-pin ?x) (double-strand ?x) (cleavable ?x) (cleaved ?x)
+	       (contains ?x ?y) (bacterium ?x) (accepts ?x ?y) (antibiotic ?x)
+	       (resists ?x ?y) (pure ?x) (molecule ?x))
+  (:action reverse-transcribe
+	   :parameters (?x)
+	   :precondition (mrna ?x)
+	   :effect (connected-cdna-mrna ?x))
+  (:action separate
+	   :parameters (?x)
+	   :precondition (connected-cdna-mrna ?x)
+	   :effect (and (single-strand ?x)
+			(not (connected-cdna-mrna ?x))))
+  (:action polymerize
+	   :parameters (?x)
+	   :precondition (single-strand ?x)
+	   :effect (and (hair-pin ?x)
+			(not (single-strand ?x))))
+  (:action digest
+	   :parameters (?x)
+	   :precondition (hair-pin ?x)
+	   :effect (and (double-strand ?x)
+			(not (hair-pin ?x))))
+  (:action ligate
+	   :parameters (?x ?y)
+	   :precondition (not (= ?x ?y))
+	   :effect (and (when (and (double-strand ?y) (= ?x linker))
+			  (cleavable ?y))
+			(when (and (cleaved ?x) (cleaved ?y)
+				   (not (= ?x linker)))
+			  (and (contains ?x ?y) (cleavable ?y)
+			       (not (cleaved ?x)) (not (cleaved ?y))))))
+  (:action cleave
+	   :parameters (?x)
+	   :precondition (cleavable ?x)
+	   :effect (and (cleaved ?x)
+			(not (cleavable ?x))))
+  (:action transform
+	   :parameters (?x ?y)
+	   :precondition (and (bacterium ?y)
+			      (not (= ?x ?y))
+			      (cleavable ?x)
+			      (accepts ?x ?y))
+	   :effect (and (contains ?x ?y)
+			(not (cleavable ?x))))
+  (:action screen
+	   :parameters (?x ?y ?z)
+	   :precondition (and (bacterium ?x) (antibiotic ?z)
+			      (not (= ?x ?y)) (not (= ?y ?z)) (not (= ?x ?z))
+			      (resists ?z ?y)(contains ?y ?x))
+	   :effect (pure ?x)))

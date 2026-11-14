@@ -1,0 +1,28 @@
+; McDermott's blocks world domain from the UCPOP distribution.
+
+(define (domain mcd-blocksworld)
+  (:requirements :equality :disjunctive-preconditions :negative-preconditions
+		 :universal-preconditions :conditional-effects)
+  (:constants table)
+  (:predicates (on ?x ?y) (block ?b) (above ?x ?y) (clear ?x))
+  (:action puton
+	   :parameters (?x ?y ?d)
+	   :precondition (and (not (= ?x ?y)) (not (= ?x table))
+			      (not (= ?d ?y))
+			      (on ?x ?d)
+			      (or (= ?x table)
+				  (forall (?b)
+					  (imply (block ?b)
+						 (not (on ?b ?x)))))
+			      (or (= ?y table)
+				  (forall (?b)
+					  (imply (block ?b)
+						 (not (on ?b ?y))))))
+	   :effect (and (on ?x ?y) (not (on ?x ?d))
+			(forall (?c)
+				(when (or (= ?y ?c) (above ?y ?c))
+				  (above ?x ?c)))
+			(forall (?e)
+				(when (and (above ?x ?e) (not (= ?y ?e))
+					   (not (above ?y ?e)))
+				  (not (above ?x ?e)))))))

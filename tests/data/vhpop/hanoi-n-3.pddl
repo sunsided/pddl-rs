@@ -1,0 +1,5 @@
+(define (problem hanoi-3)
+  (:domain hanoi-3-domain)
+  (:objects p1 p2 p3)
+  (:init (thing d1) (thing d2) (thing d3) (thing p1) (thing p2) (thing p3) (on d1 d2) (on d2 d3) (on d3 p3) (clear d1) (clear p1) (clear p2))
+  (:goal (and (on d1 d2) (on d2 d3) (on d3 p1))))

@@ -1,0 +1,8 @@
+(define (problem prodigy-sussman)
+  (:domain prodigy-bw)
+  (:objects a b c)
+  (:init (object a)
+	 (object b) (object c)
+	 (on-table a) (on-table b) (on c a)
+	 (clear b) (clear c) (arm-empty))
+  (:goal (and (on a b) (on b c))))

@@ -1,0 +1,6 @@
+(define (problem mcd-sussman-anomaly)
+  (:domain mcd-blocksworld)
+  (:objects a b c)
+  (:init (block a) (block b) (block c) (block table)
+	 (on c a) (on b table) (on a table))
+  (:goal (and (on b c) (on a b))))

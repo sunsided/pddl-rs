@@ -5,6 +5,9 @@ default_install_hook_types:
 default_stages:
   - pre-commit
 
+# Third-party test inputs stay byte-identical to their upstream copies.
+exclude: ^tests/data/
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
