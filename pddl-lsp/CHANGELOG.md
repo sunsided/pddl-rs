@@ -5,6 +5,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [0.1.0] - 2026-11-14
+
+[0.1.0]: https://github.com/sunsided/pddl-rs/releases/tag/pddl-lsp-v0.1.0
+
 ### Added
 
 - A language server for PDDL over stdio: diagnostics for syntax errors, unknown names, wrong
