@@ -284,17 +284,23 @@ impl Error {
 
     /// When all alternatives failed, keeps the error that got furthest into
     /// the input: that alternative most likely was the one intended. On a tie,
-    /// prefers the error that knows more about why it failed, then the later one.
+    /// prefers the error that knows more about why it failed, then the later one,
+    /// and keeps a suggestion or unclosed `(` that only the other one found.
     pub fn or(self, other: Self) -> Self {
         let rank = |e: &Self| {
             let described = e.reason.is_some() || e.keyword.is_some();
             (e.offset, described)
         };
-        if rank(&self) > rank(&other) {
-            self
+        let (mut kept, dropped) = if rank(&self) > rank(&other) {
+            (self, other)
         } else {
-            other
+            (other, self)
+        };
+        if kept.offset == dropped.offset {
+            kept.suggestion = kept.suggestion.or(dropped.suggestion);
+            kept.unclosed = kept.unclosed.or(dropped.unclosed);
         }
+        kept
     }
 }
 
@@ -557,6 +563,14 @@ mod tests {
     }
 
     /// Misspelled keywords from a fixed set get a suggestion; everything else doesn't.
+    #[test]
+    fn a_suggestion_survives_an_alternative_failing_at_the_same_place() {
+        // `(assign f undefined)` suggests `undefined`; `(assign f <term>)` then
+        // fails at the same atom without one.
+        let error = crate::PrimitiveEffect::from_str("(assign (f) :undefined)").unwrap_err();
+        check!(error.help() == Some("did you mean `undefined`?".to_owned()).as_deref());
+    }
+
     #[test]
     fn misspelled_keywords_get_a_suggestion() {
         use crate::{DurativeActionGoalDescription, Optimization};
