@@ -385,6 +385,14 @@ fn sections_round_trip() {
     round_trip::<ProblemConstraintsDef>("(:constraints (preference p (always (q))))");
     round_trip::<MetricSpec>("(:metric maximize (f))");
     round_trip::<LengthSpec>("(:length (:serial 3) (:parallel 2))");
+    round_trip::<LengthSpec>("(:length (:parallel 2))");
+    round_trip::<Domain>(
+        "(define (domain d)
+           (:action a :parameters ()) (:action b :parameters ())
+           (:durative-action c :parameters () :duration () :condition () :effect ())
+           (:durative-action e :parameters () :duration () :condition () :effect ())
+           (:derived (p) (q)) (:derived (r) (q)))",
+    );
     round_trip::<Domain>(
         "(define (domain d) (:extends base) (:requirements :strips)
            (:constraints (always (p))) (:timeless (p)))",
@@ -407,6 +415,49 @@ fn types_without_a_parser_still_serialize() {
     let atom = pddl::AtomicFormula::new_predicate("p".into(), [pddl::Term::Name("a".into())]);
     let literal = GoalDescription::Literal(Literal::new_not(atom));
     check!(serde_json::to_value(&literal).unwrap() == json!({"not": ["p", "a"]}));
+}
+
+#[test]
+fn values_the_parser_never_builds_still_serialize() {
+    use pddl::{
+        AssignOp, DurativeActionFluentExpression, FunctionHead, FunctionSymbol, StructureDefs,
+    };
+    let assign = DurativeActionFluentExpression::Assign(
+        AssignOp::Increase,
+        FunctionHead::new(FunctionSymbol::from("f")),
+        Box::new(DurativeActionFluentExpression::Duration),
+    );
+    check!(serde_json::to_value(&assign).unwrap() == json!({"increase": [["f"], "?duration"]}));
+
+    let domain =
+        Domain::from_str("(define (domain d) (:action a :parameters ()) (:derived (p) (q)))")
+            .unwrap();
+    let structure: &StructureDefs = domain.structure();
+    check!(
+        serde_json::to_value(structure).unwrap()
+            == json!([{"action": {"a": {}}}, {"derived": {"predicate": "p", "condition": ["q"]}}])
+    );
+}
+
+#[test]
+fn optional_parts_can_be_given_empty() {
+    use pddl::DerivedPredicate;
+    let derived: DerivedPredicate =
+        serde_json::from_value(json!({"predicate": "p", "parameters": {}, "condition": ["q"]}))
+            .unwrap();
+    check!(derived == DerivedPredicate::from_str("(:derived (p) (q))").unwrap());
+
+    // Empty sections are left out of the rebuilt PDDL.
+    let domain: Domain = serde_json::from_value(json!({"domain": "d", "types": {}})).unwrap();
+    check!(domain == Domain::from_str("(define (domain d))").unwrap());
+    let problem: Problem = serde_json::from_value(
+        json!({"problem": "p", "domain": "d", "objects": {}, "init": [], "goal": ["g"]}),
+    )
+    .unwrap();
+    check!(
+        problem
+            == Problem::from_str("(define (problem p) (:domain d) (:init) (:goal (g)))").unwrap()
+    );
 }
 
 #[test]
@@ -485,6 +536,14 @@ fn schema_mistakes_are_explained() {
     check!(message::<Domain>(json!({"domain": "a b"})) == "`a b` is not a valid PDDL name");
     check!(message::<Domain>(json!({"domain": 5})) == "expected a string, found the number 5");
     check!(message::<GoalDescription>(json!(true)).contains("a string, number, array or object"));
+    check!(
+        message::<Domain>(json!({"domain": "d", "types": "x"}))
+            == "expected an object, found the string `x`"
+    );
+    check!(
+        message::<DerivedPredicate>(json!({"predicate": "p", "condition": {"a": [], "b": []}}))
+            == r#"expected an object with a single keyword, found keys ["a", "b"]"#
+    );
 
     // YAML can spell a non-finite number; PDDL can't.
     let error = serde_yaml_ng::from_str::<FluentExpression>(".nan").unwrap_err();

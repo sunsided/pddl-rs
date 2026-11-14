@@ -4,7 +4,7 @@ use crate::serde::actions::{action, derived, ActionBody};
 use crate::serde::durative::{durative_action, DurativeActionBody};
 use crate::serde::{
     as_map, as_seq, as_str, atom, deserialize_from_pddl, deserialize_from_pddl_or_default, formula,
-    single_entry, spaced, string, type_, typed_list, Keyed, Value,
+    single_entry, spaced, string, type_, typed_list, Keyed, Render, Value,
 };
 use crate::{
     AtomicFormulaSkeleton, AtomicFunctionSkeleton, Constants, Definition, Domain,
@@ -374,6 +374,21 @@ fn required_name<'a>(entries: &'a [(String, Value)], key: &str) -> Result<&'a st
     as_str(value)
 }
 
+/// Writes a definition for each entry of an object from name to body.
+fn named(
+    out: &mut String,
+    value: &Value,
+    render: fn(&mut String, &str, &Value) -> Result<(), String>,
+) -> Result<(), String> {
+    for (i, (name, body)) in as_map(value)?.iter().enumerate() {
+        if i > 0 {
+            out.push(' ');
+        }
+        render(out, name, body)?;
+    }
+    Ok(())
+}
+
 /// Writes `(define (domain ...) ...)`.
 fn domain(out: &mut String, value: &Value) -> Result<(), String> {
     let entries = as_map(value)?;
@@ -381,54 +396,24 @@ fn domain(out: &mut String, value: &Value) -> Result<(), String> {
     atom(out, required_name(entries, "domain")?)?;
     out.push(')');
     for (key, value) in entries {
-        let known = matches!(
-            key.as_str(),
-            "domain"
-                | "extends"
-                | "requirements"
-                | "types"
-                | "constants"
-                | "predicates"
-                | "functions"
-                | "constraints"
-                | "timeless"
-                | "actions"
-                | "durative-actions"
-                | "derived"
-        );
-        if !known {
-            return Err(format!("unknown key `{key}` in a domain"));
-        }
-        if key == "domain" || is_empty(value) {
-            continue;
-        }
-        out.push(' ');
-        match key.as_str() {
-            "extends" => list_section(out, "extends", value)?,
-            "requirements" => requirements(out, value)?,
-            "types" | "constants" => typed_section(out, key, value)?,
-            "predicates" => predicates(out, value)?,
-            "functions" => functions(out, value)?,
-            "constraints" => formula_section(out, "constraints", value)?,
-            "timeless" => list_section(out, "timeless", value)?,
-            "actions" => {
-                for (i, (name, body)) in as_map(value)?.iter().enumerate() {
-                    if i > 0 {
-                        out.push(' ');
-                    }
-                    action(out, name, body)?;
-                }
-            }
-            "durative-actions" => {
-                for (i, (name, body)) in as_map(value)?.iter().enumerate() {
-                    if i > 0 {
-                        out.push(' ');
-                    }
-                    durative_action(out, name, body)?;
-                }
-            }
-            "derived" => spaced(out, as_seq(value)?, derived)?,
-            _ => unreachable!("checked above"),
+        let section: Render = match key.as_str() {
+            "domain" => continue,
+            "extends" => |out, value| list_section(out, "extends", value),
+            "requirements" => requirements,
+            "types" => |out, value| typed_section(out, "types", value),
+            "constants" => |out, value| typed_section(out, "constants", value),
+            "predicates" => predicates,
+            "functions" => functions,
+            "constraints" => |out, value| formula_section(out, "constraints", value),
+            "timeless" => |out, value| list_section(out, "timeless", value),
+            "actions" => |out, value| named(out, value, action),
+            "durative-actions" => |out, value| named(out, value, durative_action),
+            "derived" => |out, value| spaced(out, as_seq(value)?, derived),
+            _ => return Err(format!("unknown key `{key}` in a domain")),
+        };
+        if !is_empty(value) {
+            out.push(' ');
+            section(out, value)?;
         }
     }
     out.push(')');
@@ -558,36 +543,21 @@ fn problem(out: &mut String, value: &Value) -> Result<(), String> {
     atom(out, required_name(entries, "domain")?)?;
     out.push(')');
     for (key, value) in entries {
-        let known = matches!(
-            key.as_str(),
-            "problem"
-                | "domain"
-                | "requirements"
-                | "objects"
-                | "init"
-                | "goal"
-                | "constraints"
-                | "metric"
-                | "length"
-        );
-        if !known {
-            return Err(format!("unknown key `{key}` in a problem"));
-        }
-        if matches!(key.as_str(), "problem" | "domain")
-            || (key != "init" && key != "goal" && is_empty(value))
-        {
-            continue;
-        }
-        out.push(' ');
-        match key.as_str() {
-            "requirements" => requirements(out, value)?,
-            "objects" => typed_section(out, "objects", value)?,
-            "init" => list_section(out, "init", value)?,
-            "goal" => formula_section(out, "goal", value)?,
-            "constraints" => formula_section(out, "constraints", value)?,
-            "metric" => metric(out, value)?,
-            "length" => length(out, value)?,
-            _ => unreachable!("checked above"),
+        let section: Render = match key.as_str() {
+            "problem" | "domain" => continue,
+            "requirements" => requirements,
+            "objects" => |out, value| typed_section(out, "objects", value),
+            "init" => |out, value| list_section(out, "init", value),
+            "goal" => |out, value| formula_section(out, "goal", value),
+            "constraints" => |out, value| formula_section(out, "constraints", value),
+            "metric" => metric,
+            "length" => length,
+            _ => return Err(format!("unknown key `{key}` in a problem")),
+        };
+        // `init` and `goal` are written even when empty: PDDL requires them.
+        if key == "init" || key == "goal" || !is_empty(value) {
+            out.push(' ');
+            section(out, value)?;
         }
     }
     out.push(')');
