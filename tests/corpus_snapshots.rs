@@ -79,7 +79,7 @@ fn corpus_matches_snapshots() {
                 match fs::read_to_string(&snapshot) {
                     Ok(expected) if expected == actual => {}
                     Ok(_) => {
-                        mismatches.push(format!("{name}: differs from {}", snapshot.display()))
+                        mismatches.push(format!("{name}: differs from {}", snapshot.display()));
                     }
                     Err(e) => mismatches.push(format!("{name}: {}: {e}", snapshot.display())),
                 }

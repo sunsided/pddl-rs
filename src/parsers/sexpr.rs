@@ -114,9 +114,9 @@ pub(crate) fn read(input: &str) -> Result<Forest<'_>, Error> {
         }
     }
     // Close what is still open at the end of the input, innermost first.
-    let unbalanced = innermost_keyword(&open).map(|keyword| {
+    let unbalanced = (!open.is_empty()).then(|| {
         let error = Error::at(input.len(), 0).reason("expected `)`");
-        match keyword {
+        match innermost_keyword(&open) {
             Some(keyword) => error.keyword(keyword.to_ascii_lowercase()),
             None => error,
         }
@@ -136,14 +136,9 @@ pub(crate) fn read(input: &str) -> Result<Forest<'_>, Error> {
     })
 }
 
-/// `None` if no list is open; otherwise the `:keyword` heading the innermost
-/// open list that has one, such as `:action`.
-fn innermost_keyword<'a>(open: &[(usize, Vec<Node<'a>>)]) -> Option<Option<&'a str>> {
-    if open.is_empty() {
-        return None;
-    }
-    let keyword = open
-        .iter()
+/// The `:keyword` heading the innermost open list that has one, such as `:action`.
+fn innermost_keyword<'a>(open: &[(usize, Vec<Node<'a>>)]) -> Option<&'a str> {
+    open.iter()
         .rev()
         .find_map(|(_, children)| match children.first() {
             Some(Node {
@@ -151,8 +146,7 @@ fn innermost_keyword<'a>(open: &[(usize, Vec<Node<'a>>)]) -> Option<Option<&'a s
                 ..
             }) if head.starts_with(':') => Some(*head),
             _ => None,
-        });
-    Some(keyword)
+        })
 }
 
 /// Bytes of the arithmetic and comparison operators `+ - * / < > <= >= =`.

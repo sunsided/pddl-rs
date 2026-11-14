@@ -30,11 +30,11 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        let input = r#"(:action take-out
+        let input = r"(:action take-out
                              :parameters (?x - physob)
                              :precondition (not (= ?x B))
                              :effect (not (in ?x))
-                         )"#;
+                         )";
 
         let action = StructureDef::from_str(input);
 
@@ -58,11 +58,11 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        let input = r#"(:action take-out
+        let input = r"(:action take-out
                             :parameters (?x - physob)
                             :precondition (not (= ?x B))
                             :effect (not (in ?x))
-                        )"#;
+                        )";
 
         let action = StructureDef::from_str(input);
 

@@ -7,6 +7,8 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `IntoIterator` for `&Effects`, `&PreconditionGoalDescriptions` and
+  `&PreferenceConstraintGoalDescriptions`, so `for x in &effects` works like `effects.iter()`.
 - `pddl::Definition`, a single domain or problem. `Definition::from_str` parses exactly one
   `(define ...)` block and takes its kind from the header, so callers no longer parse a `PddlFile`
   and check that it holds exactly one definition.
@@ -17,6 +19,9 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- `PrettyRenderer::to_pretty` borrows the document (`&RcDoc`) instead of taking it by value.
+- Getters, constructors and the `with_*` builder methods are `#[must_use]`, so discarding their
+  result is a warning.
 - The goal types are named after PDDL's *goal description* (GD) instead of "goal definition":
   `GoalDescription`, `PreconditionGoalDescription(s)`, `PreferenceGoalDescription`,
   `ConstraintGoalDescription(Inner)`, `PreferenceConstraintGoalDescription(s)`,

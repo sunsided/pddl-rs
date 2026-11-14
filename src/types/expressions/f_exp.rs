@@ -27,30 +27,35 @@ pub enum FluentExpression {
 
 impl FluentExpression {
     /// Creates a numeric literal.
-    #[inline(always)]
+    #[inline]
     #[doc(alias = "new_number")]
+    #[must_use]
     pub fn number<N: Into<Number>>(number: N) -> Self {
         Self::Number(number.into())
     }
 
     /// Creates a numeric literal.
+    #[must_use]
     pub fn new_number<N: Into<Number>>(number: N) -> Self {
         Self::number(number)
     }
 
     /// Creates a binary operation, `(<binary-op> <f-exp> <f-exp>)`.
     #[doc(alias = "new_binary_op")]
+    #[must_use]
     pub fn binary_op(op: BinaryOp, lhs: FluentExpression, rhs: FluentExpression) -> Self {
         Self::BinaryOp(op, Box::new(lhs), Box::new(rhs))
     }
 
     /// Creates a binary operation, `(<binary-op> <f-exp> <f-exp>)`.
+    #[must_use]
     pub fn new_binary_op(op: BinaryOp, lhs: FluentExpression, rhs: FluentExpression) -> Self {
         Self::binary_op(op, lhs, rhs)
     }
 
     /// Creates an operation over two or more operands, `(<multi-op> <f-exp> <f-exp>+)`.
     #[doc(alias = "new_multi_op")]
+    #[must_use]
     pub fn multi_op<I: IntoIterator<Item = FluentExpression>>(
         op: MultiOp,
         lhs: FluentExpression,
@@ -60,6 +65,7 @@ impl FluentExpression {
     }
 
     /// Creates an operation over two or more operands, `(<multi-op> <f-exp> <f-exp>+)`.
+    #[must_use]
     pub fn new_multi_op<I: IntoIterator<Item = FluentExpression>>(
         op: MultiOp,
         lhs: FluentExpression,
@@ -70,22 +76,26 @@ impl FluentExpression {
 
     /// Creates a negation, `(- <f-exp>)`.
     #[doc(alias = "new_negative")]
+    #[must_use]
     pub fn negative(value: FluentExpression) -> Self {
         Self::Negative(Box::new(value))
     }
 
     /// Creates a negation, `(- <f-exp>)`.
+    #[must_use]
     pub fn new_negative(value: FluentExpression) -> Self {
         Self::negative(value)
     }
 
     /// Creates a fluent expression from a function head.
     #[doc(alias = "new_function")]
+    #[must_use]
     pub const fn function(f_head: FunctionHead) -> Self {
         Self::Function(f_head)
     }
 
     /// Creates a fluent expression from a function head.
+    #[must_use]
     pub fn new_function(f_head: FunctionHead) -> Self {
         Self::function(f_head)
     }

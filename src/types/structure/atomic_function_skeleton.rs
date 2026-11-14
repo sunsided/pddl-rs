@@ -22,8 +22,8 @@ use crate::types::{FunctionSymbol, TypedVariables, Variable};
 /// ```
 ///
 /// Numeric fluents can be altered through the effects of both actions
-/// ([ActionDefinition](crate::types::ActionDefinition)) and durative actions
-/// ([DurativeActionDefinition](crate::types::DurativeActionDefinition)).
+/// ([`ActionDefinition`](crate::types::ActionDefinition)) and durative actions
+/// ([`DurativeActionDefinition`](crate::types::DurativeActionDefinition)).
 ///
 /// There are a number of supported effects for numeric fluents, e.g.
 /// [`BinaryOp`](crate::types::BinaryOp) and [`AssignOp`](crate::types::AssignOp).
@@ -40,16 +40,19 @@ pub struct AtomicFunctionSkeleton {
 
 impl AtomicFunctionSkeleton {
     /// Creates a new function skeleton from its symbol and typed parameter list.
+    #[must_use]
     pub const fn new(symbol: FunctionSymbol, variables: TypedVariables) -> Self {
         Self { symbol, variables }
     }
 
     /// Gets a reference to the function symbol.
+    #[must_use]
     pub const fn symbol(&self) -> &FunctionSymbol {
         &self.symbol
     }
 
     /// Gets a reference to the variables.
+    #[must_use]
     pub fn variables(&self) -> &TypedVariables {
         &self.variables
     }

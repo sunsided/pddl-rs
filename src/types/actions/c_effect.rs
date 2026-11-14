@@ -40,6 +40,7 @@ pub struct ForallConditionalEffect {
 
 impl ForallConditionalEffect {
     /// Creates a new [`ForallConditionalEffect`] value.
+    #[must_use]
     pub const fn new(variables: TypedVariables, effects: Effects) -> Self {
         ForallConditionalEffect { variables, effects }
     }
@@ -60,6 +61,7 @@ pub struct WhenConditionalEffect {
 
 impl WhenConditionalEffect {
     /// Creates a new [`WhenConditionalEffect`] value.
+    #[must_use]
     pub const fn new(condition: GoalDescription, effect: EffectCondition) -> Self {
         WhenConditionalEffect { condition, effect }
     }
@@ -67,17 +69,20 @@ impl WhenConditionalEffect {
 
 impl ConditionalEffect {
     /// Creates a new effect.
+    #[must_use]
     pub const fn new_primitive_effect(effect: PrimitiveEffect) -> Self {
         Self::Effect(effect)
     }
 
     /// Crates a new effect.
     #[deprecated(since = "0.2.0", note = "Use `new_primitive_effect` instead")]
+    #[must_use]
     pub const fn new_p_effect(effect: PrimitiveEffect) -> Self {
         Self::new_primitive_effect(effect)
     }
 
     /// Creates a new effect.
+    #[must_use]
     pub const fn primitive_effect(effect: PrimitiveEffect) -> Self {
         Self::Effect(effect)
     }
@@ -87,12 +92,14 @@ impl ConditionalEffect {
     ///
     /// ## Requirements
     /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
+    #[must_use]
     pub const fn forall(variables: TypedVariables, effect: Effects) -> Self {
         Self::Forall(ForallConditionalEffect::new(variables, effect))
     }
 
     /// Creates a new universal effect that applies to all the specified variables.
     #[deprecated(since = "0.2.0", note = "Use `forall` instead")]
+    #[must_use]
     pub const fn new_forall(variables: TypedVariables, effect: Effects) -> Self {
         Self::forall(variables, effect)
     }
@@ -101,12 +108,14 @@ impl ConditionalEffect {
     ///
     /// ## Requirements
     /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
+    #[must_use]
     pub const fn when(condition: GoalDescription, effect: EffectCondition) -> Self {
         Self::When(WhenConditionalEffect::new(condition, effect))
     }
 
     /// Creates a new conditional `when` effect.
     #[deprecated(since = "0.2.0", note = "Use `when` instead")]
+    #[must_use]
     pub const fn new_when(condition: GoalDescription, effect: EffectCondition) -> Self {
         Self::when(condition, effect)
     }
@@ -148,8 +157,7 @@ impl TryInto<PrimitiveEffect> for ConditionalEffect {
     fn try_into(self) -> Result<PrimitiveEffect, Self::Error> {
         match self {
             ConditionalEffect::Effect(x) => Ok(x),
-            ConditionalEffect::Forall(_) => Err(()),
-            ConditionalEffect::When(_) => Err(()),
+            ConditionalEffect::Forall(_) | ConditionalEffect::When(_) => Err(()),
         }
     }
 }
@@ -159,8 +167,7 @@ impl TryInto<WhenConditionalEffect> for ConditionalEffect {
 
     fn try_into(self) -> Result<WhenConditionalEffect, Self::Error> {
         match self {
-            ConditionalEffect::Effect(_) => Err(()),
-            ConditionalEffect::Forall(_) => Err(()),
+            ConditionalEffect::Effect(_) | ConditionalEffect::Forall(_) => Err(()),
             ConditionalEffect::When(x) => Ok(x),
         }
     }
@@ -171,9 +178,8 @@ impl TryInto<ForallConditionalEffect> for ConditionalEffect {
 
     fn try_into(self) -> Result<ForallConditionalEffect, Self::Error> {
         match self {
-            ConditionalEffect::Effect(_) => Err(()),
             ConditionalEffect::Forall(x) => Ok(x),
-            ConditionalEffect::When(_) => Err(()),
+            ConditionalEffect::Effect(_) | ConditionalEffect::When(_) => Err(()),
         }
     }
 }

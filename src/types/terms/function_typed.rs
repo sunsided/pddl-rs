@@ -16,32 +16,38 @@ pub struct FunctionTyped<O>(O, FunctionType);
 
 impl<O> FunctionTyped<O> {
     /// Creates a new typed function element.
+    #[must_use]
     pub const fn new(value: O, r#type: FunctionType) -> Self {
         Self(value, r#type)
     }
 
     /// Creates a new typed function element of type `number`.
+    #[must_use]
     pub const fn number(value: O) -> Self {
         Self::new(value, FunctionType::NUMBER)
     }
 
     /// Creates a new typed function element of type `number`.
     #[deprecated(since = "0.2.0", note = "Use `number` instead")]
+    #[must_use]
     pub const fn new_number(value: O) -> Self {
         Self::number(value)
     }
 
     /// Creates a new typed function element from a [`Type`].
+    #[must_use]
     pub const fn from_type(value: O, r#type: Type) -> Self {
         Self::new(value, FunctionType::from(r#type))
     }
 
     /// Gets the typed value.
+    #[must_use]
     pub const fn value_ref(&self) -> &O {
         &self.0
     }
 
     /// Gets the function type.
+    #[must_use]
     pub const fn type_ref(&self) -> &FunctionType {
         &self.1
     }

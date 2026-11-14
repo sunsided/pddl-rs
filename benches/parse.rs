@@ -42,7 +42,7 @@ fn parse(c: &mut Criterion) {
             for (_, source) in &files {
                 black_box(PddlFile::from_str(black_box(source)).unwrap());
             }
-        })
+        });
     });
 
     // The largest problem and the largest domain, to see per-file cost on its own.
@@ -50,7 +50,7 @@ fn parse(c: &mut Criterion) {
         let (_, source) = files.iter().find(|(n, _)| n == name).unwrap();
         group.throughput(Throughput::Bytes(source.len() as u64));
         group.bench_function(name, |b| {
-            b.iter(|| black_box(PddlFile::from_str(black_box(source)).unwrap()))
+            b.iter(|| black_box(PddlFile::from_str(black_box(source)).unwrap()));
         });
     }
     group.finish();

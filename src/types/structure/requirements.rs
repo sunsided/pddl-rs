@@ -75,6 +75,7 @@ impl Requirements {
     /// The values will be taken as-is, no deduplication is performed and the
     /// implicit `:strips` requirement will not be added when no values are provided.
     /// To get the effective set of requirements, call [`Requirements::to_effective`].
+    #[must_use]
     pub fn new<I: IntoIterator<Item = Requirement>>(requirements: I) -> Self {
         Self(requirements.into_iter().collect(), Vec::new())
     }
@@ -90,6 +91,7 @@ impl Requirements {
     }
 
     /// Returns the requirement keys this crate does not know, including their leading `:`.
+    #[must_use]
     pub fn unknown(&self) -> &[Name] {
         &self.1
     }
@@ -98,6 +100,7 @@ impl Requirements {
     ///
     /// Unlike [`is_empty`](Vec::is_empty) through [`Deref`], this also considers
     /// [`Requirements::unknown`].
+    #[must_use]
     pub fn is_empty_including_unknown(&self) -> bool {
         self.0.is_empty() && self.1.is_empty()
     }
@@ -105,6 +108,7 @@ impl Requirements {
     /// Returns the set of effective requirements.
     /// This expands all shorthand requirements such as `:adl` and adds the implicit
     /// `:strips` requirement if no requirements are specified.
+    #[must_use]
     pub fn to_effective(&self) -> HashSet<Requirement> {
         let mut set = HashSet::from_iter(self.iter().flat_map(|r| r.expand().iter().copied()));
 

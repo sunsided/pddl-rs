@@ -47,27 +47,32 @@ impl Type {
 
     /// Creates a type that is exactly the given primitive type.
     #[doc(alias = "new_exactly")]
+    #[must_use]
     pub fn exactly<S: Into<PrimitiveType>>(t: S) -> Self {
         Self::Exactly(t.into())
     }
 
     /// Creates a type that is exactly the given primitive type; same as [`exactly`](Self::exactly).
+    #[must_use]
     pub fn new_exactly<S: Into<PrimitiveType>>(t: S) -> Self {
         Self::exactly(t)
     }
 
     /// Creates a type that is either of the given primitive types, i.e. `(either <primitive-type>+)`.
     #[doc(alias = "new_either")]
+    #[must_use]
     pub fn either<T: IntoIterator<Item = P>, P: Into<PrimitiveType>>(iter: T) -> Self {
-        Self::EitherOf(iter.into_iter().map(|x| x.into()).collect())
+        Self::EitherOf(iter.into_iter().map(std::convert::Into::into).collect())
     }
 
     /// Creates a type that is either of the given primitive types; same as [`either`](Self::either).
+    #[must_use]
     pub fn new_either<T: IntoIterator<Item = P>, P: Into<PrimitiveType>>(iter: T) -> Self {
         Self::either(iter)
     }
 
     /// Gets the number of primitive types; `1` for [`Type::Exactly`].
+    #[must_use]
     pub fn len(&self) -> usize {
         match self {
             Type::Exactly(_) => 1,
@@ -76,6 +81,7 @@ impl Type {
     }
 
     /// Returns `true` if this is an [`Type::EitherOf`] without any types.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
@@ -83,6 +89,7 @@ impl Type {
 
 impl PrimitiveType {
     /// Creates a new primitive type from a [`Name`].
+    #[must_use]
     pub fn new(name: Name) -> Self {
         Self(name)
     }
@@ -123,7 +130,7 @@ where
     P: Into<PrimitiveType>,
 {
     fn from_iter<T: IntoIterator<Item = P>>(iter: T) -> Self {
-        Self::EitherOf(iter.into_iter().map(|x| x.into()).collect())
+        Self::EitherOf(iter.into_iter().map(std::convert::Into::into).collect())
     }
 }
 
@@ -131,7 +138,7 @@ impl<T> From<T> for PrimitiveType
 where
     T: Into<Name>,
 {
-    #[inline(always)]
+    #[inline]
     fn from(value: T) -> Self {
         PrimitiveType::new(value.into())
     }
@@ -172,9 +179,9 @@ impl Display for PrimitiveType {
 impl Display for Type {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Type::Exactly(x) => write!(f, "{}", x),
+            Type::Exactly(x) => write!(f, "{x}"),
             Type::EitherOf(xs) => {
-                let xs: Vec<_> = xs.iter().map(|p| p.to_string()).collect();
+                let xs: Vec<_> = xs.iter().map(std::string::ToString::to_string).collect();
                 write!(f, "(either {})", xs.join(" "))
             }
         }

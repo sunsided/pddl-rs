@@ -22,7 +22,7 @@ fn main() {
     }
 
     println!("\n== durative action (width 80) ==");
-    let durative_action = r#"(define (domain rover)
+    let durative_action = r"(define (domain rover)
   (:requirements :strips :typing :durative-actions)
   (:types location rover)
   (:predicates (at ?r - rover ?l - location))
@@ -31,7 +31,7 @@ fn main() {
     :duration (= ?duration 10)
     :condition (and (at start (at ?r ?from)))
     :effect (and (at end (at ?r ?to)) (at end (not (at ?r ?from)))))
-)"#;
+)";
     let domain = pddl::Domain::from_str(durative_action).unwrap();
     println!("{}", domain.pretty(80));
 }

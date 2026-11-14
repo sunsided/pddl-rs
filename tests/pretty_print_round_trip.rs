@@ -28,7 +28,7 @@ fn round_trip_problem(input: &str, width: usize, label: &str) {
     );
 }
 
-const STRIPS_DOMAIN: &str = r#"(define (domain blocks)
+const STRIPS_DOMAIN: &str = r"(define (domain blocks)
   (:requirements :strips :typing)
   (:types block)
   (:predicates (on ?x ?y - block) (clear ?x - block) (handempty) (holding ?x - block))
@@ -40,16 +40,16 @@ const STRIPS_DOMAIN: &str = r#"(define (domain blocks)
     :parameters (?x - block)
     :precondition (holding ?x)
     :effect (and (clear ?x) (handempty) (not (holding ?x))))
-)"#;
+)";
 
-const STRIPS_PROBLEM: &str = r#"(define (problem blocks-prob)
+const STRIPS_PROBLEM: &str = r"(define (problem blocks-prob)
   (:domain blocks)
   (:objects a b c - block)
   (:init (clear a) (clear b) (on a c) (on c place) (handempty))
   (:goal (and (on a b) (on b c)))
-)"#;
+)";
 
-const CONDITIONAL_EFFECTS_DOMAIN: &str = r#"(define (domain cond-eff)
+const CONDITIONAL_EFFECTS_DOMAIN: &str = r"(define (domain cond-eff)
   (:requirements :strips :typing :conditional-effects)
   (:types location physob)
   (:predicates (at ?x - physob ?y - location) (in ?x ?y - physob))
@@ -60,9 +60,9 @@ const CONDITIONAL_EFFECTS_DOMAIN: &str = r#"(define (domain cond-eff)
       (forall (?z - physob)
         (when (in ?z ?x)
           (and (at ?z ?to) (not (at ?z ?from)))))))
-)"#;
+)";
 
-const DURATIVE_ACTIONS_DOMAIN: &str = r#"(define (domain durative)
+const DURATIVE_ACTIONS_DOMAIN: &str = r"(define (domain durative)
   (:requirements :strips :typing :durative-actions)
   (:types location rover)
   (:predicates (at ?r - rover ?l - location))
@@ -71,7 +71,7 @@ const DURATIVE_ACTIONS_DOMAIN: &str = r#"(define (domain durative)
     :duration (= ?duration 10)
     :condition (and (at start (at ?r ?from)))
     :effect (and (at end (at ?r ?to)) (at end (not (at ?r ?from)))))
-)"#;
+)";
 
 #[test]
 fn strips_domain_round_trip() {
@@ -109,7 +109,7 @@ fn briefcase_world_round_trip() {
     }
 }
 
-const BRIEFCASE_WORLD: &str = r#"
+const BRIEFCASE_WORLD: &str = r"
     (define (domain briefcase-world)
       (:requirements :strips :equality :typing :conditional-effects)
       (:types location physob)
@@ -144,9 +144,9 @@ const BRIEFCASE_WORLD: &str = r#"
            :precondition (not (= ?x B))     ; the item must be the briefcase itself
            :effect (not (in ?x)) )          ; the item is not in the briefcase anymore.
      )
-     "#;
+     ";
 
-const BRIEFCASE_WORLD_PROBLEM: &str = r#"
+const BRIEFCASE_WORLD_PROBLEM: &str = r"
     (define (problem get-paid)
         (:domain briefcase-world)
         (:init
@@ -158,9 +158,9 @@ const BRIEFCASE_WORLD_PROBLEM: &str = r#"
                (at B home) (at P home) (at D home) (in P))
         (:goal (and (at B office) (at D office) (at P home)))
     )
-    "#;
+    ";
 
-const METRIC_DOMAIN: &str = r#"(define (domain cost-domain)
+const METRIC_DOMAIN: &str = r"(define (domain cost-domain)
   (:requirements :strips :typing :numeric-fluents :action-costs)
   (:types location)
   (:predicates (at ?l - location))
@@ -169,17 +169,17 @@ const METRIC_DOMAIN: &str = r#"(define (domain cost-domain)
     :parameters (?from ?to - location)
     :precondition (at ?from)
     :effect (and (at ?to) (not (at ?from)) (increase (total-cost) 1)))
-)"#;
+)";
 
-const METRIC_PROBLEM: &str = r#"(define (problem cost-problem)
+const METRIC_PROBLEM: &str = r"(define (problem cost-problem)
   (:domain cost-domain)
   (:objects l1 l2 l3 - location)
   (:init (at l1))
   (:goal (at l3))
   (:metric minimize (total-cost))
-)"#;
+)";
 
-const LENGTH_DOMAIN: &str = r#"(define (domain blocks)
+const LENGTH_DOMAIN: &str = r"(define (domain blocks)
   (:requirements :strips :typing)
   (:types block)
   (:predicates (on ?x ?y - block) (clear ?x - block))
@@ -187,17 +187,17 @@ const LENGTH_DOMAIN: &str = r#"(define (domain blocks)
     :parameters (?x ?y - block)
     :precondition (and (clear ?x) (clear ?y))
     :effect (and (on ?x ?y) (not (clear ?x))))
-)"#;
+)";
 
-const LENGTH_PROBLEM: &str = r#"(define (problem length-problem)
+const LENGTH_PROBLEM: &str = r"(define (problem length-problem)
   (:domain blocks)
   (:objects a b c - block)
   (:init (clear a) (on a b))
   (:goal (and (on b a)))
   (:length (:serial 10) (:parallel 5))
-)"#;
+)";
 
-const CONSTRAINTS_DOMAIN: &str = r#"(define (domain constraints-domain)
+const CONSTRAINTS_DOMAIN: &str = r"(define (domain constraints-domain)
   (:requirements :strips :typing :constraints)
   (:types block)
   (:predicates (on ?x ?y - block) (clear ?x - block))
@@ -206,17 +206,17 @@ const CONSTRAINTS_DOMAIN: &str = r#"(define (domain constraints-domain)
     :parameters (?x ?y - block)
     :precondition (and (clear ?x) (clear ?y))
     :effect (and (on ?x ?y) (not (clear ?x))))
-)"#;
+)";
 
-const CONSTRAINTS_PROBLEM: &str = r#"(define (problem constraints-problem)
+const CONSTRAINTS_PROBLEM: &str = r"(define (problem constraints-problem)
   (:domain constraints-domain)
   (:objects a b c - block)
   (:init (clear a) (clear b) (clear c))
   (:goal (and (on a b)))
   (:constraints (and))
-)"#;
+)";
 
-const DERIVED_DOMAIN: &str = r#"(define (domain derived-domain)
+const DERIVED_DOMAIN: &str = r"(define (domain derived-domain)
   (:requirements :strips :typing :derived-predicates)
   (:types block)
   (:predicates (on ?x ?y - block) (clear ?x - block))
@@ -226,9 +226,9 @@ const DERIVED_DOMAIN: &str = r#"(define (domain derived-domain)
     :parameters (?x ?y - block)
     :precondition (and (clear ?x) (clear ?y))
     :effect (and (on ?x ?y) (not (clear ?x))))
-)"#;
+)";
 
-const NUMERIC_EFFECTS_DOMAIN: &str = r#"(define (domain numeric-domain)
+const NUMERIC_EFFECTS_DOMAIN: &str = r"(define (domain numeric-domain)
   (:requirements :strips :typing :numeric-fluents)
   (:types robot)
   (:predicates (charged ?r - robot))
@@ -241,9 +241,9 @@ const NUMERIC_EFFECTS_DOMAIN: &str = r#"(define (domain numeric-domain)
     :parameters (?r - robot)
     :precondition (charged ?r)
     :effect (and (not (charged ?r)) (decrease (battery-level ?r) 5)))
-)"#;
+)";
 
-const PREFERENCE_DOMAIN: &str = r#"(define (domain blocks)
+const PREFERENCE_DOMAIN: &str = r"(define (domain blocks)
   (:requirements :strips :typing :preferences)
   (:types block)
   (:predicates (on ?x ?y - block) (clear ?x - block))
@@ -251,16 +251,16 @@ const PREFERENCE_DOMAIN: &str = r#"(define (domain blocks)
     :parameters (?x ?y - block)
     :precondition (and (clear ?x) (clear ?y))
     :effect (and (on ?x ?y) (not (clear ?x))))
-)"#;
+)";
 
-const PREFERENCE_PROBLEM: &str = r#"(define (problem preference-problem)
+const PREFERENCE_PROBLEM: &str = r"(define (problem preference-problem)
   (:domain blocks)
   (:objects a b c - block)
   (:init (clear a) (clear b) (on a c))
   (:goal (and (preference goal1 (on a b)) (preference goal2 (on b c))))
-)"#;
+)";
 
-const TIMELESS_DOMAIN: &str = r#"(define (domain timeless-domain)
+const TIMELESS_DOMAIN: &str = r"(define (domain timeless-domain)
   (:requirements :strips :equality)
   (:predicates (p ?x) (q ?x ?y))
   (:timeless (= x y) (p a))
@@ -268,7 +268,7 @@ const TIMELESS_DOMAIN: &str = r#"(define (domain timeless-domain)
     :parameters ()
     :precondition (and)
     :effect (and))
-)"#;
+)";
 
 #[test]
 fn metric_round_trip() {

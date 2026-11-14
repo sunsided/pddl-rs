@@ -152,6 +152,7 @@ pub mod names {
 
 impl Requirement {
     /// Returns whether this requirement is `other` or implies it, e.g. `:fluents` contains `:numeric-fluents`.
+    #[must_use]
     pub fn contains<T: Borrow<Requirement>>(&self, other: T) -> bool {
         let other = other.borrow();
         match self {
@@ -186,6 +187,7 @@ impl Requirement {
     }
 
     /// Returns the PDDL requirement key, e.g. `:strips`.
+    #[must_use]
     pub fn as_str(&self) -> &'static str {
         match self {
             Requirement::Strips => names::STRIPS,
@@ -216,6 +218,7 @@ impl Requirement {
     /// This can be helpful when dealing with requirements such as `:quantified-preconditions`,
     /// `:fluents` and `:adl` that are shorthands for a set of other requirements; any other
     /// requirement expands to itself.
+    #[must_use]
     pub fn expand(&self) -> &'static [Requirement] {
         match self {
             Self::QuantifiedPreconditions => {
@@ -312,28 +315,28 @@ impl Display for Requirement {
 }
 
 impl PartialEq<Requirement> for &Requirement {
-    #[inline(always)]
+    #[inline]
     fn eq(&self, other: &Requirement) -> bool {
         other.eq(*self)
     }
 }
 
 impl PartialEq<&Requirement> for Requirement {
-    #[inline(always)]
+    #[inline]
     fn eq(&self, other: &&Requirement) -> bool {
         self.eq(*other)
     }
 }
 
 impl PartialEq<String> for Requirement {
-    #[inline(always)]
+    #[inline]
     fn eq(&self, other: &String) -> bool {
         other.eq(self.as_ref())
     }
 }
 
 impl PartialEq<&str> for Requirement {
-    #[inline(always)]
+    #[inline]
     fn eq(&self, other: &&str) -> bool {
         (*other).eq(self.as_ref())
     }

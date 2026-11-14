@@ -193,6 +193,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines, reason = "one check per `<con-GD>` form")]
     fn doc_example_0() {
         // (= x y)
         let gd_a = GoalDescription::atomic_formula(AtomicFormula::equality(

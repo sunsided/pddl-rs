@@ -17,6 +17,7 @@ pub struct DurativeActionFunctionAssignment(AssignOp, FunctionHead, DurativeActi
 
 impl DurativeActionFunctionAssignment {
     /// Creates a new assignment, `(<assign-op> <f-head> <f-exp-da>)`.
+    #[must_use]
     pub const fn new(
         comp: AssignOp,
         head: FunctionHead,
@@ -26,16 +27,19 @@ impl DurativeActionFunctionAssignment {
     }
 
     /// Returns the operation.
+    #[must_use]
     pub const fn operation(&self) -> &AssignOp {
         &self.0
     }
 
     /// Returns the function head.
+    #[must_use]
     pub const fn function(&self) -> &FunctionHead {
         &self.1
     }
 
     /// Returns the function expression of the durative action.
+    #[must_use]
     pub const fn function_expr(&self) -> &DurativeActionFluentExpression {
         &self.2
     }

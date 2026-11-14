@@ -103,6 +103,7 @@ pub struct Domain {
 
 impl Domain {
     /// Creates a builder to easily construct [`Domain`] instances.
+    #[must_use]
     pub fn builder(name: Name, structure: StructureDefs) -> Self {
         Self {
             name,
@@ -120,66 +121,77 @@ impl Domain {
 
     /// Adds a list of optional domain names this domain definition extends upon.
     /// This is a PDDL 1.2 construct.
+    #[must_use]
     pub fn with_extends<N: IntoIterator<Item = Name>>(mut self, names: N) -> Self {
         self.extends = names.into_iter().collect();
         self
     }
 
     /// Adds a list of optional domain requirements.
+    #[must_use]
     pub fn with_requirements(mut self, requirements: Requirements) -> Self {
         self.requirements = requirements;
         self
     }
 
     /// Adds a list of optional type declarations.
+    #[must_use]
     pub fn with_types<T: Into<Types>>(mut self, types: T) -> Self {
         self.types = types.into();
         self
     }
 
     /// Adds a list of optional constant declarations.
+    #[must_use]
     pub fn with_constants<C: Into<Constants>>(mut self, constants: C) -> Self {
         self.constants = constants.into();
         self
     }
 
     /// Adds a list of optional predicate definitions.
+    #[must_use]
     pub fn with_predicates<P: Into<PredicateDefinitions>>(mut self, predicates: P) -> Self {
         self.predicates = predicates.into();
         self
     }
 
     /// Adds a list of optional function definitions.
+    #[must_use]
     pub fn with_functions<F: Into<Functions>>(mut self, functions: F) -> Self {
         self.functions = functions.into();
         self
     }
 
     /// Adds a list of optional constraints.
+    #[must_use]
     pub fn with_constraints(mut self, constraints: DomainConstraintsDef) -> Self {
         self.constraints = constraints;
         self
     }
 
     /// Adds a list of timeless predicates.
+    #[must_use]
     pub fn with_timeless(mut self, timeless: Timeless) -> Self {
         self.timeless = timeless;
         self
     }
 
     /// Gets the domain name.
+    #[must_use]
     pub const fn name(&self) -> &Name {
         &self.name
     }
 
     /// Gets the names of the domains this definition extends.
     /// This is a PDDL 1.2 construct.
+    #[must_use]
     pub fn extends(&self) -> &[Name] {
         self.extends.as_slice()
     }
 
     /// Returns the optional domain requirements.
     /// If no requirements were specified by the domain, [STRIPS](crate::Requirement::Strips) is implied.
+    #[must_use]
     pub const fn requirements(&self) -> &Requirements {
         &self.requirements
     }
@@ -187,16 +199,19 @@ impl Domain {
     /// Returns the optional type declarations.
     /// ## Requirements
     /// Requires [Typing](crate::Requirement::Typing).
+    #[must_use]
     pub const fn types(&self) -> &Types {
         &self.types
     }
 
     /// Returns the optional constant definitions.
+    #[must_use]
     pub const fn constants(&self) -> &Constants {
         &self.constants
     }
 
     /// Returns the optional predicate definitions.
+    #[must_use]
     pub const fn predicates(&self) -> &PredicateDefinitions {
         &self.predicates
     }
@@ -204,22 +219,26 @@ impl Domain {
     /// Returns the optional function definitions.
     /// ## Requirements
     /// Requires [Fluents](crate::Requirement::Fluents).
+    #[must_use]
     pub const fn functions(&self) -> &Functions {
         &self.functions
     }
 
     /// Returns the optional constraint declaration.
+    #[must_use]
     pub const fn constraints(&self) -> &ConstraintGoalDescription {
         self.constraints.value()
     }
 
     /// Returns the domain structure definitions.
+    #[must_use]
     pub const fn structure(&self) -> &StructureDefs {
         &self.structure
     }
 
     /// Returns the timeless predicate definitions.
     /// This is a PDDL 1.2 construct.
+    #[must_use]
     pub const fn timeless(&self) -> &Timeless {
         &self.timeless
     }

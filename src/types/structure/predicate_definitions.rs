@@ -12,16 +12,19 @@ pub struct PredicateDefinitions(Vec<AtomicFormulaSkeleton>);
 
 impl PredicateDefinitions {
     /// Creates the definitions from an iterator of predicate skeletons.
+    #[must_use]
     pub fn new<I: IntoIterator<Item = AtomicFormulaSkeleton>>(predicates: I) -> Self {
         Self::from(predicates.into_iter().collect())
     }
 
     /// Creates the definitions from a vector of predicate skeletons.
+    #[must_use]
     pub const fn from(predicates: Vec<AtomicFormulaSkeleton>) -> Self {
         Self(predicates)
     }
 
     /// Gets the values.
+    #[must_use]
     pub fn values(&self) -> &[AtomicFormulaSkeleton] {
         self.0.as_slice()
     }

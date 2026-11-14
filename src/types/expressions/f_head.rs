@@ -21,17 +21,20 @@ pub enum FunctionHead {
 
 impl FunctionHead {
     /// Creates a function head without arguments.
+    #[must_use]
     pub const fn new(symbol: FunctionSymbol) -> Self {
         Self::Simple(symbol)
     }
 
     /// Creates a function head applied to the given terms.
     #[doc(alias = "new_with_terms")]
+    #[must_use]
     pub fn with_terms<I: IntoIterator<Item = Term>>(symbol: FunctionSymbol, terms: I) -> Self {
         Self::WithTerms(symbol, terms.into_iter().collect())
     }
 
     /// Creates a function head applied to the given terms.
+    #[must_use]
     pub fn new_with_terms<I: IntoIterator<Item = Term>>(symbol: FunctionSymbol, terms: I) -> Self {
         Self::with_terms(symbol, terms)
     }

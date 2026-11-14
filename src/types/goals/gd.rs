@@ -42,59 +42,68 @@ pub enum GoalDescription {
 
 impl GoalDescription {
     /// Creates a goal from an atomic formula.
-    #[inline(always)]
+    #[inline]
     #[doc(alias = "new_atomic_formula")]
+    #[must_use]
     pub const fn atomic_formula(value: AtomicFormula<Term>) -> Self {
         Self::AtomicFormula(value)
     }
 
     /// Alias for [`Self::atomic_formula`].
+    #[must_use]
     pub fn new_atomic_formula(value: AtomicFormula<Term>) -> Self {
         Self::atomic_formula(value)
     }
 
     /// Creates a goal from a literal, e.g. `(not <atomic formula(term)>)`.
-    #[inline(always)]
+    #[inline]
     #[doc(alias = "new_literal")]
+    #[must_use]
     pub const fn literal(value: TermLiteral) -> Self {
         Self::Literal(value)
     }
 
     /// Alias for [`Self::literal`].
+    #[must_use]
     pub fn new_literal(value: TermLiteral) -> Self {
         Self::literal(value)
     }
 
     /// Creates a conjunction `(and <GD>*)`.
-    #[inline(always)]
+    #[inline]
     #[doc(alias = "new_and")]
+    #[must_use]
     pub fn and<T: IntoIterator<Item = GoalDescription>>(values: T) -> Self {
         // TODO: Flatten `(and (and a b) (and x y))` into `(and a b c y)`.
         Self::And(values.into_iter().collect())
     }
 
     /// Alias for [`Self::and`].
+    #[must_use]
     pub fn new_and<T: IntoIterator<Item = GoalDescription>>(values: T) -> Self {
         Self::and(values)
     }
 
     /// Creates a disjunction `(or <GD>*)`.
-    #[inline(always)]
+    #[inline]
     #[doc(alias = "new_or")]
+    #[must_use]
     pub fn or<T: IntoIterator<Item = GoalDescription>>(values: T) -> Self {
         // TODO: Flatten `(or (or a b) (or x y))` into `(or a b c y)`.
         Self::Or(values.into_iter().collect())
     }
 
     /// Alias for [`Self::or`].
+    #[must_use]
     pub fn new_or<T: IntoIterator<Item = GoalDescription>>(values: T) -> Self {
         Self::or(values)
     }
 
     /// Creates a negation `(not <GD>)`.
     #[allow(clippy::should_implement_trait)]
-    #[inline(always)]
+    #[inline]
     #[doc(alias = "new_not")]
+    #[must_use]
     pub fn not(value: GoalDescription) -> Self {
         Self::Not(Box::new(value))
     }
@@ -110,107 +119,124 @@ impl Not for GoalDescription {
 
 impl GoalDescription {
     /// Alias for [`Self::not`].
+    #[must_use]
     pub fn new_not(value: GoalDescription) -> Self {
         Self::not(value)
     }
 
     /// Creates an implication `(imply <GD> <GD>)` from a `(premise, conclusion)` tuple.
-    #[inline(always)]
+    #[inline]
     #[doc(alias = "new_imply_tuple")]
+    #[must_use]
     pub fn imply_tuple(tuple: (GoalDescription, GoalDescription)) -> Self {
         Self::imply(tuple.0, tuple.1)
     }
 
     /// Alias for [`Self::imply_tuple`].
+    #[must_use]
     pub fn new_imply_tuple(tuple: (GoalDescription, GoalDescription)) -> Self {
         Self::imply_tuple(tuple)
     }
 
     /// Creates an implication `(imply a b)`.
-    #[inline(always)]
+    #[inline]
     #[doc(alias = "new_imply")]
+    #[must_use]
     pub fn imply(a: GoalDescription, b: GoalDescription) -> Self {
         Self::Imply(Box::new(a), Box::new(b))
     }
 
     /// Alias for [`Self::imply`].
+    #[must_use]
     pub fn new_imply(a: GoalDescription, b: GoalDescription) -> Self {
         Self::imply(a, b)
     }
 
     /// Creates an existential quantification `(exists (<variables>) <GD>)` from a tuple.
-    #[inline(always)]
+    #[inline]
     #[doc(alias = "new_exists_tuple")]
+    #[must_use]
     pub fn exists_tuple(tuple: (TypedVariables, GoalDescription)) -> Self {
         Self::exists(tuple.0, tuple.1)
     }
 
     /// Alias for [`Self::exists_tuple`].
+    #[must_use]
     pub fn new_exists_tuple(tuple: (TypedVariables, GoalDescription)) -> Self {
         Self::exists_tuple(tuple)
     }
 
     /// Creates an existential quantification `(exists (<variables>) <GD>)`.
-    #[inline(always)]
+    #[inline]
     #[doc(alias = "new_exists")]
+    #[must_use]
     pub fn exists(variables: TypedVariables, gd: GoalDescription) -> Self {
         Self::Exists(variables, Box::new(gd))
     }
 
     /// Alias for [`Self::exists`].
+    #[must_use]
     pub fn new_exists(variables: TypedVariables, gd: GoalDescription) -> Self {
         Self::exists(variables, gd)
     }
 
     /// Creates a universal quantification `(forall (<variables>) <GD>)` from a tuple.
-    #[inline(always)]
+    #[inline]
     #[doc(alias = "new_forall_tuple")]
+    #[must_use]
     pub fn forall_tuple(tuple: (TypedVariables, GoalDescription)) -> Self {
         Self::forall(tuple.0, tuple.1)
     }
 
     /// Alias for [`Self::forall_tuple`].
+    #[must_use]
     pub fn new_forall_tuple(tuple: (TypedVariables, GoalDescription)) -> Self {
         Self::forall_tuple(tuple)
     }
 
     /// Creates a universal quantification `(forall (<variables>) <GD>)`.
-    #[inline(always)]
+    #[inline]
     #[doc(alias = "new_forall")]
+    #[must_use]
     pub fn r#forall(variables: TypedVariables, gd: GoalDescription) -> Self {
         Self::ForAll(variables, Box::new(gd))
     }
 
     /// Alias for [`Self::forall`].
+    #[must_use]
     pub fn new_forall(variables: TypedVariables, gd: GoalDescription) -> Self {
         Self::r#forall(variables, gd)
     }
 
     /// Creates a numeric fluent comparison, e.g. `(> <f-exp> <f-exp>)`.
-    #[inline(always)]
+    #[inline]
     #[doc(alias = "new_f_comp")]
+    #[must_use]
     pub const fn fluent_comparison(f_comp: FluentComparison) -> Self {
         Self::FluentComparison(f_comp)
     }
 
     /// Alias for [`Self::fluent_comparison`].
+    #[must_use]
     pub fn new_f_comp(f_comp: FluentComparison) -> Self {
         Self::fluent_comparison(f_comp)
     }
 
     /// Returns `true` if this goal contains no atomic formula, literal or comparison,
     /// e.g. `(and)`.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         match self {
-            GoalDescription::AtomicFormula(_) => false,
-            GoalDescription::Literal(_) => false,
-            GoalDescription::And(x) => x.iter().all(|y| y.is_empty()),
-            GoalDescription::Or(x) => x.iter().all(|y| y.is_empty()),
-            GoalDescription::Not(x) => x.is_empty(),
+            GoalDescription::AtomicFormula(_)
+            | GoalDescription::Literal(_)
+            | GoalDescription::FluentComparison(_) => false,
+            GoalDescription::And(x) | GoalDescription::Or(x) => {
+                x.iter().all(GoalDescription::is_empty)
+            }
+            GoalDescription::Not(x)
+            | GoalDescription::Exists(_, x)
+            | GoalDescription::ForAll(_, x) => x.is_empty(),
             GoalDescription::Imply(x, y) => x.is_empty() && y.is_empty(),
-            GoalDescription::Exists(_, x) => x.is_empty(),
-            GoalDescription::ForAll(_, x) => x.is_empty(),
-            GoalDescription::FluentComparison(_) => false,
         }
     }
 }

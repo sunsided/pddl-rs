@@ -19,24 +19,28 @@ pub enum PreferenceTimedGoalDescription {
 impl PreferenceTimedGoalDescription {
     /// Creates a required timed goal.
     #[doc(alias = "new_required")]
+    #[must_use]
     pub const fn required(gd: TimedGoalDescription) -> Self {
         Self::Required(gd)
     }
 
     /// Creates a preference `(preference [<pref-name>] <timed-GD>)` with an optional name.
     #[doc(alias = "new_preference")]
+    #[must_use]
     pub const fn preference(name: Option<PreferenceName>, gd: TimedGoalDescription) -> Self {
         Self::Preference(name, gd)
     }
 
     /// Deprecated alias for [`Self::required`].
     #[deprecated(since = "0.2.0", note = "Use `required` instead")]
+    #[must_use]
     pub const fn new_required(gd: TimedGoalDescription) -> Self {
         Self::required(gd)
     }
 
     /// Deprecated alias for [`Self::preference`].
     #[deprecated(since = "0.2.0", note = "Use `preference` instead")]
+    #[must_use]
     pub const fn new_preference(name: Option<PreferenceName>, gd: TimedGoalDescription) -> Self {
         Self::preference(name, gd)
     }

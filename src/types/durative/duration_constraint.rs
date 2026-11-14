@@ -28,6 +28,7 @@ impl IntoIterator for DurationConstraint {
 
 impl DurationConstraint {
     /// Creates a constraint from a single simple duration constraint.
+    #[must_use]
     pub const fn new(constraint: SimpleDurationConstraint) -> Self {
         Self::Single(constraint)
     }
@@ -35,18 +36,21 @@ impl DurationConstraint {
     /// Creates a conjunction `(and ...)` of simple duration constraints.
     /// The iterator should not be empty; this is only checked in debug builds.
     #[doc(alias = "new_all")]
+    #[must_use]
     pub fn all<I: IntoIterator<Item = SimpleDurationConstraint>>(constraints: I) -> Self {
         let vec: Vec<_> = constraints.into_iter().collect();
-        debug_assert!(!vec.is_empty());
+        debug_assert_ne!(vec.len(), 0, "a conjunction needs at least one constraint");
         Self::All(vec)
     }
 
     /// Creates a conjunction `(and ...)` of simple duration constraints. Same as [`all`](Self::all).
+    #[must_use]
     pub fn new_all<I: IntoIterator<Item = SimpleDurationConstraint>>(constraints: I) -> Self {
         Self::all(constraints)
     }
 
     /// Returns the number of simple duration constraints.
+    #[must_use]
     pub fn len(&self) -> usize {
         match self {
             DurationConstraint::Single(_) => 1,
@@ -55,6 +59,7 @@ impl DurationConstraint {
     }
 
     /// Returns `true` if there are no simple duration constraints.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         match self {
             DurationConstraint::Single(_) => false,

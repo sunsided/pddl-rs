@@ -88,6 +88,7 @@ pub mod names {
 
 impl AssignOp {
     /// Returns the PDDL keyword, e.g. `assign`. [`AssignOp::Assign`] is always printed as `assign`, never `change`.
+    #[must_use]
     pub fn as_str(&self) -> &'static str {
         match self {
             AssignOp::Assign => names::ASSIGN,
@@ -104,8 +105,7 @@ impl TryFrom<&str> for AssignOp {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
-            names::CHANGE => Ok(AssignOp::Assign),
-            names::ASSIGN => Ok(AssignOp::Assign),
+            names::CHANGE | names::ASSIGN => Ok(AssignOp::Assign),
             names::SCALE_UP => Ok(AssignOp::ScaleUp),
             names::SCALE_DOWN => Ok(AssignOp::ScaleDown),
             names::INCREASE => Ok(AssignOp::Increase),
@@ -142,28 +142,28 @@ impl Display for AssignOp {
 }
 
 impl PartialEq<AssignOp> for &AssignOp {
-    #[inline(always)]
+    #[inline]
     fn eq(&self, other: &AssignOp) -> bool {
         other.eq(*self)
     }
 }
 
 impl PartialEq<&AssignOp> for AssignOp {
-    #[inline(always)]
+    #[inline]
     fn eq(&self, other: &&AssignOp) -> bool {
         self.eq(*other)
     }
 }
 
 impl PartialEq<String> for AssignOp {
-    #[inline(always)]
+    #[inline]
     fn eq(&self, other: &String) -> bool {
         other.eq(self.as_ref())
     }
 }
 
 impl PartialEq<&str> for AssignOp {
-    #[inline(always)]
+    #[inline]
     fn eq(&self, other: &&str) -> bool {
         (*other).eq(self.as_ref())
     }

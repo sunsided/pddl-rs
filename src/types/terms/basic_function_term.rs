@@ -9,16 +9,19 @@ pub struct BasicFunctionTerm(FunctionSymbol, Vec<Name>);
 
 impl BasicFunctionTerm {
     /// Creates a new basic function term, `(<function-symbol> <name>*)`.
+    #[must_use]
     pub fn new<N: IntoIterator<Item = Name>>(symbol: FunctionSymbol, names: N) -> Self {
         Self(symbol, names.into_iter().collect())
     }
 
     /// Returns the function symbol.
+    #[must_use]
     pub const fn symbol(&self) -> &FunctionSymbol {
         &self.0
     }
 
     /// Returns the associated names.
+    #[must_use]
     pub fn names(&self) -> &[Name] {
         self.1.as_slice()
     }

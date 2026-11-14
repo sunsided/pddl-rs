@@ -24,10 +24,10 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        let input = r#"(:predicates
+        let input = r"(:predicates
                              (at ?x - physob ?y - location)
                              (in ?x ?y - physob)
-                        )"#;
+                        )";
 
         check!(
             PredicateDefinitions::from_str(input).is_value(PredicateDefinitions::new(vec![
@@ -51,10 +51,10 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        let input = r#"(:predicates
+        let input = r"(:predicates
                             (at ?x - physob ?y - location)
                             (in ?x ?y - physob)
-                       )"#;
+                       )";
 
         check!(
             PredicateDefinitions::from_str(input).is_value(PredicateDefinitions::new(vec![

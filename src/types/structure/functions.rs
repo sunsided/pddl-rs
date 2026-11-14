@@ -15,11 +15,13 @@ pub struct Functions(FunctionTypedList<AtomicFunctionSkeleton>);
 
 impl Functions {
     /// Creates a new set of function declarations.
+    #[must_use]
     pub const fn new(functions: FunctionTypedList<AtomicFunctionSkeleton>) -> Self {
         Self(functions)
     }
 
     /// Gets the values.
+    #[must_use]
     pub fn values(&self) -> &FunctionTypedList<AtomicFunctionSkeleton> {
         &self.0
     }

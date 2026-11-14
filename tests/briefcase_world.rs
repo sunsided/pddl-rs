@@ -8,7 +8,7 @@ use pddl::{
 };
 
 /// The briefcase world domain from the PDDL 1.2 manual.
-pub const BRIEFCASE_WORLD: &str = r#"
+pub const BRIEFCASE_WORLD: &str = r"
     (define (domain briefcase-world)
       (:requirements :strips :equality :typing :conditional-effects)
       (:types location physob)
@@ -43,10 +43,10 @@ pub const BRIEFCASE_WORLD: &str = r#"
            :precondition (not (= ?x B))     ; the item must be the briefcase itself
            :effect (not (in ?x)) )          ; the item is not in the briefcase anymore.
     )
-    "#;
+    ";
 
 /// A problem for [`BRIEFCASE_WORLD`]: bring the briefcase and dictionary (`D`) to the office and leave the paycheck at home.
-pub const BRIEFCASE_WORLD_PROBLEM: &str = r#"
+pub const BRIEFCASE_WORLD_PROBLEM: &str = r"
     (define (problem get-paid)
         (:domain briefcase-world)
         (:init
@@ -58,7 +58,7 @@ pub const BRIEFCASE_WORLD_PROBLEM: &str = r#"
                (at B home) (at P home) (at D home) (in P))
         (:goal (and (at B office) (at D office) (at P home)))
     )
-    "#;
+    ";
 
 #[test]
 fn parse_domain_works() {
@@ -89,7 +89,7 @@ fn parse_problem_works() {
     check!(problem.goals().len() == 3);
 
     let mut atomic_formulas = 0;
-    for goal in problem.goals().iter() {
+    for goal in problem.goals() {
         match goal {
             PreconditionGoalDescription::Preference(pref) => match pref {
                 PreferenceGoalDescription::Goal(goal) => match goal {
@@ -98,20 +98,18 @@ fn parse_problem_works() {
                         AtomicFormula::Equality(_) => {}
                     },
                     GoalDescription::Literal(literal) => match literal {
-                        TermLiteral::AtomicFormula(_) => {
-                            // The AtomicFormula variant takes precedence over the Literal variant
-                            // because a Literal in the context of a Goal Description can only
-                            // occur with the :negative−preconditions domain requirement.
-                        }
-                        TermLiteral::NotAtomicFormula(_) => {}
+                        // The AtomicFormula variant takes precedence over the Literal variant
+                        // because a Literal in the context of a Goal Description can only
+                        // occur with the :negative−preconditions domain requirement.
+                        TermLiteral::AtomicFormula(_) | TermLiteral::NotAtomicFormula(_) => {}
                     },
-                    GoalDescription::And(_) => {}
-                    GoalDescription::Or(_) => {}
-                    GoalDescription::Not(_) => {}
-                    GoalDescription::Imply(_, _) => {}
-                    GoalDescription::Exists(_, _) => {}
-                    GoalDescription::ForAll(_, _) => {}
-                    GoalDescription::FluentComparison(_) => {}
+                    GoalDescription::And(_)
+                    | GoalDescription::Or(_)
+                    | GoalDescription::Not(_)
+                    | GoalDescription::Imply(_, _)
+                    | GoalDescription::Exists(_, _)
+                    | GoalDescription::ForAll(_, _)
+                    | GoalDescription::FluentComparison(_) => {}
                 },
                 PreferenceGoalDescription::Preference(_) => {}
             },

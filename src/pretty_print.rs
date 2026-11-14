@@ -73,10 +73,9 @@ pub struct PrettyRenderer;
 
 impl PrettyRenderer {
     /// Renders `doc` to a string, wrapping lines longer than `width`.
-    pub fn to_pretty(&self, doc: RcDoc<'static>, width: usize) -> String {
-        let mut w = Vec::new();
-        doc.render(width, &mut w).unwrap();
-        String::from_utf8(w).unwrap()
+    #[must_use]
+    pub fn to_pretty(&self, doc: &RcDoc<'static>, width: usize) -> String {
+        doc.pretty(width).to_string()
     }
 
     /// `(head child ...)` on one line if it fits within the width, otherwise
@@ -131,6 +130,7 @@ impl PrettyRenderer {
     }
 
     /// The keyword `:name`, e.g. `:parameters` before an action's parameter list.
+    #[must_use]
     pub fn keyword_line(&self, name: &'static str) -> RcDoc<'static> {
         RcDoc::text(":").append(RcDoc::text(name))
     }
@@ -170,7 +170,7 @@ macro_rules! prettify {
     ($x:expr, $n:literal) => {{
         let renderer = PrettyRenderer::default();
         let doc = $x.accept(&renderer);
-        renderer.to_pretty(doc, $n)
+        renderer.to_pretty(&doc, $n)
     }};
 }
 
@@ -187,14 +187,14 @@ mod tests {
     fn to_pretty_works() {
         let renderer = PrettyRenderer;
         let doc = RcDoc::text("hello");
-        check!(renderer.to_pretty(doc, 80) == "hello");
+        check!(renderer.to_pretty(&doc, 80) == "hello");
     }
 
     #[test]
     fn sexpr_nested_works() {
         let renderer = PrettyRenderer;
         let doc = renderer.sexpr_nested("head", [RcDoc::text("a"), RcDoc::text("b")]);
-        let out = renderer.to_pretty(doc, 80);
+        let out = renderer.to_pretty(&doc, 80);
         check!(out.starts_with("(head"));
         check!(out.contains('\n'));
     }
@@ -203,7 +203,7 @@ mod tests {
     fn list_works() {
         let renderer = PrettyRenderer;
         let doc = renderer.list([RcDoc::text("a"), RcDoc::text("b")], RcDoc::text(", "));
-        check!(renderer.to_pretty(doc, 80) == "a, b");
+        check!(renderer.to_pretty(&doc, 80) == "a, b");
     }
 
     #[test]
@@ -216,6 +216,6 @@ mod tests {
     fn keyword_line_works() {
         let renderer = PrettyRenderer;
         let doc = renderer.keyword_line("foo");
-        check!(renderer.to_pretty(doc, 80) == ":foo");
+        check!(renderer.to_pretty(&doc, 80) == ":foo");
     }
 }

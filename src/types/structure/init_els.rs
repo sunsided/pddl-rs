@@ -12,11 +12,13 @@ pub struct InitElements(Vec<InitElement>);
 
 impl InitElements {
     /// Creates a new list of initial state elements, i.e. the content of `(:init <init-el>*)`.
+    #[must_use]
     pub const fn new(iter: Vec<InitElement>) -> Self {
         Self(iter)
     }
 
     /// Gets the values.
+    #[must_use]
     pub fn values(&self) -> &[InitElement] {
         self.0.as_slice()
     }

@@ -13,11 +13,13 @@ pub struct Types(TypedNames);
 impl Types {
     /// Creates a new set of types, i.e. the content of `(:types <typed list (name)>)`;
     /// each type name is typed with its parent type.
+    #[must_use]
     pub const fn new(predicates: TypedNames) -> Self {
         Self(predicates)
     }
 
     /// Gets the values.
+    #[must_use]
     pub fn values(&self) -> &TypedNames {
         &self.0
     }

@@ -12,11 +12,13 @@ pub struct ProblemConstraintsDef(PreferenceConstraintGoalDescriptions);
 
 impl ProblemConstraintsDef {
     /// Creates a new problem constraints definition, i.e. `(:constraints <pref-con-GD>)`.
+    #[must_use]
     pub const fn new(gd: PreferenceConstraintGoalDescriptions) -> Self {
         Self(gd)
     }
 
     /// Gets the value.
+    #[must_use]
     pub const fn value(&self) -> &PreferenceConstraintGoalDescriptions {
         &self.0
     }

@@ -18,11 +18,13 @@ pub enum FlatteningIntoIterator<T> {
 
 impl<T> FlatteningIntoIterator<T> {
     /// Creates an iterator that will create exactly one item.
+    #[must_use]
     pub fn new(item: T) -> Self {
         Self::Once(once(item))
     }
 
     /// Creates an iterator that will create none, one or many values.
+    #[must_use]
     pub fn new_vec(vec: Vec<T>) -> Self {
         if vec.is_empty() {
             Self::Never

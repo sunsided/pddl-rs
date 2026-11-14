@@ -68,6 +68,7 @@ pub struct Problem {
 impl Problem {
     /// Creates a new [`Problem`] instance.
     #[allow(clippy::too_many_arguments)]
+    #[must_use]
     pub const fn new(
         name: Name,
         domain: Name,
@@ -93,6 +94,7 @@ impl Problem {
     }
 
     /// Creates a builder to easily construct problems.
+    #[must_use]
     pub fn builder<P: Into<Name>, D: Into<Name>>(
         problem_name: P,
         domain_name: D,
@@ -113,61 +115,72 @@ impl Problem {
     }
 
     /// Adds a list of requirements to the problem.
+    #[must_use]
     pub fn with_requirements<R: Into<Requirements>>(mut self, requirements: R) -> Self {
         self.requires = requirements.into();
         self
     }
 
     /// Adds a list of object declarations to the problem.
+    #[must_use]
     pub fn with_objects<O: Into<Objects>>(mut self, objects: O) -> Self {
         self.objects = objects.into();
         self
     }
 
     /// Adds a list of constraints to the problem.
+    #[must_use]
     pub fn with_constraints<C: Into<ProblemConstraintsDef>>(mut self, constraints: C) -> Self {
         self.constraints = constraints.into();
         self
     }
 
     /// Adds a list of metric specifications to the problem.
+    #[must_use]
     pub fn with_metric_spec<M: Into<MetricSpec>>(mut self, metric: M) -> Self {
         self.metric_spec = Some(metric.into());
         self
     }
 
     /// Adds a list of length specifications to the problem.
+    #[must_use]
     pub fn with_length_spec<L: Into<LengthSpec>>(mut self, length: L) -> Self {
         self.length_spec = Some(length.into());
         self
     }
 
     /// Returns the problem name.
+    #[must_use]
     pub const fn name(&self) -> &Name {
         &self.name
     }
 
     /// Returns the domain name.
+    #[must_use]
     pub const fn domain(&self) -> &Name {
         &self.domain
     }
 
     /// Returns the optional problem requirements.
+    #[must_use]
     pub const fn requirements(&self) -> &Requirements {
         &self.requires
     }
 
     /// Returns the optional object declarations.
+    #[must_use]
     pub const fn objects(&self) -> &Objects {
         &self.objects
     }
 
     /// Returns the initialization of the problem.
+    #[must_use]
     pub const fn init(&self) -> &InitElements {
         &self.init
     }
 
     /// Returns the goal statement of the problem.
+    #[must_use]
     pub const fn goals(&self) -> &PreconditionGoalDescriptions {
         self.goal.value()
     }
@@ -175,6 +188,7 @@ impl Problem {
     /// Returns the optional constraints of the problem.
     /// ## Requirements
     /// Requires [Constraints](crate::Requirement::Constraints).
+    #[must_use]
     pub const fn constraints(&self) -> &PreferenceConstraintGoalDescriptions {
         self.constraints.value()
     }
@@ -182,12 +196,14 @@ impl Problem {
     /// Returns the optional metric specification of the problem.
     /// ## Requirements
     /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
+    #[must_use]
     pub const fn metric_spec(&self) -> &Option<MetricSpec> {
         &self.metric_spec
     }
 
     /// Returns the optional length specification of the problem.
     /// Deprecated since PDDL 2.1.
+    #[must_use]
     pub const fn length_spec(&self) -> &Option<LengthSpec> {
         &self.length_spec
     }

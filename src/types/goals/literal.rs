@@ -16,16 +16,19 @@ pub enum Literal<T> {
 
 impl<T> Literal<T> {
     /// Creates a positive literal.
+    #[must_use]
     pub const fn new(atomic_formula: AtomicFormula<T>) -> Self {
         Self::AtomicFormula(atomic_formula)
     }
 
     /// Creates a negated literal `(not <atomic formula(t)>)`.
+    #[must_use]
     pub const fn new_not(atomic_formula: AtomicFormula<T>) -> Self {
         Self::NotAtomicFormula(atomic_formula)
     }
 
     /// Returns `true` if this is a negated literal.
+    #[must_use]
     pub const fn is_negated(&self) -> bool {
         matches!(self, Self::NotAtomicFormula(..))
     }

@@ -111,7 +111,8 @@ impl Name {
     ///
     /// ## Returns
     /// A new [`Name`].
-    #[inline(always)]
+    #[inline]
+    #[must_use]
     pub fn new<S: Into<String> + AsRef<str>>(name: S) -> Self {
         if let Some(str) = Self::map_to_static(name.as_ref()) {
             Self::new_static(str)
@@ -140,7 +141,8 @@ impl Name {
     /// # use pddl::Name;
     /// assert_eq!(Name::new("name"), "name");
     /// ```
-    #[inline(always)]
+    #[inline]
+    #[must_use]
     pub const fn new_static(name: &'static str) -> Self {
         Self(NameVariant::Static(name))
     }
@@ -150,7 +152,11 @@ impl Name {
     /// Looks the spelling up in a global hash set and inserts it if it wasn't found
     /// before. Unused spellings are dropped lazily on later inserts, so memory stays
     /// within about twice the names alive while interning continues.
-    #[cfg_attr(not(feature = "interning"), inline(always))]
+    #[cfg_attr(not(feature = "interning"), inline)]
+    #[allow(
+        clippy::needless_pass_by_value,
+        reason = "without the `interning` feature, the string is consumed"
+    )]
     fn new_string_interned<S: Into<String> + AsRef<str>>(name: S) -> Self {
         #[cfg(feature = "interning")]
         {
@@ -186,14 +192,14 @@ impl<T> From<T> for Name
 where
     T: Into<String> + AsRef<str>,
 {
-    #[inline(always)]
+    #[inline]
     fn from(value: T) -> Self {
         Self::new(value)
     }
 }
 
 impl AsRef<str> for Name {
-    #[inline(always)]
+    #[inline]
     fn as_ref(&self) -> &str {
         &self.0
     }
@@ -202,14 +208,14 @@ impl AsRef<str> for Name {
 impl Deref for Name {
     type Target = str;
 
-    #[inline(always)]
+    #[inline]
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
 impl PartialEq for Name {
-    #[inline(always)]
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.eq_ignore_ascii_case(other)
     }
@@ -229,21 +235,21 @@ impl Hash for Name {
 }
 
 impl PartialEq<str> for Name {
-    #[inline(always)]
+    #[inline]
     fn eq(&self, other: &str) -> bool {
         self.eq_ignore_ascii_case(other)
     }
 }
 
 impl PartialEq<&str> for Name {
-    #[inline(always)]
+    #[inline]
     fn eq(&self, other: &&str) -> bool {
         self.eq_ignore_ascii_case(other)
     }
 }
 
 impl PartialEq<String> for Name {
-    #[inline(always)]
+    #[inline]
     fn eq(&self, other: &String) -> bool {
         self.eq_ignore_ascii_case(other)
     }
@@ -286,15 +292,15 @@ impl Deref for NameVariant {
 
 impl Debug for NameVariant {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self)
+        write!(f, "{self}")
     }
 }
 
 impl Display for NameVariant {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            NameVariant::String(str) => write!(f, "{}", str),
-            NameVariant::Static(str) => write!(f, "{}", str),
+            NameVariant::String(str) => write!(f, "{str}"),
+            NameVariant::Static(str) => write!(f, "{str}"),
         }
     }
 }
