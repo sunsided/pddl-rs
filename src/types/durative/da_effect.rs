@@ -8,7 +8,6 @@ use crate::types::{DurativeActionGoalDescription, TimedEffect};
 /// ## Usage
 /// Used by [`DurativeActionDefinition`](crate::DurativeActionDefinition).
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum DurativeActionEffect {
     /// A timed effect, e.g. `(at end <cond-effect>)`.
     Timed(TimedEffect),

@@ -7,7 +7,6 @@ use crate::types::{ActionDefinition, DerivedPredicate, DurativeActionDefinition}
 /// ## Usage
 /// Used by [`StructureDefs`](crate::StructureDefs) in [`Domain`](crate::Domain).
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum StructureDef {
     /// An action definition, `(:action ...)`.
     Action(ActionDefinition),

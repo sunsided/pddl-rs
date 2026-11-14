@@ -5,7 +5,6 @@
 /// ## Usage
 /// Used by [`Problem`](crate::Problem).
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct LengthSpec {
     /// The expected number of steps of a sequential plan, `(:serial <integer>)`; a hint to the planner.
     serial: Option<u64>,

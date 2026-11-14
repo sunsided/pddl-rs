@@ -9,7 +9,6 @@ use crate::types::{EffectCondition, Effects, GoalDescription, PrimitiveEffect};
 /// Used by [`Effect`](Effects).
 #[doc(alias("c-effect"))]
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ConditionalEffect {
     /// A regular effect.
     Effect(PrimitiveEffect),
@@ -32,7 +31,6 @@ pub enum ConditionalEffect {
 /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
 #[doc(alias("c-effect"))]
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ForallConditionalEffect {
     /// The (possibly empty) set of variables constraining the effects.
     pub variables: TypedVariables,
@@ -54,7 +52,6 @@ impl ForallConditionalEffect {
 /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
 #[doc(alias("c-effect"))]
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct WhenConditionalEffect {
     /// The antecedent. This needs to be true for the effect to apply.
     pub condition: GoalDescription,

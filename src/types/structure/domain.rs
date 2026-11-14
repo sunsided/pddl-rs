@@ -65,7 +65,6 @@ use crate::types::{Name, Types};
 /// # fn main() {}
 /// ```
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Domain {
     /// The domain name.
     name: Name,

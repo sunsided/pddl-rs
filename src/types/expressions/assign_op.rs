@@ -9,7 +9,6 @@ use std::fmt::{Display, Formatter};
 /// Used by [`PrimitiveEffect`](crate::PrimitiveEffect), [`TimedEffect`](crate::TimedEffect) and
 /// [`FAssignDa`](crate::FAssignDa).
 #[derive(Debug, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum AssignOp {
     /// An assign effect assigns the value of a numeric variable to the given amount.
     /// ```pddl

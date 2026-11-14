@@ -8,8 +8,6 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`AtomicFormulaSkeleton`](crate::AtomicFormulaSkeleton) and [`AtomicFormula`](crate::AtomicFormula).
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct Predicate(Name);
 
 impl Predicate {

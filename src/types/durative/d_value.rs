@@ -7,7 +7,6 @@ use crate::types::{FluentExpression, Number};
 /// ## Usage
 /// Used by [`SimpleDurationConstraint`](crate::SimpleDurationConstraint).
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum DurationValue {
     /// A numerical value.
     Number(Number),

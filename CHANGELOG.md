@@ -7,10 +7,12 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- The optional `serde` feature implements `Serialize` and `Deserialize` for the PDDL types, so a
-  parsed `Domain`, `Problem` or `PddlFile` can be stored as JSON, YAML, TOML or any other serde
-  format and read back. Names serialize as plain strings in their original spelling; deserialized
-  numbers must be finite, as when parsed. The shape mirrors the Rust types and is not yet stable.
+- The optional `serde` feature serializes and deserializes domains, problems and every other PDDL
+  type in a schema that follows PDDL: atoms are arrays (`["at", "?t", "depot"]`), other forms are
+  objects keyed by their keyword (`{"not": ...}`, `{"forall": [vars, gd]}`, `{"at start": ...}`),
+  and typed lists, predicates, functions and actions are objects keyed by name. It works with JSON,
+  YAML, TOML and other self-describing formats; the `pddl::serde` module documents the schema.
+  Deserializing rebuilds the PDDL text and parses it, so input is checked against the grammar.
 - `ParseError::help()` suggests the intended keyword for a likely misspelling, e.g.
   ``did you mean `:predicates`?`` for `(:predicats ...)`. It covers section names, action and
   durative-action keywords such as `:effect`, and keywords such as `start` or `minimize`; with the

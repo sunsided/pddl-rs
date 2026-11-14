@@ -9,8 +9,6 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`GoalDef`](crate::GoalDef), as well as [`ActionDefinition`](crate::ActionDefinition).
 #[derive(Debug, Clone, PartialEq, Default)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct PreconditionGoalDescriptions(Vec<PreconditionGoalDescription>);
 
 impl PreconditionGoalDescriptions {
@@ -147,7 +145,6 @@ impl TryInto<PreconditionGoalDescription> for PreconditionGoalDescriptions {
 /// ## Usage
 /// Used by [`PreconditionGoalDescriptions`].
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum PreconditionGoalDescription {
     /// ## Requirements
     /// None per se: this branch may expand into [`PreferenceGoalDescription::Goal`],

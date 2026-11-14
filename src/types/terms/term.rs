@@ -8,7 +8,6 @@ use crate::types::Variable;
 /// Used by [`GoalDescription`](crate::GoalDescription), [`FunctionTerm`],
 /// [`FunctionHead`](crate::FunctionHead), [`PrimitiveEffect`](crate::PrimitiveEffect) and [`InitElement`](crate::InitElement).
 #[derive(Debug, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Term {
     /// An object or constant name.
     Name(Name),

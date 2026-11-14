@@ -8,7 +8,6 @@ use std::fmt::{Display, Formatter};
 /// Used by [`TimedEffect`](crate::TimedEffect).
 #[doc(alias("assign-op-t"))]
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum TimedAssignOperator {
     /// The `increase` operator, e.g. `(increase (fuel) (* #t (rate)))`.
     Increase,

@@ -5,7 +5,6 @@ use crate::types::{BasicFunctionTerm, Name, NameLiteral, Number};
 /// ## Usage
 /// Used by [`InitElements`](crate::InitElements) in [`Problem`](crate::Problem).
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum InitElement {
     /// A literal that holds in the initial state, e.g. `(at truck depot)` or `(not (busy truck))`.
     Literal(NameLiteral),

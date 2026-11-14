@@ -9,8 +9,6 @@ use std::ops::Deref;
 /// Used by [`FunctionTerm`](crate::FunctionTerm), [`FHead`](crate::FHead),
 /// [`BasicFunctionTerm`](crate::BasicFunctionTerm) and [`MetricFluentExpression`](crate::MetricFluentExpression).
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct FunctionSymbol(Name);
 
 impl FunctionSymbol {

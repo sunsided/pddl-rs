@@ -8,7 +8,6 @@ use std::fmt::{Display, Formatter};
 /// Used by [`FluentComparison`](crate::FluentComparison).
 #[doc(alias("binary-comp"))]
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum BinaryComparison {
     /// The `>` comparison.
     GreaterThan,

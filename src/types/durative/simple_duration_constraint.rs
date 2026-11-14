@@ -7,7 +7,6 @@ use crate::types::{DurationOperator, DurationValue, TimeSpecifier};
 /// ## Usage
 /// Used by [`SimpleDurationConstraint`] itself, as well as [`DurationConstraint`](crate::DurationConstraint).
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum SimpleDurationConstraint {
     /// A comparison operation against a duration value.
     Op(DurationOperator, DurationValue),

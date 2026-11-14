@@ -10,7 +10,6 @@ use crate::types::{GoalDescription, PreferenceName};
 /// ## Usage
 /// Used by [`PreferenceGoalDescription`](crate::PreferenceGoalDescription).
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Preference(Option<PreferenceName>, GoalDescription); // TODO: A similar type is used for PrefConGD
 
 impl Preference {

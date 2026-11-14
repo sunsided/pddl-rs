@@ -7,7 +7,6 @@ use crate::types::{AtomicFormulaSkeleton, GoalDescription};
 /// ## Usage
 /// Used by [`StructureDef`](crate::StructureDef).
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DerivedPredicate(AtomicFormulaSkeleton, GoalDescription);
 
 impl DerivedPredicate {

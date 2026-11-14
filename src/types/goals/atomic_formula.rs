@@ -9,7 +9,6 @@ use std::ops::Deref;
 /// Used by [`Literal`](crate::Literal), [`GoalDescription`](crate::GoalDescription) and
 /// [`PrimitiveEffect`](crate::PrimitiveEffect).
 #[derive(Debug, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum AtomicFormula<T> {
     /// An equality between two values, `(= <t> <t>)`.
     ///
@@ -53,7 +52,6 @@ impl<T> AtomicFormula<T> {
 
 /// An equality atomic formula, `(= <t> <t>)`.
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct EqualityAtomicFormula<T> {
     /// The left-hand operand.
     first: T,
@@ -63,7 +61,6 @@ pub struct EqualityAtomicFormula<T> {
 
 /// A predicate atomic formula, `(<predicate> <t>*)`.
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PredicateAtomicFormula<T> {
     /// The predicate.
     predicate: Predicate,

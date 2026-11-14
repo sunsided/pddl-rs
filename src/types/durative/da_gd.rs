@@ -9,7 +9,6 @@ use crate::types::TypedVariables;
 /// Used by [`DurativeActionGoalDescription`] itself, as well as [`DurativeActionDefinition`](crate::DurativeActionDefinition) and
 /// [`DurativeActionEffect`](crate::DurativeActionEffect).
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum DurativeActionGoalDescription {
     /// A timed goal that may be a preference, `<pref-timed-GD>`.
     Timed(PreferenceTimedGoalDescription),

@@ -13,7 +13,6 @@ use crate::types::{AssignOp, DurativeActionFluentExpression, FunctionHead};
 /// Used by [`TimedEffect`](crate::TimedEffect).
 #[doc(alias("f-assign-da"))]
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DurativeActionFunctionAssignment(AssignOp, FunctionHead, DurativeActionFluentExpression);
 
 impl DurativeActionFunctionAssignment {

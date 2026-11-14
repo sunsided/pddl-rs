@@ -12,7 +12,6 @@ use crate::types::{AtomicFormula, FluentComparison, Term, TypedVariables};
 /// [`TimedGoalDescription`](crate::TimedGoalDescription), [`DerivedPredicate`](crate::DerivedPredicate) and
 /// [`ConstraintGoalDescriptionInner`](crate::ConstraintGoalDescriptionInner).
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum GoalDescription {
     /// An atomic formula, `<atomic formula(term)>`.
     AtomicFormula(AtomicFormula<Term>),

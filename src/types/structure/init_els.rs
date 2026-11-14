@@ -8,8 +8,6 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`Problem`](crate::Problem).
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct InitElements(Vec<InitElement>);
 
 impl InitElements {

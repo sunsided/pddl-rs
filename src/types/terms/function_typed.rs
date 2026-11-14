@@ -12,7 +12,6 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`FunctionTypedList`](crate::FunctionTypedList).
 #[derive(Debug, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FunctionTyped<O>(O, FunctionType);
 
 impl<O> FunctionTyped<O> {

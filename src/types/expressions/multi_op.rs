@@ -8,7 +8,6 @@ use std::fmt::{Display, Formatter};
 /// Used by [`MetricFluentExpression`](crate::MetricFluentExpression) and [`FExpDa`](crate::FExpDa).
 /// Implicitly used by [`BinaryOp`](crate::BinaryOp).
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum MultiOp {
     /// The `*` operation.
     Multiplication,

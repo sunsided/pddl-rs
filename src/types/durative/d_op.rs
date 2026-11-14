@@ -6,7 +6,6 @@ use std::fmt::{Display, Formatter};
 /// Used by [`SimpleDurationConstraint`](crate::SimpleDurationConstraint).
 #[doc(alias("d-op"))]
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum DurationOperator {
     /// The `=` operator: the duration equals the value.
     Equal,

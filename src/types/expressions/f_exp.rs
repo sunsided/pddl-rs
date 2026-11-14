@@ -12,7 +12,6 @@ use crate::types::{BinaryOp, FunctionHead, MultiOp, Number};
 /// [`DurativeActionFluentExpression`](crate::DurativeActionFluentExpression) and [`TimedFluentExpression`](crate::TimedFluentExpression).
 #[doc(alias("f-exp"))]
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum FluentExpression {
     /// A numerical expression.
     Number(Number),

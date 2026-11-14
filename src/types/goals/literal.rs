@@ -7,7 +7,6 @@ use crate::types::AtomicFormula;
 /// ## Usage
 /// Used by [`GoalDescription`](crate::GoalDescription) and [`InitElement`](crate::InitElement).
 #[derive(Debug, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Literal<T> {
     /// A positive literal, `<atomic formula(t)>`.
     AtomicFormula(AtomicFormula<T>),

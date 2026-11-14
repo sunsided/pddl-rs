@@ -7,7 +7,6 @@ use crate::types::{GoalDescription, Preference};
 /// ## Usage
 /// Used by [`PreconditionGoalDescription`](crate::PreconditionGoalDescription).
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum PreferenceGoalDescription {
     /// A required goal, `<GD>`.
     Goal(GoalDescription),

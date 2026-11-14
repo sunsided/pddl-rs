@@ -7,7 +7,6 @@ use crate::{Domain, Problem};
 /// PDDL files can contain multiple `(define (domain ...))` and `(define (problem ...))`
 /// blocks in any order. This struct collects them all.
 #[derive(Debug, Clone, Default)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PddlFile {
     /// All domains found in the file.
     pub domains: Vec<Domain>,

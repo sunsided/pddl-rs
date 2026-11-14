@@ -36,7 +36,6 @@ use crate::{PreconditionGoalDescriptions, PreferenceConstraintGoalDescriptions};
 /// # fn main() {}
 /// ```
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Problem {
     /// The problem name.
     name: Name,

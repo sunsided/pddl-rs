@@ -6,7 +6,6 @@ use crate::types::{GoalDescription, Interval, TimeSpecifier};
 /// Used by [`PreferenceTimedGoalDescription`](crate::PreferenceTimedGoalDescription).
 #[doc(alias("timed-GD"))]
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum TimedGoalDescription {
     /// ## `at start`
     /// An expression or predicate with `at start` prefixed to it means that the condition
