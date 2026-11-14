@@ -52,6 +52,9 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- `Requirement::Adl.contains` claimed `:continuous-effects` instead of `:conditional-effects`, and
+  missed `:existential-preconditions` and `:universal-preconditions`. It now agrees with
+  `Requirement::expand`.
 - [#143](https://github.com/sunsided/pddl-rs/pull/143): Deeply nested input no longer overflows the
   stack and aborts the process. More than 64 open parentheses is a `ParseError` with the reason
   `nesting too deep`. Nested `(- ...)` in fluent, durative and `:metric` expressions parses in linear

@@ -170,7 +170,9 @@ impl Requirement {
                     || other == Self::DisjunctivePreconditions
                     || other == Self::Equality
                     || other == Self::QuantifiedPreconditions
-                    || other == Self::ContinuousEffects
+                    || other == Self::ExistentialPreconditions
+                    || other == Self::UniversalPreconditions
+                    || other == Self::ConditionalEffects
             }
 
             Self::Fluents => {
@@ -372,9 +374,17 @@ mod tests {
             Requirement::DisjunctivePreconditions,
             Requirement::Equality,
             Requirement::QuantifiedPreconditions,
-            Requirement::ContinuousEffects,
+            Requirement::ExistentialPreconditions,
+            Requirement::UniversalPreconditions,
+            Requirement::ConditionalEffects,
         ] {
             assert!(Requirement::Adl.contains(req));
+        }
+        assert!(!Requirement::Adl.contains(Requirement::ContinuousEffects));
+
+        // `contains` agrees with `expand`.
+        for req in Requirement::Adl.expand() {
+            assert!(Requirement::Adl.contains(req), "{req:?}");
         }
 
         // Check for self.
