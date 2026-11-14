@@ -13,6 +13,8 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- The minimum supported Rust version is now 1.86 (was 1.80), as required by the `criterion`
+  benchmark dependency.
 - `Number` stores an `f64` instead of an `f32`, so `Deref` and `Number::new` / `try_new` use `f64`.
   Whole numbers are exact up to 2^53 instead of 2^24: `16777217` used to parse as `16777216`.
   `Number::from` an `f64` beyond the `f32` range, such as `1e300`, used to overflow to infinity and
