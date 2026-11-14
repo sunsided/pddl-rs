@@ -1,4 +1,4 @@
-//! PDDL survives a round trip through JSON with the `serde` feature.
+//! PDDL survives a round trip through JSON, YAML and TOML with the `serde` feature.
 
 use assert2::check;
 
@@ -7,10 +7,10 @@ use serde_json::json;
 use std::fs;
 use std::path::Path;
 
-/// Every corpus file the parser accepts serializes to JSON and deserializes back to
-/// a value that serializes to the same JSON. Problems also compare equal; domains
-/// may come back with their actions, durative actions and derived predicates
-/// regrouped, which the JSON doesn't distinguish.
+/// Every corpus file the parser accepts serializes to JSON, YAML and TOML and
+/// deserializes back to a value that serializes to the same JSON. Problems also
+/// compare equal; domains may come back with their actions, durative actions and
+/// derived predicates regrouped, which the schema doesn't distinguish.
 #[test]
 fn corpus_round_trips_through_json() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/data");

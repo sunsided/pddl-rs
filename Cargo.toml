@@ -86,6 +86,18 @@ name = "corpus_snapshots"
 required-features = ["pretty", "parser"]
 
 [[example]]
+name = "as_json"
+required-features = ["serde"]
+
+[[example]]
+name = "as_yaml"
+required-features = ["serde"]
+
+[[example]]
+name = "as_toml"
+required-features = ["serde"]
+
+[[example]]
 name = "pretty_print"
 required-features = ["pretty", "parser"]
 
@@ -94,8 +106,10 @@ assert2 = "0.4.1"
 # Renders `ParseError` as a report in the `miette` feature's tests and example.
 # Pinned because the tests compare the rendered report byte for byte.
 miette = { version = "=7.6.0", default-features = false, features = ["fancy-no-syscall"] }
-# Round-trips the corpus through JSON in the `serde` feature's tests.
+# The `serde` feature's tests and examples; `preserve_order` keeps parameters in order.
 serde_json = { version = "1", features = ["preserve_order"] }
+toml = { version = "1.2.1", features = ["preserve_order"] }
+serde_yaml_ng = "0.10"
 criterion = { version = "0.8", default-features = false, features = ["cargo_bench_support"] }
 
 [package.metadata.docs.rs]
