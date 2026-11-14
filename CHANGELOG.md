@@ -11,8 +11,25 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `(define ...)` block and takes its kind from the header, so callers no longer parse a `PddlFile`
   and check that it holds exactly one definition.
 
+### Changed
+
+- `Name::len` returns the length in bytes, as `str::len` does, instead of in characters. For a
+  non-ASCII name built by hand, such as `Name::new("é")`, it used to return a value that can't be used
+  to slice the name. Parsed names are ASCII only, so their lengths don't change.
+- A space after an arithmetic operator is optional, so `(+x 1)` parses as `(-x)` already did. The
+  equality form accepts whitespace after its `(`, as `( = a b)`.
+
+### Fixed
+
+- [#143](https://github.com/sunsided/pddl-rs/pull/143): Deeply nested input no longer overflows the
+  stack and aborts the process. More than 64 open parentheses is a `ParseError` with the reason
+  `nesting too deep`. Nested `(- ...)` in fluent, durative and `:metric` expressions parses in linear
+  time; each level used to take about three times as long as the one below.
+
 ### Removed
 
+- The inherent `Name::len` and `Name::is_empty`. Method calls still work through `Deref` to `str`;
+  path calls such as `Name::len(&name)` don't.
 - [#138](https://github.com/sunsided/pddl-rs/issues/138): `pddl::parsers::ignore_eol_comment`. The
   parsers skip whitespace and `;` comments themselves, and nothing used it.
 
