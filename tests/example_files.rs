@@ -39,7 +39,12 @@ fn example_files_parse() {
             let source =
                 fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
             let expected_error = INVALID.iter().find(|(n, _)| *n == name).map(|(_, r)| *r);
-            match (PddlFile::from_str(&source), expected_error) {
+            let parsed = PddlFile::from_str(&source);
+            let first = pddl::parsers::check(&source).into_iter().next();
+            if first.as_ref() != parsed.as_ref().err() {
+                failures.push(format!("{name}: `check` found {first:?}"));
+            }
+            match (parsed, expected_error) {
                 (Ok(file), None) => {
                     let expected = (
                         count_headers(&source, "domain"),

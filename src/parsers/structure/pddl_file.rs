@@ -1,7 +1,9 @@
 //! Provides parsers for files with several domain and problem definitions.
 
 use crate::parsers::error::R;
-use crate::parsers::sexpr::Node;
+use crate::parsers::sexpr::{self, Node};
+use crate::parsers::structure::domain::parse_domain_recovering;
+use crate::parsers::structure::problem::parse_problem_recovering;
 use crate::parsers::{alt, parse_domain, parse_nodes, parse_problem, ParseError, Parser};
 use crate::types::{Definition, PddlFile};
 
@@ -38,6 +40,49 @@ pub(crate) fn parse_pddl_file(nodes: &[Node]) -> R<(PddlFile, usize)> {
 }
 
 crate::parsers::impl_parser!(Definition => parse_definition);
+
+/// Parses `input` like [`PddlFile::from_str`](crate::Parser::from_str), but
+/// returns every error it finds instead of stopping at the first one.
+///
+/// After an error, checking resumes at the next section of the same domain or
+/// problem, or at the next top-level form. So it reports at most one error per
+/// section, action or top-level form, in input order. The result is empty
+/// exactly when [`PddlFile::from_str`](crate::Parser::from_str) succeeds.
+///
+/// ## Example
+/// ```
+/// let input = "(define (domain d)\n  (:predicats (p))\n  (:action a :parameters (?x -)))";
+/// let errors = pddl::parsers::check(input);
+/// assert_eq!(errors.len(), 2);
+/// assert_eq!(errors[0].help(), Some("did you mean `:predicates`?"));
+/// assert_eq!(errors[1].line(), 3);
+/// ```
+#[must_use]
+pub fn check(input: &str) -> Vec<ParseError> {
+    let forest = match sexpr::read(input) {
+        Ok(forest) => forest,
+        Err(error) => return vec![ParseError::new(input, &error)],
+    };
+    let mut errors = Vec::new();
+    for node in &forest.nodes {
+        if !node
+            .head()
+            .is_some_and(|h| h.eq_ignore_ascii_case("define"))
+        {
+            errors.push(node.error());
+            continue;
+        }
+        let kind = node.children().and_then(|c| c.get(1)).and_then(Node::head);
+        let result = match kind.map(str::to_ascii_lowercase).as_deref() {
+            Some("domain") => parse_domain_recovering(node, Some(&mut errors)).map(drop),
+            Some("problem") => parse_problem_recovering(node, Some(&mut errors)).map(drop),
+            _ => parse_definition(node).map(drop),
+        };
+        errors.extend(result.err());
+    }
+    errors.extend(forest.unbalanced);
+    errors.iter().map(|e| ParseError::new(input, e)).collect()
+}
 
 impl Parser for PddlFile {
     type Item = PddlFile;
@@ -113,6 +158,60 @@ mod tests {
         for (label, input, at) in cases {
             let error = PddlFile::from_str(input).unwrap_err();
             check!(Some(error.offset()) == input.rfind(at), "{label}: {error}");
+        }
+    }
+
+    #[test]
+    fn check_reports_one_error_per_section_and_form() {
+        let input = "(define (domain d)\n  (:predicats (p))\n  (:types t)\n  (:types u)\n  \
+                     (:action a :parameters (?x -) :effect (p))\n  \
+                     (:action b :parameters () :effect (p)))\n\
+                     stray\n\
+                     (define (problem q) (:domain d) (:init (p) 1) (:goal (p)))\n\
+                     (define (problem r) (:domain d) (:init (p)))\n\
+                     (define (problem s) (:domain d) (:goal (p) (q)))\n\
+                     (";
+        let errors = parsers::check(input);
+        let found: Vec<_> = errors
+            .iter()
+            .map(|e| (e.line(), e.reason().unwrap_or_default()))
+            .collect();
+        check!(
+            found
+                == [
+                    (2, "unknown section"),
+                    (4, "duplicate section"),
+                    (5, ""),
+                    (7, ""),
+                    (8, ""),
+                    (9, "missing `:goal`"),
+                    (10, "expected `)`"),
+                    (11, ""),
+                    (11, "expected `)`"),
+                ]
+        );
+        // A failed `:init` is not reported again as missing.
+        check!(errors.iter().all(|e| e.reason() != Some("missing `:init`")));
+    }
+
+    #[test]
+    fn check_agrees_with_from_str() {
+        let inputs = [
+            String::new(),
+            format!("{DOMAIN}\n{PROBLEM}"),
+            format!("{DOMAIN})"),
+            "(define (foo x))".into(),
+            "(define (domain".into(),
+            ") (define (domain d))".into(),
+            "(define (domain d) (:requirement :strips))".into(),
+            "(define (problem p) (:domain d) (:init (p) 1) (:goal (p)))".into(),
+            "(define (problem p) (:domain d) (:init))".into(),
+            "(".repeat(100),
+        ];
+        for input in inputs {
+            let first = PddlFile::from_str(&input).err();
+            let all = parsers::check(&input);
+            check!(all.first() == first.as_ref(), "{input:?}");
         }
     }
 
