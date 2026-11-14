@@ -245,3 +245,248 @@ fn mistakes_are_reported() {
         json!({"problem": "p", "domain": "d", "init": [], "goal": {"not": [["a"], ["b"]]}});
     check!(serde_json::from_value::<Problem>(invalid).is_err());
 }
+
+/// Parses `pddl` as `T`, round-trips it through JSON and expects the same value.
+fn round_trip<T>(pddl: &str)
+where
+    T: Parser<Item = T>
+        + serde::Serialize
+        + serde::de::DeserializeOwned
+        + PartialEq
+        + std::fmt::Debug,
+{
+    let value = T::from_str(pddl).unwrap_or_else(|e| panic!("{pddl}: {e}"));
+    let json = serde_json::to_value(&value).unwrap();
+    let back: T =
+        serde_json::from_value(json.clone()).unwrap_or_else(|e| panic!("{pddl}: {e}\n{json}"));
+    check!(back == value, "{pddl}\n{json}");
+}
+
+/// Names, terms, types and expressions.
+#[test]
+fn terms_and_expressions_round_trip() {
+    use pddl::*;
+    round_trip::<Name>("truck");
+    round_trip::<Variable>("?t");
+    round_trip::<Predicate>("at");
+    round_trip::<FunctionSymbol>("fuel");
+    round_trip::<PrimitiveType>("truck");
+    round_trip::<PreferenceName>("p1");
+    round_trip::<ActionSymbol>("drive");
+    round_trip::<DurativeActionSymbol>("load");
+    round_trip::<Term>("(f a ?x)");
+    round_trip::<FunctionTerm>("(f a (g ?x))");
+    round_trip::<BasicFunctionTerm>("(f a b)");
+    round_trip::<Type>("(either truck plane)");
+    round_trip::<FunctionType>("number");
+    round_trip::<FunctionHead>("(f ?x)");
+    round_trip::<FluentComparison>("(>= (f) 1)");
+    round_trip::<FluentExpression>("(* (f ?x) 2 3)");
+    round_trip::<MetricFluentExpression>(
+        "(+ (* 2 total-time) (- (is-violated p)) (/ (f a) 3) (- 1 2) (g))",
+    );
+    round_trip::<AssignOp>("scale-up");
+    round_trip::<BinaryComparison>("<=");
+    round_trip::<BinaryOp>("/");
+    round_trip::<MultiOp>("*");
+    round_trip::<Optimization>("maximize");
+}
+
+/// Goals, preferences and constraints.
+#[test]
+fn goals_round_trip() {
+    use pddl::*;
+    round_trip::<GoalDescription>(
+        "(and (p (f ?x)) (or (q) (not (r))) (imply (a) (b)) (exists (?y - t) (p ?y))
+              (forall (?z - (either a b)) (p ?z)) (> (f ?x) (- (g) 1)) (= ?x ?y))",
+    );
+    round_trip::<PreferenceGoalDescription>("(preference p (q))");
+    round_trip::<PreferenceGoalDescription>("(preference (q))");
+    round_trip::<PreconditionGoalDescriptions>("(and (forall (?x) (preference p (q ?x))) (r))");
+    round_trip::<ConstraintGoalDescription>(
+        "(and (forall (?x) (always (p ?x))) (at end (q)) (sometime (q)) (within 5 (q))
+              (at-most-once (q)) (sometime-after (p) (q)) (sometime-before (p) (q))
+              (always-within 3 (p) (q)) (hold-during 1 2 (q)) (hold-after 4 (q))
+              (always (sometime (q))))",
+    );
+    round_trip::<ConstraintGoalDescriptionInner>("(sometime (q))");
+    round_trip::<PreferenceConstraintGoalDescriptions>(
+        "(and (preference p1 (always (q))) (preference (sometime (q)))
+              (forall (?x) (preference p2 (always (q ?x)))) (always (r)))",
+    );
+}
+
+/// Effects, actions and durative actions.
+#[test]
+fn actions_and_durative_actions_round_trip() {
+    use pddl::*;
+    round_trip::<PrimitiveEffect>("(assign (f a) b)");
+    round_trip::<PrimitiveEffect>("(assign (f a) undefined)");
+    round_trip::<ConditionalEffect>("(when (p) (and (q) (not (r))))");
+    round_trip::<ForallConditionalEffect>("(forall (?x) (p ?x))");
+    round_trip::<WhenConditionalEffect>("(when (p) (q))");
+    round_trip::<EffectCondition>("(and (q) (increase (f) 2))");
+    round_trip::<Effects>("(and (forall (?x) (when (p ?x) (q ?x))) (p a))");
+    round_trip::<TimeSpecifier>("start");
+    round_trip::<Interval>("all");
+    round_trip::<DurationOperator>(">=");
+    round_trip::<TimedAssignOperator>("decrease");
+    round_trip::<TimedGoalDescription>("(over all (p))");
+    round_trip::<PreferenceTimedGoalDescription>("(preference p (at start (p)))");
+    round_trip::<DurativeActionGoalDescription>("(forall (?y) (at start (p ?y)))");
+    round_trip::<DurationValue>("(f a)");
+    round_trip::<SimpleDurationConstraint>("(at end (<= ?duration 5))");
+    round_trip::<TimedFluentExpression>("#t");
+    round_trip::<TimedFluentExpression>("(* #t 2)");
+    round_trip::<DurativeActionFluentExpression>("(+ ?duration 1 (- ?duration))");
+    round_trip::<DurativeActionFunctionAssignment>("(increase (f a) (* ?duration 2))");
+    round_trip::<TimedEffect>("(at end (increase (f a) ?duration))");
+    round_trip::<TimedEffect>("(increase (f a) #t)");
+    round_trip::<DurativeActionEffect>(
+        "(and (forall (?y) (at end (q ?y))) (when (at start (p a)) (at end (q a))))",
+    );
+    round_trip::<DurativeActionDefinition>(
+        "(:durative-action d :parameters (?x) :duration (= ?duration (- (f ?x) 1))
+           :condition (at start (p ?x)) :effect (at end (q ?x)))",
+    );
+    round_trip::<DurativeActionDefinition>(
+        "(:durative-action d :parameters () :duration () :condition () :effect ())",
+    );
+    round_trip::<ActionDefinition>(
+        "(:action a :parameters (?x) :precondition (p ?x) :effect (q ?x))",
+    );
+    round_trip::<DerivedPredicate>("(:derived (p ?x - t) (q ?x))");
+    round_trip::<DerivedPredicate>("(:derived (p) (q))");
+    round_trip::<StructureDef>("(:action a :parameters ())");
+    round_trip::<StructureDef>(
+        "(:durative-action d :parameters () :duration () :condition () :effect ())",
+    );
+    round_trip::<StructureDef>("(:derived (p) (q))");
+}
+
+/// Sections, domains and problems.
+#[test]
+fn sections_round_trip() {
+    use pddl::*;
+    round_trip::<AtomicFormulaSkeleton>("(p ?x - t)");
+    round_trip::<AtomicFunctionSkeleton>("(f ?x)");
+    round_trip::<Requirement>(":typing");
+    round_trip::<Requirements>("(:requirements :strips :foo-bar)");
+    round_trip::<Types>("(:types a b - c)");
+    round_trip::<Constants>("(:constants a - t)");
+    round_trip::<Objects>("(:objects a)");
+    round_trip::<PredicateDefinitions>("(:predicates (p ?x) (q))");
+    round_trip::<Functions>("(:functions (f ?x) - number (g) - object)");
+    round_trip::<DomainConstraintsDef>("(:constraints (always (p)))");
+    round_trip::<Timeless>("(:timeless (p a) (not (q)))");
+    round_trip::<InitElement>("(= (g a) b)");
+    round_trip::<InitElements>("(:init (p a) (not (q a)) (at 3 (r)) (= (f a) 2) (= (g a) b))");
+    round_trip::<ProblemGoalDescription>("(:goal (p))");
+    round_trip::<ProblemConstraintsDef>("(:constraints (preference p (always (q))))");
+    round_trip::<MetricSpec>("(:metric maximize (f))");
+    round_trip::<LengthSpec>("(:length (:serial 3) (:parallel 2))");
+    round_trip::<Domain>(
+        "(define (domain d) (:extends base) (:requirements :strips)
+           (:constraints (always (p))) (:timeless (p)))",
+    );
+    round_trip::<Problem>(
+        "(define (problem p) (:domain d) (:init) (:goal (p))
+           (:constraints (always (p))) (:length (:serial 2)))",
+    );
+    round_trip::<Definition>("(define (domain d))");
+    round_trip::<Definition>("(define (problem p) (:domain d) (:init) (:goal (p)))");
+}
+
+#[test]
+fn types_without_a_parser_still_serialize() {
+    use pddl::{GoalDescription, Literal, Type, Typed, TypedList};
+    let typed = Typed::new(Name::new("a"), Type::OBJECT);
+    check!(serde_json::to_value(&typed).unwrap() == json!({"a": "object"}));
+    check!(serde_json::to_value(TypedList::new(vec![typed])).unwrap() == json!({"a": "object"}));
+
+    let atom = pddl::AtomicFormula::new_predicate("p".into(), [pddl::Term::Name("a".into())]);
+    let literal = GoalDescription::Literal(Literal::new_not(atom));
+    check!(serde_json::to_value(&literal).unwrap() == json!({"not": ["p", "a"]}));
+}
+
+#[test]
+fn duration_constraints_round_trip() {
+    use pddl::DurationConstraint;
+    let constraint = DurationConstraint::from_str("(and (>= ?duration 1) (<= ?duration 5))")
+        .unwrap()
+        .unwrap();
+    let json = serde_json::to_value(&constraint).unwrap();
+    check!(serde_json::from_value::<DurationConstraint>(json).unwrap() == constraint);
+
+    let error = serde_json::from_value::<DurationConstraint>(json!({"and": []})).unwrap_err();
+    check!(error.to_string().contains("in `(and)`"));
+}
+
+/// Mistakes in the input are explained in terms of the schema.
+#[test]
+fn schema_mistakes_are_explained() {
+    use pddl::{
+        ActionDefinition, DerivedPredicate, DurativeActionDefinition, FluentExpression, Functions,
+        GoalDescription, LengthSpec, StructureDef, Types,
+    };
+    fn message<T: serde::de::DeserializeOwned + std::fmt::Debug>(
+        json: serde_json::Value,
+    ) -> String {
+        serde_json::from_value::<T>(json).unwrap_err().to_string()
+    }
+    check!(
+        message::<ActionDefinition>(json!({"a": {"pre": []}})) == "unknown key `pre` in action `a`"
+    );
+    check!(
+        message::<DurativeActionDefinition>(json!({"d": {"cond": []}}))
+            == "unknown key `cond` in durative action `d`"
+    );
+    check!(
+        message::<DerivedPredicate>(json!({"pred": "p"}))
+            == "unknown key `pred` in a derived predicate"
+    );
+    check!(
+        message::<DerivedPredicate>(json!({"condition": ["q"]}))
+            == "a derived predicate needs a `predicate`"
+    );
+    check!(
+        message::<DerivedPredicate>(json!({"predicate": "p"}))
+            == "a derived predicate needs a `condition`"
+    );
+    check!(
+        message::<Functions>(json!({"f": {"kind": "x"}})) == "unknown key `kind` in function `f`"
+    );
+    check!(message::<LengthSpec>(json!({"steps": 3})) == "unknown key `steps` in `length`");
+    check!(
+        message::<StructureDef>(json!({"method": {}})) == "unknown structure definition `method`"
+    );
+    check!(message::<PddlFile>(json!({"files": []})) == "unknown key `files` in a PDDL file");
+    check!(
+        message::<Problem>(json!({"problem": "p", "domain": "d", "plan": []}))
+            == "unknown key `plan` in a problem"
+    );
+    check!(message::<Domain>(json!({"name": "d"})) == "missing `domain`");
+    check!(
+        message::<GoalDescription>(json!({"and": [], "or": []}))
+            == r#"expected an object with a single keyword, found keys ["and", "or"]"#
+    );
+    check!(message::<Types>(json!({"a": 5})) == "expected a type, found the number 5");
+    check!(
+        message::<DerivedPredicate>(json!({"predicate": ["p"], "condition": ["q"]}))
+            == "expected a string, found an array"
+    );
+    check!(
+        message::<Problem>(json!({"problem": "p", "domain": "d", "init": {"a": 1}, "goal": ["g"]}))
+            == "expected an array, found an object"
+    );
+    check!(message::<ActionDefinition>(json!({})) == "expected an object with a single entry");
+    check!(message::<ActionDefinition>(json!({"a": []})) == "expected an object, found an array");
+    check!(message::<Domain>(json!({"domain": {"x": 1}})) == "expected a string, found an object");
+    check!(message::<Domain>(json!({"domain": "a b"})) == "`a b` is not a valid PDDL name");
+    check!(message::<Domain>(json!({"domain": 5})) == "expected a string, found the number 5");
+    check!(message::<GoalDescription>(json!(true)).contains("a string, number, array or object"));
+
+    // YAML can spell a non-finite number; PDDL can't.
+    let error = serde_yaml_ng::from_str::<FluentExpression>(".nan").unwrap_err();
+    check!(error.to_string().contains("NaN is not a finite number"));
+}
