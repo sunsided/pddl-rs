@@ -2,6 +2,8 @@ version: "3"
 
 vars:
   YARN: yarn
+  CARGO: cargo
+  WASM_TARGET: wasm32-wasip1-threads
   VSIX:
     sh: node -p "require('./package.json').name + '-' + require('./package.json').version + '.vsix'"
 
@@ -38,9 +40,34 @@ tasks:
     cmds:
       - "{{.YARN}} run watch"
 
+  server:
+    desc: Build the language server as WebAssembly into server/
+    preconditions:
+      - sh: command -v {{.CARGO}}
+        msg: "cargo not found — install Rust from https://rustup.rs/"
+      - sh: rustup target list --installed | grep -qx {{.WASM_TARGET}}
+        msg: "Rust target missing — rustup target add {{.WASM_TARGET}}"
+    sources:
+      - ../../Cargo.toml
+      - ../../src/**/*.rs
+      - ../../pddl-lsp/Cargo.toml
+      - ../../pddl-lsp/src/**/*.rs
+    generates:
+      - server/pddl-lsp.wasm
+    cmds:
+      - "{{.CARGO}} build --release -p pddl-lsp --target {{.WASM_TARGET}}"
+      - mkdir -p server
+      - cp ../../target/{{.WASM_TARGET}}/release/pddl-lsp.wasm server/pddl-lsp.wasm
+
+  test:
+    desc: Run the extension with its bundled server in a downloaded VS Code
+    deps: [build, server]
+    cmds:
+      - "{{if eq OS \"linux\"}}{{if not (env \"DISPLAY\")}}xvfb-run -a {{end}}{{end}}{{.YARN}} run test"
+
   package:
-    desc: Package the extension as a .vsix file
-    deps: [build]
+    desc: Package the extension, with the server, as a .vsix file
+    deps: [build, server]
     cmds:
       - "{{.YARN}} run package"
 
@@ -54,6 +81,6 @@ tasks:
       - code --install-extension {{.VSIX}} --force
 
   clean:
-    desc: Remove the compiled extension, packages and dependencies
+    desc: Remove the compiled extension, server, packages and dependencies
     cmds:
-      - rm -rf out node_modules *.vsix
+      - rm -rf out server node_modules .vscode-test *.vsix

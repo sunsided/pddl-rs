@@ -6,3 +6,5 @@ node_modules/.bin/**
 .gitignore
 yarn.lock
 Taskfile.dist.yaml
+test/**
+.vscode-test/**

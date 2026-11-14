@@ -2,3 +2,5 @@ node_modules/
 out/
 *.vsix
 .task/
+server/
+.vscode-test/

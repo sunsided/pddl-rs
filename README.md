@@ -40,7 +40,8 @@ cargo install --git https://github.com/sunsided/pddl-rs pddl-lsp
 ```
 
 Then set up your editor as described in the [`pddl-lsp` README](pddl-lsp/README.md#editor-setup).
-For VS Code, use the extension in [`editors/vscode`](editors/vscode).
+For VS Code, use the extension in [`editors/vscode`](editors/vscode), which bundles the server
+compiled to WebAssembly.
 
 The parser exposes what the server builds on:
 [`pddl::syntax`](https://docs.rs/pddl/latest/pddl/syntax/index.html) gives the

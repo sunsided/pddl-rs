@@ -10,7 +10,7 @@
     "url": "https://github.com/sunsided/pddl-rs"
   },
   "engines": {
-    "vscode": "^1.82.0"
+    "vscode": "^1.91.0"
   },
   "categories": [
     "Programming Languages",
@@ -21,6 +21,9 @@
     "pddl",
     "planning",
     "lsp"
+  ],
+  "extensionDependencies": [
+    "ms-vscode.wasm-wasi-core"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -49,8 +52,8 @@
       "properties": {
         "pddl.server.path": {
           "type": "string",
-          "default": "pddl-lsp",
-          "markdownDescription": "Path to the `pddl-lsp` binary. The default looks it up on `PATH`; install it with `cargo install pddl-lsp`."
+          "default": "",
+          "markdownDescription": "Path to a native `pddl-lsp` binary, such as `pddl-lsp` to look it up on `PATH`. If empty, the extension runs the WebAssembly build of the server it bundles."
         },
         "pddl.trace.server": {
           "type": "string",
@@ -75,14 +78,18 @@
     "compile": "tsc -p .",
     "watch": "tsc -watch -p .",
     "package": "vsce package --yarn --allow-missing-repository",
-    "vscode:prepublish": "yarn run compile"
+    "vscode:prepublish": "yarn run compile",
+    "test": "node test/run.js"
   },
   "dependencies": {
-    "vscode-languageclient": "9.0.1"
+    "@vscode/wasm-wasi": "1.0.2",
+    "@vscode/wasm-wasi-lsp": "0.1.0-pre.9",
+    "vscode-languageclient": "10.0.0-next.21"
   },
   "devDependencies": {
     "@types/node": "20.17.6",
-    "@types/vscode": "1.82.0",
+    "@types/vscode": "1.91.0",
+    "@vscode/test-electron": "2.4.1",
     "@vscode/vsce": "3.2.1",
     "typescript": "5.6.3"
   },

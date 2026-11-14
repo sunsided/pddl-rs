@@ -56,26 +56,29 @@ The server communicates over stdin and stdout and takes no options. It accepts
 
 ## Editor setup
 
-Each example below assumes `pddl-lsp` is on your `PATH`. If it isn't, use the
+Except for VS Code, each example below assumes `pddl-lsp` is on your `PATH`. If it isn't, use the
 binary's full path instead.
 
 ### VS Code
 
 Use the extension in [`editors/vscode`](../editors/vscode). It adds syntax
-highlighting and starts the server. It isn't on the Marketplace yet, so build
-and install it yourself. This needs Node.js, [Yarn](https://classic.yarnpkg.com/)
-and [Task](https://taskfile.dev). From the repository root, run:
+highlighting and bundles this server compiled to WebAssembly, so you don't need
+to install the binary. It isn't on the Marketplace yet, so build and install it
+yourself. This needs Node.js, [Yarn](https://classic.yarnpkg.com/), the
+`wasm32-wasip1-threads` Rust target and [Task](https://taskfile.dev). From the
+repository root, run:
 
 ```shell
 task vscode:install
 ```
 
-This packages the extension as a `.vsix` file and installs it into VS Code.
-To only build the `.vsix`, run `task vscode:package`. The
+This packages the extension and the server as a `.vsix` file and installs it
+into VS Code. To only build the `.vsix`, run `task vscode:package`. The
 [extension README](../editors/vscode/README.md#building) lists every task and
-the equivalent Yarn commands.
+the equivalent commands.
 
-To use a binary that isn't on `PATH`, set `pddl.server.path` in your settings.
+To use a native binary instead of the bundled one, set `pddl.server.path` to
+its path, or to `pddl-lsp` to look it up on `PATH`.
 
 ### Neovim 0.11+
 

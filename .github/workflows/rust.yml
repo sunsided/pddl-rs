@@ -103,10 +103,21 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Install Rust
+        run: |
+          rustup toolchain install stable --profile minimal --target wasm32-wasip1-threads --no-self-update
+          rustup default stable
+      - name: Build the server as WebAssembly
+        run: |
+          cargo build --release -p pddl-lsp --target wasm32-wasip1-threads
+          mkdir -p server
+          cp ../../target/wasm32-wasip1-threads/release/pddl-lsp.wasm server/
       - name: Install dependencies
         run: yarn install --frozen-lockfile --ignore-scripts
       - name: Compile
         run: yarn run compile
+      - name: Test in VS Code
+        run: xvfb-run -a yarn run test
       - name: Package
         run: yarn run package
 
