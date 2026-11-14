@@ -1,0 +1,11 @@
+src/**
+tsconfig.json
+**/*.map
+node_modules/.bin/**
+.task/**
+.gitignore
+yarn.lock
+Taskfile.dist.yaml
+test/**
+.vscode-test/**
+CONTRIBUTING.md

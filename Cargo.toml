@@ -32,12 +32,18 @@ pretty = ["dep:pretty"]
 ## JSON-friendly schema that mirrors PDDL (see the `serde` module docs).
 serde = ["parser", "dep:serde"]
 
-[lints.rust]
+[workspace]
+members = ["pddl-lsp"]
+
+[workspace.lints.rust]
 missing_docs = "warn"
 
-[lints.clippy]
+[workspace.lints.clippy]
 pedantic = { level = "warn", priority = -1 }
 missing_docs_in_private_items = "warn"
+
+[lints]
+workspace = true
 
 [dependencies]
 miette = { version = "7", optional = true, default-features = false }

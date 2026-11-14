@@ -1,0 +1,97 @@
+version: "3"
+
+vars:
+  YARN: yarn
+  CARGO: cargo
+  WASM_TARGET: wasm32-wasip1-threads
+  VSIX:
+    sh: node -p "require('./package.json').name + '-' + require('./package.json').version + '.vsix'"
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list-all
+
+  deps:
+    desc: Install the extension's dependencies with yarn
+    preconditions:
+      - sh: command -v {{.YARN}}
+        msg: "yarn not found — install Node.js from https://nodejs.org/, then run: corepack enable"
+    sources:
+      - package.json
+      - yarn.lock
+    generates:
+      - node_modules/.yarn-integrity
+    cmds:
+      - "{{.YARN}} install --frozen-lockfile --ignore-scripts"
+
+  build:
+    desc: Compile the extension to out/
+    deps: [deps]
+    cmds:
+      - "{{.YARN}} run compile"
+
+  watch:
+    desc: Recompile the extension on every change
+    aliases:
+      - dev
+    deps: [deps]
+    cmds:
+      - "{{.YARN}} run watch"
+
+  server:
+    desc: Build the language server as WebAssembly into server/
+    preconditions:
+      - sh: command -v {{.CARGO}}
+        msg: "cargo not found — install Rust from https://rustup.rs/"
+      - sh: rustup target list --installed | grep -qx {{.WASM_TARGET}}
+        msg: "Rust target missing — rustup target add {{.WASM_TARGET}}"
+    sources:
+      - ../../Cargo.toml
+      - ../../src/**/*.rs
+      - ../../pddl-lsp/Cargo.toml
+      - ../../pddl-lsp/src/**/*.rs
+    generates:
+      - server/pddl-lsp.wasm
+    cmds:
+      - "{{.CARGO}} build --release -p pddl-lsp --target {{.WASM_TARGET}}"
+      - mkdir -p server
+      - cp ../../target/{{.WASM_TARGET}}/release/pddl-lsp.wasm server/pddl-lsp.wasm
+
+  test:
+    desc: Run the extension with its bundled server in a downloaded VS Code
+    deps: [build, server]
+    cmds:
+      - "{{if eq OS \"linux\"}}{{if not (env \"DISPLAY\")}}xvfb-run -a {{end}}{{end}}{{.YARN}} run test"
+
+  package:
+    desc: Package the extension, with the server, as a .vsix file
+    deps: [build, server]
+    cmds:
+      - "{{.YARN}} run package"
+
+  install:
+    desc: Package the extension and install it into VS Code
+    deps: [package]
+    preconditions:
+      - sh: command -v code
+        msg: "code not found — in VS Code, run \"Shell Command: Install 'code' command in PATH\""
+    cmds:
+      - code --install-extension {{.VSIX}} --force
+
+  publish:
+    desc: Publish the extension from main to the VS Code Marketplace, through GitHub Actions
+    preconditions:
+      - sh: command -v gh
+        msg: "gh not found — install the GitHub CLI from https://cli.github.com/"
+    prompt: Publish the extension on main to the VS Code Marketplace?
+    cmds:
+      # The workflow publishes with Trusted Publishing, so no access token is needed here.
+      - gh workflow run vscode-publish.yml --ref main
+      - echo 'Started; follow it with "gh run watch" or in the Actions tab.'
+
+  clean:
+    desc: Remove the compiled extension, server, packages and dependencies
+    cmds:
+      - rm -rf out server node_modules .vscode-test *.vsix

@@ -1,0 +1,80 @@
+{
+  "Domain": {
+    "prefix": "domain",
+    "description": "A domain with requirements, types, predicates and an action",
+    "body": [
+      "(define (domain ${1:name})",
+      "  (:requirements :strips :typing)",
+      "  (:types ${2:thing})",
+      "  (:predicates",
+      "    (${3:predicate} ?${4:x} - ${2:thing}))",
+      "",
+      "  (:action ${5:action}",
+      "    :parameters (?${4:x} - ${2:thing})",
+      "    :precondition (${3:predicate} ?${4:x})",
+      "    :effect (not (${3:predicate} ?${4:x}))))$0"
+    ]
+  },
+  "Problem": {
+    "prefix": "problem",
+    "description": "A problem with objects, initial state and goal",
+    "body": [
+      "(define (problem ${1:name})",
+      "  (:domain ${2:domain})",
+      "  (:objects ${3:a b} - ${4:object})",
+      "  (:init",
+      "    ${5})",
+      "  (:goal (and",
+      "    ${6})))$0"
+    ]
+  },
+  "Action": {
+    "prefix": ":action",
+    "description": "An action with parameters, precondition and effect",
+    "body": [
+      "(:action ${1:name}",
+      "  :parameters (?${2:x} - ${3:object})",
+      "  :precondition (and ${4})",
+      "  :effect (and ${5}))$0"
+    ]
+  },
+  "Durative action": {
+    "prefix": ":durative-action",
+    "description": "A durative action with duration, conditions and effects",
+    "body": [
+      "(:durative-action ${1:name}",
+      "  :parameters (?${2:x} - ${3:object})",
+      "  :duration (= ?duration ${4:1})",
+      "  :condition (and",
+      "    (at start ${5})",
+      "    (over all ${6})",
+      "    (at end ${7}))",
+      "  :effect (and",
+      "    (at start ${8})",
+      "    (at end ${9})))$0"
+    ]
+  },
+  "Derived predicate": {
+    "prefix": ":derived",
+    "description": "A derived predicate and the goal that makes it true",
+    "body": [
+      "(:derived (${1:predicate} ?${2:x} - ${3:object})",
+      "  ${4})$0"
+    ]
+  },
+  "Universal quantifier": {
+    "prefix": "forall",
+    "description": "A formula or effect for every value of a variable",
+    "body": ["(forall (?${1:x} - ${2:thing})", "  ${3})$0"]
+  },
+  "Existential quantifier": {
+    "prefix": "exists",
+    "description": "A formula that holds for some value of a variable",
+    "body": ["(exists (?${1:x} - ${2:thing})", "  ${3})$0"]
+  },
+  "Conditional effect": {
+    "prefix": "when",
+    "description": "An effect that applies only if a condition holds",
+    "body": ["(when ${1:condition}", "  ${2:effect})$0"]
+  }
+}

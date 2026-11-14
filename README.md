@@ -26,6 +26,29 @@ pddl = { version = "*", default-features = false }
 
 Documentation comments are assembled from the PDDL papers and [nergmada/planning-wiki](https://github.com/nergmada/planning-wiki).
 
+## Editor Support
+
+[`pddl-lsp`](pddl-lsp) is a language server built on this crate. It works in
+VS Code, Neovim, Vim, Helix, Emacs, Sublime Text and other editors that speak
+the Language Server Protocol. It reports every syntax error in a file plus
+unknown names and wrong argument counts, and checks problems against their
+domain across files. It also provides hover, go to definition, references,
+rename, completion, signature help and formatting.
+
+```shell
+cargo install --git https://github.com/sunsided/pddl-rs pddl-lsp
+```
+
+Then set up your editor as described in the [`pddl-lsp` README](pddl-lsp/README.md#editor-setup).
+For VS Code, use the extension in [`editors/vscode`](editors/vscode), which bundles the server
+compiled to WebAssembly.
+
+The parser exposes what the server builds on:
+[`pddl::syntax`](https://docs.rs/pddl/latest/pddl/syntax/index.html) gives the
+position of every atom, list and comment, and
+[`pddl::parsers::check`](https://docs.rs/pddl/latest/pddl/parsers/fn.check.html)
+reports every error in a file rather than only the first.
+
 ## Usage Example
 
 See [`tests/briefcase_world.rs`](tests/briefcase_world.rs) for the full example.
@@ -35,7 +58,9 @@ See [`tests/briefcase_world.rs`](tests/briefcase_world.rs) for the full example.
 ```rust
 use pddl::{Problem, Parser};
 
-pub const BRIEFCASE_WORLD_PROBLEM: &'static str = r#"
+pub const BRIEFCASE_WORLD_PROBLEM: &'static str = 
+    // language=pddl
+    r#"
     (define (problem get-paid)
         (:domain briefcase-world)
         (:init (place home) (place office)                  ; place types
@@ -64,25 +89,27 @@ in any order. Use `PddlFile` to parse them all at once:
 ```rust
 use pddl::{PddlFile, Parser};
 
-pub const PDDL_FILE: &'static str = r#"
-(define (domain blocks-world)
-    (:requirements :strips)
-    (:predicates (clear ?x) (on ?x ?y) (on-table ?x))
-    ; ... actions omitted for brevity
-)
+pub const PDDL_FILE: &'static str = 
+    // language=pddl
+    r#"
+    (define (domain blocks-world)
+        (:requirements :strips)
+        (:predicates (clear ?x) (on ?x ?y) (on-table ?x))
+        ; ... actions omitted for brevity
+    )
 
-(define (problem blocks-problem-1)
-    (:domain blocks-world)
-    (:init (on-table a) (on b a) (clear b))
-    (:goal (and (on a b)))
-)
+    (define (problem blocks-problem-1)
+        (:domain blocks-world)
+        (:init (on-table a) (on b a) (clear b))
+        (:goal (and (on a b)))
+    )
 
-(define (problem blocks-problem-2)
-    (:domain blocks-world)
-    (:init (on-table a) (on-table b) (clear a) (clear b))
-    (:goal (and (on b a)))
-)
-"#;
+    (define (problem blocks-problem-2)
+        (:domain blocks-world)
+        (:init (on-table a) (on-table b) (clear a) (clear b))
+        (:goal (and (on b a)))
+    )
+    "#;
 
 fn main() {
     let file = PddlFile::from_str(PDDL_FILE).unwrap();

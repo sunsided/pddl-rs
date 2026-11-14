@@ -8,6 +8,8 @@ on:
       - 'Cargo.toml'
       - 'Cargo.lock'
       - 'src/**'
+      - 'pddl-lsp/**'
+      - 'editors/vscode/**'
       - '.github/workflows/rust.yml'
   pull_request:
     branches: [ "main" ]
@@ -15,6 +17,8 @@ on:
       - 'Cargo.toml'
       - 'Cargo.lock'
       - 'src/**'
+      - 'pddl-lsp/**'
+      - 'editors/vscode/**'
       - '.github/workflows/rust.yml'
 
 env:
@@ -37,7 +41,7 @@ jobs:
           rustup toolchain install stable --profile minimal --component clippy --no-self-update
           rustup default stable
       - name: Run clippy
-        run: cargo clippy --all-features --tests -- -D warnings
+        run: cargo clippy --workspace --all-features --tests -- -D warnings
 
   msrv:
     name: MSRV
@@ -53,9 +57,9 @@ jobs:
           rustup toolchain install 1.86.0 --profile minimal --no-self-update
           rustup default 1.86.0
       - name: Build with MSRV
-        run: cargo build --all-features
+        run: cargo build --workspace --all-features
       - name: Test with MSRV
-        run: cargo test --all-features
+        run: cargo test --workspace --all-features
 
   build:
     name: Build and Test
@@ -72,20 +76,53 @@ jobs:
       - name: Check format
         run: cargo fmt --check
       - name: Build
-        run: cargo build --verbose
+        run: cargo build --workspace --verbose
       - uses: taiki-e/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39 # v2.90.3
         with:
           tool: nextest
       - name: Run tests
-        run: cargo nextest run --verbose --all-features
+        run: cargo nextest run --workspace --verbose --all-features
       - name: Run doctests
-        run: cargo test --doc --verbose --all-features
+        run: cargo test --workspace --doc --verbose --all-features
       - name: Test without default features
         run: cargo test --no-default-features
       - name: Test with only the pretty feature
         run: cargo test --no-default-features --features pretty
       - name: Test with only the parser feature
         run: cargo test --no-default-features --features parser
+
+  vscode:
+    name: VS Code Extension
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: editors/vscode
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Install Rust
+        run: |
+          rustup toolchain install stable --profile minimal --target wasm32-wasip1-threads --no-self-update
+          rustup default stable
+      - name: Build the server as WebAssembly
+        run: |
+          cargo build --release -p pddl-lsp --target wasm32-wasip1-threads
+          mkdir -p server
+          cp ../../target/wasm32-wasip1-threads/release/pddl-lsp.wasm server/
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --ignore-scripts
+      - name: Compile
+        run: yarn run compile
+      - name: Test in VS Code
+        run: xvfb-run -a yarn run test
+      - name: Package
+        run: yarn run package
 
   codecov:
     name: Code Coverage

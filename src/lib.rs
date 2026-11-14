@@ -332,6 +332,9 @@
 #[cfg_attr(docsrs, doc(cfg(feature = "parser")))]
 #[cfg(feature = "parser")]
 pub mod parsers;
+#[cfg_attr(docsrs, doc(cfg(feature = "parser")))]
+#[cfg(feature = "parser")]
+pub mod syntax;
 mod types;
 pub mod visitor;
 

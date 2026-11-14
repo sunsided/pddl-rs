@@ -4,6 +4,8 @@
 //! This is the only place that looks at characters. The grammar works on the
 //! tree, so every error it reports can point at a whole atom or list.
 
+use std::ops::Range;
+
 use crate::parsers::error::Error;
 
 /// The deepest `(` nesting the parser accepts: each `(` still open counts once.
@@ -12,8 +14,8 @@ use crate::parsers::error::Error;
 pub(crate) const MAX_NESTING_DEPTH: usize = 64;
 
 /// An atom or a parenthesized list, with its position in the input.
-#[derive(Debug)]
-pub(crate) struct Node<'a> {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Node<'a> {
     /// Byte offset of the atom or of the list's `(`.
     pub start: usize,
     /// For an atom, the byte offset just past it. For a list, the byte offset
@@ -26,8 +28,8 @@ pub(crate) struct Node<'a> {
 }
 
 /// The content of a [`Node`].
-#[derive(Debug)]
-pub(crate) enum Kind<'a> {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Kind<'a> {
     /// Any run of characters other than whitespace, `(`, `)` and `;`.
     Atom(&'a str),
     /// A parenthesized list and its children, in order.
@@ -43,6 +45,8 @@ pub(crate) struct Forest<'a> {
     /// the nodes before it, because a mistake inside a form is usually closer
     /// to the real cause than a missing parenthesis at the end of the input.
     pub unbalanced: Option<Error>,
+    /// The byte ranges of the `;` comments read, in order, without their line break.
+    pub comments: Vec<Range<usize>>,
 }
 
 /// Splits `input` into atoms and lists.
@@ -55,14 +59,17 @@ pub(crate) fn read(input: &str) -> Result<Forest<'_>, Error> {
     // Lists still open: their `(` offset and the children read so far.
     let mut open: Vec<(usize, Vec<Node>)> = Vec::new();
     let mut top = Vec::new();
+    let mut comments = Vec::new();
     let mut i = 0;
     while i < bytes.len() {
         match bytes[i] {
             b if b.is_ascii_whitespace() => i += 1,
             b';' => {
+                let start = i;
                 while i < bytes.len() && bytes[i] != b'\n' && bytes[i] != b'\r' {
                     i += 1;
                 }
+                comments.push(start..i);
             }
             b'(' => {
                 if open.len() == MAX_NESTING_DEPTH {
@@ -77,6 +84,7 @@ pub(crate) fn read(input: &str) -> Result<Forest<'_>, Error> {
                     return Ok(Forest {
                         nodes: top,
                         unbalanced,
+                        comments,
                     });
                 };
                 let node = Node {
@@ -134,6 +142,7 @@ pub(crate) fn read(input: &str) -> Result<Forest<'_>, Error> {
     Ok(Forest {
         nodes: top,
         unbalanced,
+        comments,
     })
 }
 
@@ -163,6 +172,7 @@ const fn is_delimiter(b: u8) -> bool {
 
 impl<'a> Node<'a> {
     /// The atom's text, or `None` for a list.
+    #[must_use]
     pub fn atom(&self) -> Option<&'a str> {
         match self.kind {
             Kind::Atom(text) => Some(text),
@@ -171,11 +181,13 @@ impl<'a> Node<'a> {
     }
 
     /// Whether this is the atom `word`, ignoring ASCII case.
+    #[must_use]
     pub fn is(&self, word: &str) -> bool {
         self.atom().is_some_and(|a| a.eq_ignore_ascii_case(word))
     }
 
     /// The list's children, or `None` for an atom.
+    #[must_use]
     pub fn children(&self) -> Option<&[Node<'a>]> {
         match &self.kind {
             Kind::List(children) => Some(children),
@@ -184,12 +196,13 @@ impl<'a> Node<'a> {
     }
 
     /// The list's first child if it is an atom, such as `and` in `(and ...)`.
+    #[must_use]
     pub fn head(&self) -> Option<&'a str> {
         self.children()?.first()?.atom()
     }
 
     /// An error at this node. It covers an atom, or a list's `(` and head atom.
-    pub fn error(&self) -> Error {
+    pub(crate) fn error(&self) -> Error {
         let end = match &self.kind {
             Kind::Atom(_) => self.end,
             Kind::List(children) => match children.first() {
@@ -207,7 +220,7 @@ impl<'a> Node<'a> {
 
     /// An error at this list's `)`, or at the end of the input if it has none,
     /// in which case the error marks this list's `(` as never closed.
-    pub fn error_at_close(&self) -> Error {
+    pub(crate) fn error_at_close(&self) -> Error {
         Error {
             unclosed: (!self.closed).then_some(self.start),
             ..Error::at(self.end, usize::from(self.closed))
@@ -233,9 +246,12 @@ mod tests {
 
     #[test]
     fn reads_atoms_lists_and_comments() {
-        let forest = read("(a ?b(c) ; (not this)\n :d-e 1.5)x").unwrap();
+        let input = "(a ?b(c) ; (not this)\r\n :d-e 1.5)x;end";
+        let forest = read(input).unwrap();
         check!(shape(&forest.nodes) == "[a ?b [c] :d-e 1.5] x");
         check!(forest.unbalanced.is_none());
+        let comments: Vec<_> = forest.comments.iter().map(|c| &input[c.clone()]).collect();
+        check!(comments == ["; (not this)", ";end"]);
     }
 
     #[test]

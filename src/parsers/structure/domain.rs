@@ -1,6 +1,6 @@
 //! Provides parsers for domain definitions (`<domain>`).
 
-use crate::parsers::error::R;
+use crate::parsers::error::{Error, R};
 use crate::parsers::sexpr::Node;
 use crate::parsers::{
     parse_constants_def, parse_domain_constraints_def, parse_functions_def, parse_name,
@@ -28,6 +28,15 @@ const SECTIONS: &[&str] = &[
 ///
 /// The sections may appear in any order; each one except actions at most once.
 pub(crate) fn parse_domain(node: &Node) -> R<Domain> {
+    parse_domain_recovering(node, None)
+}
+
+/// Like [`parse_domain`], but with `errors`, a failing section is recorded there
+/// and skipped, so that the sections after it are still checked.
+pub(crate) fn parse_domain_recovering(
+    node: &Node,
+    mut errors: Option<&mut Vec<Error>>,
+) -> R<Domain> {
     prefix(node, "define", |args| {
         let name = prefix(args.next()?, "domain", |args| parse_name(args.next()?))?;
         let mut extends = None;
@@ -40,39 +49,51 @@ pub(crate) fn parse_domain(node: &Node) -> R<Domain> {
         let mut timeless = None;
         let mut structure = Vec::new();
         for section in args.rest() {
-            if section.atom().is_some() {
-                return Err(section.error());
-            }
-            let head = section.head().unwrap_or_default().to_ascii_lowercase();
-            match head.as_str() {
-                ":extends" => {
-                    let names = prefix(section, ":extends", |args| args.list1(parse_name))?;
-                    set_once(&mut extends, names, section)?;
+            let mut read = || -> R<()> {
+                if section.atom().is_some() {
+                    return Err(section.error());
                 }
-                ":requirements" => {
-                    set_once(&mut requirements, parse_require_def(section)?, section)?;
+                let head = section.head().unwrap_or_default().to_ascii_lowercase();
+                match head.as_str() {
+                    ":extends" => {
+                        let names = prefix(section, ":extends", |args| args.list1(parse_name))?;
+                        set_once(&mut extends, names, section)
+                    }
+                    ":requirements" => {
+                        set_once(&mut requirements, parse_require_def(section)?, section)
+                    }
+                    ":types" => set_once(&mut types, parse_types_def(section)?, section),
+                    ":constants" => {
+                        set_once(&mut constants, parse_constants_def(section)?, section)
+                    }
+                    ":predicates" => {
+                        set_once(&mut predicates, parse_predicates_def(section)?, section)
+                    }
+                    ":functions" => {
+                        set_once(&mut functions, parse_functions_def(section)?, section)
+                    }
+                    ":constraints" => {
+                        let value = parse_domain_constraints_def(section)?;
+                        set_once(&mut constraints, value, section)
+                    }
+                    ":timeless" => set_once(&mut timeless, parse_timeless_def(section)?, section),
+                    ":action" | ":durative-action" | ":derived" => {
+                        structure.push(parse_structure_def(section)?);
+                        Ok(())
+                    }
+                    _ => {
+                        let error = section.error().reason("unknown section").fatal();
+                        Err(match section.head() {
+                            Some(head) => error.suggest(head, SECTIONS),
+                            None => error,
+                        })
+                    }
                 }
-                ":types" => set_once(&mut types, parse_types_def(section)?, section)?,
-                ":constants" => set_once(&mut constants, parse_constants_def(section)?, section)?,
-                ":predicates" => {
-                    set_once(&mut predicates, parse_predicates_def(section)?, section)?;
-                }
-                ":functions" => set_once(&mut functions, parse_functions_def(section)?, section)?,
-                ":constraints" => {
-                    let value = parse_domain_constraints_def(section)?;
-                    set_once(&mut constraints, value, section)?;
-                }
-                ":timeless" => set_once(&mut timeless, parse_timeless_def(section)?, section)?,
-                ":action" | ":durative-action" | ":derived" => {
-                    structure.push(parse_structure_def(section)?);
-                }
-                _ => {
-                    let error = section.error().reason("unknown section").fatal();
-                    return Err(match section.head() {
-                        Some(head) => error.suggest(head, SECTIONS),
-                        None => error,
-                    });
-                }
+            };
+            match (read(), errors.as_deref_mut()) {
+                (Ok(()), _) => {}
+                (Err(error), Some(errors)) => errors.push(error),
+                (Err(error), None) => return Err(error),
             }
         }
         Ok(Domain::builder(name, StructureDefs::new(structure))

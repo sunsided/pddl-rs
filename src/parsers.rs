@@ -105,6 +105,7 @@ mod test_helpers;
 mod utilities;
 
 pub use error::ParseError;
+pub use structure::pddl_file::check;
 
 use error::{Error, R};
 use sexpr::Node;

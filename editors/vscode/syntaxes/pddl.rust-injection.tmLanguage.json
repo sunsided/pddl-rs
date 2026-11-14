@@ -1,0 +1,78 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "scopeName": "pddl.language-comment.rust",
+  "injectionSelector": "L:source.rust -comment -string, L:meta.embedded.block.rust -comment -string",
+  "patterns": [
+    {
+      "include": "#tagged"
+    }
+  ],
+  "repository": {
+    "tagged": {
+      "comment": "A `language=pddl` comment: the string that follows it is PDDL.",
+      "begin": "(?i)//\\s*language\\s*=\\s*pddl\\b.*$",
+      "beginCaptures": {
+        "0": {
+          "name": "comment.line.double-slash.pddl-injection"
+        }
+      },
+      "end": "(?<=[\"`#])",
+      "patterns": [
+        {
+          "include": "#rust-raw-string"
+        },
+        {
+          "include": "#double-quoted-string"
+        },
+        {
+          "include": "source.rust"
+        }
+      ]
+    },
+    "rust-raw-string": {
+      "name": "string.quoted.raw.pddl-injection",
+      "begin": "b?r(#*)\"",
+      "end": "\"\\1",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.begin.pddl-injection"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.pddl-injection"
+        }
+      },
+      "contentName": "meta.embedded.block.pddl",
+      "patterns": [
+        {
+          "include": "source.pddl"
+        }
+      ]
+    },
+    "double-quoted-string": {
+      "name": "string.quoted.double.pddl-injection",
+      "begin": "\"",
+      "end": "\"",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.begin.pddl-injection"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.pddl-injection"
+        }
+      },
+      "contentName": "meta.embedded.block.pddl",
+      "patterns": [
+        {
+          "match": "\\\\."
+        },
+        {
+          "include": "source.pddl"
+        }
+      ]
+    }
+  }
+}

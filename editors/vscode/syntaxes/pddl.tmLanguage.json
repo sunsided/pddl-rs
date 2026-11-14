@@ -1,0 +1,58 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "PDDL",
+  "scopeName": "source.pddl",
+  "patterns": [
+    {
+      "include": "#comment"
+    },
+    {
+      "include": "#keyword"
+    },
+    {
+      "include": "#variable"
+    },
+    {
+      "include": "#number"
+    },
+    {
+      "include": "#timed"
+    },
+    {
+      "include": "#builtin"
+    },
+    {
+      "include": "#operator"
+    }
+  ],
+  "repository": {
+    "comment": {
+      "name": "comment.line.semicolon.pddl",
+      "match": ";.*$"
+    },
+    "keyword": {
+      "name": "keyword.other.pddl",
+      "match": ":[A-Za-z][A-Za-z0-9_-]*"
+    },
+    "variable": {
+      "name": "variable.parameter.pddl",
+      "match": "\\?[A-Za-z][A-Za-z0-9_-]*"
+    },
+    "number": {
+      "name": "constant.numeric.pddl",
+      "match": "(?<![A-Za-z0-9_-])-?\\d+(\\.\\d+)?(?![A-Za-z0-9_-])"
+    },
+    "builtin": {
+      "name": "keyword.control.pddl",
+      "match": "(?i)(?<=\\()\\s*(define|domain|problem|and|or|not|imply|forall|exists|when|either|preference|always|sometime|within|at-most-once|sometime-after|sometime-before|always-within|hold-during|hold-after|increase|decrease|assign|scale-up|scale-down|minimize|maximize|is-violated|total-time)(?![A-Za-z0-9_-])"
+    },
+    "operator": {
+      "name": "keyword.operator.pddl",
+      "match": "(?<=[\\s(])(<=|>=|=|<|>|\\+|\\*|/|-)(?=[\\s()])"
+    },
+    "timed": {
+      "name": "keyword.control.pddl",
+      "match": "(?i)(?<=\\()\\s*(at|over)(?=\\s+(start|end|all|-?\\d))|(?<=\\s)(start|end|all)(?=[\\s()])"
+    }
+  }
+}

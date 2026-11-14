@@ -5,7 +5,9 @@ use assert2::check;
 use pddl::{Name, Parser, PddlFile, Problem};
 
 /// A file with several domain and problem definitions, interleaved.
-pub const MULTI_DEF_FILE: &str = r"
+pub const MULTI_DEF_FILE: &str =
+    // language=pddl
+    r"
 ; Multi-definition PDDL file containing multiple domains and problems.
 ;
 ; This example demonstrates a PDDL file with several (define ...) blocks
@@ -178,4 +180,25 @@ fn parse_problems_only_from_multi_file() {
     check!(problems.len() == 5);
     check!(problems[0].name() == &Name::new("blocks-world-problem-1"));
     check!(problems[4].name() == &Name::new("blocks-world-problem-2"));
+}
+
+#[test]
+fn parses_the_multiple_definitions_example() {
+    let input = include_str!("../examples/multiple-definitions.pddl");
+    let file = PddlFile::from_str(input).unwrap();
+    let domains: Vec<_> = file.domains.iter().map(|d| d.name().to_string()).collect();
+    let problems: Vec<_> = file
+        .problems
+        .iter()
+        .map(|p| (p.name().to_string(), p.domain().to_string()))
+        .collect();
+    check!(domains == ["logistics", "ferry"]);
+    check!(
+        problems
+            == [
+                ("deliver-one".to_string(), "logistics".to_string()),
+                ("deliver-two".to_string(), "logistics".to_string()),
+                ("cross-river".to_string(), "ferry".to_string()),
+            ]
+    );
 }

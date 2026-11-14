@@ -1,0 +1,51 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "scopeName": "pddl.language-comment.typescript",
+  "injectionSelector": "L:source.ts -comment -string, L:source.tsx -comment -string, L:meta.embedded.block.typescript -comment -string, L:meta.embedded.block.typescriptreact -comment -string",
+  "patterns": [
+    {
+      "include": "#tagged"
+    }
+  ],
+  "repository": {
+    "tagged": {
+      "comment": "A `language=pddl` comment: the string that follows it is PDDL. The code before the string isn't highlighted as JavaScript or TypeScript, whose declaration rules would otherwise take the string.",
+      "begin": "(?i)//\\s*language\\s*=\\s*pddl\\b.*$",
+      "beginCaptures": {
+        "0": {
+          "name": "comment.line.double-slash.pddl-injection"
+        }
+      },
+      "end": "(?<=[\"`#])",
+      "patterns": [
+        {
+          "include": "#template-string"
+        }
+      ]
+    },
+    "template-string": {
+      "name": "string.template.pddl-injection",
+      "begin": "`",
+      "end": "`",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.begin.pddl-injection"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.pddl-injection"
+        }
+      },
+      "contentName": "meta.embedded.block.pddl",
+      "patterns": [
+        {
+          "match": "\\\\."
+        },
+        {
+          "include": "source.pddl"
+        }
+      ]
+    }
+  }
+}

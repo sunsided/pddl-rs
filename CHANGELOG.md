@@ -7,6 +7,12 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `pddl::syntax` exposes the tree of atoms and lists the parser reads first, with the byte range
+  of every atom, list and comment, for tools that work on the text such as editors and formatters.
+- `pddl::parsers::check` reports every error in a file instead of the first: after an error it
+  resumes at the next section of the domain or problem, or at the next top-level form.
+- `pddl-lsp`, a new crate in this repository, is a language server for PDDL with diagnostics,
+  navigation, rename, completion and formatting; `editors/vscode` holds a VS Code extension for it.
 - The optional `serde` feature serializes and deserializes domains, problems and every other PDDL
   type in a schema that follows PDDL: atoms are arrays (`["at", "?t", "depot"]`), other forms are
   objects keyed by their keyword (`{"not": ...}`, `{"forall": [vars, gd]}`, `{"at start": ...}`),

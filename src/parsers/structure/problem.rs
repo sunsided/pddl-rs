@@ -1,6 +1,6 @@
 //! Provides parsers for problem definitions (`<problem>`).
 
-use crate::parsers::error::R;
+use crate::parsers::error::{Error, R};
 use crate::parsers::sexpr::Node;
 use crate::parsers::{
     parse_name, parse_problem_constraints_def, parse_problem_goal_def, parse_problem_init_def,
@@ -26,6 +26,19 @@ const SECTIONS: &[&str] = &[
 /// The sections may appear in any order, each at most once; `:domain`, `:init`
 /// and `:goal` are required.
 pub(crate) fn parse_problem(node: &Node) -> R<Problem> {
+    // Without `errors`, a failing section returns its error, so the problem is never `None`.
+    parse_problem_recovering(node, None).map(|problem| problem.expect("no recovery"))
+}
+
+/// Like [`parse_problem`], but with `errors`, a failing section is recorded there
+/// and skipped, so that the sections after it are still checked. Then `None`
+/// means that a section failed and a required section is missing, which is not
+/// reported again: it may be the one that failed.
+pub(crate) fn parse_problem_recovering(
+    node: &Node,
+    mut errors: Option<&mut Vec<Error>>,
+) -> R<Option<Problem>> {
+    let mut failed = false;
     prefix(node, "define", |args| {
         let name = prefix(args.next()?, "problem", |args| parse_name(args.next()?))?;
         let mut domain = None;
@@ -37,50 +50,70 @@ pub(crate) fn parse_problem(node: &Node) -> R<Problem> {
         let mut metric = None;
         let mut length = None;
         for section in args.rest() {
-            if section.atom().is_some() {
-                return Err(section.error());
-            }
-            let head = section.head().unwrap_or_default().to_ascii_lowercase();
-            match head.as_str() {
-                ":domain" => {
-                    let value = prefix(section, ":domain", |args| parse_name(args.next()?))?;
-                    set_once(&mut domain, value, section)?;
+            let mut read = || -> R<()> {
+                if section.atom().is_some() {
+                    return Err(section.error());
                 }
-                ":requirements" => {
-                    set_once(&mut requirements, parse_require_def(section)?, section)?;
+                let head = section.head().unwrap_or_default().to_ascii_lowercase();
+                match head.as_str() {
+                    ":domain" => {
+                        let value = prefix(section, ":domain", |args| parse_name(args.next()?))?;
+                        set_once(&mut domain, value, section)
+                    }
+                    ":requirements" => {
+                        set_once(&mut requirements, parse_require_def(section)?, section)
+                    }
+                    ":objects" => {
+                        let value = parse_problem_objects_declaration(section)?;
+                        set_once(&mut objects, value, section)
+                    }
+                    ":init" => set_once(&mut init, parse_problem_init_def(section)?, section),
+                    ":goal" => set_once(&mut goal, parse_problem_goal_def(section)?, section),
+                    ":constraints" => {
+                        let value = parse_problem_constraints_def(section)?;
+                        set_once(&mut constraints, value, section)
+                    }
+                    // :numeric-fluents
+                    ":metric" => {
+                        set_once(&mut metric, parse_problem_metric_spec(section)?, section)
+                    }
+                    // Deprecated since PDDL 2.1
+                    ":length" => {
+                        set_once(&mut length, parse_problem_length_spec(section)?, section)
+                    }
+                    _ => {
+                        let error = section.error().reason("unknown section").fatal();
+                        Err(match section.head() {
+                            Some(head) => error.suggest(head, SECTIONS),
+                            None => error,
+                        })
+                    }
                 }
-                ":objects" => {
-                    let value = parse_problem_objects_declaration(section)?;
-                    set_once(&mut objects, value, section)?;
+            };
+            match (read(), errors.as_deref_mut()) {
+                (Ok(()), _) => {}
+                (Err(error), Some(errors)) => {
+                    errors.push(error);
+                    failed = true;
                 }
-                ":init" => set_once(&mut init, parse_problem_init_def(section)?, section)?,
-                ":goal" => set_once(&mut goal, parse_problem_goal_def(section)?, section)?,
-                ":constraints" => {
-                    let value = parse_problem_constraints_def(section)?;
-                    set_once(&mut constraints, value, section)?;
-                }
-                // :numeric-fluents
-                ":metric" => set_once(&mut metric, parse_problem_metric_spec(section)?, section)?,
-                // Deprecated since PDDL 2.1
-                ":length" => set_once(&mut length, parse_problem_length_spec(section)?, section)?,
-                _ => {
-                    let error = section.error().reason("unknown section").fatal();
-                    return Err(match section.head() {
-                        Some(head) => error.suggest(head, SECTIONS),
-                        None => error,
-                    });
-                }
+                (Err(error), None) => return Err(error),
             }
         }
         // Exhaustive per section, so a new required section can't be reported as another one.
-        let missing = |reason| Err(args.error_at_close().reason(reason).fatal());
+        let missing = |reason| {
+            if failed {
+                Ok(None)
+            } else {
+                Err(args.error_at_close().reason(reason).fatal())
+            }
+        };
         let (domain, init, goal) = match (domain, init, goal) {
             (Some(domain), Some(init), Some(goal)) => (domain, init, goal),
             (None, _, _) => return missing("missing `:domain`"),
             (_, None, _) => return missing("missing `:init`"),
             (_, _, None) => return missing("missing `:goal`"),
         };
-        Ok(Problem::new(
+        Ok(Some(Problem::new(
             name,
             domain,
             requirements.unwrap_or_default(),
@@ -90,7 +123,7 @@ pub(crate) fn parse_problem(node: &Node) -> R<Problem> {
             constraints.unwrap_or_default(),
             metric,
             length,
-        ))
+        )))
     })
 }
 

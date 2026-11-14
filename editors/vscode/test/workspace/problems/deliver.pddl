@@ -1,0 +1,5 @@
+(define (problem deliver)
+  (:domain logistics)
+  (:objects t1 - truck home - place)
+  (:init (at t1 home))
+  (:goal (at t1 ham)))

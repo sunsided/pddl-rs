@@ -1,0 +1,172 @@
+{
+  "name": "pddl-lsp",
+  "displayName": "PDDL (pddl-lsp)",
+  "description": "PDDL language support through the pddl-lsp language server: diagnostics, navigation, completion, rename and formatting.",
+  "version": "0.1.0",
+  "publisher": "sunsided",
+  "preview": true,
+  "license": "EUPL-1.2",
+  "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sunsided/pddl-rs"
+  },
+  "engines": {
+    "vscode": "^1.91.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Formatters"
+  ],
+  "keywords": [
+    "pddl",
+    "planning",
+    "lsp"
+  ],
+  "extensionDependencies": [
+    "ms-vscode.wasm-wasi-core"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "In Restricted Mode, only syntax highlighting is available. The language server starts once you trust the folder, so an untrusted folder can't choose a program through `pddl.server.path`.",
+      "restrictedConfigurations": [
+        "pddl.server.path"
+      ]
+    }
+  },
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "pddl",
+        "aliases": [
+          "PDDL",
+          "pddl"
+        ],
+        "extensions": [
+          ".pddl"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "pddl",
+        "scopeName": "source.pddl",
+        "path": "./syntaxes/pddl.tmLanguage.json"
+      },
+      {
+        "scopeName": "markdown.pddl.codeblock",
+        "path": "./syntaxes/pddl.markdown.tmLanguage.json",
+        "injectTo": [
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.pddl": "pddl"
+        }
+      },
+      {
+        "scopeName": "pddl.language-comment.rust",
+        "path": "./syntaxes/pddl.rust-injection.tmLanguage.json",
+        "injectTo": [
+          "source.rust",
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.pddl": "pddl"
+        }
+      },
+      {
+        "scopeName": "pddl.language-comment.javascript",
+        "path": "./syntaxes/pddl.javascript-injection.tmLanguage.json",
+        "injectTo": [
+          "source.js",
+          "source.js.jsx",
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.pddl": "pddl"
+        }
+      },
+      {
+        "scopeName": "pddl.language-comment.typescript",
+        "path": "./syntaxes/pddl.typescript-injection.tmLanguage.json",
+        "injectTo": [
+          "source.ts",
+          "source.tsx",
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.pddl": "pddl"
+        }
+      },
+      {
+        "scopeName": "pddl.language-comment.python",
+        "path": "./syntaxes/pddl.python-injection.tmLanguage.json",
+        "injectTo": [
+          "source.python",
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.pddl": "pddl"
+        }
+      }
+    ],
+    "configuration": {
+      "title": "PDDL",
+      "properties": {
+        "pddl.server.path": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Path to a native `pddl-lsp` binary, such as `pddl-lsp` to look it up on `PATH`. If empty, the extension runs the WebAssembly build of the server it bundles. A workspace can only set this once you trust it.",
+          "scope": "machine-overridable"
+        },
+        "pddl.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Logs the messages between VS Code and the language server to the output panel."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "pddl.restartServer",
+        "title": "PDDL: Restart Language Server"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "pddl",
+        "path": "./snippets/pddl.json"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p .",
+    "watch": "tsc -watch -p .",
+    "package": "vsce package --yarn --baseContentUrl https://github.com/sunsided/pddl-rs/blob/main/editors/vscode --baseImagesUrl https://github.com/sunsided/pddl-rs/raw/main/editors/vscode",
+    "vscode:prepublish": "yarn run compile",
+    "test": "node test/run.js",
+    "publish:marketplace": "vsce publish --yarn --baseContentUrl https://github.com/sunsided/pddl-rs/blob/main/editors/vscode --baseImagesUrl https://github.com/sunsided/pddl-rs/raw/main/editors/vscode"
+  },
+  "dependencies": {
+    "@vscode/wasm-wasi": "1.0.2",
+    "@vscode/wasm-wasi-lsp": "0.1.0-pre.9",
+    "vscode-languageclient": "10.0.0-next.21"
+  },
+  "devDependencies": {
+    "@types/node": "20.17.6",
+    "@types/vscode": "1.91.0",
+    "@vscode/test-electron": "2.4.1",
+    "@vscode/vsce": "4.1.0",
+    "typescript": "5.6.3"
+  },
+  "packageManager": "yarn@1.22.22"
+}

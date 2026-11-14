@@ -1,0 +1,51 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "scopeName": "pddl.language-comment.python",
+  "injectionSelector": "L:source.python -comment -string, L:meta.embedded.block.python -comment -string",
+  "patterns": [
+    {
+      "include": "#tagged"
+    }
+  ],
+  "repository": {
+    "tagged": {
+      "comment": "A `language=pddl` comment: the string that follows it is PDDL.",
+      "begin": "(?i)#\\s*language\\s*=\\s*pddl\\b.*$",
+      "beginCaptures": {
+        "0": {
+          "name": "comment.line.number-sign.pddl-injection"
+        }
+      },
+      "end": "(?<=\"\"\"|''')",
+      "patterns": [
+        {
+          "include": "#python-triple-string"
+        },
+        {
+          "include": "source.python"
+        }
+      ]
+    },
+    "python-triple-string": {
+      "name": "string.quoted.triple.pddl-injection",
+      "begin": "[rRuUbB]{0,2}(\"\"\"|''')",
+      "end": "\\1",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.begin.pddl-injection"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.pddl-injection"
+        }
+      },
+      "contentName": "meta.embedded.block.pddl",
+      "patterns": [
+        {
+          "include": "source.pddl"
+        }
+      ]
+    }
+  }
+}

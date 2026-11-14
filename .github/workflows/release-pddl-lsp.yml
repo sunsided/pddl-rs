@@ -1,0 +1,169 @@
+---
+name: Release pddl-lsp
+
+# Runs when `cargo release -p pddl-lsp` pushes a pddl-lsp-vX.Y.Z tag (see
+# pddl-lsp/release.toml). Publishes the crate to crates.io, creates a GitHub
+# Release and attaches binaries for the common platforms.
+on:
+  push:
+    tags:
+      - 'pddl-lsp-v[0-9]+.[0-9]+.[0-9]+'
+
+permissions: {}
+
+env:
+  CARGO_TERM_COLOR: always
+
+# Every job can be re-run: an already published version, an existing GitHub
+# Release and already uploaded binaries are skipped or replaced.
+jobs:
+  publish:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    # crates.io trusted publishing for pddl-lsp is configured for this workflow and environment.
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Rust
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
+      - name: Check that the tag matches the crate version and is on main
+        run: |
+          version=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "pddl-lsp") | .version')
+          if [ "pddl-lsp-v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match the version $version in pddl-lsp/Cargo.toml"
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::Tag $GITHUB_REF_NAME points at a commit that is not on main"
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+      - name: Run tests
+        run: cargo test -p pddl-lsp
+      - name: Check whether this version is already on crates.io
+        id: crates-io
+        run: |
+          response="$RUNNER_TEMP/crates-io.json"
+          # --retry covers timeouts, 429 and 5xx; a 404 means "not published yet".
+          status=$(curl -s --max-time 10 --retry 3 -o "$response" -w '%{http_code}' \
+            -A "pddl-rs release workflow (https://github.com/sunsided/pddl-rs)" \
+            "https://crates.io/api/v1/crates/pddl-lsp/$VERSION")
+          case "$status" in
+            200)
+              if [ "$(jq -r '.version.yanked' "$response")" != "false" ]; then
+                echo "::error::$VERSION is on crates.io but yanked; it can't be published again"
+                exit 1
+              fi
+              jq -r '"\(.version.num) is already on crates.io (published \(.version.created_at)); skipping publish"' "$response"
+              echo "published=true" >> "$GITHUB_OUTPUT"
+              ;;
+            404) echo "published=false" >> "$GITHUB_OUTPUT" ;;
+            *) echo "::error::Unexpected HTTP $status from crates.io"; exit 1 ;;
+          esac
+      - name: Authenticate with crates.io
+        if: steps.crates-io.outputs.published == 'false'
+        id: auth
+        uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1.0.6
+      # Builds against the pddl version on crates.io, so it fails if pddl-lsp needs
+      # parser changes that haven't been released yet: release pddl first.
+      - name: Publish
+        if: steps.crates-io.outputs.published == 'false'
+        run: cargo publish -p pddl-lsp
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+
+  github-release:
+    name: Create GitHub Release
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Extract release notes from pddl-lsp/CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#pddl-lsp-v}"
+          # The section from "## [X.Y.Z]" up to the next "## " heading, without
+          # the heading itself and without link definitions like "[X.Y.Z]: https://...".
+          awk -v heading="## [$version]" '
+            index($0, heading) == 1 { found = 1; next }
+            found && /^## / { exit }
+            found && /^\[[^]]+\]: / { next }
+            found { print }
+          ' pddl-lsp/CHANGELOG.md > release-notes.md
+      - name: Create the release
+        run: |
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists, skipping"
+          elif grep -q '[^[:space:]]' release-notes.md; then
+            gh release create "$GITHUB_REF_NAME" --verify-tag --title "pddl-lsp ${GITHUB_REF_NAME#pddl-lsp-v}" --notes-file release-notes.md
+          else
+            gh release create "$GITHUB_REF_NAME" --verify-tag --title "pddl-lsp ${GITHUB_REF_NAME#pddl-lsp-v}" --generate-notes
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  binaries:
+    name: Binary (${{ matrix.target }})
+    needs: github-release
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, target: x86_64-unknown-linux-gnu }
+          - { os: ubuntu-24.04-arm, target: aarch64-unknown-linux-gnu }
+          - { os: macos-latest, target: aarch64-apple-darwin }
+          - { os: windows-latest, target: x86_64-pc-windows-msvc }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Rust
+        run: |
+          rustup toolchain install stable --profile minimal --target "$TARGET" --no-self-update
+          rustup default stable
+        env:
+          TARGET: ${{ matrix.target }}
+      - name: Build
+        run: cargo build --release -p pddl-lsp --target "$TARGET"
+        env:
+          TARGET: ${{ matrix.target }}
+      - name: Upload to the release
+        run: |
+          name="pddl-lsp-${GITHUB_REF_NAME#pddl-lsp-v}-$TARGET"
+          mkdir "$name"
+          cp pddl-lsp/README.md LICENSE.md "$name/"
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            cp "target/$TARGET/release/pddl-lsp.exe" "$name/"
+            archive="$name.zip"
+            7z a "$archive" "$name" > /dev/null
+          else
+            cp "target/$TARGET/release/pddl-lsp" "$name/"
+            archive="$name.tar.gz"
+            tar -czf "$archive" "$name"
+          fi
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            shasum -a 256 "$archive" > "$archive.sha256"
+          else
+            sha256sum "$archive" > "$archive.sha256"
+          fi
+          gh release upload "$GITHUB_REF_NAME" "$archive" "$archive.sha256" --clobber
+        env:
+          TARGET: ${{ matrix.target }}
+          GH_TOKEN: ${{ github.token }}
