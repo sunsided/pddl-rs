@@ -41,13 +41,13 @@ Install the binary with Cargo. Cargo puts it in `~/.cargo/bin`, which needs to
 be on your `PATH`:
 
 ```shell
-cargo install --git https://github.com/sunsided/pddl-rs pddl-lsp
+cargo install --locked pddl-lsp
 ```
 
-Or from a checkout of this repository:
+Or, for unreleased changes, from a checkout of this repository:
 
 ```shell
-cargo install --path pddl-lsp
+cargo install --locked --path pddl-lsp
 ```
 
 Check that it works:

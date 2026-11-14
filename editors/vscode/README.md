@@ -106,7 +106,7 @@ server skips that runtime, which may help with very large workspaces. To use
 one, install it with Rust:
 
 ```shell
-cargo install --git https://github.com/sunsided/pddl-rs pddl-lsp
+cargo install --locked pddl-lsp
 ```
 
 Then set `pddl.server.path` to `pddl-lsp`, or to the binary's full path if

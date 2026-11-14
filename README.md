@@ -36,7 +36,7 @@ domain across files. It also provides hover, go to definition, references,
 rename, completion, signature help and formatting.
 
 ```shell
-cargo install --git https://github.com/sunsided/pddl-rs pddl-lsp
+cargo install --locked pddl-lsp
 ```
 
 Then set up your editor as described in the [`pddl-lsp` README](pddl-lsp/README.md#editor-setup).
