@@ -33,7 +33,7 @@ mod tests {
 
         let predicate = DerivedPredicate::from_str(input).unwrap();
         assert_eq!(predicate.predicate().name(), "train-usable");
-        assert!(matches!(predicate.expression(), &GoalDefinition::And(..)));
+        assert!(matches!(predicate.expression(), &GoalDescription::And(..)));
     }
 
     #[test]
@@ -47,6 +47,6 @@ mod tests {
 
         let predicate = DerivedPredicate::from_str(input).unwrap();
         assert_eq!(predicate.predicate().name(), "train-usable");
-        assert!(matches!(predicate.expression(), &GoalDefinition::And(..)));
+        assert!(matches!(predicate.expression(), &GoalDescription::And(..)));
     }
 }

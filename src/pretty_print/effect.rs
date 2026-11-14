@@ -116,7 +116,7 @@ mod tests {
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
     use crate::{
-        AtomicFormula, ConditionalEffect, EffectCondition, FunctionSymbol, GoalDefinition, Name,
+        AtomicFormula, ConditionalEffect, EffectCondition, FunctionSymbol, GoalDescription, Name,
         Predicate, PrimitiveEffect, Term,
     };
 
@@ -200,7 +200,7 @@ mod tests {
 
     #[test]
     fn c_effect_when() {
-        let cond = GoalDefinition::and(Vec::<GoalDefinition>::new());
+        let cond = GoalDescription::and(Vec::<GoalDescription>::new());
         let ce_inner = EffectCondition::all(Vec::new());
         let ce = ConditionalEffect::when(cond, ce_inner);
         assert_eq!(prettify!(ce, 30), "(when (and) (and))");

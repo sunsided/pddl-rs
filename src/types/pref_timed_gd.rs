@@ -1,120 +1,120 @@
-//! Contains the [`PreferenceTimedGoalDefinition`] type.
+//! Contains the [`PreferenceTimedGoalDescription`] type.
 
-use crate::types::{PreferenceName, TimedGoalDefinition};
+use crate::types::{PreferenceName, TimedGoalDescription};
 
-/// A (preferred) timed goal definition.
+/// A (preferred) timed goal description.
 ///
 /// ## Usage
-/// Used by [`DurativeActionGoalDefinition`](crate::DurativeActionGoalDefinition).
+/// Used by [`DurativeActionGoalDescription`](crate::DurativeActionGoalDescription).
 #[doc(alias("pref-timed-GD"))]
 #[derive(Debug, Clone, PartialEq)]
-pub enum PreferenceTimedGoalDefinition {
+pub enum PreferenceTimedGoalDescription {
     /// A required timed goal, `<timed-GD>`.
-    Required(TimedGoalDefinition),
+    Required(TimedGoalDescription),
     /// ## Requirements
     /// Requires [Preferences](crate::Requirement::Preferences).
-    Preference(Option<PreferenceName>, TimedGoalDefinition),
+    Preference(Option<PreferenceName>, TimedGoalDescription),
 }
 
-impl PreferenceTimedGoalDefinition {
+impl PreferenceTimedGoalDescription {
     /// Creates a required timed goal.
     #[doc(alias = "new_required")]
-    pub const fn required(gd: TimedGoalDefinition) -> Self {
+    pub const fn required(gd: TimedGoalDescription) -> Self {
         Self::Required(gd)
     }
 
     /// Creates a preference `(preference [<pref-name>] <timed-GD>)` with an optional name.
     #[doc(alias = "new_preference")]
-    pub const fn preference(name: Option<PreferenceName>, gd: TimedGoalDefinition) -> Self {
+    pub const fn preference(name: Option<PreferenceName>, gd: TimedGoalDescription) -> Self {
         Self::Preference(name, gd)
     }
 
     /// Deprecated alias for [`Self::required`].
     #[deprecated(since = "0.2.0", note = "Use `required` instead")]
-    pub const fn new_required(gd: TimedGoalDefinition) -> Self {
+    pub const fn new_required(gd: TimedGoalDescription) -> Self {
         Self::required(gd)
     }
 
     /// Deprecated alias for [`Self::preference`].
     #[deprecated(since = "0.2.0", note = "Use `preference` instead")]
-    pub const fn new_preference(name: Option<PreferenceName>, gd: TimedGoalDefinition) -> Self {
+    pub const fn new_preference(name: Option<PreferenceName>, gd: TimedGoalDescription) -> Self {
         Self::preference(name, gd)
     }
 }
 
-impl From<TimedGoalDefinition> for PreferenceTimedGoalDefinition {
-    fn from(value: TimedGoalDefinition) -> Self {
-        PreferenceTimedGoalDefinition::Required(value)
+impl From<TimedGoalDescription> for PreferenceTimedGoalDescription {
+    fn from(value: TimedGoalDescription) -> Self {
+        PreferenceTimedGoalDescription::Required(value)
     }
 }
 
-impl From<(Option<PreferenceName>, TimedGoalDefinition)> for PreferenceTimedGoalDefinition {
-    fn from(value: (Option<PreferenceName>, TimedGoalDefinition)) -> Self {
-        PreferenceTimedGoalDefinition::Preference(value.0, value.1)
+impl From<(Option<PreferenceName>, TimedGoalDescription)> for PreferenceTimedGoalDescription {
+    fn from(value: (Option<PreferenceName>, TimedGoalDescription)) -> Self {
+        PreferenceTimedGoalDescription::Preference(value.0, value.1)
     }
 }
 
-/// Alias for [`PreferenceTimedGoalDefinition`]; matches BNF `<pref-timed-GD>`.
-#[deprecated(since = "0.2.0", note = "Use `PreferenceTimedGoalDefinition` instead")]
-pub type PrefTimedGD = PreferenceTimedGoalDefinition;
+/// Alias for [`PreferenceTimedGoalDescription`]; matches BNF `<pref-timed-GD>`.
+#[deprecated(since = "0.2.0", note = "Use `PreferenceTimedGoalDescription` instead")]
+pub type PrefTimedGD = PreferenceTimedGoalDescription;
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::types::{
-        AtomicFormula, GoalDefinition, Predicate, Term, TimeSpecifier, TimedGoalDefinition,
+        AtomicFormula, GoalDescription, Predicate, Term, TimeSpecifier, TimedGoalDescription,
     };
 
-    fn make_timed_gd() -> TimedGoalDefinition {
+    fn make_timed_gd() -> TimedGoalDescription {
         let af = AtomicFormula::predicate(Predicate::string("at"), Vec::<Term>::new());
-        let gd = GoalDefinition::AtomicFormula(af);
-        TimedGoalDefinition::at(TimeSpecifier::Start, gd)
+        let gd = GoalDescription::AtomicFormula(af);
+        TimedGoalDescription::at(TimeSpecifier::Start, gd)
     }
 
     #[test]
     fn required_constructor() {
         let timed_gd = make_timed_gd();
-        let pref = PreferenceTimedGoalDefinition::required(timed_gd.clone());
-        assert_eq!(pref, PreferenceTimedGoalDefinition::Required(timed_gd));
+        let pref = PreferenceTimedGoalDescription::required(timed_gd.clone());
+        assert_eq!(pref, PreferenceTimedGoalDescription::Required(timed_gd));
     }
 
     #[test]
     fn preference_with_name() {
         let timed_gd = make_timed_gd();
         let name = PreferenceName::new("pref1");
-        let pref = PreferenceTimedGoalDefinition::preference(Some(name.clone()), timed_gd.clone());
+        let pref = PreferenceTimedGoalDescription::preference(Some(name.clone()), timed_gd.clone());
         assert_eq!(
             pref,
-            PreferenceTimedGoalDefinition::Preference(Some(name), timed_gd)
+            PreferenceTimedGoalDescription::Preference(Some(name), timed_gd)
         );
     }
 
     #[test]
     fn preference_without_name() {
         let timed_gd = make_timed_gd();
-        let pref = PreferenceTimedGoalDefinition::preference(None, timed_gd.clone());
+        let pref = PreferenceTimedGoalDescription::preference(None, timed_gd.clone());
         assert_eq!(
             pref,
-            PreferenceTimedGoalDefinition::Preference(None, timed_gd)
+            PreferenceTimedGoalDescription::Preference(None, timed_gd)
         );
     }
 
     #[test]
     fn from_timed_gd() {
         let timed_gd = make_timed_gd();
-        let from_gd: PreferenceTimedGoalDefinition = timed_gd.clone().into();
-        assert_eq!(from_gd, PreferenceTimedGoalDefinition::Required(timed_gd));
+        let from_gd: PreferenceTimedGoalDescription = timed_gd.clone().into();
+        assert_eq!(from_gd, PreferenceTimedGoalDescription::Required(timed_gd));
     }
 
     #[test]
     fn from_tuple() {
         let timed_gd = make_timed_gd();
         let name = PreferenceName::new("pref1");
-        let from_tuple: PreferenceTimedGoalDefinition =
+        let from_tuple: PreferenceTimedGoalDescription =
             (Some(name.clone()), timed_gd.clone()).into();
         assert_eq!(
             from_tuple,
-            PreferenceTimedGoalDefinition::Preference(Some(name), timed_gd)
+            PreferenceTimedGoalDescription::Preference(Some(name), timed_gd)
         );
     }
 
@@ -122,9 +122,11 @@ mod tests {
     #[allow(deprecated)]
     fn deprecated_new_constructors() {
         let timed_gd = make_timed_gd();
-        let _ = PreferenceTimedGoalDefinition::new_required(timed_gd.clone());
-        let _ =
-            PreferenceTimedGoalDefinition::new_preference(Some(PreferenceName::new("p")), timed_gd);
+        let _ = PreferenceTimedGoalDescription::new_required(timed_gd.clone());
+        let _ = PreferenceTimedGoalDescription::new_preference(
+            Some(PreferenceName::new("p")),
+            timed_gd,
+        );
     }
 
     #[test]

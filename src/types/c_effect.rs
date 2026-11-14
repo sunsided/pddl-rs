@@ -1,7 +1,7 @@
 //! Contains the [`ConditionalEffect`] type.
 
 use crate::types::TypedVariables;
-use crate::types::{EffectCondition, Effects, GoalDefinition, PrimitiveEffect};
+use crate::types::{EffectCondition, Effects, GoalDescription, PrimitiveEffect};
 
 /// A (potentially conditional) effect. Occurs as part of [`Effects`].
 ///
@@ -53,14 +53,14 @@ impl ForallConditionalEffect {
 #[derive(Debug, Clone, PartialEq)]
 pub struct WhenConditionalEffect {
     /// The antecedent. This needs to be true for the effect to apply.
-    pub condition: GoalDefinition,
+    pub condition: GoalDescription,
     /// The consequent. This is the effect that applies when the condition is true.
     pub effect: EffectCondition,
 }
 
 impl WhenConditionalEffect {
     /// Creates a new [`WhenConditionalEffect`] value.
-    pub const fn new(condition: GoalDefinition, effect: EffectCondition) -> Self {
+    pub const fn new(condition: GoalDescription, effect: EffectCondition) -> Self {
         WhenConditionalEffect { condition, effect }
     }
 }
@@ -101,13 +101,13 @@ impl ConditionalEffect {
     ///
     /// ## Requirements
     /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
-    pub const fn when(condition: GoalDefinition, effect: EffectCondition) -> Self {
+    pub const fn when(condition: GoalDescription, effect: EffectCondition) -> Self {
         Self::When(WhenConditionalEffect::new(condition, effect))
     }
 
     /// Creates a new conditional `when` effect.
     #[deprecated(since = "0.2.0", note = "Use `when` instead")]
-    pub const fn new_when(condition: GoalDefinition, effect: EffectCondition) -> Self {
+    pub const fn new_when(condition: GoalDescription, effect: EffectCondition) -> Self {
         Self::when(condition, effect)
     }
 }
@@ -136,8 +136,8 @@ impl From<(TypedVariables, Effects)> for ForallConditionalEffect {
     }
 }
 
-impl From<(GoalDefinition, EffectCondition)> for WhenConditionalEffect {
-    fn from(value: (GoalDefinition, EffectCondition)) -> Self {
+impl From<(GoalDescription, EffectCondition)> for WhenConditionalEffect {
+    fn from(value: (GoalDescription, EffectCondition)) -> Self {
         WhenConditionalEffect::new(value.0, value.1)
     }
 }
@@ -216,7 +216,7 @@ mod tests {
 
     #[test]
     fn conditional_effect_try_into_when() {
-        let cond = GoalDefinition::and(Vec::new());
+        let cond = GoalDescription::and(Vec::new());
         let effect = EffectCondition::all(Vec::new());
         let ce = ConditionalEffect::when(cond, effect);
         let result: Result<WhenConditionalEffect, ()> = ce.try_into();
@@ -247,10 +247,10 @@ mod tests {
         let forall: ForallConditionalEffect = (TypedVariables::default(), effects).into();
         assert!(forall.effects.is_empty());
 
-        let cond = GoalDefinition::and(Vec::new());
+        let cond = GoalDescription::and(Vec::new());
         let effect = EffectCondition::all(Vec::new());
         let when: WhenConditionalEffect = (cond, effect).into();
-        assert!(matches!(when.condition, GoalDefinition::And(_)));
+        assert!(matches!(when.condition, GoalDescription::And(_)));
     }
 
     #[test]

@@ -5,7 +5,7 @@ use crate::types::AtomicFormula;
 /// An [`AtomicFormula`] or its negated value.
 ///
 /// ## Usage
-/// Used by [`GoalDefinition`](crate::GoalDefinition) and [`InitElement`](crate::InitElement).
+/// Used by [`GoalDescription`](crate::GoalDescription) and [`InitElement`](crate::InitElement).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Literal<T> {
     /// A positive literal, `<atomic formula(t)>`.

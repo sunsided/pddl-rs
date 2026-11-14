@@ -2,7 +2,7 @@
 
 use crate::types::TypedVariables;
 use crate::types::{
-    DurationConstraint, DurativeActionEffect, DurativeActionGoalDefinition, DurativeActionSymbol,
+    DurationConstraint, DurativeActionEffect, DurativeActionGoalDescription, DurativeActionSymbol,
 };
 
 /// A durative action represents an action which takes an amount
@@ -32,7 +32,7 @@ pub struct DurativeActionDefinition {
     /// The duration constraint, from `:duration`; `None` if it is empty (`()`).
     duration: Option<DurationConstraint>,
     /// The conditions, from `:condition`; `None` if empty (`()`).
-    condition: Option<DurativeActionGoalDefinition>,
+    condition: Option<DurativeActionGoalDescription>,
     /// The effects, from `:effect`; `None` if empty (`()`).
     effect: Option<DurativeActionEffect>,
 }
@@ -44,7 +44,7 @@ impl DurativeActionDefinition {
         symbol: DurativeActionSymbol,
         parameters: TypedVariables,
         duration: Option<DurationConstraint>,
-        condition: Option<DurativeActionGoalDefinition>,
+        condition: Option<DurativeActionGoalDescription>,
         effect: Option<DurativeActionEffect>,
     ) -> Self {
         Self {
@@ -111,7 +111,7 @@ impl DurativeActionDefinition {
     /// Because a durative action occurs over time, we may wish to express that additional
     /// conditions be met for the duration or end of the action, not just the start.
     /// This gives rise to three new keywords `at start`, `at end` and `over all`.
-    pub const fn condition(&self) -> &Option<DurativeActionGoalDefinition> {
+    pub const fn condition(&self) -> &Option<DurativeActionGoalDescription> {
         &self.condition
     }
 
@@ -141,8 +141,8 @@ impl AsRef<Option<DurationConstraint>> for DurativeActionDefinition {
     }
 }
 
-impl AsRef<Option<DurativeActionGoalDefinition>> for DurativeActionDefinition {
-    fn as_ref(&self) -> &Option<DurativeActionGoalDefinition> {
+impl AsRef<Option<DurativeActionGoalDescription>> for DurativeActionDefinition {
+    fn as_ref(&self) -> &Option<DurativeActionGoalDescription> {
         self.condition()
     }
 }

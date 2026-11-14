@@ -2,8 +2,8 @@
 
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{
-    DurationConstraint, DurationValue, DurativeActionEffect, DurativeActionGoalDefinition,
-    PreferenceTimedGoalDefinition, SimpleDurationConstraint, TimedEffect, TimedGoalDefinition,
+    DurationConstraint, DurationValue, DurativeActionEffect, DurativeActionGoalDescription,
+    PreferenceTimedGoalDescription, SimpleDurationConstraint, TimedEffect, TimedGoalDescription,
 };
 use crate::visitor::{Accept, Visitor};
 use pretty::RcDoc;
@@ -11,11 +11,11 @@ use pretty::RcDoc;
 impl sealed::Sealed for DurationValue {}
 impl sealed::Sealed for SimpleDurationConstraint {}
 impl sealed::Sealed for DurationConstraint {}
-impl sealed::Sealed for TimedGoalDefinition {}
-impl sealed::Sealed for PreferenceTimedGoalDefinition {}
+impl sealed::Sealed for TimedGoalDescription {}
+impl sealed::Sealed for PreferenceTimedGoalDescription {}
 impl sealed::Sealed for TimedEffect {}
 impl sealed::Sealed for DurativeActionEffect {}
-impl sealed::Sealed for DurativeActionGoalDefinition {}
+impl sealed::Sealed for DurativeActionGoalDescription {}
 
 impl Visitor<DurationValue, RcDoc<'static>> for PrettyRenderer {
     fn visit(&self, value: &DurationValue) -> RcDoc<'static> {
@@ -63,15 +63,15 @@ impl Visitor<DurationConstraint, RcDoc<'static>> for PrettyRenderer {
     }
 }
 
-impl Visitor<TimedGoalDefinition, RcDoc<'static>> for PrettyRenderer {
-    fn visit(&self, value: &TimedGoalDefinition) -> RcDoc<'static> {
+impl Visitor<TimedGoalDescription, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &TimedGoalDescription) -> RcDoc<'static> {
         match value {
-            TimedGoalDefinition::At(ts, gd) => RcDoc::text("(at ")
+            TimedGoalDescription::At(ts, gd) => RcDoc::text("(at ")
                 .append(ts.accept(self))
                 .append(" ")
                 .append(gd.accept(self))
                 .append(")"),
-            TimedGoalDefinition::Over(interval, gd) => RcDoc::text("(over ")
+            TimedGoalDescription::Over(interval, gd) => RcDoc::text("(over ")
                 .append(interval.accept(self))
                 .append(" ")
                 .append(gd.accept(self))
@@ -80,11 +80,11 @@ impl Visitor<TimedGoalDefinition, RcDoc<'static>> for PrettyRenderer {
     }
 }
 
-impl Visitor<PreferenceTimedGoalDefinition, RcDoc<'static>> for PrettyRenderer {
-    fn visit(&self, value: &PreferenceTimedGoalDefinition) -> RcDoc<'static> {
+impl Visitor<PreferenceTimedGoalDescription, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &PreferenceTimedGoalDescription) -> RcDoc<'static> {
         match value {
-            PreferenceTimedGoalDefinition::Required(tgd) => tgd.accept(self),
-            PreferenceTimedGoalDefinition::Preference(name, tgd) => {
+            PreferenceTimedGoalDescription::Required(tgd) => tgd.accept(self),
+            PreferenceTimedGoalDescription::Preference(name, tgd) => {
                 let children: Vec<RcDoc<'static>> = match name {
                     Some(n) => vec![n.accept(self), self.visit(tgd)],
                     None => vec![self.visit(tgd)],
@@ -119,18 +119,18 @@ impl Visitor<TimedEffect, RcDoc<'static>> for PrettyRenderer {
     }
 }
 
-impl Visitor<DurativeActionGoalDefinition, RcDoc<'static>> for PrettyRenderer {
-    fn visit(&self, value: &DurativeActionGoalDefinition) -> RcDoc<'static> {
+impl Visitor<DurativeActionGoalDescription, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &DurativeActionGoalDescription) -> RcDoc<'static> {
         match value {
-            DurativeActionGoalDefinition::Timed(ptgd) => ptgd.accept(self),
-            DurativeActionGoalDefinition::And(items) => {
+            DurativeActionGoalDescription::Timed(ptgd) => ptgd.accept(self),
+            DurativeActionGoalDescription::And(items) => {
                 if items.is_empty() {
                     RcDoc::text("(and)")
                 } else {
                     self.sexpr("and", items.iter().map(|dagd| self.visit(dagd)))
                 }
             }
-            DurativeActionGoalDefinition::Forall(vars, body) => self.sexpr(
+            DurativeActionGoalDescription::Forall(vars, body) => self.sexpr(
                 "forall",
                 [
                     RcDoc::text("(").append(vars.accept(self)).append(")"),
@@ -175,7 +175,7 @@ mod tests {
     use super::*;
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
-    use crate::{DurationOperator, PreferenceTimedGoalDefinition};
+    use crate::{DurationOperator, PreferenceTimedGoalDescription};
 
     #[test]
     fn duration_value_number() {
@@ -227,42 +227,42 @@ mod tests {
 
     #[test]
     fn timed_gd_at() {
-        let gd = crate::GoalDefinition::and(Vec::<crate::GoalDefinition>::new());
-        let tgd = TimedGoalDefinition::at(crate::TimeSpecifier::Start, gd);
+        let gd = crate::GoalDescription::and(Vec::<crate::GoalDescription>::new());
+        let tgd = TimedGoalDescription::at(crate::TimeSpecifier::Start, gd);
         assert_eq!(prettify!(tgd, 30), "(at start (and))");
     }
 
     #[test]
     fn timed_gd_over() {
         use crate::Interval;
-        let gd = crate::GoalDefinition::and(Vec::<crate::GoalDefinition>::new());
-        let tgd = TimedGoalDefinition::over(Interval::All, gd);
+        let gd = crate::GoalDescription::and(Vec::<crate::GoalDescription>::new());
+        let tgd = TimedGoalDescription::over(Interval::All, gd);
         assert_eq!(prettify!(tgd, 30), "(over all (and))");
     }
 
     #[test]
     fn pref_timed_gd_required() {
-        let gd = crate::GoalDefinition::and(Vec::<crate::GoalDefinition>::new());
-        let tgd = TimedGoalDefinition::at(crate::TimeSpecifier::Start, gd);
-        let ptgd = PreferenceTimedGoalDefinition::required(tgd);
+        let gd = crate::GoalDescription::and(Vec::<crate::GoalDescription>::new());
+        let tgd = TimedGoalDescription::at(crate::TimeSpecifier::Start, gd);
+        let ptgd = PreferenceTimedGoalDescription::required(tgd);
         assert_eq!(prettify!(ptgd, 30), "(at start (and))");
     }
 
     #[test]
     fn pref_timed_gd_preference_with_name() {
         use crate::PreferenceName;
-        let gd = crate::GoalDefinition::and(Vec::<crate::GoalDefinition>::new());
-        let tgd = TimedGoalDefinition::at(crate::TimeSpecifier::Start, gd);
+        let gd = crate::GoalDescription::and(Vec::<crate::GoalDescription>::new());
+        let tgd = TimedGoalDescription::at(crate::TimeSpecifier::Start, gd);
         let ptgd =
-            PreferenceTimedGoalDefinition::preference(Some(PreferenceName::string("p1")), tgd);
+            PreferenceTimedGoalDescription::preference(Some(PreferenceName::string("p1")), tgd);
         assert_eq!(prettify!(ptgd, 40), "(preference p1 (at start (and)))");
     }
 
     #[test]
     fn pref_timed_gd_preference_no_name() {
-        let gd = crate::GoalDefinition::and(Vec::<crate::GoalDefinition>::new());
-        let tgd = TimedGoalDefinition::at(crate::TimeSpecifier::Start, gd);
-        let ptgd = PreferenceTimedGoalDefinition::preference(None, tgd);
+        let gd = crate::GoalDescription::and(Vec::<crate::GoalDescription>::new());
+        let tgd = TimedGoalDescription::at(crate::TimeSpecifier::Start, gd);
+        let ptgd = PreferenceTimedGoalDescription::preference(None, tgd);
         assert_eq!(prettify!(ptgd, 40), "(preference (at start (and)))");
     }
 
@@ -307,25 +307,25 @@ mod tests {
 
     #[test]
     fn durative_action_goal_timed() {
-        let gd = crate::GoalDefinition::and(Vec::<crate::GoalDefinition>::new());
-        let tgd = TimedGoalDefinition::at(crate::TimeSpecifier::Start, gd);
-        let ptgd = PreferenceTimedGoalDefinition::required(tgd);
-        let dagd = DurativeActionGoalDefinition::timed(ptgd);
+        let gd = crate::GoalDescription::and(Vec::<crate::GoalDescription>::new());
+        let tgd = TimedGoalDescription::at(crate::TimeSpecifier::Start, gd);
+        let ptgd = PreferenceTimedGoalDescription::required(tgd);
+        let dagd = DurativeActionGoalDescription::timed(ptgd);
         assert_eq!(prettify!(dagd, 30), "(at start (and))");
     }
 
     #[test]
     fn durative_action_goal_and_empty() {
-        let dagd = DurativeActionGoalDefinition::and(Vec::new());
+        let dagd = DurativeActionGoalDescription::and(Vec::new());
         assert_eq!(prettify!(dagd, 30), "(and)");
     }
 
     #[test]
     fn durative_action_goal_and_non_empty() {
-        let gd = crate::GoalDefinition::and(Vec::<crate::GoalDefinition>::new());
-        let tgd = TimedGoalDefinition::at(crate::TimeSpecifier::Start, gd);
-        let ptgd = PreferenceTimedGoalDefinition::required(tgd);
-        let dagd = DurativeActionGoalDefinition::and([DurativeActionGoalDefinition::timed(ptgd)]);
+        let gd = crate::GoalDescription::and(Vec::<crate::GoalDescription>::new());
+        let tgd = TimedGoalDescription::at(crate::TimeSpecifier::Start, gd);
+        let ptgd = PreferenceTimedGoalDescription::required(tgd);
+        let dagd = DurativeActionGoalDescription::and([DurativeActionGoalDescription::timed(ptgd)]);
         assert_eq!(prettify!(dagd, 40), "(and (at start (and)))");
     }
 
@@ -333,8 +333,8 @@ mod tests {
     fn durative_action_goal_forall() {
         use crate::{ToTyped, Type, TypedVariables, Variable};
         let vars: TypedVariables = vec![Variable::string("x").to_typed(Type::OBJECT)].into();
-        let inner = DurativeActionGoalDefinition::and(Vec::new());
-        let dagd = DurativeActionGoalDefinition::forall(vars, inner);
+        let inner = DurativeActionGoalDescription::and(Vec::new());
+        let dagd = DurativeActionGoalDescription::forall(vars, inner);
         assert_eq!(prettify!(dagd, 40), "(forall (?x) (and))");
     }
 
@@ -369,13 +369,13 @@ mod tests {
 
     #[test]
     fn durative_action_effect_when() {
-        use crate::{EffectCondition, GoalDefinition};
-        let gd = GoalDefinition::and(Vec::<GoalDefinition>::new());
+        use crate::{EffectCondition, GoalDescription};
+        let gd = GoalDescription::and(Vec::<GoalDescription>::new());
         let ce = EffectCondition::all(Vec::new());
         let te = TimedEffect::conditional(crate::TimeSpecifier::Start, ce);
         let dae = DurativeActionEffect::when(
-            DurativeActionGoalDefinition::timed(PreferenceTimedGoalDefinition::required(
-                TimedGoalDefinition::at(crate::TimeSpecifier::Start, gd),
+            DurativeActionGoalDescription::timed(PreferenceTimedGoalDescription::required(
+                TimedGoalDescription::at(crate::TimeSpecifier::Start, gd),
             )),
             te,
         );

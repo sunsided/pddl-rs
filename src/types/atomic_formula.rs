@@ -6,7 +6,7 @@ use std::ops::Deref;
 /// An atomic formula.
 ///
 /// ## Usage
-/// Used by [`Literal`](crate::Literal), [`GoalDefinition`](crate::GoalDefinition) and
+/// Used by [`Literal`](crate::Literal), [`GoalDescription`](crate::GoalDescription) and
 /// [`PrimitiveEffect`](crate::PrimitiveEffect).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum AtomicFormula<T> {

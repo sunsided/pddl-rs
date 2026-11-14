@@ -95,7 +95,7 @@ mod tests {
         assert_eq!(
             value,
             ConditionalEffect::new_when(
-                GoalDefinition::from_str("(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))")
+                GoalDescription::from_str("(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))")
                     .unwrap(),
                 EffectCondition::from_str("(and (person-is-happy ?p))").unwrap()
             )
@@ -127,7 +127,7 @@ mod tests {
         assert_eq!(
             value,
             WhenConditionalEffect::new(
-                GoalDefinition::from_str("(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))")
+                GoalDescription::from_str("(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))")
                     .unwrap(),
                 EffectCondition::from_str("(and (person-is-happy ?p))").unwrap()
             )
@@ -173,12 +173,12 @@ mod tests {
             (and (person-is-happy ?p)))"#;
         assert!(
             ConditionalEffect::from_str(input).is_value(ConditionalEffect::when(
-                GoalDefinition::new_and([
-                    GoalDefinition::new_atomic_formula(AtomicFormula::new_predicate(
+                GoalDescription::new_and([
+                    GoalDescription::new_atomic_formula(AtomicFormula::new_predicate(
                         Predicate::new("has-hot-chocolate".into()),
                         [Term::Variable("p".into()), Term::Variable("c".into())]
                     )),
-                    GoalDefinition::new_atomic_formula(AtomicFormula::new_predicate(
+                    GoalDescription::new_atomic_formula(AtomicFormula::new_predicate(
                         Predicate::new("has-marshmallows".into()),
                         [Term::Variable("c".into())]
                     )),
@@ -219,12 +219,12 @@ mod tests {
 
         assert!(
             WhenConditionalEffect::from_str(input).is_value(WhenConditionalEffect::new(
-                GoalDefinition::new_and([
-                    GoalDefinition::new_atomic_formula(AtomicFormula::new_predicate(
+                GoalDescription::new_and([
+                    GoalDescription::new_atomic_formula(AtomicFormula::new_predicate(
                         Predicate::new("has-hot-chocolate".into()),
                         [Term::Variable("p".into()), Term::Variable("c".into())]
                     )),
-                    GoalDefinition::new_atomic_formula(AtomicFormula::new_predicate(
+                    GoalDescription::new_atomic_formula(AtomicFormula::new_predicate(
                         Predicate::new("has-marshmallows".into()),
                         [Term::Variable("c".into())]
                     )),
@@ -272,7 +272,7 @@ mod tests {
         assert_eq!(
             value,
             ConditionalEffect::when(
-                GoalDefinition::from_str("(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))")
+                GoalDescription::from_str("(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))")
                     .unwrap(),
                 EffectCondition::from_str("(and (person-is-happy ?p))").unwrap()
             )
@@ -304,7 +304,7 @@ mod tests {
         assert_eq!(
             value,
             WhenConditionalEffect::new(
-                GoalDefinition::from_str("(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))")
+                GoalDescription::from_str("(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))")
                     .unwrap(),
                 EffectCondition::from_str("(and (person-is-happy ?p))").unwrap()
             )

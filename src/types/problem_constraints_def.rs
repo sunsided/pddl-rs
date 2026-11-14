@@ -1,48 +1,48 @@
 //! Contains the [`ProblemConstraintsDef`] type.
 
-use crate::PreferenceConstraintGoalDefinitions;
+use crate::PreferenceConstraintGoalDescriptions;
 use std::ops::Deref;
 
-/// A problem constraints definition; wraps a [`PreferenceConstraintGoalDefinitions`].
+/// A problem constraints definition; wraps a [`PreferenceConstraintGoalDescriptions`].
 ///
 /// ## Requirements
 /// Requires [Constraints](crate::Requirement::Constraints).
 #[derive(Debug, Default, Clone, PartialEq)]
-pub struct ProblemConstraintsDef(PreferenceConstraintGoalDefinitions);
+pub struct ProblemConstraintsDef(PreferenceConstraintGoalDescriptions);
 
 impl ProblemConstraintsDef {
     /// Creates a new problem constraints definition, i.e. `(:constraints <pref-con-GD>)`.
-    pub const fn new(gd: PreferenceConstraintGoalDefinitions) -> Self {
+    pub const fn new(gd: PreferenceConstraintGoalDescriptions) -> Self {
         Self(gd)
     }
 
     /// Gets the value.
-    pub const fn value(&self) -> &PreferenceConstraintGoalDefinitions {
+    pub const fn value(&self) -> &PreferenceConstraintGoalDescriptions {
         &self.0
     }
 }
 
-impl PartialEq<PreferenceConstraintGoalDefinitions> for ProblemConstraintsDef {
-    fn eq(&self, other: &PreferenceConstraintGoalDefinitions) -> bool {
+impl PartialEq<PreferenceConstraintGoalDescriptions> for ProblemConstraintsDef {
+    fn eq(&self, other: &PreferenceConstraintGoalDescriptions) -> bool {
         self.0.eq(other)
     }
 }
 
-impl From<PreferenceConstraintGoalDefinitions> for ProblemConstraintsDef {
-    fn from(value: PreferenceConstraintGoalDefinitions) -> Self {
+impl From<PreferenceConstraintGoalDescriptions> for ProblemConstraintsDef {
+    fn from(value: PreferenceConstraintGoalDescriptions) -> Self {
         Self::new(value)
     }
 }
 
 impl Deref for ProblemConstraintsDef {
-    type Target = PreferenceConstraintGoalDefinitions;
+    type Target = PreferenceConstraintGoalDescriptions;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl From<ProblemConstraintsDef> for PreferenceConstraintGoalDefinitions {
+impl From<ProblemConstraintsDef> for PreferenceConstraintGoalDescriptions {
     fn from(val: ProblemConstraintsDef) -> Self {
         val.0
     }
@@ -60,14 +60,14 @@ mod tests {
 
     #[test]
     fn new_works() {
-        let defs = PreferenceConstraintGoalDefinitions::default();
+        let defs = PreferenceConstraintGoalDescriptions::default();
         let def = ProblemConstraintsDef::new(defs.clone());
         assert_eq!(*def.value(), defs);
     }
 
     #[test]
     fn from_works() {
-        let defs = PreferenceConstraintGoalDefinitions::default();
+        let defs = PreferenceConstraintGoalDescriptions::default();
         let def = ProblemConstraintsDef::from(defs.clone());
         assert_eq!(def, ProblemConstraintsDef::new(defs));
     }
@@ -75,15 +75,15 @@ mod tests {
     #[test]
     fn deref_works() {
         let def = ProblemConstraintsDef::default();
-        let inner: &PreferenceConstraintGoalDefinitions = &def;
+        let inner: &PreferenceConstraintGoalDescriptions = &def;
         assert!(inner.is_empty());
     }
 
     #[test]
     fn into_works() {
-        let defs = PreferenceConstraintGoalDefinitions::default();
+        let defs = PreferenceConstraintGoalDescriptions::default();
         let def = ProblemConstraintsDef::new(defs.clone());
-        let result: PreferenceConstraintGoalDefinitions = def.into();
+        let result: PreferenceConstraintGoalDescriptions = def.into();
         assert_eq!(result, defs);
     }
 

@@ -212,11 +212,11 @@ mod tests {
 #[cfg(test)]
 mod tests_without_parser {
     use crate::pretty_print::Pretty;
-    use crate::types::{ConstraintGoalDefinition, DomainConstraintsDef};
+    use crate::types::{ConstraintGoalDescription, DomainConstraintsDef};
 
     #[test]
     fn domain_constraints_def_empty_nil() {
-        let dc = DomainConstraintsDef::new(ConstraintGoalDefinition::default());
+        let dc = DomainConstraintsDef::new(ConstraintGoalDescription::default());
         let out = dc.pretty(80).to_string();
         assert_eq!(out, "");
     }

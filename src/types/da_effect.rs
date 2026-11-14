@@ -1,7 +1,7 @@
 //! Contains durative action effects via the [`DurativeActionEffect`] type.
 
 use crate::types::TypedVariables;
-use crate::types::{DurativeActionGoalDefinition, TimedEffect};
+use crate::types::{DurativeActionGoalDescription, TimedEffect};
 
 /// A durative action effect used in [`DurativeActionDefinition`](crate::types::DurativeActionDefinition).
 ///
@@ -18,7 +18,7 @@ pub enum DurativeActionEffect {
     Forall(TypedVariables, Box<DurativeActionEffect>),
     /// ## Requirements
     /// Requires [Conditional Effects](crate::Requirement::ConditionalEffects).
-    When(DurativeActionGoalDefinition, TimedEffect),
+    When(DurativeActionGoalDescription, TimedEffect),
 }
 
 impl DurativeActionEffect {
@@ -57,12 +57,12 @@ impl DurativeActionEffect {
 
     /// Creates a conditional effect, `(when <da-GD> <timed-effect>)`.
     #[doc(alias = "new_when")]
-    pub const fn when(gd: DurativeActionGoalDefinition, effect: TimedEffect) -> Self {
+    pub const fn when(gd: DurativeActionGoalDescription, effect: TimedEffect) -> Self {
         Self::When(gd, effect)
     }
 
     /// Creates a conditional effect, `(when <da-GD> <timed-effect>)`.
-    pub fn new_when(gd: DurativeActionGoalDefinition, effect: TimedEffect) -> Self {
+    pub fn new_when(gd: DurativeActionGoalDescription, effect: TimedEffect) -> Self {
         Self::when(gd, effect)
     }
 }
@@ -85,8 +85,8 @@ impl From<(TypedVariables, DurativeActionEffect)> for DurativeActionEffect {
     }
 }
 
-impl From<(DurativeActionGoalDefinition, TimedEffect)> for DurativeActionEffect {
-    fn from(value: (DurativeActionGoalDefinition, TimedEffect)) -> Self {
+impl From<(DurativeActionGoalDescription, TimedEffect)> for DurativeActionEffect {
+    fn from(value: (DurativeActionGoalDescription, TimedEffect)) -> Self {
         Self::when(value.0, value.1)
     }
 }
@@ -95,8 +95,8 @@ impl From<(DurativeActionGoalDefinition, TimedEffect)> for DurativeActionEffect 
 mod tests {
     use super::*;
     use crate::types::{
-        AtomicFormula, EffectCondition, GoalDefinition, Name, Predicate,
-        PreferenceTimedGoalDefinition, PrimitiveEffect, Term, TimeSpecifier, TimedGoalDefinition,
+        AtomicFormula, EffectCondition, GoalDescription, Name, Predicate,
+        PreferenceTimedGoalDescription, PrimitiveEffect, Term, TimeSpecifier, TimedGoalDescription,
         TypedVariables,
     };
 
@@ -113,15 +113,15 @@ mod tests {
         DurativeActionEffect::timed(make_timed_effect())
     }
 
-    fn make_da_gd() -> DurativeActionGoalDefinition {
+    fn make_da_gd() -> DurativeActionGoalDescription {
         let af = AtomicFormula::<Term>::predicate(
             Predicate::string("clear"),
             vec![Term::new_name(Name::new("b"))],
         );
         let timed_gd =
-            TimedGoalDefinition::at(TimeSpecifier::Start, GoalDefinition::AtomicFormula(af));
-        let pref_timed = PreferenceTimedGoalDefinition::required(timed_gd);
-        DurativeActionGoalDefinition::timed(pref_timed)
+            TimedGoalDescription::at(TimeSpecifier::Start, GoalDescription::AtomicFormula(af));
+        let pref_timed = PreferenceTimedGoalDescription::required(timed_gd);
+        DurativeActionGoalDescription::timed(pref_timed)
     }
 
     #[test]

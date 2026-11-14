@@ -23,14 +23,20 @@ mod tests {
     #[test]
     fn test_parse() {
         let input = "(:constraints (and))";
-        assert!(DomainConstraintsDef::from_str(input)
-            .is_value(DomainConstraintsDef::new(ConstraintGoalDefinition::and([]))));
+        assert!(
+            DomainConstraintsDef::from_str(input).is_value(DomainConstraintsDef::new(
+                ConstraintGoalDescription::and([])
+            ))
+        );
     }
 
     #[test]
     fn doc_example_0() {
         let input = "(:constraints (and))";
-        assert!(DomainConstraintsDef::from_str(input)
-            .is_value(DomainConstraintsDef::new(ConstraintGoalDefinition::and([]))));
+        assert!(
+            DomainConstraintsDef::from_str(input).is_value(DomainConstraintsDef::new(
+                ConstraintGoalDescription::and([])
+            ))
+        );
     }
 }

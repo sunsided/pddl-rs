@@ -40,8 +40,8 @@ mod tests {
         assert!(action.is_value(StructureDef::action(ActionDefinition::new(
             ActionSymbol::from("take-out"),
             TypedList::from_iter([Variable::from("x").to_typed("physob")]),
-            PreconditionGoalDefinitions::preference(PreferenceGoalDefinition::from_gd(
-                GoalDefinition::not(GoalDefinition::atomic_formula(AtomicFormula::equality(
+            PreconditionGoalDescriptions::preference(PreferenceGoalDescription::from_gd(
+                GoalDescription::not(GoalDescription::atomic_formula(AtomicFormula::equality(
                     Term::Variable(Variable::from("x")),
                     Term::Name(Name::new("B"))
                 )))
@@ -68,8 +68,8 @@ mod tests {
         assert!(action.is_value(StructureDef::action(ActionDefinition::new(
             ActionSymbol::from("take-out"),
             TypedList::from_iter([Variable::from("x").to_typed("physob")]),
-            PreconditionGoalDefinitions::preference(PreferenceGoalDefinition::from_gd(
-                GoalDefinition::not(GoalDefinition::atomic_formula(AtomicFormula::equality(
+            PreconditionGoalDescriptions::preference(PreferenceGoalDescription::from_gd(
+                GoalDescription::not(GoalDescription::atomic_formula(AtomicFormula::equality(
                     Term::Variable(Variable::from("x")),
                     Term::Name(Name::new("B"))
                 )))

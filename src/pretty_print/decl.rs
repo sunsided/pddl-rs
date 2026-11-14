@@ -5,7 +5,7 @@ use std::ops::Deref;
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{
     Constants, Functions, InitElement, InitElements, LengthSpec, MetricSpec, Objects,
-    PredicateDefinitions, ProblemGoalDefinition, Requirements, Types,
+    PredicateDefinitions, ProblemGoalDescription, Requirements, Types,
 };
 use crate::visitor::{Accept, Visitor};
 use pretty::RcDoc;
@@ -17,7 +17,7 @@ impl sealed::Sealed for PredicateDefinitions {}
 impl sealed::Sealed for Functions {}
 impl sealed::Sealed for Objects {}
 impl sealed::Sealed for InitElements {}
-impl sealed::Sealed for ProblemGoalDefinition {}
+impl sealed::Sealed for ProblemGoalDescription {}
 impl sealed::Sealed for MetricSpec {}
 impl sealed::Sealed for LengthSpec {}
 impl sealed::Sealed for InitElement {}
@@ -104,8 +104,8 @@ impl Visitor<InitElement, RcDoc<'static>> for PrettyRenderer {
     }
 }
 
-impl Visitor<ProblemGoalDefinition, RcDoc<'static>> for PrettyRenderer {
-    fn visit(&self, value: &ProblemGoalDefinition) -> RcDoc<'static> {
+impl Visitor<ProblemGoalDescription, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &ProblemGoalDescription) -> RcDoc<'static> {
         value.deref().accept(self)
     }
 }
@@ -138,7 +138,7 @@ mod tests {
     use super::*;
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
-    use crate::{Literal, PreconditionGoalDefinitions, ToTyped};
+    use crate::{Literal, PreconditionGoalDescriptions, ToTyped};
 
     #[test]
     fn requirements_works() {
@@ -255,11 +255,11 @@ mod tests {
 
     #[test]
     fn goal_def_works() {
-        let gd = crate::GoalDefinition::and(Vec::<crate::GoalDefinition>::new());
-        let pre_gd = crate::PreconditionGoalDefinition::preference(
-            crate::PreferenceGoalDefinition::from_gd(gd),
+        let gd = crate::GoalDescription::and(Vec::<crate::GoalDescription>::new());
+        let pre_gd = crate::PreconditionGoalDescription::preference(
+            crate::PreferenceGoalDescription::from_gd(gd),
         );
-        let gdef = ProblemGoalDefinition::new(PreconditionGoalDefinitions::new(vec![pre_gd]));
+        let gdef = ProblemGoalDescription::new(PreconditionGoalDescriptions::new(vec![pre_gd]));
         assert_eq!(prettify!(gdef, 20), "(and)");
     }
 

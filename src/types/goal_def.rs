@@ -1,10 +1,10 @@
-//! Contains the [`ProblemGoalDefinition`] type.
+//! Contains the [`ProblemGoalDescription`] type.
 
-use crate::types::pre_gd::PreconditionGoalDefinitions;
-use crate::PreconditionGoalDefinition;
+use crate::types::pre_gd::PreconditionGoalDescriptions;
+use crate::PreconditionGoalDescription;
 use std::ops::Deref;
 
-/// A problem goal definition; wraps a [`PreconditionGoalDefinitions`].
+/// A problem goal description; wraps a [`PreconditionGoalDescriptions`].
 ///
 /// # BNF
 /// Corresponds to the `(:goal ...)` section of a PDDL problem definition.
@@ -13,79 +13,79 @@ use std::ops::Deref;
 /// Used by [`Problem`](crate::Problem).
 #[doc(alias("goal"))]
 #[derive(Debug, Clone, PartialEq)]
-pub struct ProblemGoalDefinition(PreconditionGoalDefinitions);
+pub struct ProblemGoalDescription(PreconditionGoalDescriptions);
 
-impl ProblemGoalDefinition {
-    /// Creates a new problem goal definition, i.e. `(:goal <pre-GD>)`.
-    pub const fn new(gd: PreconditionGoalDefinitions) -> Self {
+impl ProblemGoalDescription {
+    /// Creates a new problem goal description, i.e. `(:goal <pre-GD>)`.
+    pub const fn new(gd: PreconditionGoalDescriptions) -> Self {
         Self(gd)
     }
 
     /// Gets the value.
-    pub const fn value(&self) -> &PreconditionGoalDefinitions {
+    pub const fn value(&self) -> &PreconditionGoalDescriptions {
         &self.0
     }
 }
 
-impl PartialEq<PreconditionGoalDefinitions> for ProblemGoalDefinition {
-    fn eq(&self, other: &PreconditionGoalDefinitions) -> bool {
+impl PartialEq<PreconditionGoalDescriptions> for ProblemGoalDescription {
+    fn eq(&self, other: &PreconditionGoalDescriptions) -> bool {
         self.0.eq(other)
     }
 }
 
-impl From<PreconditionGoalDefinitions> for ProblemGoalDefinition {
-    fn from(value: PreconditionGoalDefinitions) -> Self {
+impl From<PreconditionGoalDescriptions> for ProblemGoalDescription {
+    fn from(value: PreconditionGoalDescriptions) -> Self {
         Self::new(value)
     }
 }
 
-impl From<PreconditionGoalDefinition> for ProblemGoalDefinition {
-    fn from(value: PreconditionGoalDefinition) -> Self {
-        Self::new(PreconditionGoalDefinitions::from(value))
+impl From<PreconditionGoalDescription> for ProblemGoalDescription {
+    fn from(value: PreconditionGoalDescription) -> Self {
+        Self::new(PreconditionGoalDescriptions::from(value))
     }
 }
 
-impl FromIterator<PreconditionGoalDefinition> for ProblemGoalDefinition {
-    fn from_iter<T: IntoIterator<Item = PreconditionGoalDefinition>>(iter: T) -> Self {
-        ProblemGoalDefinition::new(PreconditionGoalDefinitions::from_iter(iter))
+impl FromIterator<PreconditionGoalDescription> for ProblemGoalDescription {
+    fn from_iter<T: IntoIterator<Item = PreconditionGoalDescription>>(iter: T) -> Self {
+        ProblemGoalDescription::new(PreconditionGoalDescriptions::from_iter(iter))
     }
 }
 
-impl Deref for ProblemGoalDefinition {
-    type Target = PreconditionGoalDefinitions;
+impl Deref for ProblemGoalDescription {
+    type Target = PreconditionGoalDescriptions;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl From<ProblemGoalDefinition> for PreconditionGoalDefinitions {
-    fn from(val: ProblemGoalDefinition) -> Self {
+impl From<ProblemGoalDescription> for PreconditionGoalDescriptions {
+    fn from(val: ProblemGoalDescription) -> Self {
         val.0
     }
 }
 
-/// Alias for [`ProblemGoalDefinition`].
-#[deprecated(since = "0.2.0", note = "Use `ProblemGoalDefinition` instead")]
-pub type GoalDef = ProblemGoalDefinition;
+/// Alias for [`ProblemGoalDescription`].
+#[deprecated(since = "0.2.0", note = "Use `ProblemGoalDescription` instead")]
+pub type GoalDef = ProblemGoalDescription;
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::GoalDefinition;
+    use crate::GoalDescription;
 
     #[test]
-    fn problem_goal_definition_from_precondition_goal_definitions() {
-        let defs = PreconditionGoalDefinitions::new(Vec::new());
-        let pgd: ProblemGoalDefinition = defs.clone().into();
+    fn problem_goal_description_from_precondition_goal_descriptions() {
+        let defs = PreconditionGoalDescriptions::new(Vec::new());
+        let pgd: ProblemGoalDescription = defs.clone().into();
         assert_eq!(*pgd.value(), defs);
     }
 
     #[test]
-    fn problem_goal_definition_from_precondition_goal_definition() {
-        let pref_gd = crate::PreferenceGoalDefinition::from_gd(GoalDefinition::and(Vec::new()));
-        let pre_gd = PreconditionGoalDefinition::preference(pref_gd);
-        let pgd: ProblemGoalDefinition = pre_gd.into();
+    fn problem_goal_description_from_precondition_goal_description() {
+        let pref_gd = crate::PreferenceGoalDescription::from_gd(GoalDescription::and(Vec::new()));
+        let pre_gd = PreconditionGoalDescription::preference(pref_gd);
+        let pgd: ProblemGoalDescription = pre_gd.into();
         assert_eq!(pgd.len(), 1);
     }
 

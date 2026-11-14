@@ -25,9 +25,9 @@ mod tests {
         let input = "(:constraints (preference test (and)))";
         assert!(
             ProblemConstraintsDef::from_str(input).is_value(ProblemConstraintsDef::new(
-                PreferenceConstraintGoalDefinitions::preference(
+                PreferenceConstraintGoalDescriptions::preference(
                     Some("test".into()),
-                    ConstraintGoalDefinition::and([])
+                    ConstraintGoalDescription::and([])
                 )
             ))
         );
@@ -38,9 +38,9 @@ mod tests {
         let input = "(:constraints (preference test (and)))";
         assert!(
             ProblemConstraintsDef::from_str(input).is_value(ProblemConstraintsDef::new(
-                PreferenceConstraintGoalDefinitions::preference(
+                PreferenceConstraintGoalDescriptions::preference(
                     Some("test".into()),
-                    ConstraintGoalDefinition::and([])
+                    ConstraintGoalDescription::and([])
                 )
             ))
         );

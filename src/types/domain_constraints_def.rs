@@ -1,9 +1,9 @@
 //! Contains the [`DomainConstraintsDef`] type.
 
-use crate::types::ConstraintGoalDefinition;
+use crate::types::ConstraintGoalDescription;
 use std::ops::Deref;
 
-/// A domain constraints definition; wraps a [`ConstraintGoalDefinition`].
+/// A domain constraints definition; wraps a [`ConstraintGoalDescription`].
 ///
 /// ## Requirements
 /// Requires [Constraints](crate::Requirement::Constraints).
@@ -11,41 +11,41 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`Domain`](crate::Domain).
 #[derive(Debug, Default, Clone, PartialEq)]
-pub struct DomainConstraintsDef(ConstraintGoalDefinition);
+pub struct DomainConstraintsDef(ConstraintGoalDescription);
 
 impl DomainConstraintsDef {
     /// Creates a new domain constraints definition, i.e. `(:constraints <con-GD>)`.
-    pub const fn new(gd: ConstraintGoalDefinition) -> Self {
+    pub const fn new(gd: ConstraintGoalDescription) -> Self {
         Self(gd)
     }
 
     /// Gets the value.
-    pub const fn value(&self) -> &ConstraintGoalDefinition {
+    pub const fn value(&self) -> &ConstraintGoalDescription {
         &self.0
     }
 }
 
-impl PartialEq<ConstraintGoalDefinition> for DomainConstraintsDef {
-    fn eq(&self, other: &ConstraintGoalDefinition) -> bool {
+impl PartialEq<ConstraintGoalDescription> for DomainConstraintsDef {
+    fn eq(&self, other: &ConstraintGoalDescription) -> bool {
         self.0.eq(other)
     }
 }
 
-impl From<ConstraintGoalDefinition> for DomainConstraintsDef {
-    fn from(value: ConstraintGoalDefinition) -> Self {
+impl From<ConstraintGoalDescription> for DomainConstraintsDef {
+    fn from(value: ConstraintGoalDescription) -> Self {
         Self::new(value)
     }
 }
 
 impl Deref for DomainConstraintsDef {
-    type Target = ConstraintGoalDefinition;
+    type Target = ConstraintGoalDescription;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl From<DomainConstraintsDef> for ConstraintGoalDefinition {
+impl From<DomainConstraintsDef> for ConstraintGoalDescription {
     fn from(val: DomainConstraintsDef) -> Self {
         val.0
     }
@@ -57,16 +57,16 @@ mod tests {
 
     #[test]
     fn domain_constraints_def_from_con_gd() {
-        let gd = ConstraintGoalDefinition::default();
+        let gd = ConstraintGoalDescription::default();
         let dcd: DomainConstraintsDef = gd.clone().into();
         assert_eq!(*dcd, gd);
     }
 
     #[test]
     fn domain_constraints_def_into_con_gd() {
-        let gd = ConstraintGoalDefinition::default();
+        let gd = ConstraintGoalDescription::default();
         let dcd = DomainConstraintsDef::new(gd.clone());
-        let back: ConstraintGoalDefinition = dcd.into();
+        let back: ConstraintGoalDescription = dcd.into();
         assert_eq!(back, gd);
     }
 }

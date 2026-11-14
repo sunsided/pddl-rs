@@ -1,12 +1,12 @@
-//! Provides parsers for preference goal definitions (`<pref-GD>`).
+//! Provides parsers for preference goal descriptions (`<pref-GD>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{alt, parse_gd, parse_pref_name, prefix};
-use crate::types::{Preference, PreferenceGoalDefinition};
+use crate::types::{Preference, PreferenceGoalDescription};
 
-/// Parses a preference goal definition (`<pref-GD>`), i.e. `<GD> | (preference [<pref-name>] <GD>)`.
-pub(crate) fn parse_pref_gd(node: &Node) -> R<PreferenceGoalDefinition> {
+/// Parses a preference goal description (`<pref-GD>`), i.e. `<GD> | (preference [<pref-name>] <GD>)`.
+pub(crate) fn parse_pref_gd(node: &Node) -> R<PreferenceGoalDescription> {
     alt(
         node,
         &[
@@ -18,14 +18,14 @@ pub(crate) fn parse_pref_gd(node: &Node) -> R<PreferenceGoalDefinition> {
                     }
                     Ok(Preference::new(name, parse_gd(args.next()?)?))
                 })
-                .map(PreferenceGoalDefinition::from_preference)
+                .map(PreferenceGoalDescription::from_preference)
             },
-            &|n| parse_gd(n).map(PreferenceGoalDefinition::from_gd),
+            &|n| parse_gd(n).map(PreferenceGoalDescription::from_gd),
         ],
     )
 }
 
-crate::parsers::impl_parser!(PreferenceGoalDefinition => parse_pref_gd);
+crate::parsers::impl_parser!(PreferenceGoalDescription => parse_pref_gd);
 
 #[cfg(test)]
 mod tests {
@@ -37,8 +37,8 @@ mod tests {
     #[test]
     fn predicate_starting_with_preference_is_not_a_preference() {
         for input in ["(preferences(p))", "(preferences (p))"] {
-            let value = PreferenceGoalDefinition::from_str(input).unwrap();
-            let PreferenceGoalDefinition::Goal(GoalDefinition::AtomicFormula(formula)) = &value
+            let value = PreferenceGoalDescription::from_str(input).unwrap();
+            let PreferenceGoalDescription::Goal(GoalDescription::AtomicFormula(formula)) = &value
             else {
                 panic!("{input}: expected an atomic formula, got {value:?}");
             };
@@ -51,31 +51,31 @@ mod tests {
 
     #[test]
     fn unnamed_preference_without_whitespace() {
-        let value = PreferenceGoalDefinition::from_str("(preference(p))").unwrap();
-        let PreferenceGoalDefinition::Preference(pref) = &value else {
+        let value = PreferenceGoalDescription::from_str("(preference(p))").unwrap();
+        let PreferenceGoalDescription::Preference(pref) = &value else {
             panic!("expected a preference, got {value:?}");
         };
         assert_eq!(
             pref,
-            &Preference::new(None, GoalDefinition::from_str("(p)").unwrap())
+            &Preference::new(None, GoalDescription::from_str("(p)").unwrap())
         );
     }
 
     #[test]
     fn test_parse() {
-        // Simple goal definition.
-        assert!(PreferenceGoalDefinition::from_str("(= x y)").is_value(
-            PreferenceGoalDefinition::Goal(GoalDefinition::AtomicFormula(
+        // Simple goal description.
+        assert!(PreferenceGoalDescription::from_str("(= x y)").is_value(
+            PreferenceGoalDescription::Goal(GoalDescription::AtomicFormula(
                 AtomicFormula::new_equality(Term::Name("x".into()), Term::Name("y".into()))
             ))
         ));
 
         // Named preference.
         assert!(
-            PreferenceGoalDefinition::from_str("(preference p (= x y))").is_value(
-                PreferenceGoalDefinition::Preference(Preference::new(
+            PreferenceGoalDescription::from_str("(preference p (= x y))").is_value(
+                PreferenceGoalDescription::Preference(Preference::new(
                     Some(PreferenceName::from("p")),
-                    GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                    GoalDescription::AtomicFormula(AtomicFormula::new_equality(
                         Term::Name("x".into()),
                         Term::Name("y".into())
                     ))
@@ -85,10 +85,10 @@ mod tests {
 
         // Unnamed preference.
         assert!(
-            PreferenceGoalDefinition::from_str("(preference (= x y))").is_value(
-                PreferenceGoalDefinition::Preference(Preference::new(
+            PreferenceGoalDescription::from_str("(preference (= x y))").is_value(
+                PreferenceGoalDescription::Preference(Preference::new(
                     None,
-                    GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                    GoalDescription::AtomicFormula(AtomicFormula::new_equality(
                         Term::Name("x".into()),
                         Term::Name("y".into())
                     ))
@@ -99,19 +99,19 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        // Simple goal definition.
-        assert!(PreferenceGoalDefinition::from_str("(= x y)").is_value(
-            PreferenceGoalDefinition::Goal(GoalDefinition::AtomicFormula(
+        // Simple goal description.
+        assert!(PreferenceGoalDescription::from_str("(= x y)").is_value(
+            PreferenceGoalDescription::Goal(GoalDescription::AtomicFormula(
                 AtomicFormula::new_equality(Term::Name("x".into()), Term::Name("y".into()))
             ))
         ));
 
         // Named preference.
         assert!(
-            PreferenceGoalDefinition::from_str("(preference p (= x y))").is_value(
-                PreferenceGoalDefinition::Preference(Preference::new(
+            PreferenceGoalDescription::from_str("(preference p (= x y))").is_value(
+                PreferenceGoalDescription::Preference(Preference::new(
                     Some(PreferenceName::from("p")),
-                    GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                    GoalDescription::AtomicFormula(AtomicFormula::new_equality(
                         Term::Name("x".into()),
                         Term::Name("y".into())
                     ))
@@ -121,10 +121,10 @@ mod tests {
 
         // Unnamed preference.
         assert!(
-            PreferenceGoalDefinition::from_str("(preference (= x y))").is_value(
-                PreferenceGoalDefinition::Preference(Preference::new(
+            PreferenceGoalDescription::from_str("(preference (= x y))").is_value(
+                PreferenceGoalDescription::Preference(Preference::new(
                     None,
-                    GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                    GoalDescription::AtomicFormula(AtomicFormula::new_equality(
                         Term::Name("x".into()),
                         Term::Name("y".into())
                     ))

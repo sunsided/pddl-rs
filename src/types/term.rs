@@ -5,7 +5,7 @@ use crate::types::Variable;
 /// A term, i.e. a [`Name`], [`Variable`] or [`FunctionTerm`].
 ///
 /// ## Usage
-/// Used by [`GoalDefinition`](crate::GoalDefinition), [`FunctionTerm`],
+/// Used by [`GoalDescription`](crate::GoalDescription), [`FunctionTerm`],
 /// [`FunctionHead`](crate::FunctionHead), [`PrimitiveEffect`](crate::PrimitiveEffect) and [`InitElement`](crate::InitElement).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Term {

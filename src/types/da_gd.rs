@@ -1,61 +1,61 @@
-//! Contains durative action goal definitions via the [`DurativeActionGoalDefinition`] type.
+//! Contains durative action goal descriptions via the [`DurativeActionGoalDescription`] type.
 
-use crate::types::PreferenceTimedGoalDefinition;
+use crate::types::PreferenceTimedGoalDescription;
 use crate::types::TypedVariables;
 
-/// A durative action goal definition.
+/// A durative action goal description.
 ///
 /// ## Usage
-/// Used by [`DurativeActionGoalDefinition`] itself, as well as [`DurativeActionDefinition`](crate::DurativeActionDefinition) and
+/// Used by [`DurativeActionGoalDescription`] itself, as well as [`DurativeActionDefinition`](crate::DurativeActionDefinition) and
 /// [`DurativeActionEffect`](crate::DurativeActionEffect).
 #[derive(Debug, Clone, PartialEq)]
-pub enum DurativeActionGoalDefinition {
+pub enum DurativeActionGoalDescription {
     /// A (preferred) timed goal, `<pref-timed-GD>`.
-    Timed(PreferenceTimedGoalDefinition),
+    Timed(PreferenceTimedGoalDescription),
     /// A conjunction, `(and <da-GD>*)`.
-    And(Vec<DurativeActionGoalDefinition>),
+    And(Vec<DurativeActionGoalDescription>),
     /// ## Requirements
     /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
-    Forall(TypedVariables, Box<DurativeActionGoalDefinition>),
+    Forall(TypedVariables, Box<DurativeActionGoalDescription>),
 }
 
-impl DurativeActionGoalDefinition {
-    /// Creates a timed goal from a [`PreferenceTimedGoalDefinition`].
+impl DurativeActionGoalDescription {
+    /// Creates a timed goal from a [`PreferenceTimedGoalDescription`].
     #[doc(alias = "new_timed")]
-    pub fn timed(pref: PreferenceTimedGoalDefinition) -> Self {
+    pub fn timed(pref: PreferenceTimedGoalDescription) -> Self {
         Self::Timed(pref)
     }
 
     /// Alias for [`Self::timed`].
-    pub fn new_timed(pref: PreferenceTimedGoalDefinition) -> Self {
+    pub fn new_timed(pref: PreferenceTimedGoalDescription) -> Self {
         Self::timed(pref)
     }
 
     /// Creates a conjunction `(and <da-GD>*)`.
     #[doc(alias = "new_and")]
-    pub fn and<I: IntoIterator<Item = DurativeActionGoalDefinition>>(prefs: I) -> Self {
+    pub fn and<I: IntoIterator<Item = DurativeActionGoalDescription>>(prefs: I) -> Self {
         Self::And(prefs.into_iter().collect())
     }
 
     /// Alias for [`Self::and`].
-    pub fn new_and<I: IntoIterator<Item = DurativeActionGoalDefinition>>(prefs: I) -> Self {
+    pub fn new_and<I: IntoIterator<Item = DurativeActionGoalDescription>>(prefs: I) -> Self {
         Self::and(prefs)
     }
 
     /// Creates a universal quantification `(forall (<variables>) <da-GD>)`.
     #[doc(alias = "new_forall")]
-    pub fn r#forall(variables: TypedVariables, gd: DurativeActionGoalDefinition) -> Self {
+    pub fn r#forall(variables: TypedVariables, gd: DurativeActionGoalDescription) -> Self {
         Self::Forall(variables, Box::new(gd))
     }
 
     /// Alias for [`Self::forall`].
-    pub fn new_forall(variables: TypedVariables, gd: DurativeActionGoalDefinition) -> Self {
+    pub fn new_forall(variables: TypedVariables, gd: DurativeActionGoalDescription) -> Self {
         Self::r#forall(variables, gd)
     }
 }
 
-impl From<PreferenceTimedGoalDefinition> for DurativeActionGoalDefinition {
-    fn from(value: PreferenceTimedGoalDefinition) -> Self {
-        DurativeActionGoalDefinition::timed(value)
+impl From<PreferenceTimedGoalDescription> for DurativeActionGoalDescription {
+    fn from(value: PreferenceTimedGoalDescription) -> Self {
+        DurativeActionGoalDescription::timed(value)
     }
 }

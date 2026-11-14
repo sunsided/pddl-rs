@@ -9,9 +9,9 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`AtomicFormulaSkeleton`](crate::AtomicFormulaSkeleton),
 /// [`AtomicFunctionSkeleton`](crate::AtomicFunctionSkeleton), [`ActionDefinition`](crate::ActionDefinition),
-/// [`PreconditionGoalDefinition`](crate::PreconditionGoalDefinition), [`GoalDefinition`](crate::GoalDefinition),
+/// [`PreconditionGoalDescription`](crate::PreconditionGoalDescription), [`GoalDescription`](crate::GoalDescription),
 /// [`Term`](crate::Term), [`CEffect`](crate::CEffect), [`DurativeActionDefinition`](crate::DurativeActionDefinition),
-/// [`DurativeActionGoalDefinition`](crate::DurativeActionGoalDefinition), [`DurativeActionEffect`](crate::DurativeActionEffect),
+/// [`DurativeActionGoalDescription`](crate::DurativeActionGoalDescription), [`DurativeActionEffect`](crate::DurativeActionEffect),
 /// [`PrefConGD`](crate::PrefConGD) and [`ConGD`](crate::ConGD).
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
 pub struct Variable(Name);

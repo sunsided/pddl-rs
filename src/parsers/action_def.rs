@@ -48,7 +48,7 @@ mod tests {
             ActionDefinition::new(
                 ActionSymbol::string("take-out"),
                 TypedList::from_iter([Variable::new_string("x").to_typed("physob")]),
-                PreconditionGoalDefinitions::from_str("(not (= ?x B))").unwrap(),
+                PreconditionGoalDescriptions::from_str("(not (= ?x B))").unwrap(),
                 Some(Effects::from_str("(not (in ?x))").unwrap())
             )
         );
@@ -67,9 +67,9 @@ mod tests {
         assert!(action.is_value(ActionDefinition::new(
             ActionSymbol::string("take-out"),
             TypedList::from_iter([Variable::new_string("x").to_typed("physob")]),
-            PreconditionGoalDefinitions::from(PreconditionGoalDefinition::Preference(
-                PreferenceGoalDefinition::from_gd(GoalDefinition::new_not(
-                    GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+            PreconditionGoalDescriptions::from(PreconditionGoalDescription::Preference(
+                PreferenceGoalDescription::from_gd(GoalDescription::new_not(
+                    GoalDescription::AtomicFormula(AtomicFormula::new_equality(
                         Term::Variable(Variable::new_string("x")),
                         Term::Name(Name::new("B"))
                     ))
@@ -99,7 +99,7 @@ mod tests {
             ActionDefinition::new(
                 ActionSymbol::string("take-out"),
                 TypedList::from_iter([Variable::new_string("x").to_typed("physob")]),
-                PreconditionGoalDefinitions::from_str("(not (= ?x B))").unwrap(),
+                PreconditionGoalDescriptions::from_str("(not (= ?x B))").unwrap(),
                 Some(Effects::from_str("(not (in ?x))").unwrap())
             )
         );

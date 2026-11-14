@@ -1,7 +1,7 @@
 //! Contains the [`Domain`] type.
 
 use crate::types::{
-    Constants, ConstraintGoalDefinition, DomainConstraintsDef, Functions, PredicateDefinitions,
+    Constants, ConstraintGoalDescription, DomainConstraintsDef, Functions, PredicateDefinitions,
     Requirements, StructureDefs, Timeless,
 };
 use crate::types::{Name, Types};
@@ -209,7 +209,7 @@ impl Domain {
     }
 
     /// Returns the optional constraint declaration.
-    pub const fn constraints(&self) -> &ConstraintGoalDefinition {
+    pub const fn constraints(&self) -> &ConstraintGoalDescription {
         self.constraints.value()
     }
 

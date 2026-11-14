@@ -1,13 +1,13 @@
-//! Provides parsers for preference timed goal definitions (`<pref-timed-GD>`).
+//! Provides parsers for preference timed goal descriptions (`<pref-timed-GD>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{alt, parse_pref_name, parse_timed_gd, prefix};
-use crate::types::PreferenceTimedGoalDefinition;
+use crate::types::PreferenceTimedGoalDescription;
 
-/// Parses a preference timed goal definition (`<pref-timed-GD>`), i.e. `<timed-GD>
+/// Parses a preference timed goal description (`<pref-timed-GD>`), i.e. `<timed-GD>
 /// | (preference [<pref-name>] <timed-GD>)`.
-pub(crate) fn parse_pref_timed_gd(node: &Node) -> R<PreferenceTimedGoalDefinition> {
+pub(crate) fn parse_pref_timed_gd(node: &Node) -> R<PreferenceTimedGoalDescription> {
     alt(
         node,
         &[
@@ -19,14 +19,14 @@ pub(crate) fn parse_pref_timed_gd(node: &Node) -> R<PreferenceTimedGoalDefinitio
                     }
                     Ok((name, parse_timed_gd(args.next()?)?))
                 })
-                .map(PreferenceTimedGoalDefinition::from)
+                .map(PreferenceTimedGoalDescription::from)
             },
-            &|n| parse_timed_gd(n).map(PreferenceTimedGoalDefinition::from),
+            &|n| parse_timed_gd(n).map(PreferenceTimedGoalDescription::from),
         ],
     )
 }
 
-crate::parsers::impl_parser!(PreferenceTimedGoalDefinition => parse_pref_timed_gd);
+crate::parsers::impl_parser!(PreferenceTimedGoalDescription => parse_pref_timed_gd);
 
 #[cfg(test)]
 mod tests {
@@ -37,10 +37,10 @@ mod tests {
     #[test]
     fn test_parse() {
         assert!(
-            PreferenceTimedGoalDefinition::from_str("(at start (= x y))").is_value(
-                PreferenceTimedGoalDefinition::Required(TimedGoalDefinition::at(
+            PreferenceTimedGoalDescription::from_str("(at start (= x y))").is_value(
+                PreferenceTimedGoalDescription::Required(TimedGoalDescription::at(
                     TimeSpecifier::Start,
-                    GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                    GoalDescription::AtomicFormula(AtomicFormula::new_equality(
                         Term::Name("x".into()),
                         Term::Name("y".into())
                     ))
@@ -49,12 +49,12 @@ mod tests {
         );
 
         assert!(
-            PreferenceTimedGoalDefinition::from_str("(preference (over all (= x y)))").is_value(
-                PreferenceTimedGoalDefinition::Preference(
+            PreferenceTimedGoalDescription::from_str("(preference (over all (= x y)))").is_value(
+                PreferenceTimedGoalDescription::Preference(
                     None,
-                    TimedGoalDefinition::over(
+                    TimedGoalDescription::over(
                         Interval::All,
-                        GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                        GoalDescription::AtomicFormula(AtomicFormula::new_equality(
                             Term::Name("x".into()),
                             Term::Name("y".into())
                         ))
@@ -63,14 +63,14 @@ mod tests {
             )
         );
 
-        assert!(PreferenceTimedGoalDefinition::from_str(
+        assert!(PreferenceTimedGoalDescription::from_str(
             "(preference pref-name (over all (= x y)))"
         )
-        .is_value(PreferenceTimedGoalDefinition::Preference(
+        .is_value(PreferenceTimedGoalDescription::Preference(
             Some("pref-name".into()),
-            TimedGoalDefinition::over(
+            TimedGoalDescription::over(
                 Interval::All,
-                GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                GoalDescription::AtomicFormula(AtomicFormula::new_equality(
                     Term::Name("x".into()),
                     Term::Name("y".into())
                 ))
@@ -81,10 +81,10 @@ mod tests {
     #[test]
     fn doc_example_0() {
         assert!(
-            PreferenceTimedGoalDefinition::from_str("(at start (= x y))").is_value(
-                PreferenceTimedGoalDefinition::Required(TimedGoalDefinition::at(
+            PreferenceTimedGoalDescription::from_str("(at start (= x y))").is_value(
+                PreferenceTimedGoalDescription::Required(TimedGoalDescription::at(
                     TimeSpecifier::Start,
-                    GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                    GoalDescription::AtomicFormula(AtomicFormula::new_equality(
                         Term::Name("x".into()),
                         Term::Name("y".into())
                     ))
@@ -93,12 +93,12 @@ mod tests {
         );
 
         assert!(
-            PreferenceTimedGoalDefinition::from_str("(preference (over all (= x y)))").is_value(
-                PreferenceTimedGoalDefinition::Preference(
+            PreferenceTimedGoalDescription::from_str("(preference (over all (= x y)))").is_value(
+                PreferenceTimedGoalDescription::Preference(
                     None,
-                    TimedGoalDefinition::over(
+                    TimedGoalDescription::over(
                         Interval::All,
-                        GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                        GoalDescription::AtomicFormula(AtomicFormula::new_equality(
                             Term::Name("x".into()),
                             Term::Name("y".into())
                         ))
@@ -107,14 +107,14 @@ mod tests {
             )
         );
 
-        assert!(PreferenceTimedGoalDefinition::from_str(
+        assert!(PreferenceTimedGoalDescription::from_str(
             "(preference pref-name (over all (= x y)))"
         )
-        .is_value(PreferenceTimedGoalDefinition::Preference(
+        .is_value(PreferenceTimedGoalDescription::Preference(
             Some("pref-name".into()),
-            TimedGoalDefinition::over(
+            TimedGoalDescription::over(
                 Interval::All,
-                GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                GoalDescription::AtomicFormula(AtomicFormula::new_equality(
                     Term::Name("x".into()),
                     Term::Name("y".into())
                 ))

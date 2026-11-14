@@ -2,11 +2,11 @@
 
 use crate::types::{BinaryComparison, FluentExpression};
 
-/// An fluent comparison used as part of a [`GoalDefinition`](crate::GoalDefinition)
+/// An fluent comparison used as part of a [`GoalDescription`](crate::GoalDescription)
 /// when [`NumericFluents`](crate::Requirement::NumericFluents) is allowed.
 ///
 /// ## Usage
-/// Used by [`GoalDefinition`](crate::GoalDefinition).
+/// Used by [`GoalDescription`](crate::GoalDescription).
 #[doc(alias("f-comp"))]
 #[derive(Debug, Clone, PartialEq)]
 pub struct FluentComparison(BinaryComparison, FluentExpression, FluentExpression);

@@ -59,6 +59,10 @@ name = "example_files"
 required-features = ["parser"]
 
 [[test]]
+name = "deprecated_names"
+required-features = ["parser"]
+
+[[test]]
 name = "corpus_snapshots"
 required-features = ["pretty", "parser"]
 

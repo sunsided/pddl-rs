@@ -17,6 +17,11 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- The goal types are named after PDDL's *goal description* (GD) instead of "goal definition":
+  `GoalDescription`, `PreconditionGoalDescription(s)`, `PreferenceGoalDescription`,
+  `ConstraintGoalDescription(Inner)`, `PreferenceConstraintGoalDescription(s)`,
+  `TimedGoalDescription`, `PreferenceTimedGoalDescription`, `DurativeActionGoalDescription` and
+  `ProblemGoalDescription`. The old `...GoalDefinition...` names remain as deprecated type aliases.
 - `Requirement::expand` returns `&'static [Requirement]` instead of a `Vec`, so it no longer
   allocates. Iterating over it yields `&Requirement`; call `.to_vec()` for an owned list.
 - [#104](https://github.com/sunsided/pddl-rs/issues/104): The parser is hand-written instead of

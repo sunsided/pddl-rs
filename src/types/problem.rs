@@ -2,9 +2,9 @@
 
 use crate::types::{
     InitElements, LengthSpec, MetricSpec, Name, Objects, ProblemConstraintsDef,
-    ProblemGoalDefinition, Requirements,
+    ProblemGoalDescription, Requirements,
 };
-use crate::{PreconditionGoalDefinitions, PreferenceConstraintGoalDefinitions};
+use crate::{PreconditionGoalDescriptions, PreferenceConstraintGoalDescriptions};
 
 /// A domain-specific problem declaration.
 ///
@@ -47,8 +47,8 @@ pub struct Problem {
     objects: Objects,
     /// The initial state definition.
     init: InitElements,
-    /// The goal definition.
-    goal: ProblemGoalDefinition,
+    /// The goal description.
+    goal: ProblemGoalDescription,
     /// The optional list of constraints.
     ///
     /// ## Requirements
@@ -74,7 +74,7 @@ impl Problem {
         requires: Requirements,
         objects: Objects,
         init: InitElements,
-        goal: ProblemGoalDefinition,
+        goal: ProblemGoalDescription,
         constraints: ProblemConstraintsDef,
         metric_spec: Option<MetricSpec>,
         length_spec: Option<LengthSpec>,
@@ -97,7 +97,7 @@ impl Problem {
         problem_name: P,
         domain_name: D,
         init: InitElements,
-        goal: ProblemGoalDefinition,
+        goal: ProblemGoalDescription,
     ) -> Self {
         Self {
             name: problem_name.into(),
@@ -168,14 +168,14 @@ impl Problem {
     }
 
     /// Returns the goal statement of the problem.
-    pub const fn goals(&self) -> &PreconditionGoalDefinitions {
+    pub const fn goals(&self) -> &PreconditionGoalDescriptions {
         self.goal.value()
     }
 
     /// Returns the optional constraints of the problem.
     /// ## Requirements
     /// Requires [Constraints](crate::Requirement::Constraints).
-    pub const fn constraints(&self) -> &PreferenceConstraintGoalDefinitions {
+    pub const fn constraints(&self) -> &PreferenceConstraintGoalDescriptions {
         self.constraints.value()
     }
 
@@ -196,12 +196,12 @@ impl Problem {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{InitElements, ProblemGoalDefinition};
-    use crate::{PreconditionGoalDefinitions, Requirement, Requirements};
+    use crate::types::{InitElements, ProblemGoalDescription};
+    use crate::{PreconditionGoalDescriptions, Requirement, Requirements};
 
     fn make_minimal_problem() -> Problem {
         let init = InitElements::new(Vec::new());
-        let goal = ProblemGoalDefinition::new(PreconditionGoalDefinitions::default());
+        let goal = ProblemGoalDescription::new(PreconditionGoalDescriptions::default());
         Problem::builder("test-problem", "test-domain", init, goal)
     }
 
@@ -240,7 +240,7 @@ mod tests {
     #[test]
     fn new_full() {
         let init = InitElements::new(Vec::new());
-        let goal = ProblemGoalDefinition::new(PreconditionGoalDefinitions::default());
+        let goal = ProblemGoalDescription::new(PreconditionGoalDescriptions::default());
         let problem = Problem::new(
             Name::new("p"),
             Name::new("d"),

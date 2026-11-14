@@ -166,11 +166,11 @@ mod tests {
 #[cfg(test)]
 mod tests_without_parser {
     use crate::pretty_print::Pretty;
-    use crate::types::{PreferenceConstraintGoalDefinitions, ProblemConstraintsDef};
+    use crate::types::{PreferenceConstraintGoalDescriptions, ProblemConstraintsDef};
 
     #[test]
     fn problem_constraints_def_empty_nil() {
-        let dc = ProblemConstraintsDef::new(PreferenceConstraintGoalDefinitions::new(Vec::new()));
+        let dc = ProblemConstraintsDef::new(PreferenceConstraintGoalDescriptions::new(Vec::new()));
         let out = dc.pretty(80).to_string();
         assert_eq!(out, "");
     }

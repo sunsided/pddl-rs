@@ -1,18 +1,18 @@
-//! Provides parsers for problem goal definitions (`<goal>`).
+//! Provides parsers for problem goal descriptions (`<goal>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{parse_pre_gd, prefix};
-use crate::types::ProblemGoalDefinition;
+use crate::types::ProblemGoalDescription;
 
-/// Parses a problem goal definition (`<goal>`), i.e. `(:goal <pre-GD>)`.
-pub(crate) fn parse_problem_goal_def(node: &Node) -> R<ProblemGoalDefinition> {
+/// Parses a problem goal description (`<goal>`), i.e. `(:goal <pre-GD>)`.
+pub(crate) fn parse_problem_goal_def(node: &Node) -> R<ProblemGoalDescription> {
     prefix(node, ":goal", |args| {
-        parse_pre_gd(args.next()?).map(ProblemGoalDefinition::new)
+        parse_pre_gd(args.next()?).map(ProblemGoalDescription::new)
     })
 }
 
-crate::parsers::impl_parser!(ProblemGoalDefinition => parse_problem_goal_def);
+crate::parsers::impl_parser!(ProblemGoalDescription => parse_problem_goal_def);
 
 #[cfg(test)]
 mod tests {
@@ -24,9 +24,9 @@ mod tests {
     fn test_parse() {
         let input = "(:goal (= x y))";
         assert!(
-            ProblemGoalDefinition::from_str(input).is_value(ProblemGoalDefinition::from(
-                PreconditionGoalDefinition::Preference(PreferenceGoalDefinition::Goal(
-                    GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+            ProblemGoalDescription::from_str(input).is_value(ProblemGoalDescription::from(
+                PreconditionGoalDescription::Preference(PreferenceGoalDescription::Goal(
+                    GoalDescription::AtomicFormula(AtomicFormula::new_equality(
                         Term::Name("x".into()),
                         Term::Name("y".into())
                     ))
@@ -39,9 +39,9 @@ mod tests {
     fn doc_example_0() {
         let input = "(:goal (= x y))";
         assert!(
-            ProblemGoalDefinition::from_str(input).is_value(ProblemGoalDefinition::from(
-                PreconditionGoalDefinition::Preference(PreferenceGoalDefinition::Goal(
-                    GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+            ProblemGoalDescription::from_str(input).is_value(ProblemGoalDescription::from(
+                PreconditionGoalDescription::Preference(PreferenceGoalDescription::Goal(
+                    GoalDescription::AtomicFormula(AtomicFormula::new_equality(
                         Term::Name("x".into()),
                         Term::Name("y".into())
                     ))

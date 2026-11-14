@@ -20,8 +20,8 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`Types`](crate::Types) and [`Constants`](crate::Constants) in [`Domain`](crate::Domain),
 /// [`AtomicFormulaSkeleton`](crate::AtomicFormulaSkeleton), [`AtomicFunctionSkeleton`](crate::AtomicFunctionSkeleton),
-/// [`ActionDefinition`](crate::ActionDefinition), [`PreconditionGoalDefinition`](crate::PreconditionGoalDefinition),
-/// [`GoalDefinition`](crate::GoalDefinition), [`CEffect`](crate::CEffect),
+/// [`ActionDefinition`](crate::ActionDefinition), [`PreconditionGoalDescription`](crate::PreconditionGoalDescription),
+/// [`GoalDescription`](crate::GoalDescription), [`CEffect`](crate::CEffect),
 /// [`DurativeActionDefinition`](crate::DurativeActionDefinition), [`DurativeActionEffect`](crate::DurativeActionEffect),
 /// [`Objects`](crate::Objects) in [`Problem`](crate::Problem), [`PrefConGD`](crate::PrefConGD) and
 /// [`ConGD`](crate::ConGD).

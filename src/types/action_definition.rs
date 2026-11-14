@@ -2,7 +2,7 @@
 
 use crate::types::TypedVariables;
 use crate::types::{ActionSymbol, Effects};
-use crate::PreconditionGoalDefinitions;
+use crate::PreconditionGoalDescriptions;
 
 /// An action definition.
 ///
@@ -15,7 +15,7 @@ pub struct ActionDefinition {
     /// The action's parameters, from `:parameters`.
     parameters: TypedVariables,
     /// The action's preconditions, from `:precondition`; empty if the action has none.
-    precondition: PreconditionGoalDefinitions,
+    precondition: PreconditionGoalDescriptions,
     /// The action's effect, from `:effect`; `None` if the action has none.
     effect: Option<Effects>,
 }
@@ -25,7 +25,7 @@ impl ActionDefinition {
     pub const fn new(
         symbol: ActionSymbol,
         parameters: TypedVariables,
-        precondition: PreconditionGoalDefinitions,
+        precondition: PreconditionGoalDescriptions,
         effect: Option<Effects>,
     ) -> Self {
         Self {
@@ -47,7 +47,7 @@ impl ActionDefinition {
     }
 
     /// Gets the action's preconditions, from `:precondition`; empty if the action has none.
-    pub const fn precondition(&self) -> &PreconditionGoalDefinitions {
+    pub const fn precondition(&self) -> &PreconditionGoalDescriptions {
         &self.precondition
     }
 

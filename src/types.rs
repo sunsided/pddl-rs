@@ -72,7 +72,7 @@ mod structure_defs;
 mod term;
 pub(crate) mod time_specifier;
 mod timed_effect;
-/// Contains timed goal definitions via the [`TimedGoalDefinition`] type.
+/// Contains timed goal descriptions via the [`TimedGoalDescription`] type.
 mod timed_gd;
 mod timeless;
 mod r#type;
@@ -104,7 +104,7 @@ pub use c_effect::{
     WhenConditionalEffect,
 };
 #[allow(deprecated)]
-pub use con_gd::{Con2GD, ConGD, ConstraintGoalDefinition, ConstraintGoalDefinitionInner};
+pub use con_gd::{Con2GD, ConGD, ConstraintGoalDescription, ConstraintGoalDescriptionInner};
 pub use conditional_effect::EffectCondition;
 pub use constants::Constants;
 #[allow(deprecated)]
@@ -112,7 +112,7 @@ pub use d_op::{DOp, DurationOperator};
 pub use d_value::DurationValue;
 pub use da_def::DurativeActionDefinition;
 pub use da_effect::DurativeActionEffect;
-pub use da_gd::DurativeActionGoalDefinition;
+pub use da_gd::DurativeActionGoalDescription;
 pub use da_symbol::DurativeActionSymbol;
 pub use definition::Definition;
 pub use derived_predicate::DerivedPredicate;
@@ -138,9 +138,9 @@ pub use function_type::FunctionType;
 pub use function_typed::FunctionTyped;
 pub use function_typed_list::FunctionTypedList;
 pub use functions::Functions;
-pub use gd::GoalDefinition;
+pub use gd::GoalDescription;
 #[allow(deprecated)]
-pub use goal_def::{GoalDef, ProblemGoalDefinition};
+pub use goal_def::{GoalDef, ProblemGoalDescription};
 pub use init_el::InitElement;
 pub use init_els::InitElements;
 pub use interval::Interval;
@@ -159,18 +159,19 @@ pub use optimization::Optimization;
 pub use p_effect::PEffect;
 pub use p_effect::PrimitiveEffect;
 pub use pddl_file::PddlFile;
-pub use pre_gd::{PreconditionGoalDefinition, PreconditionGoalDefinitions};
+pub use pre_gd::{PreconditionGoalDescription, PreconditionGoalDescriptions};
 pub use predicate::Predicate;
 pub use predicate_definitions::PredicateDefinitions;
 #[allow(deprecated)]
 pub use pref_con_gd::{
-    PrefConGD, PrefConGDs, PreferenceConstraintGoalDefinition, PreferenceConstraintGoalDefinitions,
+    PrefConGD, PrefConGDs, PreferenceConstraintGoalDescription,
+    PreferenceConstraintGoalDescriptions,
 };
 #[allow(deprecated)]
-pub use pref_gd::{PreferenceGD, PreferenceGoalDefinition};
+pub use pref_gd::{PreferenceGD, PreferenceGoalDescription};
 pub use pref_name::PreferenceName;
 #[allow(deprecated)]
-pub use pref_timed_gd::{PrefTimedGD, PreferenceTimedGoalDefinition};
+pub use pref_timed_gd::{PrefTimedGD, PreferenceTimedGoalDescription};
 pub use preference::Preference;
 pub use problem::Problem;
 pub use problem_constraints_def::ProblemConstraintsDef;
@@ -184,7 +185,7 @@ pub use term::Term;
 pub use time_specifier::TimeSpecifier;
 pub use timed_effect::TimedEffect;
 #[allow(deprecated)]
-pub use timed_gd::{TimedGD, TimedGoalDefinition};
+pub use timed_gd::{TimedGD, TimedGoalDescription};
 pub use timeless::Timeless;
 pub use typed::{ToTyped, Typed};
 pub use typed_list::TypedList;
@@ -204,3 +205,47 @@ pub type TermLiteral = Literal<Term>;
 pub type TypedVariables = TypedList<Variable>;
 /// A list of typed names, e.g. objects or constants `t1 t2 - truck`.
 pub type TypedNames = TypedList<Name>;
+
+// The names before PDDL's "goal description" (GD) was spelled out correctly.
+/// Former name of [`GoalDescription`].
+#[deprecated(since = "0.4.0", note = "renamed to `GoalDescription`")]
+pub type GoalDefinition = GoalDescription;
+/// Former name of [`ConstraintGoalDescription`].
+#[deprecated(since = "0.4.0", note = "renamed to `ConstraintGoalDescription`")]
+pub type ConstraintGoalDefinition = ConstraintGoalDescription;
+/// Former name of [`ConstraintGoalDescriptionInner`].
+#[deprecated(since = "0.4.0", note = "renamed to `ConstraintGoalDescriptionInner`")]
+pub type ConstraintGoalDefinitionInner = ConstraintGoalDescriptionInner;
+/// Former name of [`DurativeActionGoalDescription`].
+#[deprecated(since = "0.4.0", note = "renamed to `DurativeActionGoalDescription`")]
+pub type DurativeActionGoalDefinition = DurativeActionGoalDescription;
+/// Former name of [`PreconditionGoalDescription`].
+#[deprecated(since = "0.4.0", note = "renamed to `PreconditionGoalDescription`")]
+pub type PreconditionGoalDefinition = PreconditionGoalDescription;
+/// Former name of [`PreconditionGoalDescriptions`].
+#[deprecated(since = "0.4.0", note = "renamed to `PreconditionGoalDescriptions`")]
+pub type PreconditionGoalDefinitions = PreconditionGoalDescriptions;
+/// Former name of [`PreferenceConstraintGoalDescription`].
+#[deprecated(
+    since = "0.4.0",
+    note = "renamed to `PreferenceConstraintGoalDescription`"
+)]
+pub type PreferenceConstraintGoalDefinition = PreferenceConstraintGoalDescription;
+/// Former name of [`PreferenceConstraintGoalDescriptions`].
+#[deprecated(
+    since = "0.4.0",
+    note = "renamed to `PreferenceConstraintGoalDescriptions`"
+)]
+pub type PreferenceConstraintGoalDefinitions = PreferenceConstraintGoalDescriptions;
+/// Former name of [`PreferenceGoalDescription`].
+#[deprecated(since = "0.4.0", note = "renamed to `PreferenceGoalDescription`")]
+pub type PreferenceGoalDefinition = PreferenceGoalDescription;
+/// Former name of [`PreferenceTimedGoalDescription`].
+#[deprecated(since = "0.4.0", note = "renamed to `PreferenceTimedGoalDescription`")]
+pub type PreferenceTimedGoalDefinition = PreferenceTimedGoalDescription;
+/// Former name of [`ProblemGoalDescription`].
+#[deprecated(since = "0.4.0", note = "renamed to `ProblemGoalDescription`")]
+pub type ProblemGoalDefinition = ProblemGoalDescription;
+/// Former name of [`TimedGoalDescription`].
+#[deprecated(since = "0.4.0", note = "renamed to `TimedGoalDescription`")]
+pub type TimedGoalDefinition = TimedGoalDescription;

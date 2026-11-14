@@ -1,8 +1,8 @@
 //! Parses the briefcase world domain and problem and checks the resulting AST.
 
 use pddl::{
-    AtomicFormula, Domain, GoalDefinition, Parser, PreconditionGoalDefinition,
-    PreferenceGoalDefinition, Problem, TermLiteral,
+    AtomicFormula, Domain, GoalDescription, Parser, PreconditionGoalDescription,
+    PreferenceGoalDescription, Problem, TermLiteral,
 };
 
 /// The briefcase world domain from the PDDL 1.2 manual.
@@ -89,13 +89,13 @@ fn parse_problem_works() {
     let mut atomic_formulas = 0;
     for goal in problem.goals().iter() {
         match goal {
-            PreconditionGoalDefinition::Preference(pref) => match pref {
-                PreferenceGoalDefinition::Goal(goal) => match goal {
-                    GoalDefinition::AtomicFormula(af) => match af {
+            PreconditionGoalDescription::Preference(pref) => match pref {
+                PreferenceGoalDescription::Goal(goal) => match goal {
+                    GoalDescription::AtomicFormula(af) => match af {
                         AtomicFormula::Predicate(_) => atomic_formulas += 1,
                         AtomicFormula::Equality(_) => {}
                     },
-                    GoalDefinition::Literal(literal) => match literal {
+                    GoalDescription::Literal(literal) => match literal {
                         TermLiteral::AtomicFormula(_) => {
                             // The AtomicFormula variant takes precedence over the Literal variant
                             // because a Literal in the context of a Goal Description can only
@@ -103,17 +103,17 @@ fn parse_problem_works() {
                         }
                         TermLiteral::NotAtomicFormula(_) => {}
                     },
-                    GoalDefinition::And(_) => {}
-                    GoalDefinition::Or(_) => {}
-                    GoalDefinition::Not(_) => {}
-                    GoalDefinition::Imply(_, _) => {}
-                    GoalDefinition::Exists(_, _) => {}
-                    GoalDefinition::ForAll(_, _) => {}
-                    GoalDefinition::FluentComparison(_) => {}
+                    GoalDescription::And(_) => {}
+                    GoalDescription::Or(_) => {}
+                    GoalDescription::Not(_) => {}
+                    GoalDescription::Imply(_, _) => {}
+                    GoalDescription::Exists(_, _) => {}
+                    GoalDescription::ForAll(_, _) => {}
+                    GoalDescription::FluentComparison(_) => {}
                 },
-                PreferenceGoalDefinition::Preference(_) => {}
+                PreferenceGoalDescription::Preference(_) => {}
             },
-            PreconditionGoalDefinition::Forall(_, _) => {}
+            PreconditionGoalDescription::Forall(_, _) => {}
         }
     }
     assert_eq!(atomic_formulas, 3);
