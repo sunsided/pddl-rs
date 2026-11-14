@@ -12,6 +12,7 @@ pub struct StructureDefs(Vec<StructureDef>);
 
 impl StructureDefs {
     /// Creates a new set of structure definitions from an iterator.
+    #[must_use]
     pub fn new<I: IntoIterator<Item = StructureDef>>(defs: I) -> Self {
         Self(defs.into_iter().collect())
     }

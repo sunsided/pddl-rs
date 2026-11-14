@@ -12,6 +12,7 @@ pub struct PredicateDefinitions(Vec<AtomicFormulaSkeleton>);
 
 impl PredicateDefinitions {
     /// Creates the definitions from an iterator of predicate skeletons.
+    #[must_use]
     pub fn new<I: IntoIterator<Item = AtomicFormulaSkeleton>>(predicates: I) -> Self {
         Self::from(predicates.into_iter().collect())
     }

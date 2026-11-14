@@ -75,6 +75,7 @@ impl Requirements {
     /// The values will be taken as-is, no deduplication is performed and the
     /// implicit `:strips` requirement will not be added when no values are provided.
     /// To get the effective set of requirements, call [`Requirements::to_effective`].
+    #[must_use]
     pub fn new<I: IntoIterator<Item = Requirement>>(requirements: I) -> Self {
         Self(requirements.into_iter().collect(), Vec::new())
     }

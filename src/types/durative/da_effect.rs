@@ -37,11 +37,13 @@ impl DurativeActionEffect {
 
     /// Creates a conjunction of durative action effects, `(and <da-effect>*)`.
     #[doc(alias = "new_and")]
+    #[must_use]
     pub fn and<E: IntoIterator<Item = DurativeActionEffect>>(effect: E) -> Self {
         Self::All(effect.into_iter().collect())
     }
 
     /// Creates a conjunction of durative action effects, `(and <da-effect>*)`.
+    #[must_use]
     pub fn new_and<E: IntoIterator<Item = DurativeActionEffect>>(effect: E) -> Self {
         Self::and(effect)
     }

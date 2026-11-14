@@ -46,6 +46,7 @@ impl MetricFluentExpression {
     ///
     /// `rhs` must contain at least one operand; this is checked in debug builds.
     #[doc(alias = "new_multi_op")]
+    #[must_use]
     pub fn multi_op<I: IntoIterator<Item = Self>>(op: MultiOp, lhs: Self, rhs: I) -> Self {
         let vec: Vec<_> = rhs.into_iter().collect();
         debug_assert!(
@@ -56,6 +57,7 @@ impl MetricFluentExpression {
     }
 
     /// Creates an operation over two or more operands, `(<multi-op> <metric-f-exp> <metric-f-exp>+)`.
+    #[must_use]
     pub fn new_multi_op<I: IntoIterator<Item = Self>>(op: MultiOp, lhs: Self, rhs: I) -> Self {
         Self::multi_op(op, lhs, rhs)
     }
@@ -75,22 +77,26 @@ impl MetricFluentExpression {
 
     /// Creates a numeric literal.
     #[doc(alias = "new_number")]
+    #[must_use]
     pub fn number<N: Into<Number>>(number: N) -> Self {
         Self::Number(number.into())
     }
 
     /// Creates a numeric literal.
+    #[must_use]
     pub fn new_number<N: Into<Number>>(number: N) -> Self {
         Self::number(number)
     }
 
     /// Creates a ground function, `(<function-symbol> <name>*)`.
     #[doc(alias = "new_function")]
+    #[must_use]
     pub fn function<I: IntoIterator<Item = Name>>(symbol: FunctionSymbol, names: I) -> Self {
         Self::Function(symbol, names.into_iter().collect())
     }
 
     /// Creates a ground function, `(<function-symbol> <name>*)`.
+    #[must_use]
     pub fn new_function<I: IntoIterator<Item = Name>>(symbol: FunctionSymbol, names: I) -> Self {
         Self::function(symbol, names)
     }

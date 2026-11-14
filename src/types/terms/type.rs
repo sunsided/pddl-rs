@@ -47,22 +47,26 @@ impl Type {
 
     /// Creates a type that is exactly the given primitive type.
     #[doc(alias = "new_exactly")]
+    #[must_use]
     pub fn exactly<S: Into<PrimitiveType>>(t: S) -> Self {
         Self::Exactly(t.into())
     }
 
     /// Creates a type that is exactly the given primitive type; same as [`exactly`](Self::exactly).
+    #[must_use]
     pub fn new_exactly<S: Into<PrimitiveType>>(t: S) -> Self {
         Self::exactly(t)
     }
 
     /// Creates a type that is either of the given primitive types, i.e. `(either <primitive-type>+)`.
     #[doc(alias = "new_either")]
+    #[must_use]
     pub fn either<T: IntoIterator<Item = P>, P: Into<PrimitiveType>>(iter: T) -> Self {
         Self::EitherOf(iter.into_iter().map(std::convert::Into::into).collect())
     }
 
     /// Creates a type that is either of the given primitive types; same as [`either`](Self::either).
+    #[must_use]
     pub fn new_either<T: IntoIterator<Item = P>, P: Into<PrimitiveType>>(iter: T) -> Self {
         Self::either(iter)
     }

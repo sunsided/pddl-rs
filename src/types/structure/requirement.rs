@@ -152,6 +152,7 @@ pub mod names {
 
 impl Requirement {
     /// Returns whether this requirement is `other` or implies it, e.g. `:fluents` contains `:numeric-fluents`.
+    #[must_use]
     pub fn contains<T: Borrow<Requirement>>(&self, other: T) -> bool {
         let other = other.borrow();
         match self {

@@ -29,11 +29,13 @@ impl FluentExpression {
     /// Creates a numeric literal.
     #[inline]
     #[doc(alias = "new_number")]
+    #[must_use]
     pub fn number<N: Into<Number>>(number: N) -> Self {
         Self::Number(number.into())
     }
 
     /// Creates a numeric literal.
+    #[must_use]
     pub fn new_number<N: Into<Number>>(number: N) -> Self {
         Self::number(number)
     }
@@ -53,6 +55,7 @@ impl FluentExpression {
 
     /// Creates an operation over two or more operands, `(<multi-op> <f-exp> <f-exp>+)`.
     #[doc(alias = "new_multi_op")]
+    #[must_use]
     pub fn multi_op<I: IntoIterator<Item = FluentExpression>>(
         op: MultiOp,
         lhs: FluentExpression,
@@ -62,6 +65,7 @@ impl FluentExpression {
     }
 
     /// Creates an operation over two or more operands, `(<multi-op> <f-exp> <f-exp>+)`.
+    #[must_use]
     pub fn new_multi_op<I: IntoIterator<Item = FluentExpression>>(
         op: MultiOp,
         lhs: FluentExpression,

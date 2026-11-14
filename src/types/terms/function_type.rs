@@ -21,6 +21,7 @@ impl FunctionType {
     pub const NUMBER: FunctionType = FunctionType::from(Type::NUMBER);
 
     /// Creates a new function type from the given type.
+    #[must_use]
     pub fn new<T: Into<Type>>(r#type: T) -> Self {
         Self(r#type.into())
     }

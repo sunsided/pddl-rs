@@ -22,17 +22,20 @@ pub enum AtomicFormula<T> {
 impl<T> AtomicFormula<T> {
     /// Creates an equality formula `(= first second)`.
     #[doc(alias = "new_equality")]
+    #[must_use]
     pub const fn equality(first: T, second: T) -> Self {
         Self::Equality(EqualityAtomicFormula::new(first, second))
     }
 
     /// Alias for [`Self::equality`].
+    #[must_use]
     pub fn new_equality(first: T, second: T) -> Self {
         Self::equality(first, second)
     }
 
     /// Creates a predicate formula `(<predicate> <values>*)`.
     #[doc(alias = "new_predicate")]
+    #[must_use]
     pub fn predicate<V: IntoIterator<Item = T>>(predicate: Predicate, values: V) -> Self {
         Self::Predicate(PredicateAtomicFormula::new(
             predicate,
@@ -41,6 +44,7 @@ impl<T> AtomicFormula<T> {
     }
 
     /// Alias for [`Self::predicate`].
+    #[must_use]
     pub fn new_predicate<V: IntoIterator<Item = T>>(predicate: Predicate, values: V) -> Self {
         Self::predicate(predicate, values)
     }
@@ -66,16 +70,19 @@ pub struct PredicateAtomicFormula<T> {
 
 impl<T> EqualityAtomicFormula<T> {
     /// Creates an equality formula `(= first second)`.
+    #[must_use]
     pub const fn new(first: T, second: T) -> Self {
         Self { first, second }
     }
 
     /// Gets a reference to the first element.
+    #[must_use]
     pub const fn first(&self) -> &T {
         &self.first
     }
 
     /// Gets a reference to the second element.
+    #[must_use]
     pub const fn second(&self) -> &T {
         &self.second
     }

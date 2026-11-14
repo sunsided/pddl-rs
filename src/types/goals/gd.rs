@@ -72,12 +72,14 @@ impl GoalDescription {
     /// Creates a conjunction `(and <GD>*)`.
     #[inline]
     #[doc(alias = "new_and")]
+    #[must_use]
     pub fn and<T: IntoIterator<Item = GoalDescription>>(values: T) -> Self {
         // TODO: Flatten `(and (and a b) (and x y))` into `(and a b c y)`.
         Self::And(values.into_iter().collect())
     }
 
     /// Alias for [`Self::and`].
+    #[must_use]
     pub fn new_and<T: IntoIterator<Item = GoalDescription>>(values: T) -> Self {
         Self::and(values)
     }
@@ -85,12 +87,14 @@ impl GoalDescription {
     /// Creates a disjunction `(or <GD>*)`.
     #[inline]
     #[doc(alias = "new_or")]
+    #[must_use]
     pub fn or<T: IntoIterator<Item = GoalDescription>>(values: T) -> Self {
         // TODO: Flatten `(or (or a b) (or x y))` into `(or a b c y)`.
         Self::Or(values.into_iter().collect())
     }
 
     /// Alias for [`Self::or`].
+    #[must_use]
     pub fn new_or<T: IntoIterator<Item = GoalDescription>>(values: T) -> Self {
         Self::or(values)
     }

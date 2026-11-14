@@ -94,6 +94,7 @@ impl Problem {
     }
 
     /// Creates a builder to easily construct problems.
+    #[must_use]
     pub fn builder<P: Into<Name>, D: Into<Name>>(
         problem_name: P,
         domain_name: D,

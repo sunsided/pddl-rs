@@ -14,6 +14,7 @@ pub struct PreferenceName(Name);
 impl PreferenceName {
     /// Creates a preference name from anything convertible into a [`Name`].
     #[inline]
+    #[must_use]
     pub fn new<N: Into<Name>>(name: N) -> Self {
         Self(name.into())
     }

@@ -90,12 +90,14 @@ impl Default for ConstraintGoalDescription {
 impl ConstraintGoalDescription {
     /// Creates a conjunction `(and <con-GD>*)`.
     #[doc(alias = "new_and")]
+    #[must_use]
     pub fn and<G: IntoIterator<Item = ConstraintGoalDescription>>(goals: G) -> Self {
         // TODO: Flatten `(and (and a b) (and x y))` into `(and a b c y)`.
         Self::And(goals.into_iter().collect())
     }
 
     /// Alias for [`Self::and`].
+    #[must_use]
     pub fn new_and<G: IntoIterator<Item = ConstraintGoalDescription>>(goals: G) -> Self {
         Self::and(goals)
     }

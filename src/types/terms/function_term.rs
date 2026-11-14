@@ -15,6 +15,7 @@ pub struct FunctionTerm(FunctionSymbol, Vec<Term>);
 
 impl FunctionTerm {
     /// Creates a new function term, `(<function-symbol> <term>*)`.
+    #[must_use]
     pub fn new<I: IntoIterator<Item = Term>>(symbol: FunctionSymbol, terms: I) -> Self {
         Self(symbol, terms.into_iter().collect())
     }

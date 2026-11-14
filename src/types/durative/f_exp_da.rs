@@ -68,6 +68,7 @@ impl DurativeActionFluentExpression {
 
     /// Creates an operation over two or more operands, `(<multi-op> <f-exp-da> <f-exp-da>+)`.
     #[doc(alias = "new_multi_op")]
+    #[must_use]
     pub fn multi_op<I: IntoIterator<Item = DurativeActionFluentExpression>>(
         op: MultiOp,
         lhs: DurativeActionFluentExpression,
@@ -77,6 +78,7 @@ impl DurativeActionFluentExpression {
     }
 
     /// Creates an operation over two or more operands, `(<multi-op> <f-exp-da> <f-exp-da>+)`.
+    #[must_use]
     pub fn new_multi_op<I: IntoIterator<Item = DurativeActionFluentExpression>>(
         op: MultiOp,
         lhs: DurativeActionFluentExpression,

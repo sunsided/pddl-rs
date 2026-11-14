@@ -35,11 +35,13 @@ impl DurativeActionGoalDescription {
 
     /// Creates a conjunction `(and <da-GD>*)`.
     #[doc(alias = "new_and")]
+    #[must_use]
     pub fn and<I: IntoIterator<Item = DurativeActionGoalDescription>>(prefs: I) -> Self {
         Self::And(prefs.into_iter().collect())
     }
 
     /// Alias for [`Self::and`].
+    #[must_use]
     pub fn new_and<I: IntoIterator<Item = DurativeActionGoalDescription>>(prefs: I) -> Self {
         Self::and(prefs)
     }

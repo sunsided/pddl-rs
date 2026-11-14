@@ -112,6 +112,7 @@ impl Name {
     /// ## Returns
     /// A new [`Name`].
     #[inline]
+    #[must_use]
     pub fn new<S: Into<String> + AsRef<str>>(name: S) -> Self {
         if let Some(str) = Self::map_to_static(name.as_ref()) {
             Self::new_static(str)

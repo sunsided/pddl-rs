@@ -12,27 +12,32 @@ pub struct Typed<O>(O, Type);
 
 impl<O> Typed<O> {
     /// Creates a new typed element with the given value and type.
+    #[must_use]
     pub const fn new(value: O, r#type: Type) -> Self {
         Self(value, r#type)
     }
 
     /// Creates a new typed element with the value typed as [`Type::OBJECT`].
+    #[must_use]
     pub const fn object(value: O) -> Self {
         Self::new(value, Type::OBJECT)
     }
 
     /// Creates a new typed element with the value typed as [`Type::OBJECT`].
     #[deprecated(since = "0.2.0", note = "Use `object` instead")]
+    #[must_use]
     pub const fn new_object(value: O) -> Self {
         Self::object(value)
     }
 
     /// Gets the value.
+    #[must_use]
     pub const fn value(&self) -> &O {
         &self.0
     }
 
     /// Gets the assigned type.
+    #[must_use]
     pub const fn type_(&self) -> &Type {
         &self.1
     }

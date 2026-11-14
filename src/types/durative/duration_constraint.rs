@@ -36,6 +36,7 @@ impl DurationConstraint {
     /// Creates a conjunction `(and ...)` of simple duration constraints.
     /// The iterator should not be empty; this is only checked in debug builds.
     #[doc(alias = "new_all")]
+    #[must_use]
     pub fn all<I: IntoIterator<Item = SimpleDurationConstraint>>(constraints: I) -> Self {
         let vec: Vec<_> = constraints.into_iter().collect();
         debug_assert_ne!(vec.len(), 0, "a conjunction needs at least one constraint");
@@ -43,6 +44,7 @@ impl DurationConstraint {
     }
 
     /// Creates a conjunction `(and ...)` of simple duration constraints. Same as [`all`](Self::all).
+    #[must_use]
     pub fn new_all<I: IntoIterator<Item = SimpleDurationConstraint>>(constraints: I) -> Self {
         Self::all(constraints)
     }

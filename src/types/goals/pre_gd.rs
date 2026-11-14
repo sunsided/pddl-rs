@@ -159,6 +159,7 @@ impl PreconditionGoalDescription {
     /// Creates a conjunction `(and <pre-GD>*)`, represented as a list of
     /// precondition goal descriptions.
     #[doc(alias = "new_and")]
+    #[must_use]
     pub fn and<I: IntoIterator<Item = PreconditionGoalDescription>>(
         iter: I,
     ) -> PreconditionGoalDescriptions {
@@ -167,6 +168,7 @@ impl PreconditionGoalDescription {
     }
 
     /// Alias for [`Self::and`].
+    #[must_use]
     pub fn new_and<I: IntoIterator<Item = PreconditionGoalDescription>>(
         iter: I,
     ) -> PreconditionGoalDescriptions {

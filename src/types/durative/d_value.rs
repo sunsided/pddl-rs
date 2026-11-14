@@ -19,11 +19,13 @@ pub enum DurationValue {
 impl DurationValue {
     /// Creates a duration value from a number.
     #[doc(alias = "new_number")]
+    #[must_use]
     pub fn number<I: Into<Number>>(number: I) -> Self {
         Self::Number(number.into())
     }
 
     /// Creates a duration value from a number. Same as [`number`](Self::number).
+    #[must_use]
     pub fn new_number<I: Into<Number>>(number: I) -> Self {
         Self::number(number)
     }
