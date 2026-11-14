@@ -813,6 +813,49 @@ mod tests {
     }
 
     #[test]
+    fn handles_less_common_and_malformed_forms() {
+        let a = analyze(
+            "(define (domain odd)
+  (:types car - (either vehicle thing) vehicle thing)
+  (:constants (bad) c1)
+  (:predicates (p ?x) (q) atom)
+  (:derived (q ?y - car) (exists (?z) (and (p ?y) (p ?z))))
+  (:action a :parameters (?x) :effect (and ((p ?x)) (increase total-cost (+ ((f)) 1))))
+  stray)
+(define (domain))
+(define (problem nameless-section) (:domain odd) (:objects o) (:metric minimize (total-time)))
+(define)
+atom
+(other)",
+        );
+        check!(defs(&a, Kind::Type) == ["car", "vehicle", "thing"]);
+        let either: Vec<_> = a
+            .references
+            .iter()
+            .filter(|r| r.expect == Expect::Type)
+            .map(|r| r.name.as_str())
+            .collect();
+        check!(either == ["vehicle", "thing", "car"]);
+        // `:derived` refers to its predicate and binds its parameters.
+        check!(a
+            .references
+            .iter()
+            .any(|r| r.name == "q" && r.args == Some(1)));
+        check!(a.variables.iter().all(|v| v.binding.is_some()));
+        // A parameterless function used as a term, and nested lists without a head.
+        check!(a
+            .references
+            .iter()
+            .any(|r| r.name == "total-cost" && r.expect == Expect::Term));
+        check!(a.references.iter().any(|r| r.name == "f"));
+        // A nameless domain still counts as a context; the other forms are skipped.
+        check!(a.contexts.len() == 3);
+        check!(a.contexts[1].name.is_empty());
+        check!(Kind::Function.label() == "function");
+        check!(Expect::Domain.kinds() == [Kind::Domain]);
+    }
+
+    #[test]
     fn finds_the_occurrence_at_an_offset() {
         let a = analyze(DOMAIN);
         let offset = DOMAIN.find("(ready))))))").unwrap() + 2;

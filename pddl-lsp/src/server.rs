@@ -280,15 +280,6 @@ fn call<P: DeserializeOwned, R: Serialize>(
 // The handlers take their parameters by value, as `call` passes them.
 #[allow(clippy::needless_pass_by_value, clippy::unnecessary_wraps)]
 impl Server {
-    /// Creates a server without documents, for tests.
-    #[must_use]
-    pub fn new(encoding: Encoding) -> Self {
-        Self {
-            workspace: Workspace::default(),
-            encoding,
-        }
-    }
-
     /// Answers `request`.
     #[must_use]
     pub fn request(&self, request: Request) -> Response {

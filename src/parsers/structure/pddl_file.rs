@@ -195,6 +195,32 @@ mod tests {
     }
 
     #[test]
+    fn check_reports_sections_that_are_not_keyword_lists() {
+        let input = "(define (domain d) word (()) (:predicates (p)))\n\
+                     (define (problem q) (:domain d) (()) (:init) (:goal (p)))";
+        let errors = parsers::check(input);
+        let found: Vec<_> = errors
+            .iter()
+            .map(|e| {
+                let excerpt = e.found().unwrap_or_default();
+                (
+                    &excerpt[..excerpt.find(' ').unwrap()],
+                    e.reason().unwrap_or_default(),
+                )
+            })
+            .collect();
+        check!(
+            found
+                == [
+                    ("word", ""),
+                    ("(())", "unknown section"),
+                    ("(())", "unknown section")
+                ]
+        );
+        check!(errors.iter().all(|e| e.help().is_none()));
+    }
+
+    #[test]
     fn check_agrees_with_from_str() {
         let inputs = [
             String::new(),

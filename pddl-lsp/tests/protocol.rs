@@ -32,6 +32,13 @@ struct Client {
 
 impl Client {
     fn start() -> Self {
+        let (client, result) = Self::start_with(json!({ "capabilities": {} }));
+        check!(result["capabilities"]["positionEncoding"] == "utf-16");
+        client
+    }
+
+    /// Starts a server with these initialize parameters, and returns its initialize result.
+    fn start_with(params: Value) -> (Self, Value) {
         let (server, client) = Connection::memory();
         let server = thread::spawn(move || pddl_lsp::server::run(&server).unwrap());
         let mut client = Self {
@@ -39,10 +46,9 @@ impl Client {
             next_id: 0,
             server: Some(server),
         };
-        let result = client.request("initialize", json!({ "capabilities": {} }));
-        check!(result["capabilities"]["positionEncoding"] == "utf-16");
+        let result = client.request("initialize", params);
         client.notify("initialized", json!({}));
-        client
+        (client, result)
     }
 
     fn notify(&self, method: &str, params: Value) {
@@ -50,25 +56,26 @@ impl Client {
         self.connection.sender.send(message.into()).unwrap();
     }
 
-    /// Sends a request and returns its result, collecting notifications on the way.
-    fn request(&mut self, method: &str, params: Value) -> Value {
+    /// Sends a request and returns its response, skipping notifications on the way.
+    fn response(&mut self, method: &str, params: Value) -> Response {
         self.next_id += 1;
         let id = RequestId::from(self.next_id);
         let request = Request::new(id.clone(), method.into(), params);
         self.connection.sender.send(request.into()).unwrap();
         loop {
-            match self.connection.receiver.recv().unwrap() {
-                Message::Response(Response {
-                    id: got,
-                    result,
-                    error,
-                }) if got == id => {
-                    check!(error.is_none(), "{method}: {error:?}");
-                    return result.unwrap_or(Value::Null);
+            if let Message::Response(response) = self.connection.receiver.recv().unwrap() {
+                if response.id == id {
+                    return response;
                 }
-                _ => {}
             }
         }
+    }
+
+    /// Sends a request and returns its result, which must not be an error.
+    fn request(&mut self, method: &str, params: Value) -> Value {
+        let Response { result, error, .. } = self.response(method, params);
+        check!(error.is_none(), "{method}: {error:?}");
+        result.unwrap_or(Value::Null)
     }
 
     /// The next diagnostics published for `uri`.
@@ -228,4 +235,216 @@ fn inlay_hints_name_parameters() {
         .map(|h| h["label"].as_str().unwrap())
         .collect();
     check!(labels == ["?p:"]);
+}
+
+/// The labels the server completes at `|` in `text`, opened as `uri`.
+fn complete(client: &mut Client, uri: &str, text: &str) -> Vec<String> {
+    let offset = text.find('|').unwrap();
+    let text = text.replace('|', "");
+    client.open(uri, &text);
+    let before = &text[..offset];
+    let line = before.matches('\n').count();
+    let character = offset - before.rfind('\n').map_or(0, |i| i + 1);
+    let items = client.request(
+        "textDocument/completion",
+        at(
+            uri,
+            u32::try_from(line).unwrap(),
+            u32::try_from(character).unwrap(),
+        ),
+    );
+    let items = items.as_array().unwrap();
+    items
+        .iter()
+        .map(|i| i["label"].as_str().unwrap().to_string())
+        .collect()
+}
+
+#[test]
+fn completes_by_context() {
+    let mut client = Client::start();
+    client.open("file:///w/domain.pddl", DOMAIN);
+    let cases = [
+        ("(define (domain c1)\n  (:|", ":predicates"),
+        ("(define (problem c2)\n  (:|", ":objects"),
+        ("(define (domain c3)\n  (:action a\n    :|", ":precondition"),
+        (
+            "(define (domain c4)\n  (:durative-action a\n    :|",
+            ":duration",
+        ),
+        ("(define (domain c5)\n  (:requirements :|", ":typing"),
+        (
+            "(define (domain c6) (:predicates (on ?x))\n  (:action a :parameters (?x) :effect (|",
+            "on",
+        ),
+        (
+            "(define (domain c7) (:predicates (on ?x))\n  (:action a :parameters (?x) :effect (|",
+            "and",
+        ),
+        (
+            "(define (domain c8) (:types block)\n  (:constants b1 - |",
+            "block",
+        ),
+        (
+            "(define (domain c9) (:types block)\n  (:constants b1 - |",
+            "object",
+        ),
+        (
+            "(define (problem c10) (:domain logistics) (:objects t9 - truck)\n  (:init (at |",
+            "t9",
+        ),
+    ];
+    for (index, (text, expected)) in cases.into_iter().enumerate() {
+        let uri = format!("file:///w/complete{index}.pddl");
+        let labels = complete(&mut client, &uri, text);
+        check!(labels.iter().any(|l| l == expected), "{text:?}: {labels:?}");
+    }
+}
+
+#[test]
+fn navigates_variables_and_symbols() {
+    let (d, p) = ("file:///w/domain.pddl", "file:///w/problem.pddl");
+    let mut client = Client::start();
+    client.open(d, DOMAIN);
+    client.open(p, PROBLEM);
+
+    // `?t` in the action's precondition.
+    let t = at(d, 6, 22);
+    let hover = client.request("textDocument/hover", t.clone());
+    check!(hover["contents"]["value"]
+        .as_str()
+        .unwrap()
+        .contains("?t - truck"));
+    let highlights = client.request("textDocument/documentHighlight", t.clone());
+    check!(highlights.as_array().unwrap().len() == 4);
+    let range = client.request("textDocument/prepareRename", t.clone());
+    check!(range["start"] == json!({ "line": 6, "character": 22 }));
+    check!(range["end"] == json!({ "line": 6, "character": 24 }));
+    let mut params = t;
+    params["newName"] = json!("?truck");
+    let edit = client.request("textDocument/rename", params);
+    check!(edit["changes"][d].as_array().unwrap().len() == 4);
+
+    // A predicate can't be renamed to something that isn't a name.
+    let mut params = at(d, 3, 16);
+    params["newName"] = json!("not a name");
+    let response = client.response("textDocument/rename", params);
+    check!(response.error.unwrap().message == "`not a name` is not a valid predicate name");
+
+    let symbols = client.request("workspace/symbol", json!({ "query": "DELIV" }));
+    let names: Vec<_> = symbols
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|s| s["name"].as_str().unwrap())
+        .collect();
+    check!(names == ["deliver"]);
+
+    let folds = client.request(
+        "textDocument/foldingRange",
+        json!({ "textDocument": { "uri": d } }),
+    );
+    let folds = folds.as_array().unwrap();
+    check!(folds
+        .iter()
+        .any(|f| f["startLine"] == 0 && f["endLine"] == 7));
+
+    let tokens = client.request(
+        "textDocument/semanticTokens/full",
+        json!({ "textDocument": { "uri": d } }),
+    );
+    check!(!tokens["data"].as_array().unwrap().is_empty());
+}
+
+#[test]
+fn answers_unknown_requests_and_bad_parameters_with_errors() {
+    let mut client = Client::start();
+    let unknown = client.response("pddl/unknown", json!({}));
+    check!(unknown.error.unwrap().code == -32601);
+    let bad = client.response("textDocument/hover", json!({ "nonsense": true }));
+    check!(bad.error.unwrap().code == -32602);
+    let bad = client.response("textDocument/rename", json!({ "nonsense": true }));
+    check!(bad.error.unwrap().code == -32602);
+}
+
+/// A folder under the system's temporary directory, removed when dropped.
+struct TempDir(std::path::PathBuf);
+
+impl TempDir {
+    fn new(name: &str) -> Self {
+        let path = std::env::temp_dir().join(format!("pddl-lsp-{name}-{}", std::process::id()));
+        std::fs::create_dir_all(&path).unwrap();
+        Self(path)
+    }
+
+    fn uri(&self, file: &str) -> String {
+        lsp_types::Url::from_file_path(self.0.join(file))
+            .unwrap()
+            .to_string()
+    }
+}
+
+impl Drop for TempDir {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
+#[test]
+fn follows_workspace_files_on_disk() {
+    let dir = TempDir::new("workspace");
+    std::fs::write(dir.0.join("domain.pddl"), DOMAIN).unwrap();
+    std::fs::create_dir(dir.0.join(".hidden")).unwrap();
+    std::fs::write(
+        dir.0.join(".hidden/ignored.pddl"),
+        "(define (domain hidden))",
+    )
+    .unwrap();
+    let folder = json!({ "uri": dir.uri(""), "name": "workspace" });
+    let params = json!({
+        "capabilities": { "general": { "positionEncodings": ["utf-8", "utf-16"] } },
+        "workspaceFolders": [folder],
+    });
+    let (mut client, result) = Client::start_with(params);
+    check!(result["capabilities"]["positionEncoding"] == "utf-8");
+    let symbols = |client: &mut Client, query: &str| {
+        let found = client.request("workspace/symbol", json!({ "query": query }));
+        found.as_array().unwrap().len()
+    };
+    // The domain was read from disk; the hidden folder was skipped.
+    check!(symbols(&mut client, "logistics") == 1);
+    check!(symbols(&mut client, "hidden") == 0);
+
+    // A problem using it is checked against it.
+    let p = dir.uri("problem.pddl");
+    client.open(&p, PROBLEM);
+    check!(client.diagnostics(&p).len() == 2);
+    let change = json!({
+        "textDocument": { "uri": p, "version": 2 },
+        "contentChanges": [{ "text": PROBLEM.replace(" ham", "") }],
+    });
+    client.notify("textDocument/didChange", change);
+    check!(client.diagnostics(&p).is_empty());
+
+    // Closing the edited domain goes back to what's on disk.
+    let d = dir.uri("domain.pddl");
+    client.open(&d, "(define (domain logistics))");
+    // Without its types and predicates: `truck`, `place` and both `at`s are unknown.
+    check!(client.diagnostics(&p).len() == 4);
+    client.notify(
+        "textDocument/didClose",
+        json!({ "textDocument": { "uri": d } }),
+    );
+    check!(client.diagnostics(&p).is_empty());
+
+    // Files created and deleted on disk come and go.
+    let extra = dir.0.join("extra.pddl");
+    std::fs::write(&extra, "(define (domain extra))").unwrap();
+    let created = json!({ "changes": [{ "uri": dir.uri("extra.pddl"), "type": 1 }] });
+    client.notify("workspace/didChangeWatchedFiles", created);
+    check!(symbols(&mut client, "extra") == 1);
+    std::fs::remove_file(&extra).unwrap();
+    let deleted = json!({ "changes": [{ "uri": dir.uri("extra.pddl"), "type": 3 }] });
+    client.notify("workspace/didChangeWatchedFiles", deleted);
+    check!(symbols(&mut client, "extra") == 0);
 }
