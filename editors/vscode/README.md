@@ -2,7 +2,7 @@
 
 Language support for the Planning Domain Definition Language (PDDL 3.1):
 error checking, navigation, rename, completion and formatting for domain and
-problem files. It's powered by [`pddl-lsp`](../../pddl-lsp), a language server
+problem files. It's powered by [`pddl-lsp`](https://github.com/sunsided/pddl-rs/tree/main/pddl-lsp), a language server
 written in Rust, which comes with the extension. There's nothing else to
 install.
 
