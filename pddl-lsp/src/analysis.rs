@@ -565,7 +565,10 @@ impl Walker<'_> {
         match head.atom().map(str::to_ascii_lowercase).as_deref() {
             Some(":requirements") => self.requirements(section, args),
             Some(":types") => {
-                self.need(&[Requirement::Typing], head);
+                // With a `-`, that `-` already gets the warning.
+                if !args.iter().any(|n| n.is("-")) {
+                    self.need(&[Requirement::Typing], head);
+                }
                 self.typed_defs(Kind::Type, args, &range, None);
             }
             Some(":constants") => {
@@ -793,14 +796,21 @@ impl Walker<'_> {
                 self.formulas(args);
             }
             "not" => {
-                let negated = args.first().and_then(Node::head);
+                let inner = args.first();
+                let negated = inner.and_then(Node::head);
+                // `(= (fuel) 5)` compares numbers, like `<`, so it is no atomic formula.
+                let numeric = negated == Some("=")
+                    && inner
+                        .and_then(Node::children)
+                        .is_some_and(|c| fluent_value(&c[1..]) == Some(true));
                 // `(not (= ?x ?y))` is how domains with only `:equality` say
                 // "different"; planners accept it, so only the `=` needs a requirement.
-                if goal && negated.is_none_or(|h| h != "=") {
-                    let atomic = negated.is_some_and(|h| {
-                        !CONNECTIVES.iter().any(|c| h.eq_ignore_ascii_case(c))
-                            && !COMPARISONS.contains(&h)
-                    });
+                if goal && (numeric || negated != Some("=")) {
+                    let atomic = !numeric
+                        && negated.is_some_and(|h| {
+                            !CONNECTIVES.iter().any(|c| h.eq_ignore_ascii_case(c))
+                                && !COMPARISONS.contains(&h)
+                        });
                     // `:disjunctive-preconditions` allows `(not <GD>)` for any goal.
                     let any_of: &'static [Requirement] = if atomic {
                         &[

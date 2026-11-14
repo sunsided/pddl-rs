@@ -821,7 +821,6 @@ mod tests {
         check!(
             messages(&ws, "d.pddl")
                 == [
-                    "`:types` needs `:typing` in `:requirements`",
                     "type `box` is never used",
                     "`-` needs `:typing` in `:requirements`",
                     "`not` needs `:negative-preconditions` or `:disjunctive-preconditions` in `:requirements`",
@@ -854,13 +853,24 @@ mod tests {
   (:durative-action a :parameters () :duration (= ?duration 1) :condition () :effect ()))";
         check!(messages(&workspace(&[("t.pddl", durative)]), "t.pddl").is_empty());
 
+        // A `:types` section needs `:typing` even without a `-`.
+        let untyped = "(define (domain u) (:types a) (:constants c - a))";
+        check!(
+            messages(&workspace(&[("u.pddl", untyped)]), "u.pddl")
+                == [
+                    "`:types` needs `:typing` in `:requirements`",
+                    "constant `c` is never used",
+                    "`-` needs `:typing` in `:requirements`",
+                ]
+        );
+
         // Each construct asks for the requirement it really needs.
         let fluents = "(define (domain f) (:requirements :negative-preconditions :typing)
   (:types place)
   (:functions (fuel) - number (loc) - place)
   (:durative-action d :parameters () :duration (at start (<= ?duration 2)) :condition () :effect ())
   (:action a :parameters (?p - place)
-    :precondition (and (not (> (fuel) 1)) (not (= (loc) ?p)))
+    :precondition (and (not (> (fuel) 1)) (not (= (fuel) 2)) (not (= (loc) ?p)))
     :effect (assign (loc) ?p)))";
         check!(
             messages(&workspace(&[("f.pddl", fluents)]), "f.pddl")
@@ -871,6 +881,8 @@ mod tests {
                     "`<=` needs `:duration-inequalities` in `:requirements`",
                     "`not` needs `:disjunctive-preconditions` in `:requirements`",
                     "`>` needs `:numeric-fluents` in `:requirements`",
+                    "`not` needs `:disjunctive-preconditions` in `:requirements`",
+                    "`=` needs `:numeric-fluents` in `:requirements`",
                     "`=` needs `:object-fluents` in `:requirements`",
                     "`assign` needs `:object-fluents` in `:requirements`",
                 ]

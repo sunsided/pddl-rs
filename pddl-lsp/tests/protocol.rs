@@ -197,11 +197,7 @@ fn an_editor_session() {
         .filter(|d| d["severity"] == 2)
         .map(|d| d["message"].as_str().unwrap())
         .collect();
-    check!(warnings.len() == 3);
-    check!(warnings
-        .iter()
-        .all(|m| *m == "`:types` needs `:typing` in `:requirements`"
-            || *m == "`-` needs `:typing` in `:requirements`"));
+    check!(warnings == ["`-` needs `:typing` in `:requirements`"; 2]);
     let whole =
         json!({ "start": { "line": 0, "character": 0 }, "end": { "line": 0, "character": 50 } });
     let params = json!({ "textDocument": { "uri": "file:///w/untyped.pddl" }, "range": whole, "context": { "diagnostics": [] } });
