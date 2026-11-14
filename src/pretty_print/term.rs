@@ -21,8 +21,11 @@ impl Visitor<Term, RcDoc<'static>> for PrettyRenderer {
 
 impl Visitor<FunctionTerm, RcDoc<'static>> for PrettyRenderer {
     fn visit(&self, value: &FunctionTerm) -> RcDoc<'static> {
+        // Even without terms: a bare symbol would parse back as a name.
         if value.terms().is_empty() {
-            return value.symbol().accept(self);
+            return RcDoc::text("(")
+                .append(value.symbol().accept(self))
+                .append(")");
         }
         RcDoc::text("(")
             .append(value.symbol().accept(self))
@@ -99,7 +102,7 @@ mod tests {
     #[test]
     fn function_term_empty_terms_works() {
         let ft = FunctionTerm::new(FunctionSymbol::from("f"), Vec::<Term>::new());
-        assert_eq!(prettify!(ft, 20), "f");
+        assert_eq!(prettify!(ft, 20), "(f)");
     }
 
     #[test]

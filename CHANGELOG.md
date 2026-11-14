@@ -52,6 +52,9 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- A function term without terms pretty-prints as `(f)` instead of `f`, which parsed back as the
+  name `f`: `(at (loc) y)` printed as `(at loc y)`, and `(assign (loc) y)` turned into a numeric
+  assignment.
 - `Requirement::Adl.contains` claimed `:continuous-effects` instead of `:conditional-effects`, and
   missed `:existential-preconditions` and `:universal-preconditions`. It now agrees with
   `Requirement::expand`.

@@ -179,7 +179,7 @@ mod tests {
         use crate::{FunctionSymbol, FunctionTerm};
         let ft = FunctionTerm::new(FunctionSymbol::from("loc"), vec![]);
         let pe = PrimitiveEffect::object_fluent(ft, None);
-        assert_eq!(prettify!(pe, 30), "(assign loc)");
+        assert_eq!(prettify!(pe, 30), "(assign (loc))");
     }
 
     #[test]

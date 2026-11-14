@@ -2,7 +2,7 @@
 
 #![cfg(feature = "pretty")]
 
-use pddl::{Domain, Parser, Pretty, Problem};
+use pddl::{Domain, Parser, Pretty, PrimitiveEffect, Problem, Term};
 
 fn round_trip_domain(input: &str, width: usize, label: &str) {
     let original = Domain::from_str(input).unwrap_or_else(|_| panic!("{label}: parse original"));
@@ -491,4 +491,22 @@ fn whitespace_before_closing_paren_of_term_and_variable_lists() {
     ] {
         Domain::from_str(input).unwrap_or_else(|e| panic!("{input}: {e}"));
     }
+}
+
+/// Parses `input` as a primitive effect, prints it and parses the output again.
+fn round_trip_p_effect(input: &str) -> String {
+    let original = PrimitiveEffect::from_str(input).unwrap_or_else(|e| panic!("{input}: {e}"));
+    let printed = original.pretty(80).to_string();
+    let reparsed = PrimitiveEffect::from_str(&printed).unwrap_or_else(|e| panic!("{printed}: {e}"));
+    assert_eq!(original, reparsed, "{input} printed as {printed}");
+    printed
+}
+
+/// A function term without terms keeps its parentheses, or it would parse back as a name.
+#[test]
+fn nullary_function_terms_round_trip() {
+    assert_eq!(round_trip_p_effect("(assign (loc) y)"), "(assign (loc) y)");
+    assert_eq!(round_trip_p_effect("(at (loc) y)"), "(at (loc) y)");
+    let term = Term::from_str("(loc)").unwrap();
+    assert_eq!(Term::from_str(&term.pretty(80).to_string()), Ok(term));
 }
