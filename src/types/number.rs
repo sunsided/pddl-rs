@@ -201,7 +201,9 @@ impl From<f32> for Number {
     /// Panics if the provided `value` is not finite. Use [`Number::try_new`]
     /// if you need the function to not panic.
     fn from(value: f32) -> Self {
-        Number::new(value.into())
+        // Through the shortest decimal, so `1.1f32` becomes `1.1`, not `1.100000023841858`.
+        let value: f64 = value.to_string().parse().expect("f32 text is a valid f64");
+        Number::new(value)
     }
 }
 
@@ -343,7 +345,7 @@ mod tests {
     #[test]
     fn eq_from_f64() {
         let n = Number::from(2.5f64);
-        assert!((*n - 2.5).abs() < 1e-6);
+        assert_eq!(*n, 2.5);
     }
 
     #[test]
@@ -410,6 +412,14 @@ mod tests {
         assert_eq!(*Number::from(1e300), 1e300);
         assert_eq!(*Number::from(16_777_217), 16_777_217.0);
         assert_eq!(*"16777217".parse::<Number>().unwrap(), 16_777_217.0);
+    }
+
+    #[test]
+    fn from_f32_keeps_the_decimal_written() {
+        // Widening the bits would give 1.100000023841858.
+        assert_eq!(*Number::from(1.1f32), 1.1);
+        assert_eq!(Number::from(1.1f64), 1.1f32);
+        assert_eq!(*Number::from(f32::MAX), 3.4028235e38);
     }
 
     #[test]

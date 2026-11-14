@@ -16,7 +16,9 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `Number` stores an `f64` instead of an `f32`, so `Deref` and `Number::new` / `try_new` use `f64`.
   Whole numbers are exact up to 2^53 instead of 2^24: `16777217` used to parse as `16777216`.
   `Number::from` an `f64` beyond the `f32` range, such as `1e300`, used to overflow to infinity and
-  panic; it now keeps the value. `From<f32>` and `From<f64>` still panic on NaN and infinity.
+  panic; it now keeps the value. `From<f32>` widens through the shortest decimal, so
+  `Number::from(1.1f32)` is `1.1` and prints as `1.1`. `From<f32>` and `From<f64>` still panic on NaN
+  and infinity.
 - `Name::len` returns the length in bytes, as `str::len` does, instead of in characters. For a
   non-ASCII name built by hand, such as `Name::new("é")`, it used to return a value that can't be used
   to slice the name. Parsed names are ASCII only, so their lengths don't change.
