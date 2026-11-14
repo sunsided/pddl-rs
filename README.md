@@ -58,7 +58,9 @@ See [`tests/briefcase_world.rs`](tests/briefcase_world.rs) for the full example.
 ```rust
 use pddl::{Problem, Parser};
 
-pub const BRIEFCASE_WORLD_PROBLEM: &'static str = r#"
+pub const BRIEFCASE_WORLD_PROBLEM: &'static str = 
+    // language=pddl
+    r#"
     (define (problem get-paid)
         (:domain briefcase-world)
         (:init (place home) (place office)                  ; place types
@@ -87,25 +89,27 @@ in any order. Use `PddlFile` to parse them all at once:
 ```rust
 use pddl::{PddlFile, Parser};
 
-pub const PDDL_FILE: &'static str = r#"
-(define (domain blocks-world)
-    (:requirements :strips)
-    (:predicates (clear ?x) (on ?x ?y) (on-table ?x))
-    ; ... actions omitted for brevity
-)
+pub const PDDL_FILE: &'static str = 
+    // language=pddl
+    r#"
+    (define (domain blocks-world)
+        (:requirements :strips)
+        (:predicates (clear ?x) (on ?x ?y) (on-table ?x))
+        ; ... actions omitted for brevity
+    )
 
-(define (problem blocks-problem-1)
-    (:domain blocks-world)
-    (:init (on-table a) (on b a) (clear b))
-    (:goal (and (on a b)))
-)
+    (define (problem blocks-problem-1)
+        (:domain blocks-world)
+        (:init (on-table a) (on b a) (clear b))
+        (:goal (and (on a b)))
+    )
 
-(define (problem blocks-problem-2)
-    (:domain blocks-world)
-    (:init (on-table a) (on-table b) (clear a) (clear b))
-    (:goal (and (on b a)))
-)
-"#;
+    (define (problem blocks-problem-2)
+        (:domain blocks-world)
+        (:init (on-table a) (on-table b) (clear a) (clear b))
+        (:goal (and (on b a)))
+    )
+    "#;
 
 fn main() {
     let file = PddlFile::from_str(PDDL_FILE).unwrap();
