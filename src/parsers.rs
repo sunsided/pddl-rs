@@ -98,7 +98,7 @@ pub(crate) use terms::typed_list::{typed_list, typed_variables};
 pub(crate) use terms::variable::parse_variable;
 
 mod error;
-mod sexpr;
+pub(crate) mod sexpr;
 mod suggest;
 #[cfg(test)]
 mod test_helpers;

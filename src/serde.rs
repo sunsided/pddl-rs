@@ -9,7 +9,8 @@
 //! The schema follows PDDL, so a PDDL reader can read it without a reference:
 //!
 //! - Names are strings. Variables keep their `?`, which tells them apart from
-//!   constants: `"truck"`, `"?t"`. Numbers are numbers.
+//!   constants: `"truck"`, `"?t"`. Numbers are numbers. PDDL has no negative
+//!   literals, so in a formula a negative number reads back as a negation.
 //! - Atoms and function terms are arrays, the symbol first: `["at", "?t", "depot"]`,
 //!   `["total-cost"]`, and `["=", "?a", "?b"]` for equality.
 //! - Every other form `(op a b ...)` is an object with the keyword as its only key
@@ -164,11 +165,45 @@ where
     D: Deserializer<'de>,
     T: Parser<Item = T>,
 {
-    let value = Value::deserialize(deserializer)?;
-    let mut text = String::new();
-    render(&mut text, &value).map_err(de::Error::custom)?;
-    T::from_str(&text).map_err(|e| de::Error::custom(format!("{e} in `{text}`")))
+    parse_value(&Value::deserialize(deserializer)?, render)
 }
+
+/// Like [`from_pddl`], but an empty array or object is the default value, for
+/// sections that PDDL can't write empty, such as `(:predicates)`.
+pub(crate) fn from_pddl_or_default<'de, D, T>(
+    deserializer: D,
+    render: Render,
+) -> Result<T, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Parser<Item = T> + Default,
+{
+    let value = Value::deserialize(deserializer)?;
+    match &value {
+        Value::Seq(items) if items.is_empty() => Ok(T::default()),
+        Value::Map(entries) if entries.is_empty() => Ok(T::default()),
+        _ => parse_value(&value, render),
+    }
+}
+
+/// Rebuilds the PDDL text of `value` with `render` and parses it as `T`.
+fn parse_value<T: Parser<Item = T>, E: de::Error>(value: &Value, render: Render) -> Result<T, E> {
+    let mut text = String::new();
+    render(&mut text, value).map_err(E::custom)?;
+    T::from_str(&text).map_err(|e| E::custom(format!("{e} in `{text}`")))
+}
+
+/// Implements `Deserialize` through [`from_pddl_or_default`] with the given renderer.
+macro_rules! deserialize_from_pddl_or_default {
+    ($($ty:ty => $render:expr),+ $(,)?) => {$(
+        impl<'de> ::serde::Deserialize<'de> for $ty {
+            fn deserialize<D: ::serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+                $crate::serde::from_pddl_or_default(deserializer, $render)
+            }
+        }
+    )+};
+}
+pub(crate) use deserialize_from_pddl_or_default;
 
 /// Implements `Deserialize` through [`from_pddl`] with the given renderer.
 macro_rules! deserialize_from_pddl {
@@ -293,11 +328,16 @@ const UNARY_KEYS: &[&str] = &[
     "maximize",
 ];
 
-/// Writes a name, keyword or variable, refusing anything that would change the
-/// structure of the PDDL text around it.
+/// Writes a name, keyword or variable, refusing anything that the reader
+/// wouldn't take as exactly this one atom: a parenthesis or space would change
+/// the structure of the text, and an inner `?` or `:` or a leading operator
+/// would split it, e.g. `a?b` into the constant `a` and the variable `?b`.
 pub(crate) fn atom(out: &mut String, s: &str) -> Result<(), String> {
-    let breaks_structure = |c: char| c.is_whitespace() || matches!(c, '(' | ')' | ';');
-    if s.is_empty() || s.contains(breaks_structure) {
+    let single_atom = crate::parsers::sexpr::read(s).is_ok_and(|forest| {
+        forest.unbalanced.is_none()
+            && matches!(forest.nodes.as_slice(), [node] if node.atom() == Some(s))
+    });
+    if !single_atom {
         return Err(format!("`{s}` is not a valid PDDL name"));
     }
     out.push_str(s);
@@ -309,8 +349,16 @@ pub(crate) fn atom(out: &mut String, s: &str) -> Result<(), String> {
 pub(crate) fn formula(out: &mut String, value: &Value) -> Result<(), String> {
     match value {
         Value::Str(s) => atom(out, s),
+        // PDDL has no negative literals: `-5` is the negation `(- 5)`.
         Value::Num(n) => {
-            out.push_str(n);
+            match n.strip_prefix('-') {
+                Some(magnitude) => {
+                    out.push_str("(- ");
+                    out.push_str(magnitude);
+                    out.push(')');
+                }
+                None => out.push_str(n),
+            }
             Ok(())
         }
         Value::Seq(items) => {

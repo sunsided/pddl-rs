@@ -8,7 +8,7 @@ use crate::{
     PrimitiveType, Term, Type, Typed, TypedList, Variable,
 };
 use ::serde::ser::{SerializeMap, SerializeSeq};
-use ::serde::{Serialize, Serializer};
+use ::serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
 /// The largest magnitude up to which every integer is exactly representable as `f64`.
 const MAX_EXACT_INTEGER: f64 = 9_007_199_254_740_992.0;
@@ -32,6 +32,15 @@ impl Serialize for Number {
         } else {
             serializer.serialize_f64(value)
         }
+    }
+}
+
+impl<'de> Deserialize<'de> for Number {
+    /// Reads the number directly, so a negative one, which PDDL can only write as
+    /// a negation, still comes back as itself. It must be finite.
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = f64::deserialize(deserializer)?;
+        Number::try_new(value).map_err(de::Error::custom)
     }
 }
 
@@ -104,7 +113,6 @@ impl<T: Serialize> Serialize for TypedList<T> {
 
 deserialize_from_pddl!(
     Name => formula,
-    Number => formula,
     Variable => formula,
     Term => formula,
     FunctionTerm => formula,

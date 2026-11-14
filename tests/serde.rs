@@ -191,11 +191,47 @@ fn numbers_are_numbers() {
     check!(serde_json::from_str::<Number>("1e999").is_err());
 }
 
+/// PDDL has no negative literals, so in a formula a negative number reads back
+/// as a negation; on its own, a `Number` keeps its sign.
+#[test]
+fn negative_numbers_read_back() {
+    check!(serde_json::from_str::<Number>("-5").unwrap() == Number::from(-5));
+
+    let exp = FluentExpression::Number(Number::from(-5));
+    let json = serde_json::to_value(&exp).unwrap();
+    check!(json == json!(-5));
+    let back: FluentExpression = serde_json::from_value(json).unwrap();
+    check!(back == FluentExpression::negative(FluentExpression::Number(Number::from(5))));
+}
+
 #[test]
 fn input_cannot_change_the_pddl_structure() {
     let injected = json!({"problem": "p) (:goal (x", "domain": "d", "init": [], "goal": ["g"]});
     let error = serde_json::from_value::<Problem>(injected).unwrap_err();
     check!(error.to_string().contains("is not a valid PDDL name"));
+
+    // Names the reader would split into several atoms: `a?b` would become the
+    // constant `a` and the variable `?b`.
+    for name in ["a?b", "a:b", "-x", "a b"] {
+        let goal = json!({"problem": "p", "domain": "d", "init": [], "goal": ["at", name]});
+        let error = serde_json::from_value::<Problem>(goal).unwrap_err();
+        check!(
+            error.to_string().contains("is not a valid PDDL name"),
+            "{name}"
+        );
+    }
+}
+
+/// Sections that PDDL can't write empty still deserialize from an empty value.
+#[test]
+fn empty_sections_deserialize() {
+    use pddl::{PredicateDefinitions, Requirements, Timeless};
+    check!(serde_json::from_str::<Requirements>("[]").unwrap() == Requirements::default());
+    check!(
+        serde_json::from_str::<PredicateDefinitions>("{}").unwrap()
+            == PredicateDefinitions::default()
+    );
+    check!(serde_json::from_str::<Timeless>("[]").unwrap() == Timeless::default());
 }
 
 #[test]

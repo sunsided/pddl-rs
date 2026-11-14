@@ -3,8 +3,8 @@
 use crate::serde::actions::{action, derived, ActionBody};
 use crate::serde::durative::{durative_action, DurativeActionBody};
 use crate::serde::{
-    as_map, as_seq, as_str, atom, deserialize_from_pddl, formula, single_entry, spaced, string,
-    type_, typed_list, Keyed, Value,
+    as_map, as_seq, as_str, atom, deserialize_from_pddl, deserialize_from_pddl_or_default, formula,
+    single_entry, spaced, string, type_, typed_list, Keyed, Value,
 };
 use crate::{
     AtomicFormulaSkeleton, AtomicFunctionSkeleton, Constants, Definition, Domain,
@@ -642,9 +642,14 @@ fn pddl_file(out: &mut String, value: &Value) -> Result<(), String> {
     Ok(())
 }
 
+deserialize_from_pddl_or_default!(
+    Requirements => requirements,
+    PredicateDefinitions => predicates,
+    Timeless => |out, value| list_section(out, "timeless", value),
+);
+
 deserialize_from_pddl!(
     Requirement => requirement,
-    Requirements => requirements,
     Types => |out, value| typed_section(out, "types", value),
     Constants => |out, value| typed_section(out, "constants", value),
     Objects => |out, value| typed_section(out, "objects", value),
@@ -652,14 +657,12 @@ deserialize_from_pddl!(
         let (name, parameters) = single_entry(value)?;
         skeleton(out, name, parameters)
     },
-    PredicateDefinitions => predicates,
     AtomicFunctionSkeleton => |out, value| {
         let (name, parameters) = single_entry(value)?;
         skeleton(out, name, parameters)
     },
     Functions => functions,
     DomainConstraintsDef => |out, value| formula_section(out, "constraints", value),
-    Timeless => |out, value| list_section(out, "timeless", value),
     StructureDef => structure_def,
     Domain => domain,
     InitElement => formula,
