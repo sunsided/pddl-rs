@@ -77,6 +77,9 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- A constraint nested in another, such as `(always (sometime (q)))`, parses as a nested constraint.
+  It parsed as a goal with the predicate `sometime` whenever its argument also reads as a term, as
+  `(q)` does. `<con2-GD>` now tries `<con-GD>` first, as in the BNF.
 - Pretty-printing durative actions now produces PDDL that parses back: continuous effects print
   `#t` and `(* #t exp)` instead of `now` and a bare `exp`, the duration prints as `?duration`
   instead of `#t`, and a missing duration, condition or effect prints as `()` instead of being
