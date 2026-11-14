@@ -4,6 +4,8 @@ name: Publish VS Code extension
 # Publishes editors/vscode to the VS Code Marketplace as sunsided.pddl-lsp, with
 # Trusted Publishing: the Marketplace accepts this workflow's OIDC token, so no
 # access token is stored. Run it from the Actions tab or with `task vscode:publish`.
+# Afterwards it tags the commit vscode-vX.Y.Z and creates a GitHub Release with
+# the .vsix attached.
 on:
   workflow_dispatch:
 
@@ -14,7 +16,8 @@ jobs:
     name: Publish
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      # Create the tag and the GitHub Release.
+      contents: write
       # Trusted Publishing, and signing the build provenance attestation.
       id-token: write
       attestations: write
@@ -40,11 +43,33 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile --ignore-scripts
       - name: Package
-        run: yarn run package --out pddl-lsp.vsix
+        run: |
+          version=$(node -p 'require("./package.json").version')
+          vsix="pddl-lsp-$version.vsix"
+          yarn run package --out "$vsix"
+          sha256sum "$vsix" > "$vsix.sha256"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          echo "VSIX=$vsix" >> "$GITHUB_ENV"
       # Package once and publish that file, so the attestation covers what is uploaded.
       - name: Attest build provenance
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
-          subject-path: editors/vscode/pddl-lsp.vsix
+          subject-path: editors/vscode/${{ env.VSIX }}
       - name: Publish
-        run: yarn vsce publish --packagePath pddl-lsp.vsix --oidc
+        run: yarn vsce publish --packagePath "$VSIX" --oidc
+      # Runs only after the Marketplace accepted the version, so the release holds
+      # the same file. Publishing a version twice fails above, so a re-run can't
+      # attach a rebuilt .vsix.
+      - name: Create the GitHub Release
+        run: |
+          # The section from "## X.Y.Z - date" up to the next "## " heading.
+          awk -v heading="## $VERSION " '
+            index($0, heading) == 1 { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > "$RUNNER_TEMP/release-notes.md"
+          # Not "latest": that stays with the pddl crate's releases.
+          gh release create "vscode-v$VERSION" "$VSIX" "$VSIX.sha256" --target "$GITHUB_SHA" \
+            --title "VS Code extension $VERSION" --notes-file "$RUNNER_TEMP/release-notes.md" --latest=false
+        env:
+          GH_TOKEN: ${{ github.token }}
