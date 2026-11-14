@@ -28,4 +28,14 @@ mod tests {
         let x = Number::from(2.71);
         assert_eq!(prettify!(x, 10), "2.71");
     }
+
+    #[test]
+    fn large_number_prints_without_exponent() {
+        // PDDL numbers have no exponent syntax, so the long form is the only valid one.
+        let x = Number::from(1e300);
+        let text = prettify!(x, 10);
+        assert_eq!(text.len(), 301);
+        assert!(text.bytes().all(|b| b.is_ascii_digit()));
+        assert_eq!(text.parse::<Number>().unwrap(), x);
+    }
 }
