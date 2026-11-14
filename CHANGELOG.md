@@ -11,6 +11,11 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `(define ...)` block and takes its kind from the header, so callers no longer parse a `PddlFile`
   and check that it holds exactly one definition.
 
+### Removed
+
+- [#138](https://github.com/sunsided/pddl-rs/issues/138): `pddl::parsers::ignore_eol_comment`. The
+  parsers skip whitespace and `;` comments themselves, and nothing used it.
+
 ## [0.3.1] - 2026-11-13
 
 [0.3.1]: https://github.com/sunsided/pddl-rs/releases/tag/v0.3.1
