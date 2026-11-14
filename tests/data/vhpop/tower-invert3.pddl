@@ -1,0 +1,7 @@
+(define (problem tower-invert3)
+  (:domain blocks-world-domain)
+  (:objects a b c)
+  (:init (block a) (block b) (block c) (block table)
+	 (on a b) (on b c) (on c table)
+	 (clear a) (clear table))
+  (:goal (and (on b c) (on c a))))

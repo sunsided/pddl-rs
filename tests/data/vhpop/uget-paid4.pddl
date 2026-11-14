@@ -1,0 +1,7 @@
+(define (problem uget-paid4)
+  (:domain uni-bw)
+  (:objects home office bank p d)
+  (:init (place home) (place office) (place bank)
+	 (object p) (object d) (object b)
+	 (at b home) (at p home) (at d home) (in p))
+  (:goal (and (at b home) (at d office) (at p bank))))

@@ -1,0 +1,8 @@
+(define (problem road-test)
+  (:domain road-operators)
+  (:objects jack mark a d g)
+  (:init (vehicle jack) (vehicle mark)
+	 (place a) (place d) (place g)
+	 (at jack a) (at mark a)
+	 (bridge a d) (bridge d a) (road d g) (road g d))
+  (:goal (and (at jack g) (at mark g))))

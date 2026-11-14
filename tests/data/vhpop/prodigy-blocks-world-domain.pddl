@@ -1,0 +1,38 @@
+; The prodigy blocks world domain from the UCPOP distribution.
+
+(define (domain prodigy-bw)
+  (:predicates (object ?x) (clear ?x) (on-table ?x) (arm-empty) (holding ?x)
+	       (on ?x ?y))
+  (:action pick-up
+	   :parameters (?ob1)
+	   :precondition (and (object ?ob1)
+			      (clear ?ob1) (on-table ?ob1) (arm-empty))
+	   :effect (and (not (on-table ?ob1))
+			(not (clear ?ob1))
+			(not (arm-empty))
+			(holding ?ob1)))
+  (:action put-down
+	   :parameters (?ob)
+	   :precondition (and (object ?ob) (holding ?ob))
+	   :effect (and (not (holding ?ob))
+			(clear ?ob)
+			(arm-empty)
+			(on-table ?ob)))
+  (:action stack
+	   :parameters (?sob ?sunderob)
+	   :precondition (and (object ?sob) (object ?sunderob)
+			      (holding ?sob) (clear ?sunderob))
+	   :effect (and (not (holding ?sob))
+			(not (clear ?sunderob))
+			(clear ?sob)
+			(arm-empty)
+			(on ?sob ?sunderob)))
+  (:action unstack
+	   :parameters (?sob ?sunderob)
+	   :precondition (and (object ?sob) (object ?sunderob)
+			      (on ?sob ?sunderob) (clear ?sob) (arm-empty))
+	   :effect (and (holding ?sob)
+			(clear ?sunderob)
+			(not (clear ?sob))
+			(not (arm-empty))
+			(not (on ?sob ?sunderob)))))
