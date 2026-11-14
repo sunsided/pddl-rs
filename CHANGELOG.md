@@ -7,6 +7,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `ParseError::help()` suggests the intended keyword for a likely misspelling, e.g.
+  ``did you mean `:predicates`?`` for `(:predicats ...)`. It covers section names, action and
+  durative-action keywords such as `:effect`, and keywords such as `start` or `minimize`; with the
+  `miette` feature it appears as the report's help line. `Display` is unchanged.
 - `IntoIterator` for `&Effects`, `&PreconditionGoalDescriptions` and
   `&PreferenceConstraintGoalDescriptions`, so `for x in &effects` works like `effects.iter()`.
 - `pddl::Definition`, a single domain or problem. `Definition::from_str` parses exactly one
@@ -15,7 +19,9 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `ParseError::span()`, the byte range of the input that parsing stopped at: an atom, the start of a
   list up to its first atom (e.g. `(:bogus`), a single parenthesis, or an empty range at the end.
 - The optional `miette` feature implements `miette::Diagnostic` for `ParseError`, labelling that
-  span. Render an error with `miette::Report::new(error).with_source_code(input)`.
+  span. Render an error with `miette::Report::new(error).with_source_code(input)`; the `miette`
+  example shows the output. For a missing `)`, the report also marks the `(` that is never closed,
+  since the end of the input itself can't be marked.
 
 ### Changed
 

@@ -114,8 +114,9 @@ pub(crate) fn read(input: &str) -> Result<Forest<'_>, Error> {
         }
     }
     // Close what is still open at the end of the input, innermost first.
-    let unbalanced = (!open.is_empty()).then(|| {
-        let error = Error::at(input.len(), 0).reason("expected `)`");
+    let unbalanced = open.last().map(|(innermost, _)| {
+        let mut error = Error::at(input.len(), 0).reason("expected `)`");
+        error.unclosed = Some(*innermost);
         match innermost_keyword(&open) {
             Some(keyword) => error.keyword(keyword.to_ascii_lowercase()),
             None => error,
@@ -204,9 +205,13 @@ impl<'a> Node<'a> {
         Error::at(self.start, end - self.start)
     }
 
-    /// An error at this list's `)`, or at the end of the input if it has none.
+    /// An error at this list's `)`, or at the end of the input if it has none,
+    /// in which case the error marks this list's `(` as never closed.
     pub fn error_at_close(&self) -> Error {
-        Error::at(self.end, usize::from(self.closed))
+        Error {
+            unclosed: (!self.closed).then_some(self.start),
+            ..Error::at(self.end, usize::from(self.closed))
+        }
     }
 }
 

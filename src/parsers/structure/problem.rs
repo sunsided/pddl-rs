@@ -9,6 +9,18 @@ use crate::parsers::{
 };
 use crate::types::Problem;
 
+/// The section keywords of a problem, for suggestions.
+const SECTIONS: &[&str] = &[
+    ":domain",
+    ":requirements",
+    ":objects",
+    ":init",
+    ":goal",
+    ":constraints",
+    ":metric",
+    ":length",
+];
+
 /// Parses a problem definition (`<problem>`), i.e. `(define (problem <name>) <section>*)`.
 ///
 /// The sections may appear in any order, each at most once; `:domain`, `:init`
@@ -51,7 +63,13 @@ pub(crate) fn parse_problem(node: &Node) -> R<Problem> {
                 ":metric" => set_once(&mut metric, parse_problem_metric_spec(section)?, section)?,
                 // Deprecated since PDDL 2.1
                 ":length" => set_once(&mut length, parse_problem_length_spec(section)?, section)?,
-                _ => return Err(section.error().reason("unknown section").fatal()),
+                _ => {
+                    let error = section.error().reason("unknown section").fatal();
+                    return Err(match section.head() {
+                        Some(head) => error.suggest(head, SECTIONS),
+                        None => error,
+                    });
+                }
             }
         }
         // Exhaustive per section, so a new required section can't be reported as another one.

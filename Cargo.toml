@@ -13,6 +13,8 @@ exclude = ["tests/data/", "tests/example_files.rs", "tests/corpus_snapshots.rs",
 authors = ["Markus Mayer <widemeadows@gmail.com>"]
 edition = "2021"
 rust-version = "1.86.0"
+# Resolve dependencies to versions that support `rust-version`.
+resolver = "3"
 
 # Features
 
@@ -64,6 +66,14 @@ name = "deprecated_names"
 required-features = ["parser"]
 
 [[test]]
+name = "miette"
+required-features = ["miette"]
+
+[[example]]
+name = "miette"
+required-features = ["miette"]
+
+[[test]]
 name = "corpus_snapshots"
 required-features = ["pretty", "parser"]
 
@@ -73,6 +83,9 @@ required-features = ["pretty", "parser"]
 
 [dev-dependencies]
 assert2 = "0.4.1"
+# Renders `ParseError` as a report in the `miette` feature's tests and example.
+# Pinned because the tests compare the rendered report byte for byte.
+miette = { version = "=7.6.0", default-features = false, features = ["fancy-no-syscall"] }
 criterion = { version = "0.8", default-features = false, features = ["cargo_bench_support"] }
 
 [package.metadata.docs.rs]

@@ -99,6 +99,7 @@ pub(crate) use terms::variable::parse_variable;
 
 mod error;
 mod sexpr;
+mod suggest;
 #[cfg(test)]
 mod test_helpers;
 mod utilities;

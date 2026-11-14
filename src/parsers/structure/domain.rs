@@ -9,6 +9,21 @@ use crate::parsers::{
 };
 use crate::types::{Domain, StructureDefs};
 
+/// The section keywords of a domain, for suggestions.
+const SECTIONS: &[&str] = &[
+    ":extends",
+    ":requirements",
+    ":types",
+    ":constants",
+    ":predicates",
+    ":functions",
+    ":constraints",
+    ":timeless",
+    ":action",
+    ":durative-action",
+    ":derived",
+];
+
 /// Parses a domain definition (`<domain>`), i.e. `(define (domain <name>) <section>*)`.
 ///
 /// The sections may appear in any order; each one except actions at most once.
@@ -51,7 +66,13 @@ pub(crate) fn parse_domain(node: &Node) -> R<Domain> {
                 ":action" | ":durative-action" | ":derived" => {
                     structure.push(parse_structure_def(section)?);
                 }
-                _ => return Err(section.error().reason("unknown section").fatal()),
+                _ => {
+                    let error = section.error().reason("unknown section").fatal();
+                    return Err(match section.head() {
+                        Some(head) => error.suggest(head, SECTIONS),
+                        None => error,
+                    });
+                }
             }
         }
         Ok(Domain::builder(name, StructureDefs::new(structure))

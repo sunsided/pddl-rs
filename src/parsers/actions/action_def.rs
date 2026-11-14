@@ -16,6 +16,7 @@ pub(crate) fn parse_action_def(node: &Node) -> R<ActionDefinition> {
         let parameters = keyword_arg(args, ":parameters", typed_variables)?;
         let precondition = opt_keyword_arg(args, ":precondition", |n| empty_or(n, parse_pre_gd))?;
         let effect = opt_keyword_arg(args, ":effect", |n| empty_or(n, parse_effect))?;
+        args.reject_misspelled(&[":precondition", ":effect"])?;
         Ok(ActionDefinition::new(
             symbol,
             parameters,
