@@ -1,69 +1,25 @@
-//! Provides parsers for predicate definitions.
+//! Provides parsers for predicates definitions.
 
-use nom::combinator::map;
-use nom::Parser;
-
-use crate::parsers::{parse_atomic_formula_skeleton, ParseResult, Span};
-use crate::parsers::{prefix_expr, space_separated_list1};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{parse_atomic_formula_skeleton, prefix};
 use crate::types::PredicateDefinitions;
 
-/// Parses predicate definitions, i.e. `(:predicates <atomic formula skeleton>⁺)`.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_predicates_def, preamble::*};
-/// # use pddl::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions};
-/// # use pddl::{ToTyped, TypedList};
-/// let input = r#"(:predicates
-///                     (at ?x - physob ?y - location)
-///                     (in ?x ?y - physob)
-///                )"#;
-///
-/// assert!(parse_predicates_def(input).is_value(
-///     PredicateDefinitions::new(vec![
-///         AtomicFormulaSkeleton::new(
-///             Predicate::from("at"),
-///             TypedList::from_iter([
-///                 Variable::from("x").to_typed("physob"),
-///                 Variable::from("y").to_typed("location"),
-///             ])),
-///         AtomicFormulaSkeleton::new(
-///             Predicate::from("in"),
-///             TypedList::from_iter([
-///                 Variable::from("x").to_typed("physob"),
-///                 Variable::from("y").to_typed("physob"),
-///             ]))
-///     ])
-/// ));
-/// ```
-pub fn parse_predicates_def<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, PredicateDefinitions> {
-    map(
-        prefix_expr(
-            ":predicates",
-            space_separated_list1(parse_atomic_formula_skeleton),
-        ),
-        PredicateDefinitions::new,
-    )
-    .parse(input.into())
+/// Parses a predicates definition, i.e. `(:predicates <atomic formula skeleton>⁺)`.
+pub(crate) fn parse_predicates_def(node: &Node) -> R<PredicateDefinitions> {
+    prefix(node, ":predicates", |args| {
+        args.list1(parse_atomic_formula_skeleton)
+            .map(PredicateDefinitions::new)
+    })
 }
 
-impl crate::parsers::Parser for PredicateDefinitions {
-    type Item = PredicateDefinitions;
-
-    /// See [`parse_predicates_def`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_predicates_def(input)
-    }
-}
+crate::parsers::impl_parser!(PredicateDefinitions => parse_predicates_def);
 
 #[cfg(test)]
 mod tests {
-    use crate::parsers::preamble::*;
-    use crate::{
-        AtomicFormulaSkeleton, Predicate, PredicateDefinitions, ToTyped, TypedList, Variable,
-    };
+    use crate::parsers::UnwrapValue;
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
@@ -73,7 +29,34 @@ mod tests {
                         )"#;
 
         assert!(
-            PredicateDefinitions::parse(input).is_value(PredicateDefinitions::new(vec![
+            PredicateDefinitions::from_str(input).is_value(PredicateDefinitions::new(vec![
+                AtomicFormulaSkeleton::new(
+                    Predicate::from("at"),
+                    TypedList::from_iter([
+                        Variable::from("x").to_typed("physob"),
+                        Variable::from("y").to_typed("location"),
+                    ])
+                ),
+                AtomicFormulaSkeleton::new(
+                    Predicate::from("in"),
+                    TypedList::from_iter([
+                        Variable::from("x").to_typed("physob"),
+                        Variable::from("y").to_typed("physob"),
+                    ])
+                )
+            ]))
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        let input = r#"(:predicates
+                            (at ?x - physob ?y - location)
+                            (in ?x ?y - physob)
+                       )"#;
+
+        assert!(
+            PredicateDefinitions::from_str(input).is_value(PredicateDefinitions::new(vec![
                 AtomicFormulaSkeleton::new(
                     Predicate::from("at"),
                     TypedList::from_iter([

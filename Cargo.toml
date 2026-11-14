@@ -18,16 +18,17 @@ rust-version = "1.86.0"
 
 [features]
 default = ["parser", "interning"]
-## Enables parsing of PDDL types through the `Parser` trait (nom-based).
-parser = ["dep:nom", "dep:nom_locate"]
+## Enables parsing of PDDL types through the `Parser` trait.
+parser = []
+## Implements `miette::Diagnostic` for `ParseError`.
+miette = ["parser", "dep:miette"]
 ## Enables string interning for `Name` types to reduce memory footprint.
 interning = []
 ## Enables pretty-printing of PDDL types via the `pretty` crate.
 pretty = ["dep:pretty"]
 
 [dependencies]
-nom = { version = "8.0.0", optional = true }
-nom_locate = { version = "5.0.0", optional = true }
+miette = { version = "7", optional = true, default-features = false }
 pretty = { version = "0.12.1", optional = true }
 thiserror = "2.0.18"
 

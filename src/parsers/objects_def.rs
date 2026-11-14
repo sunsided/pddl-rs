@@ -1,55 +1,38 @@
-//! Provides parsers for goal object declarations.
+//! Provides parsers for objects declarations.
 
-use nom::combinator::map;
-use nom::Parser;
-
-use crate::parsers::{parse_name, prefix_expr, typed_list, ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{parse_name, prefix, typed_list};
 use crate::types::Objects;
 
-/// Parser for goal object declarations.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_problem_objects_declaration, preamble::*};
-/// # use pddl::{Name, Objects, ToTyped, Type};
-/// let input = "(:objects train1 train2)";
-/// assert!(parse_problem_objects_declaration(input).is_value(
-///     Objects::new([
-///         Name::new("train1").to_typed(Type::OBJECT),
-///         Name::new("train2").to_typed(Type::OBJECT),
-///     ])
-/// ));
-/// ```
-pub fn parse_problem_objects_declaration<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, Objects> {
-    map(
-        prefix_expr(":objects", typed_list(parse_name)),
-        Objects::new,
-    )
-    .parse(input.into())
+/// Parses an objects declaration, i.e. `(:objects <typed list (name)>)`.
+pub(crate) fn parse_problem_objects_declaration(node: &Node) -> R<Objects> {
+    prefix(node, ":objects", |args| {
+        typed_list(args, parse_name).map(Objects::new)
+    })
 }
 
-impl crate::parsers::Parser for Objects {
-    type Item = Objects;
-
-    /// See [`parse_problem_objects_declaration`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_problem_objects_declaration(input)
-    }
-}
+crate::parsers::impl_parser!(Objects => parse_problem_objects_declaration);
 
 #[cfg(test)]
-mod test {
+mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{Name, Parser, ToTyped, Type};
 
-    use super::*;
+    use crate::*;
 
     #[test]
     fn test_parse() {
         let input = "(:objects train1 train2)";
-        assert!(Objects::parse(input).is_value(Objects::new([
+        assert!(Objects::from_str(input).is_value(Objects::new([
+            Name::new("train1").to_typed(Type::OBJECT),
+            Name::new("train2").to_typed(Type::OBJECT),
+        ])));
+    }
+
+    #[test]
+    fn doc_example_0() {
+        let input = "(:objects train1 train2)";
+        assert!(Objects::from_str(input).is_value(Objects::new([
             Name::new("train1").to_typed(Type::OBJECT),
             Name::new("train2").to_typed(Type::OBJECT),
         ])));

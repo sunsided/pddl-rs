@@ -1,73 +1,49 @@
 //! Provides parsers for terms.
 
-use crate::parsers::{parse_function_term, parse_variable};
-use crate::parsers::{parse_name, ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{parse_function_term, parse_name, parse_variable};
 use crate::types::Term;
-use nom::error::ErrorKind;
-use nom::error_position;
 
 /// Parses a term, i.e. `<name> | <variable> | <function-term>`.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_term, preamble::*};
-/// # use pddl::Term;
-/// assert!(parse_term("abcde").is_value(Term::Name("abcde".into())));
-/// assert!(parse_term("?abcde").is_value(Term::Variable("abcde".into())));
-///```
-pub fn parse_term<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Term> {
-    let input = input.into();
-
-    if let Ok((remaining, variable)) = parse_variable(input) {
-        return Ok((remaining, Term::Variable(variable)));
+pub(crate) fn parse_term(node: &Node) -> R<Term> {
+    if node.atom().is_some() {
+        return parse_variable(node)
+            .map(Term::Variable)
+            .or_else(|_| parse_name(node).map(Term::Name));
     }
-
-    if let Ok((remaining, name)) = parse_name(input) {
-        return Ok((remaining, Term::Name(name)));
-    }
-
-    match parse_function_term(input) {
-        Ok((remaining, ft)) => return Ok((remaining, Term::Function(ft))),
-        // E.g. "nesting too deep": keep the reason, and stop `alt` from retrying.
-        Err(failure @ nom::Err::Failure(_)) => return Err(failure),
-        Err(_) => {}
-    }
-
-    Err(nom::Err::Error(error_position!(input, ErrorKind::Alt)))
+    parse_function_term(node).map(Term::Function)
 }
 
-impl crate::parsers::Parser for Term {
-    type Item = Term;
-
-    /// Parses a term.
-    ///
-    /// ## Example
-    /// ```
-    /// # use pddl::{Term, Parser};
-    /// let (_, value) = Term::parse("some-name").unwrap();
-    /// assert_eq!(value, Term::Name("some-name".into()));
-    ///
-    /// let (_, value) = Term::parse("?some-var").unwrap();
-    /// assert_eq!(value, Term::Variable("some-var".into()));
-    ///```
-    ///
-    /// ## See also
-    /// See [`parse_term`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_term(input)
-    }
-}
+crate::parsers::impl_parser!(Term => parse_term);
 
 #[cfg(test)]
 mod tests {
-    use crate::{Parser, Term};
+    use crate::parsers::UnwrapValue;
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
-        let (_, value) = Term::parse("some-name").unwrap();
+        let value = Term::from_str("some-name").unwrap();
         assert_eq!(value, Term::Name("some-name".into()));
 
-        let (_, value) = Term::parse("?some-var").unwrap();
+        let value = Term::from_str("?some-var").unwrap();
+        assert_eq!(value, Term::Variable("some-var".into()));
+    }
+
+    #[test]
+    fn doc_example_0() {
+        assert!(Term::from_str("abcde").is_value(Term::Name("abcde".into())));
+        assert!(Term::from_str("?abcde").is_value(Term::Variable("abcde".into())));
+    }
+
+    #[test]
+    fn doc_example_1() {
+        let value = Term::from_str("some-name").unwrap();
+        assert_eq!(value, Term::Name("some-name".into()));
+
+        let value = Term::from_str("?some-var").unwrap();
         assert_eq!(value, Term::Variable("some-var".into()));
     }
 }

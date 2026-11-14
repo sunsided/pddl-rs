@@ -1,46 +1,33 @@
-//! Provides parsers for optimization.
+//! Provides parsers for optimization goals.
 
-use crate::parsers::{ParseResult, Span};
-use crate::types::{optimization::names, Optimization};
-use nom::branch::alt;
-use nom::bytes::complete::tag_no_case;
-use nom::combinator::value;
-use nom::Parser;
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::word;
+use crate::types::optimization::names;
+use crate::types::Optimization;
 
-/// Parses an optimization goal, i.e. `minimize | maximize`.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_optimization, preamble::*};
-/// # use pddl::{Optimization};
-/// assert!(parse_optimization("minimize").is_value(Optimization::Minimize));
-/// assert!(parse_optimization("maximize").is_value(Optimization::Maximize));
-///```
-pub fn parse_optimization<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Optimization> {
-    alt((
-        value(Optimization::Minimize, tag_no_case(names::MINIMIZE)),
-        value(Optimization::Maximize, tag_no_case(names::MAXIMIZE)),
-    ))
-    .parse(input.into())
+/// Parses an optimization goal, ignoring case.
+pub(crate) fn parse_optimization(node: &Node) -> R<Optimization> {
+    word(
+        node,
+        &[
+            (names::MINIMIZE, Optimization::Minimize),
+            (names::MAXIMIZE, Optimization::Maximize),
+        ],
+    )
 }
 
-impl crate::parsers::Parser for Optimization {
-    type Item = Optimization;
-
-    /// See [`parse_optimization`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_optimization(input)
-    }
-}
+crate::parsers::impl_parser!(Optimization => parse_optimization);
 
 #[cfg(test)]
 mod tests {
-    use crate::parsers::preamble::*;
-    use crate::Optimization;
+    use crate::parsers::UnwrapValue;
+    use crate::{Optimization, Parser};
 
     #[test]
     fn test_parse() {
-        assert!(Optimization::parse("minimize").is_value(Optimization::Minimize));
-        assert!(Optimization::parse("maximize").is_value(Optimization::Maximize));
+        assert!(Optimization::from_str("MAXIMIZE").is_value(Optimization::Maximize));
+        assert!(Optimization::from_str("minimise").is_err());
+        assert!(Optimization::from_str("(MAXIMIZE)").is_err());
     }
 }

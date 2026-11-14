@@ -1,84 +1,46 @@
 //! Provides parsers for function terms.
 
-use crate::parsers::utilities::nested;
-use crate::parsers::{parse_function_symbol, parse_term};
-use crate::parsers::{space_separated_list0, ws, ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{parens, parse_function_symbol, parse_term};
 use crate::types::FunctionTerm;
-use nom::bytes::complete::tag_no_case;
-use nom::combinator::map;
-use nom::sequence::terminated;
-use nom::Parser;
 
-/// Parses a function terms, i.e. `(<function symbol> <term>*)`.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_function_term, preamble::*};
-/// # use pddl::{FunctionTerm, Variable, FunctionSymbol, Term};
-/// assert!(parse_function_term("(fun-sym)").is_value(FunctionTerm::new("fun-sym".into(), vec![])));
-///
-/// let x = Term::Name("x".into());
-/// assert!(parse_function_term("(fun-sym x)").is_value(FunctionTerm::new("fun-sym".into(), vec![x])));
-///
-/// let x = Term::Name("x".into());
-/// let y = Term::Variable("y".into());
-/// assert!(parse_function_term("(fun-sym ?y x)").is_value(FunctionTerm::new("fun-sym".into(), vec![y, x])));
-///
-/// let x = Term::Name("x".into());
-/// let y = Term::Variable("y".into());
-/// let a = Term::Name("a".into());
-/// let ft = Term::Function(FunctionTerm::new(FunctionSymbol::from("fn"), vec![a]));
-/// assert!(parse_function_term("(fun-sym ?y x (fn a))").is_value(FunctionTerm::new("fun-sym".into(), vec![y, x, ft])));
-///```
-pub fn parse_function_term<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FunctionTerm> {
-    let input = input.into();
-    let (rest, _) = tag_no_case("(").parse(input)?;
-    nested(input, || {
-        map(
-            terminated(
-                (parse_function_symbol, space_separated_list0(parse_term)),
-                ws(tag_no_case(")")),
-            ),
-            |(symbol, terms)| FunctionTerm::new(symbol, terms),
-        )
-        .parse(rest)
+/// Parses a function term, i.e. `(<function-symbol> <term>*)`.
+pub(crate) fn parse_function_term(node: &Node) -> R<FunctionTerm> {
+    parens(node, |args| {
+        let symbol = parse_function_symbol(args.next()?)?;
+        let terms = args.list0(parse_term)?;
+        Ok(FunctionTerm::new(symbol, terms))
     })
 }
 
-impl crate::parsers::Parser for FunctionTerm {
-    type Item = FunctionTerm;
-
-    /// See [`parse_function_term`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_function_term(input)
-    }
-}
+crate::parsers::impl_parser!(FunctionTerm => parse_function_term);
 
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{FunctionSymbol, FunctionTerm, Parser, Term};
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(
-            FunctionTerm::parse("(fun-sym)").is_value(FunctionTerm::new("fun-sym".into(), vec![]))
-        );
+        assert!(FunctionTerm::from_str("(fun-sym)")
+            .is_value(FunctionTerm::new("fun-sym".into(), vec![])));
 
         let x = Term::Name("x".into());
-        assert!(FunctionTerm::parse("(fun-sym x)")
+        assert!(FunctionTerm::from_str("(fun-sym x)")
             .is_value(FunctionTerm::new("fun-sym".into(), vec![x])));
 
         let x = Term::Name("x".into());
         let y = Term::Variable("y".into());
-        assert!(FunctionTerm::parse("(fun-sym ?y x)")
+        assert!(FunctionTerm::from_str("(fun-sym ?y x)")
             .is_value(FunctionTerm::new("fun-sym".into(), vec![y, x])));
 
         let x = Term::Name("x".into());
         let y = Term::Variable("y".into());
         let a = Term::Name("a".into());
         let ft = Term::Function(FunctionTerm::new(FunctionSymbol::from("fn"), vec![a]));
-        assert!(FunctionTerm::parse("(fun-sym ?y x (fn a))")
+        assert!(FunctionTerm::from_str("(fun-sym ?y x (fn a))")
             .is_value(FunctionTerm::new("fun-sym".into(), vec![y, x, ft])));
     }
 
@@ -86,9 +48,30 @@ mod tests {
     fn whitespace_before_closing_paren() {
         for input in ["(fun-sym x )", "(fun-sym x\n  )", "(fun-sym x ; c\n)"] {
             let x = Term::Name("x".into());
-            assert!(
-                FunctionTerm::parse(input).is_value(FunctionTerm::new("fun-sym".into(), vec![x]))
-            );
+            assert!(FunctionTerm::from_str(input)
+                .is_value(FunctionTerm::new("fun-sym".into(), vec![x])));
         }
+    }
+
+    #[test]
+    fn doc_example_0() {
+        assert!(FunctionTerm::from_str("(fun-sym)")
+            .is_value(FunctionTerm::new("fun-sym".into(), vec![])));
+
+        let x = Term::Name("x".into());
+        assert!(FunctionTerm::from_str("(fun-sym x)")
+            .is_value(FunctionTerm::new("fun-sym".into(), vec![x])));
+
+        let x = Term::Name("x".into());
+        let y = Term::Variable("y".into());
+        assert!(FunctionTerm::from_str("(fun-sym ?y x)")
+            .is_value(FunctionTerm::new("fun-sym".into(), vec![y, x])));
+
+        let x = Term::Name("x".into());
+        let y = Term::Variable("y".into());
+        let a = Term::Name("a".into());
+        let ft = Term::Function(FunctionTerm::new(FunctionSymbol::from("fn"), vec![a]));
+        assert!(FunctionTerm::from_str("(fun-sym ?y x (fn a))")
+            .is_value(FunctionTerm::new("fun-sym".into(), vec![y, x, ft])));
     }
 }

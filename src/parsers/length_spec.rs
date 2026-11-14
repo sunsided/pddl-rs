@@ -1,60 +1,75 @@
-//! Provides parsers for length specification.
+//! Provides parsers for length specifications.
 
-use nom::character::complete::multispace0;
-use nom::combinator::{map, opt};
-use nom::sequence::preceded;
-use nom::Parser;
-
-use crate::parsers::{prefix_expr, ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{prefix, Args};
 use crate::types::LengthSpec;
 
-/// Parses a length specification. Deprecated since PDDL 2.1.
+/// Parses a length specification, i.e. `(:length [(:serial <integer>)] [(:parallel <integer>)])`.
 ///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_problem_length_spec, preamble::*};
-/// # use pddl::LengthSpec;
-/// assert!(parse_problem_length_spec("(:length)").is_value(LengthSpec::default()));
-/// assert!(parse_problem_length_spec("(:length (:serial 123))").is_value(LengthSpec::new_serial(123)));
-/// assert!(parse_problem_length_spec("(:length (:parallel 42))").is_value(LengthSpec::new_parallel(42)));
-/// assert!(parse_problem_length_spec("(:length (:serial 123) (:parallel 42))").is_value(LengthSpec::new(Some(123), Some(42))));
-///```
-pub fn parse_problem_length_spec<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, LengthSpec> {
-    let serial = prefix_expr(":serial", nom::character::complete::u64);
-    let parallel = prefix_expr(":parallel", nom::character::complete::u64);
-    let length = prefix_expr(
-        ":length",
-        (opt(serial), opt(preceded(multispace0, parallel))),
-    );
-
-    map(length, |(serial, parallel)| {
-        LengthSpec::new(serial, parallel)
+/// Deprecated since PDDL 2.1.
+pub(crate) fn parse_problem_length_spec(node: &Node) -> R<LengthSpec> {
+    prefix(node, ":length", |args| {
+        let serial = opt_limit(args, ":serial")?;
+        let parallel = opt_limit(args, ":parallel")?;
+        Ok(LengthSpec::new(serial, parallel))
     })
-    .parse(input.into())
 }
 
-impl crate::parsers::Parser for LengthSpec {
-    type Item = LengthSpec;
-
-    /// See [`parse_problem_length_spec`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_problem_length_spec(input)
+/// Parses `(<keyword> <integer>)` if the next child starts with `keyword`.
+fn opt_limit(args: &mut Args, keyword: &'static str) -> R<Option<u64>> {
+    match args.peek() {
+        Some(node) if node.head().is_some_and(|h| h.eq_ignore_ascii_case(keyword)) => {
+            let node = args.next()?;
+            prefix(node, keyword, |args| {
+                let value = args.next()?;
+                value
+                    .atom()
+                    .filter(|a| a.bytes().all(|b| b.is_ascii_digit()))
+                    .and_then(|a| a.parse().ok())
+                    .ok_or_else(|| value.error())
+            })
+            .map(Some)
+        }
+        _ => Ok(None),
     }
 }
+
+crate::parsers::impl_parser!(LengthSpec => parse_problem_length_spec);
 
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{LengthSpec, Parser};
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(LengthSpec::parse("(:length)").is_value(LengthSpec::default()));
-        assert!(LengthSpec::parse("(:length (:serial 123))").is_value(LengthSpec::new_serial(123)));
+        assert!(LengthSpec::from_str("(:length)").is_value(LengthSpec::default()));
         assert!(
-            LengthSpec::parse("(:length (:parallel 42))").is_value(LengthSpec::new_parallel(42))
+            LengthSpec::from_str("(:length (:serial 123))").is_value(LengthSpec::new_serial(123))
         );
-        assert!(LengthSpec::parse("(:length (:serial 123) (:parallel 42))")
-            .is_value(LengthSpec::new(Some(123), Some(42))));
+        assert!(
+            LengthSpec::from_str("(:length (:parallel 42))").is_value(LengthSpec::new_parallel(42))
+        );
+        assert!(
+            LengthSpec::from_str("(:length (:serial 123) (:parallel 42))")
+                .is_value(LengthSpec::new(Some(123), Some(42)))
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        assert!(LengthSpec::from_str("(:length)").is_value(LengthSpec::default()));
+        assert!(
+            LengthSpec::from_str("(:length (:serial 123))").is_value(LengthSpec::new_serial(123))
+        );
+        assert!(
+            LengthSpec::from_str("(:length (:parallel 42))").is_value(LengthSpec::new_parallel(42))
+        );
+        assert!(
+            LengthSpec::from_str("(:length (:serial 123) (:parallel 42))")
+                .is_value(LengthSpec::new(Some(123), Some(42)))
+        );
     }
 }

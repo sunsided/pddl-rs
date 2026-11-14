@@ -96,9 +96,7 @@ pub const MULTI_DEF_FILE: &str = r#"
 
 #[test]
 fn parse_multi_definition_file() {
-    let (remainder, file) = PddlFile::parse(MULTI_DEF_FILE).unwrap();
-
-    assert!(remainder.is_empty());
+    let file = PddlFile::from_str(MULTI_DEF_FILE).unwrap();
 
     // 2 domains, 5 problems — alternating order in the file
     assert_eq!(file.domain_count(), 2);
@@ -163,9 +161,7 @@ fn problems_correct_order_and_domain_refs() {
 
 #[test]
 fn parse_domains_only_from_multi_file() {
-    let (remainder, domains) = pddl::parsers::parse_domains(MULTI_DEF_FILE).unwrap();
-
-    assert!(remainder.is_empty());
+    let domains = PddlFile::from_str(MULTI_DEF_FILE).unwrap().domains;
     assert_eq!(domains.len(), 2);
     assert_eq!(domains[0].name(), &Name::new("blocks-world"));
     assert_eq!(domains[1].name(), &Name::new("briefcase-world"));
@@ -173,9 +169,7 @@ fn parse_domains_only_from_multi_file() {
 
 #[test]
 fn parse_problems_only_from_multi_file() {
-    let (remainder, problems) = pddl::parsers::parse_problems(MULTI_DEF_FILE).unwrap();
-
-    assert!(remainder.is_empty());
+    let problems = PddlFile::from_str(MULTI_DEF_FILE).unwrap().problems;
     assert_eq!(problems.len(), 5);
     assert_eq!(problems[0].name(), &Name::new("blocks-world-problem-1"));
     assert_eq!(problems[4].name(), &Name::new("blocks-world-problem-2"));

@@ -1,206 +1,57 @@
-//! Provides parsers for `(define ...)` blocks: exactly one via [`Definition`],
-//! or any number of them via [`PddlFile`].
+//! Provides parsers for files with several domain and problem definitions.
 
-use nom::branch::alt;
-use nom::bytes::complete::tag_no_case;
-use nom::combinator::map;
-use nom::Parser;
-
-use crate::parsers::utilities::skip_whitespace_and_comments;
-use crate::parsers::{parse_domain, parse_problem};
-use crate::parsers::{ws2, NomError, ParseResult, Span};
-use crate::types::{Definition, Domain, PddlFile, Problem};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{alt, parse_domain, parse_nodes, parse_problem, ParseError, Parser};
+use crate::types::{Definition, PddlFile};
 
 /// Parses a single `(define ...)` block, determining whether it's a domain or problem.
-fn parse_define_block<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Definition> {
-    // `define` is not a `:keyword`, so a `(problem` header backtracks out of `parse_domain`.
-    alt((
-        map(parse_domain, Definition::Domain),
-        map(parse_problem, Definition::Problem),
-    ))
-    .parse(input.into())
+pub(crate) fn parse_definition(node: &Node) -> R<Definition> {
+    alt(
+        node,
+        &[&|n| parse_domain(n).map(Definition::Domain), &|n| {
+            parse_problem(n).map(Definition::Problem)
+        }],
+    )
 }
 
-/// Parses zero or more `(define ...)` blocks, failing if a malformed
-/// define block is encountered after valid ones.
-fn parse_define_blocks<'a>(input: Span<'a>) -> ParseResult<'a, Vec<Definition>> {
-    let mut blocks = Vec::new();
-    let mut remaining = input;
-
-    loop {
-        (remaining, ()) = skip_whitespace_and_comments(remaining)?;
-        if tag_no_case::<_, _, NomError>("(define")
-            .parse(remaining)
-            .is_err()
+/// Parses every leading `(define ...)` node of `nodes` and returns how many it read.
+pub(crate) fn parse_pddl_file(nodes: &[Node]) -> R<(PddlFile, usize)> {
+    let mut domains = Vec::new();
+    let mut problems = Vec::new();
+    let mut read = 0;
+    for node in nodes {
+        if !node
+            .head()
+            .is_some_and(|h| h.eq_ignore_ascii_case("define"))
         {
             break;
         }
-
-        // Past `(define`, a malformed block is an error rather than the end of the list.
-        let (next, block) = ws2(parse_define_block).parse(remaining)?;
-        blocks.push(block);
-        remaining = next;
-    }
-
-    Ok((remaining, blocks))
-}
-
-/// Parses a PDDL file containing zero or more domain and problem definitions.
-///
-/// This function consumes all `(define ...)` blocks in the input, returning
-/// them grouped into a [`PddlFile`].
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_pddl_file, preamble::*};
-/// let input = r#"
-///     (define (domain briefcase-world)
-///         (:requirements :strips)
-///         (:predicates (at ?x))
-///     )
-///     (define (problem get-paid)
-///         (:domain briefcase-world)
-///         (:init (at home))
-///         (:goal (at office))
-///     )
-/// "#;
-///
-/// let (remainder, pddl_file) = parse_pddl_file(input).unwrap();
-/// assert!(remainder.is_empty());
-/// assert_eq!(pddl_file.domain_count(), 1);
-/// assert_eq!(pddl_file.problem_count(), 1);
-/// ```
-pub fn parse_pddl_file<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PddlFile> {
-    let (remainder, blocks) = parse_define_blocks(input.into())?;
-
-    let mut domains = Vec::new();
-    let mut problems = Vec::new();
-
-    for block in blocks {
-        match block {
+        match parse_definition(node)? {
             Definition::Domain(d) => domains.push(d),
             Definition::Problem(p) => problems.push(p),
         }
+        read += 1;
     }
-
-    Ok((
-        remainder,
-        PddlFile::with_domains_and_problems(domains, problems),
-    ))
+    let file = PddlFile::with_domains_and_problems(domains, problems);
+    Ok((file, read))
 }
 
-/// Parses and returns only the [`Domain`] definitions from a PDDL file.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_domains, preamble::*};
-/// let input = r#"
-///     (define (domain d1) (:requirements :strips) (:predicates (p)))
-///     (define (domain d2) (:requirements :strips) (:predicates (q)))
-/// "#;
-///
-/// let (remainder, domains) = parse_domains(input).unwrap();
-/// assert!(remainder.is_empty());
-/// assert_eq!(domains.len(), 2);
-/// ```
-pub fn parse_domains<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Vec<Domain>> {
-    let (remainder, blocks) = parse_define_blocks(input.into())?;
+crate::parsers::impl_parser!(Definition => parse_definition);
 
-    let domains = blocks
-        .into_iter()
-        .filter_map(|block| match block {
-            Definition::Domain(d) => Some(d),
-            _ => None,
-        })
-        .collect();
-
-    Ok((remainder, domains))
-}
-
-/// Parses and returns only the [`Problem`] definitions from a PDDL file.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_problems, preamble::*};
-/// let input = r#"
-///     (define (problem p1) (:domain d) (:init) (:goal (and)))
-///     (define (problem p2) (:domain d) (:init) (:goal (and)))
-/// "#;
-///
-/// let (remainder, problems) = parse_problems(input).unwrap();
-/// assert!(remainder.is_empty());
-/// assert_eq!(problems.len(), 2);
-/// ```
-pub fn parse_problems<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Vec<Problem>> {
-    let (remainder, blocks) = parse_define_blocks(input.into())?;
-
-    let problems = blocks
-        .into_iter()
-        .filter_map(|block| match block {
-            Definition::Problem(p) => Some(p),
-            _ => None,
-        })
-        .collect();
-
-    Ok((remainder, problems))
-}
-
-impl crate::parsers::Parser for Definition {
-    type Item = Definition;
-
-    /// Parses a single domain or problem definition, determining its kind
-    /// from the `(define (domain ...))` / `(define (problem ...))` header.
-    ///
-    /// ## Example
-    /// ```
-    /// # use pddl::{Definition, Parser};
-    /// let input = "; Uses (domain d)\n(define (problem q) (:domain d) (:init) (:goal (p)))";
-    /// assert!(matches!(Definition::from_str(input), Ok(Definition::Problem(_))));
-    ///
-    /// // A second definition is trailing input, not part of this one.
-    /// let two = "(define (domain d) (:predicates (p)))\n(define (domain e) (:predicates (q)))";
-    /// assert!(Definition::from_str(two).is_err());
-    /// ```
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        ws2(parse_define_block).parse(input.into())
-    }
-}
-
-impl crate::parsers::Parser for PddlFile {
+impl Parser for PddlFile {
     type Item = PddlFile;
 
-    /// Parses a PDDL file containing zero or more domain and problem definitions.
-    ///
-    /// ## Example
-    /// ```
-    /// # use pddl::{PddlFile, Parser};
-    /// let input = r#"
-    ///     (define (domain briefcase-world)
-    ///         (:requirements :strips)
-    ///         (:predicates (at ?x))
-    ///     )
-    ///     (define (problem get-paid)
-    ///         (:domain briefcase-world)
-    ///         (:init (at home))
-    ///         (:goal (at office))
-    ///     )
-    /// "#;
-    ///
-    /// let pddl_file = PddlFile::from_str(input).unwrap();
-    /// assert_eq!(pddl_file.domain_count(), 1);
-    /// assert_eq!(pddl_file.problem_count(), 1);
-    /// ```
-    ///
-    /// ## See also
-    /// See [`parse_pddl_file`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_pddl_file(input)
+    /// Parses zero or more `(define ...)` blocks, in any order.
+    fn from_str(input: &str) -> Result<Self::Item, ParseError> {
+        parse_nodes(input, |nodes, _| parse_pddl_file(nodes))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{Definition, Name, Parser, PddlFile};
+
+    use crate::*;
 
     const DOMAIN: &str = "(define (domain d) (:predicates (p)))";
     const PROBLEM: &str = "(define (problem q) (:domain d) (:init) (:goal (p)))";
@@ -278,8 +129,7 @@ mod tests {
             )
         "#;
 
-        let (remainder, pddl_file) = super::parse_pddl_file(input).unwrap();
-        assert!(remainder.is_empty());
+        let pddl_file = PddlFile::from_str(input).unwrap();
         assert_eq!(pddl_file.domain_count(), 1);
         assert_eq!(pddl_file.problem_count(), 1);
         assert_eq!(pddl_file.domains[0].name(), &Name::new("briefcase-world"));
@@ -304,8 +154,7 @@ mod tests {
             )
         "#;
 
-        let (remainder, pddl_file) = super::parse_pddl_file(input).unwrap();
-        assert!(remainder.is_empty());
+        let pddl_file = PddlFile::from_str(input).unwrap();
         assert_eq!(pddl_file.domain_count(), 2);
         assert_eq!(pddl_file.problem_count(), 1);
         assert_eq!(pddl_file.domains[0].name(), &Name::new("d1"));
@@ -331,8 +180,7 @@ mod tests {
             )
         "#;
 
-        let (remainder, pddl_file) = super::parse_pddl_file(input).unwrap();
-        assert!(remainder.is_empty());
+        let pddl_file = PddlFile::from_str(input).unwrap();
         assert_eq!(pddl_file.domain_count(), 1);
         assert_eq!(pddl_file.problem_count(), 2);
     }
@@ -351,8 +199,7 @@ mod tests {
             )
         "#;
 
-        let (remainder, pddl_file) = super::parse_pddl_file(input).unwrap();
-        assert!(remainder.is_empty());
+        let pddl_file = PddlFile::from_str(input).unwrap();
         assert_eq!(pddl_file.domain_count(), 1);
         assert_eq!(pddl_file.problem_count(), 1);
         // Problem comes first in the file
@@ -371,8 +218,7 @@ mod tests {
             )
         "#;
 
-        let (remainder, pddl_file) = super::parse_pddl_file(input).unwrap();
-        assert!(remainder.is_empty());
+        let pddl_file = PddlFile::from_str(input).unwrap();
         assert_eq!(pddl_file.domain_count(), 1);
         assert_eq!(pddl_file.domains[0].name(), &Name::new("test"));
     }
@@ -381,8 +227,7 @@ mod tests {
     fn parse_empty_file() {
         let input = "";
 
-        let (remainder, pddl_file) = super::parse_pddl_file(input).unwrap();
-        assert!(remainder.is_empty());
+        let pddl_file = PddlFile::from_str(input).unwrap();
         assert!(pddl_file.is_empty());
         assert_eq!(pddl_file.domain_count(), 0);
         assert_eq!(pddl_file.problem_count(), 0);
@@ -395,8 +240,7 @@ mod tests {
 ; Another comment
 "#;
 
-        let (remainder, pddl_file) = super::parse_pddl_file(input).unwrap();
-        assert!(remainder.is_empty());
+        let pddl_file = PddlFile::from_str(input).unwrap();
         assert!(pddl_file.is_empty());
     }
 
@@ -432,8 +276,7 @@ mod tests {
             )
         "#;
 
-        let (remainder, domains) = super::parse_domains(input).unwrap();
-        assert!(remainder.is_empty());
+        let domains = PddlFile::from_str(input).unwrap().domains;
         assert_eq!(domains.len(), 2);
         assert_eq!(domains[0].name(), &Name::new("d1"));
         assert_eq!(domains[1].name(), &Name::new("d2"));
@@ -454,8 +297,7 @@ mod tests {
             )
         "#;
 
-        let (remainder, problems) = super::parse_problems(input).unwrap();
-        assert!(remainder.is_empty());
+        let problems = PddlFile::from_str(input).unwrap().problems;
         assert_eq!(problems.len(), 2);
     }
 
@@ -471,10 +313,83 @@ mod tests {
             )
         "#;
 
-        let result = super::parse_pddl_file(input);
+        let result = PddlFile::from_str(input);
         assert!(
             result.is_err(),
             "Should reject file with malformed define block after valid ones"
         );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        let input = r#"
+            (define (domain briefcase-world)
+                (:requirements :strips)
+                (:predicates (at ?x))
+            )
+            (define (problem get-paid)
+                (:domain briefcase-world)
+                (:init (at home))
+                (:goal (at office))
+            )
+        "#;
+
+        let pddl_file = PddlFile::from_str(input).unwrap();
+        assert_eq!(pddl_file.domain_count(), 1);
+        assert_eq!(pddl_file.problem_count(), 1);
+    }
+
+    #[test]
+    fn doc_example_1() {
+        let input = r#"
+            (define (domain d1) (:requirements :strips) (:predicates (p)))
+            (define (domain d2) (:requirements :strips) (:predicates (q)))
+        "#;
+
+        let domains = PddlFile::from_str(input).unwrap().domains;
+        assert_eq!(domains.len(), 2);
+    }
+
+    #[test]
+    fn doc_example_2() {
+        let input = r#"
+            (define (problem p1) (:domain d) (:init) (:goal (and)))
+            (define (problem p2) (:domain d) (:init) (:goal (and)))
+        "#;
+
+        let problems = PddlFile::from_str(input).unwrap().problems;
+        assert_eq!(problems.len(), 2);
+    }
+
+    #[test]
+    fn doc_example_3() {
+        let input = "; Uses (domain d)\n(define (problem q) (:domain d) (:init) (:goal (p)))";
+        assert!(matches!(
+            Definition::from_str(input),
+            Ok(Definition::Problem(_))
+        ));
+
+        // A second definition is trailing input, not part of this one.
+        let two = "(define (domain d) (:predicates (p)))\n(define (domain e) (:predicates (q)))";
+        assert!(Definition::from_str(two).is_err());
+    }
+
+    #[test]
+    fn doc_example_4() {
+        let input = r#"
+            (define (domain briefcase-world)
+                (:requirements :strips)
+                (:predicates (at ?x))
+            )
+            (define (problem get-paid)
+                (:domain briefcase-world)
+                (:init (at home))
+                (:goal (at office))
+            )
+        "#;
+
+        let pddl_file = PddlFile::from_str(input).unwrap();
+        assert_eq!(pddl_file.domain_count(), 1);
+        assert_eq!(pddl_file.problem_count(), 1);
     }
 }

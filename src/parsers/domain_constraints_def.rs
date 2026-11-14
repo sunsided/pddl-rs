@@ -1,52 +1,36 @@
-//! Provides parsers for domain constraint definitions.
+//! Provides parsers for domain constraints definitions.
 
-use nom::combinator::map;
-use nom::Parser;
-
-use crate::parsers::{parse_con_gd, prefix_expr, ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{parse_con_gd, prefix};
 use crate::types::DomainConstraintsDef;
 
-/// Parses domain constraint definitions, i.e. `(:constraints <con-gd>)`.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_domain_constraints_def, parse_functions_def, preamble::*};
-/// # use pddl::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions, FunctionTypedList, FunctionTyped, AtomicFunctionSkeleton, FunctionSymbol, Functions, ConstraintGoalDefinition, DomainConstraintsDef};
-/// # use pddl::{Type, Typed, TypedList};
-///
-/// let input = "(:constraints (and))";
-/// assert!(parse_domain_constraints_def(input).is_value(
-///     DomainConstraintsDef::new(ConstraintGoalDefinition::and([]))
-/// ));
-/// ```
-pub fn parse_domain_constraints_def<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, DomainConstraintsDef> {
-    map(
-        prefix_expr(":constraints", parse_con_gd),
-        DomainConstraintsDef::new,
-    )
-    .parse(input.into())
+/// Parses a domain constraints definition, i.e. `(:constraints <con-GD>)`.
+pub(crate) fn parse_domain_constraints_def(node: &Node) -> R<DomainConstraintsDef> {
+    prefix(node, ":constraints", |args| {
+        parse_con_gd(args.next()?).map(DomainConstraintsDef::new)
+    })
 }
 
-impl crate::parsers::Parser for DomainConstraintsDef {
-    type Item = DomainConstraintsDef;
-
-    /// See [`parse_domain_constraints_def`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_domain_constraints_def(input)
-    }
-}
+crate::parsers::impl_parser!(DomainConstraintsDef => parse_domain_constraints_def);
 
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{ConstraintGoalDefinition, DomainConstraintsDef, Parser};
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
         let input = "(:constraints (and))";
-        assert!(DomainConstraintsDef::parse(input)
+        assert!(DomainConstraintsDef::from_str(input)
+            .is_value(DomainConstraintsDef::new(ConstraintGoalDefinition::and([]))));
+    }
+
+    #[test]
+    fn doc_example_0() {
+        let input = "(:constraints (and))";
+        assert!(DomainConstraintsDef::from_str(input)
             .is_value(DomainConstraintsDef::new(ConstraintGoalDefinition::and([]))));
     }
 }

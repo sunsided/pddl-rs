@@ -1,52 +1,41 @@
-//! Provides parsers for constant definitions.
+//! Provides parsers for types definitions.
 
-use nom::combinator::map;
-use nom::Parser;
-
-use crate::parsers::{parse_name, prefix_expr, typed_list, ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{parse_name, prefix, typed_list};
 use crate::types::Types;
 
-/// Parses constant definitions, i.e. `(:constants <typed list (name)>)`.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_types_def, preamble::*};
-/// # use pddl::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions};
-/// # use pddl::{Name, Type, Typed, TypedList, Types};
-/// let input = "(:types location physob)";
-/// assert!(parse_types_def(input).is_value(
-///     Types::new(TypedList::from_iter([
-///         Typed::new(Name::from("location"), Type::OBJECT),
-///         Typed::new(Name::from("physob"), Type::OBJECT),
-///     ]))
-/// ));
-/// ```
-pub fn parse_types_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Types> {
-    map(prefix_expr(":types", typed_list(parse_name)), |vec| {
-        Types::new(vec)
+/// Parses a types definition, i.e. `(:types <typed list (name)>)`.
+pub(crate) fn parse_types_def(node: &Node) -> R<Types> {
+    prefix(node, ":types", |args| {
+        typed_list(args, parse_name).map(Types::new)
     })
-    .parse(input.into())
 }
 
-impl crate::parsers::Parser for Types {
-    type Item = Types;
-
-    /// See [`parse_types_def`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_types_def(input)
-    }
-}
+crate::parsers::impl_parser!(Types => parse_types_def);
 
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{Name, Parser, Type, Typed, TypedList, Types};
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
         let input = "(:types location physob)";
         assert!(
-            Types::parse(input).is_value(Types::new(TypedList::from_iter([
+            Types::from_str(input).is_value(Types::new(TypedList::from_iter([
+                Typed::new(Name::from("location"), Type::OBJECT),
+                Typed::new(Name::from("physob"), Type::OBJECT),
+            ])))
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        let input = "(:types location physob)";
+        assert!(
+            Types::from_str(input).is_value(Types::new(TypedList::from_iter([
                 Typed::new(Name::from("location"), Type::OBJECT),
                 Typed::new(Name::from("physob"), Type::OBJECT),
             ])))

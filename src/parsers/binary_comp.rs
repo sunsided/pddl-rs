@@ -1,83 +1,39 @@
-//! Provides parsers for binary comparison operations.
+//! Provides parsers for binary comparisons.
 
-use nom::branch::alt;
-use nom::bytes::complete::tag_no_case;
-use nom::combinator::value;
-use nom::Parser;
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::word;
+use crate::types::binary_comp::names;
+use crate::types::BinaryComparison;
 
-use crate::parsers::{ParseResult, Span};
-use crate::types::{binary_comp::names, BinaryComparison};
-
-/// Parses a binary comparison operation.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_binary_comp, Span, UnwrapValue};
-/// # use pddl::{AssignOp, BinaryComparison};
-/// assert!(parse_binary_comp(Span::new(">")).is_value(BinaryComparison::GreaterThan));
-/// assert!(parse_binary_comp(Span::new("<")).is_value(BinaryComparison::LessThan));
-/// assert!(parse_binary_comp(Span::new("=")).is_value(BinaryComparison::Equal));
-/// assert!(parse_binary_comp(Span::new(">=")).is_value(BinaryComparison::GreaterOrEqual));
-/// assert!(parse_binary_comp(Span::new("<=")).is_value(BinaryComparison::LessThanOrEqual));
-///```
-pub fn parse_binary_comp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, BinaryComparison> {
-    alt((
-        value(
-            BinaryComparison::GreaterOrEqual,
-            tag_no_case(names::GREATER_THAN_OR_EQUAL),
-        ),
-        value(
-            BinaryComparison::LessThanOrEqual,
-            tag_no_case(names::LESS_THAN_OR_EQUAL),
-        ),
-        value(BinaryComparison::Equal, tag_no_case(names::EQUAL)),
-        value(
-            BinaryComparison::GreaterThan,
-            tag_no_case(names::GREATER_THAN),
-        ),
-        value(BinaryComparison::LessThan, tag_no_case(names::LESS_THAN)),
-    ))
-    .parse(input.into())
+/// Parses a binary comparison, ignoring case.
+pub(crate) fn parse_binary_comp(node: &Node) -> R<BinaryComparison> {
+    word(
+        node,
+        &[
+            (
+                names::GREATER_THAN_OR_EQUAL,
+                BinaryComparison::GreaterOrEqual,
+            ),
+            (names::LESS_THAN_OR_EQUAL, BinaryComparison::LessThanOrEqual),
+            (names::EQUAL, BinaryComparison::Equal),
+            (names::GREATER_THAN, BinaryComparison::GreaterThan),
+            (names::LESS_THAN, BinaryComparison::LessThan),
+        ],
+    )
 }
 
-impl crate::parsers::Parser for BinaryComparison {
-    type Item = BinaryComparison;
-
-    /// Parses a binary comparison operation.
-    ///
-    /// ## Example
-    /// ```
-    /// # use pddl::{BinaryComparison, Parser};
-    /// let (_, value) = BinaryComparison::parse(">=").unwrap();
-    /// assert_eq!(value, BinaryComparison::GreaterOrEqual);
-    ///```
-    ///
-    /// ## See also
-    /// See [`parse_binary_comp`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_binary_comp(input)
-    }
-}
+crate::parsers::impl_parser!(BinaryComparison => parse_binary_comp);
 
 #[cfg(test)]
 mod tests {
+    use crate::parsers::UnwrapValue;
     use crate::{BinaryComparison, Parser};
 
     #[test]
     fn test_parse() {
-        let (_, value) = BinaryComparison::parse(">=").unwrap();
-        assert_eq!(value, BinaryComparison::GreaterOrEqual);
-
-        let (_, value) = BinaryComparison::parse(">").unwrap();
-        assert_eq!(value, BinaryComparison::GreaterThan);
-
-        let (_, value) = BinaryComparison::parse("<=").unwrap();
-        assert_eq!(value, BinaryComparison::LessThanOrEqual);
-
-        let (_, value) = BinaryComparison::parse("<").unwrap();
-        assert_eq!(value, BinaryComparison::LessThan);
-
-        let (_, value) = BinaryComparison::parse("=").unwrap();
-        assert_eq!(value, BinaryComparison::Equal);
+        assert!(BinaryComparison::from_str(">=").is_value(BinaryComparison::GreaterOrEqual));
+        assert!(BinaryComparison::from_str("=>").is_err());
+        assert!(BinaryComparison::from_str("(>=)").is_err());
     }
 }

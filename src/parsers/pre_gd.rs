@@ -1,133 +1,60 @@
-//! Provides parsers for goal definitions.
+//! Provides parsers for precondition goal definitions.
 
-use nom::branch::alt;
-use nom::combinator::map;
-use nom::sequence::preceded;
-use nom::Parser;
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{alt, parse_pref_gd, prefix, typed_variables};
+use crate::types::{PreconditionGoalDefinition, PreconditionGoalDefinitions};
 
-use crate::parsers::sep;
-use crate::parsers::{parens, prefix_expr, space_separated_list0, typed_list, ParseResult, Span};
-use crate::parsers::{parse_pref_gd, parse_variable};
-use crate::types::PreconditionGoalDefinition;
-use crate::PreconditionGoalDefinitions;
-
-/// Parser for goal definitions.
-///
-/// ## Examples
-/// ```
-/// # use pddl::parsers::{parse_pre_gd, preamble::*};
-/// # use pddl::{AtomicFormula, EqualityAtomicFormula, GoalDefinition, Literal, Preference, PreferenceName, PreferenceGoalDefinition, PreconditionGoalDefinitions, PreconditionGoalDefinition, Term, Variable, Type, Typed, TypedList};
-/// assert!(parse_pre_gd(Span::new("(= x y)")).is_value(
-///     PreconditionGoalDefinitions::new_preference(
-///         PreferenceGoalDefinition::Goal(
-///             GoalDefinition::AtomicFormula(
-///                 AtomicFormula::new_equality(
-///                     Term::Name("x".into()),
-///                     Term::Name("y".into())
-///                 )
-///             )
-///         )
-///     )
-/// ));
-///
-/// assert!(parse_pre_gd(Span::new("(and (= x y) (= a b))")).is_value(
-///     PreconditionGoalDefinitions::from_iter([
-///         PreconditionGoalDefinition::Preference(PreferenceGoalDefinition::Goal(
-///             GoalDefinition::AtomicFormula(
-///                 AtomicFormula::new_equality(
-///                     Term::Name("x".into()),
-///                     Term::Name("y".into())
-///                 )
-///             )
-///         )),
-///         PreconditionGoalDefinition::Preference(PreferenceGoalDefinition::Goal(
-///             GoalDefinition::AtomicFormula(
-///                 AtomicFormula::new_equality(
-///                     Term::Name("a".into()),
-///                     Term::Name("b".into())
-///                 )
-///             )
-///         ))
-///     ])
-/// ));
-///
-/// assert!(parse_pre_gd(Span::new("(forall (?a ?b) (= a b))")).is_value(
-///     PreconditionGoalDefinition::new_forall(
-///         TypedList::from_iter([
-///             Typed::new(Variable::new_string("a"), Type::OBJECT),
-///             Typed::new(Variable::new_string("b"), Type::OBJECT),
-///         ]),
-///         PreconditionGoalDefinition::new_preference(PreferenceGoalDefinition::Goal(
-///             GoalDefinition::AtomicFormula(
-///                 AtomicFormula::new_equality(
-///                     Term::Name("a".into()),
-///                     Term::Name("b".into())
-///                 )
-///             )
-///         )).into()
-///     ).into()
-/// ));
-/// ```
-pub fn parse_pre_gd<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, PreconditionGoalDefinitions> {
-    let pref_gd = map(parse_pref_gd, |x| {
-        PreconditionGoalDefinitions::from(PreconditionGoalDefinition::new_preference(x))
-    });
-    let and = map(
-        prefix_expr("and", space_separated_list0(parse_pre_gd)),
-        |x| PreconditionGoalDefinitions::from_iter(x.into_iter().flatten()),
-    );
-
-    // :universal-preconditions
-    let forall = map(
-        prefix_expr(
-            "forall",
-            (
-                parens(typed_list(parse_variable)),
-                preceded(sep, parse_pre_gd),
-            ),
-        ),
-        |(vars, gd)| {
-            PreconditionGoalDefinitions::from(PreconditionGoalDefinition::new_forall(vars, gd))
-        },
-    );
-
-    alt((forall, and, pref_gd)).parse(input.into())
+/// Parses precondition goal definitions, i.e. `<pref-GD> | (and <pre-GD>*)
+/// | (forall (<typed list (variable)>) <pre-GD>)`.
+pub(crate) fn parse_pre_gd(node: &Node) -> R<PreconditionGoalDefinitions> {
+    alt(
+        node,
+        &[
+            &|n| {
+                prefix(n, "forall", |args| {
+                    Ok((typed_variables(args.next()?)?, parse_pre_gd(args.next()?)?))
+                })
+                .map(|(variables, gd)| {
+                    PreconditionGoalDefinitions::from(PreconditionGoalDefinition::new_forall(
+                        variables, gd,
+                    ))
+                })
+            },
+            &|n| {
+                prefix(n, "and", |args| args.list0(parse_pre_gd))
+                    .map(|x| PreconditionGoalDefinitions::from_iter(x.into_iter().flatten()))
+            },
+            &|n| {
+                parse_pref_gd(n).map(|x| {
+                    PreconditionGoalDefinitions::from(PreconditionGoalDefinition::new_preference(x))
+                })
+            },
+        ],
+    )
 }
 
-impl crate::parsers::Parser for PreconditionGoalDefinitions {
-    type Item = PreconditionGoalDefinitions;
-
-    /// See [`parse_pre_gd`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_pre_gd(input)
-    }
-}
+crate::parsers::impl_parser!(PreconditionGoalDefinitions => parse_pre_gd);
 
 #[cfg(test)]
 mod tests {
-    use crate::parsers::preamble::*;
-    use crate::{
-        AtomicFormula, GoalDefinition, PreconditionGoalDefinition, PreconditionGoalDefinitions,
-        PreferenceGoalDefinition, Term, Type, Typed, TypedList, Variable,
-    };
+    use crate::parsers::UnwrapValue;
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(
-            PreconditionGoalDefinitions::parse(Span::new("(= x y)")).is_value(
-                PreconditionGoalDefinitions::new_preference(PreferenceGoalDefinition::Goal(
-                    GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
-                        Term::Name("x".into()),
-                        Term::Name("y".into())
-                    ))
+        assert!(PreconditionGoalDefinitions::from_str("(= x y)").is_value(
+            PreconditionGoalDefinitions::new_preference(PreferenceGoalDefinition::Goal(
+                GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                    Term::Name("x".into()),
+                    Term::Name("y".into())
                 ))
-            )
-        );
+            ))
+        ));
 
         assert!(
-            PreconditionGoalDefinitions::parse(Span::new("(and (= x y) (= a b))")).is_value(
+            PreconditionGoalDefinitions::from_str("(and (= x y) (= a b))").is_value(
                 PreconditionGoalDefinitions::from_iter([
                     PreconditionGoalDefinition::Preference(PreferenceGoalDefinition::Goal(
                         GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
@@ -146,7 +73,57 @@ mod tests {
         );
 
         assert!(
-            PreconditionGoalDefinitions::parse(Span::new("(forall (?a ?b) (= a b))")).is_value(
+            PreconditionGoalDefinitions::from_str("(forall (?a ?b) (= a b))").is_value(
+                PreconditionGoalDefinition::new_forall(
+                    TypedList::from_iter([
+                        Typed::new(Variable::new_string("a"), Type::OBJECT),
+                        Typed::new(Variable::new_string("b"), Type::OBJECT),
+                    ]),
+                    PreconditionGoalDefinition::new_preference(PreferenceGoalDefinition::Goal(
+                        GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                            Term::Name("a".into()),
+                            Term::Name("b".into())
+                        ))
+                    ))
+                    .into()
+                )
+                .into()
+            )
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        assert!(PreconditionGoalDefinitions::from_str("(= x y)").is_value(
+            PreconditionGoalDefinitions::new_preference(PreferenceGoalDefinition::Goal(
+                GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                    Term::Name("x".into()),
+                    Term::Name("y".into())
+                ))
+            ))
+        ));
+
+        assert!(
+            PreconditionGoalDefinitions::from_str("(and (= x y) (= a b))").is_value(
+                PreconditionGoalDefinitions::from_iter([
+                    PreconditionGoalDefinition::Preference(PreferenceGoalDefinition::Goal(
+                        GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                            Term::Name("x".into()),
+                            Term::Name("y".into())
+                        ))
+                    )),
+                    PreconditionGoalDefinition::Preference(PreferenceGoalDefinition::Goal(
+                        GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                            Term::Name("a".into()),
+                            Term::Name("b".into())
+                        ))
+                    ))
+                ])
+            )
+        );
+
+        assert!(
+            PreconditionGoalDefinitions::from_str("(forall (?a ?b) (= a b))").is_value(
                 PreconditionGoalDefinition::new_forall(
                     TypedList::from_iter([
                         Typed::new(Variable::new_string("a"), Type::OBJECT),

@@ -1,74 +1,61 @@
 //! Provides parsers for atomic formula skeletons.
 
-use crate::parsers::{parens, typed_list, ws, ParseResult, Span};
-use crate::parsers::{parse_predicate, parse_variable};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{parens, parse_predicate, parse_variable, typed_list};
 use crate::types::AtomicFormulaSkeleton;
-use nom::combinator::map;
-use nom::Parser;
 
 /// Parses an atomic formula skeleton, i.e. `(<predicate> <typed list (variable)>)`.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_atomic_formula_skeleton, Span, UnwrapValue};
-/// # use pddl::{Variable, AtomicFormulaSkeleton, Predicate};
-/// # use pddl::{ToTyped, TypedList};
-/// assert!(parse_atomic_formula_skeleton(Span::new("(at ?x - physob ?y - location)")).is_value(
-///     AtomicFormulaSkeleton::new(
-///         Predicate::from("at"),
-///         TypedList::from_iter([
-///             Variable::from("x").to_typed("physob"),
-///             Variable::from("y").to_typed("location")
-///         ]))
-/// ));
-/// ```
-pub fn parse_atomic_formula_skeleton<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, AtomicFormulaSkeleton> {
-    map(
-        parens((parse_predicate, ws(typed_list(parse_variable)))),
-        AtomicFormulaSkeleton::from,
-    )
-    .parse(input.into())
+pub(crate) fn parse_atomic_formula_skeleton(node: &Node) -> R<AtomicFormulaSkeleton> {
+    parens(node, |args| {
+        let predicate = parse_predicate(args.next()?)?;
+        let variables = typed_list(args, parse_variable)?;
+        Ok(AtomicFormulaSkeleton::from((predicate, variables)))
+    })
 }
 
-impl crate::parsers::Parser for AtomicFormulaSkeleton {
-    type Item = AtomicFormulaSkeleton;
-
-    /// Parses an atomic formula skeleton.
-    ///
-    /// ## Example
-    /// ```
-    /// # use pddl::parsers::{parse_atomic_formula_skeleton, Span, UnwrapValue};
-    /// # use pddl::{Variable, AtomicFormulaSkeleton, Predicate, Parser};
-    /// # use pddl::{ToTyped, TypedList};
-    /// let (_, value) = AtomicFormulaSkeleton::parse("(at ?x - physob ?y - location)").unwrap();
-    ///
-    /// assert_eq!(value,
-    ///     AtomicFormulaSkeleton::new(
-    ///         Predicate::from("at"),
-    ///         TypedList::from_iter([
-    ///             Variable::from("x").to_typed("physob"),
-    ///             Variable::from("y").to_typed("location")
-    ///         ]))
-    /// );
-    /// ```
-    ///
-    /// ## See also
-    /// See [`parse_atomic_formula_skeleton`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_atomic_formula_skeleton(input)
-    }
-}
+crate::parsers::impl_parser!(AtomicFormulaSkeleton => parse_atomic_formula_skeleton);
 
 #[cfg(test)]
 mod tests {
-    use crate::{AtomicFormulaSkeleton, Parser, Predicate, Variable};
-    use crate::{ToTyped, TypedList};
+    use crate::parsers::UnwrapValue;
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
-        let (_, value) = AtomicFormulaSkeleton::parse("(at ?x - physob ?y - location)").unwrap();
+        let value = AtomicFormulaSkeleton::from_str("(at ?x - physob ?y - location)").unwrap();
+
+        assert_eq!(
+            value,
+            AtomicFormulaSkeleton::new(
+                Predicate::from("at"),
+                TypedList::from_iter([
+                    Variable::from("x").to_typed("physob"),
+                    Variable::from("y").to_typed("location")
+                ])
+            )
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        assert!(
+            AtomicFormulaSkeleton::from_str("(at ?x - physob ?y - location)").is_value(
+                AtomicFormulaSkeleton::new(
+                    Predicate::from("at"),
+                    TypedList::from_iter([
+                        Variable::from("x").to_typed("physob"),
+                        Variable::from("y").to_typed("location")
+                    ])
+                )
+            )
+        );
+    }
+
+    #[test]
+    fn doc_example_1() {
+        let value = AtomicFormulaSkeleton::from_str("(at ?x - physob ?y - location)").unwrap();
 
         assert_eq!(
             value,

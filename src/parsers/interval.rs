@@ -1,33 +1,17 @@
-//! Provides parsers for assignment operations.
+//! Provides parsers for intervals.
 
-use nom::bytes::complete::tag_no_case;
-use nom::combinator::value;
-use nom::Parser;
-
-use crate::parsers::{ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::word;
 use crate::types::interval::names;
 use crate::types::Interval;
 
-/// Parses an intervals, i.e. `all`.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_interval, preamble::*};
-/// # use pddl::{Interval};
-/// assert!(parse_interval("all").is_value(Interval::All));
-///```
-pub fn parse_interval<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Interval> {
-    value(Interval::All, tag_no_case(names::ALL)).parse(input.into())
+/// Parses an interval, ignoring case.
+pub(crate) fn parse_interval(node: &Node) -> R<Interval> {
+    word(node, &[(names::ALL, Interval::All)])
 }
 
-impl crate::parsers::Parser for Interval {
-    type Item = Interval;
-
-    /// See [`parse_interval`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_interval(input)
-    }
-}
+crate::parsers::impl_parser!(Interval => parse_interval);
 
 #[cfg(test)]
 mod tests {
@@ -36,6 +20,8 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        assert!(Interval::parse("all").is_value(Interval::All));
+        assert!(Interval::from_str("all").is_value(Interval::All));
+        assert!(Interval::from_str("any").is_err());
+        assert!(Interval::from_str("(all)").is_err());
     }
 }

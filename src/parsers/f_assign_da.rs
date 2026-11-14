@@ -1,51 +1,37 @@
-//! Provides parsers for f-assign-das.
+//! Provides parsers for durative action function assignments.
 
-use crate::parsers::sep;
-use crate::parsers::{parens, ParseResult, Span};
-use crate::parsers::{parse_assign_op, parse_f_exp_da, parse_f_head};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{parens, parse_assign_op, parse_f_exp_da, parse_f_head};
 use crate::types::DurativeActionFunctionAssignment;
-use nom::combinator::map;
-use nom::sequence::preceded;
-use nom::Parser;
 
-/// Parses an f-assign-da.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::parse_f_assign_da;
-/// assert!(parse_f_assign_da("(assign fun-sym ?duration)").is_ok());
-///```
-pub fn parse_f_assign_da<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, DurativeActionFunctionAssignment> {
-    map(
-        parens((
-            parse_assign_op,
-            preceded(sep, parse_f_head),
-            preceded(sep, parse_f_exp_da),
-        )),
-        DurativeActionFunctionAssignment::from,
-    )
-    .parse(input.into())
+/// Parses a durative action function assignment, i.e. `(<assign-op> <f-head> <f-exp-da>)`.
+pub(crate) fn parse_f_assign_da(node: &Node) -> R<DurativeActionFunctionAssignment> {
+    parens(node, |args| {
+        Ok((
+            parse_assign_op(args.next()?)?,
+            parse_f_head(args.next()?)?,
+            parse_f_exp_da(args.next()?)?,
+        ))
+    })
+    .map(DurativeActionFunctionAssignment::from)
 }
 
-impl crate::parsers::Parser for DurativeActionFunctionAssignment {
-    type Item = DurativeActionFunctionAssignment;
-
-    /// See [`parse_f_assign_da`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_f_assign_da(input)
-    }
-}
+crate::parsers::impl_parser!(DurativeActionFunctionAssignment => parse_f_assign_da);
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::Parser;
+
+    use crate::*;
 
     #[test]
     fn it_works() {
         let input = "(increase (distance-travelled) 5)";
-        let (_, _effect) = DurativeActionFunctionAssignment::parse(Span::new(input)).unwrap();
+        let _effect = DurativeActionFunctionAssignment::from_str(input).unwrap();
+    }
+
+    #[test]
+    fn doc_example_0() {
+        assert!(DurativeActionFunctionAssignment::from_str("(assign fun-sym ?duration)").is_ok());
     }
 }

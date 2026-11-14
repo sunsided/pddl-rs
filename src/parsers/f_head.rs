@@ -1,77 +1,63 @@
-//! Provides parsers for f-heads.
+//! Provides parsers for function heads.
 
-use nom::branch::alt;
-use nom::combinator::map;
-use nom::sequence::preceded;
-use nom::Parser;
-
-use crate::parsers::sep;
-use crate::parsers::{parens, space_separated_list0, ParseResult, Span};
-use crate::parsers::{parse_function_symbol, parse_term};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{parens, parse_function_symbol, parse_term};
 use crate::types::FunctionHead;
 
-/// Parses an f-head.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_f_head, preamble::*};
-/// # use pddl::{FunctionTerm, Variable, FunctionSymbol, Term, FunctionHead};
-/// assert!(parse_f_head("fun-sym").is_value(
-///     FunctionHead::new(FunctionSymbol::string("fun-sym"))
-/// ));
-///
-/// assert!(parse_f_head("(fun-sym)").is_value(
-///     FunctionHead::new(FunctionSymbol::string("fun-sym"))
-/// ));
-///
-/// assert!(parse_f_head("(fun-sym term)").is_value(
-///     FunctionHead::with_terms(FunctionSymbol::string("fun-sym"), [
-///         Term::Name("term".into())
-///     ])
-/// ));
-///```
-pub fn parse_f_head<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FunctionHead> {
-    let simple = map(parse_function_symbol, FunctionHead::new);
-    let simple_parens = map(parens(parse_function_symbol), FunctionHead::new);
-    let with_terms = map(
-        parens((
-            parse_function_symbol,
-            preceded(sep, space_separated_list0(parse_term)),
-        )),
-        |(symbol, terms)| FunctionHead::with_terms(symbol, terms),
-    );
-
-    alt((simple, simple_parens, with_terms)).parse(input.into())
-}
-
-impl crate::parsers::Parser for FunctionHead {
-    type Item = FunctionHead;
-
-    /// See [`parse_f_head`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_f_head(input)
+/// Parses a function head, i.e. `<function-symbol> | (<function-symbol> <term>*)`.
+pub(crate) fn parse_f_head(node: &Node) -> R<FunctionHead> {
+    if node.atom().is_some() {
+        return parse_function_symbol(node).map(FunctionHead::new);
     }
+    parens(node, |args| {
+        let symbol = parse_function_symbol(args.next()?)?;
+        if args.peek().is_none() {
+            return Ok(FunctionHead::new(symbol));
+        }
+        let terms = args.list0(parse_term)?;
+        Ok(FunctionHead::with_terms(symbol, terms))
+    })
 }
+
+crate::parsers::impl_parser!(FunctionHead => parse_f_head);
 
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{FunctionHead, FunctionSymbol, Parser, Term};
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(FunctionHead::parse("fun-sym")
+        assert!(FunctionHead::from_str("fun-sym")
             .is_value(FunctionHead::new(FunctionSymbol::string("fun-sym"))));
 
-        assert!(FunctionHead::parse("(fun-sym)")
+        assert!(FunctionHead::from_str("(fun-sym)")
             .is_value(FunctionHead::new(FunctionSymbol::string("fun-sym"))));
 
         // Whitespace before `)` gives the same head as `(fun-sym)` (#119).
-        assert!(FunctionHead::parse("(fun-sym )")
+        assert!(FunctionHead::from_str("(fun-sym )")
             .is_value(FunctionHead::new(FunctionSymbol::string("fun-sym"))));
 
         assert!(
-            FunctionHead::parse("(fun-sym term)").is_value(FunctionHead::with_terms(
+            FunctionHead::from_str("(fun-sym term)").is_value(FunctionHead::with_terms(
+                FunctionSymbol::string("fun-sym"),
+                [Term::Name("term".into())]
+            ))
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        assert!(FunctionHead::from_str("fun-sym")
+            .is_value(FunctionHead::new(FunctionSymbol::string("fun-sym"))));
+
+        assert!(FunctionHead::from_str("(fun-sym)")
+            .is_value(FunctionHead::new(FunctionSymbol::string("fun-sym"))));
+
+        assert!(
+            FunctionHead::from_str("(fun-sym term)").is_value(FunctionHead::with_terms(
                 FunctionSymbol::string("fun-sym"),
                 [Term::Name("term".into())]
             ))

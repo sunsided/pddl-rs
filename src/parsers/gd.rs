@@ -1,219 +1,71 @@
 //! Provides parsers for goal definitions.
 
-use nom::branch::alt;
-use nom::combinator::map;
-use nom::sequence::preceded;
-use nom::Parser;
-
-use crate::parsers::sep;
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
 use crate::parsers::{
-    atomic_formula, literal, parse_f_comp, parse_term, parse_variable, ParseResult, Span,
+    alt, atomic_formula, literal, parse_f_comp, parse_term, prefix, typed_variables,
 };
-use crate::parsers::{parens, prefix_expr, space_separated_list0, typed_list};
 use crate::types::GoalDefinition;
 
-/// Parser for goal definitions.
+/// Parses a goal definition.
 ///
-/// ## Examples
-/// ```
-/// # use pddl::parsers::{parse_gd, preamble::*};
-/// # use pddl::{AtomicFormula, BinaryComparison, BinaryOp, EqualityAtomicFormula, FluentComparison, FluentExpression, GoalDefinition, Literal, Term, Variable};
-/// # use pddl::TypedList;
-/// // Atomic formula
-/// assert!(parse_gd("(= x y)").is_value(
-///     GoalDefinition::AtomicFormula(
-///         AtomicFormula::equality(
-///             Term::Name("x".into()),
-///             Term::Name("y".into())
-///         )
-///     )
-/// ));
-///
-/// // Literal
-/// assert!(parse_gd("(not (= x y))").is_value(
-///     GoalDefinition::not(
-///         GoalDefinition::atomic_formula(
-///             AtomicFormula::equality(
-///                 Term::Name("x".into()),
-///                 Term::Name("y".into())
-///             )
-///         )
-///     )
-/// ));
-///
-/// // Conjunction (and)
-/// assert!(parse_gd("(and (not (= x y)) (= x z))").is_value(
-///     GoalDefinition::and([
-///         GoalDefinition::not(GoalDefinition::atomic_formula(
-///             AtomicFormula::equality(
-///                 Term::Name("x".into()),
-///                 Term::Name("y".into())
-///             )
-///         )),
-///         GoalDefinition::AtomicFormula(AtomicFormula::equality(
-///             Term::Name("x".into()),
-///             Term::Name("z".into())
-///         ))
-///     ])
-/// ));
-///
-/// // Disjunction (or)
-/// assert!(parse_gd("(or (not (= x y)) (= x z))").is_value(
-///     GoalDefinition::or([
-///         GoalDefinition::not(GoalDefinition::atomic_formula(
-///             AtomicFormula::equality(
-///                 Term::Name("x".into()),
-///                 Term::Name("y".into())
-///             )
-///         )),
-///         GoalDefinition::AtomicFormula(AtomicFormula::equality(
-///             Term::Name("x".into()),
-///             Term::Name("z".into())
-///         ))
-///     ])
-/// ));
-///
-/// // Implication
-/// assert!(parse_gd("(imply (not (= x y)) (= x z))").is_value(
-///     GoalDefinition::imply(
-///         GoalDefinition::not(GoalDefinition::atomic_formula(
-///             AtomicFormula::equality(
-///                 Term::Name("x".into()),
-///                 Term::Name("y".into())
-///             )
-///         )),
-///         GoalDefinition::AtomicFormula(AtomicFormula::equality(
-///             Term::Name("x".into()),
-///             Term::Name("z".into())
-///         ))
-///     )
-/// ));
-///
-/// // Existential preconditions
-/// assert!(parse_gd("(exists (?x ?y) (not (= ?x ?y)))").is_value(
-///     GoalDefinition::exists(
-///         TypedList::from_iter([Variable::new_string("x").into(), Variable::new_string("y").into()]),
-///         GoalDefinition::not(GoalDefinition::atomic_formula(
-///             AtomicFormula::equality(
-///                 Term::Variable("x".into()),
-///                 Term::Variable("y".into())
-///             )
-///         ))
-///     )
-/// ));
-///
-/// // Universal preconditions
-/// assert!(parse_gd("(forall (?x ?y) (not (= ?x ?y)))").is_value(
-///     GoalDefinition::forall(
-///         TypedList::from_iter([Variable::new_string("x").into(), Variable::new_string("y").into()]),
-///         GoalDefinition::not(GoalDefinition::atomic_formula(
-///             AtomicFormula::equality(
-///                 Term::Variable("x".into()),
-///                 Term::Variable("y".into())
-///             )
-///         ))
-///     )
-/// ));
-///
-/// assert!(parse_gd("(= (+ 1.23 2.34) (+ 1.23 2.34))").is_value(
-///     GoalDefinition::fluent_comparison(
-///         FluentComparison::new(
-///             BinaryComparison::Equal,
-///             FluentExpression::binary_op(
-///                 BinaryOp::Addition,
-///                 FluentExpression::number(1.23),
-///                 FluentExpression::number(2.34),
-///             ),
-///             FluentExpression::binary_op(
-///                 BinaryOp::Addition,
-///                 FluentExpression::number(1.23),
-///                 FluentExpression::number(2.34),
-///             )
-///         )
-///     )
-/// ));
-/// ```
-pub fn parse_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, GoalDefinition> {
-    let af = map(
-        atomic_formula(parse_term),
-        GoalDefinition::new_atomic_formula,
-    );
-
-    // :negative-preconditions
-    let literal = map(literal(parse_term), GoalDefinition::new_literal);
-
-    let and = map(
-        prefix_expr("and", space_separated_list0(parse_gd)),
-        GoalDefinition::new_and,
-    );
-
-    // :disjunctive-preconditions
-    let or = map(
-        prefix_expr("or", space_separated_list0(parse_gd)),
-        GoalDefinition::new_or,
-    );
-
-    // :disjunctive-preconditions
-    let not = map(prefix_expr("not", parse_gd), GoalDefinition::new_not);
-
-    // :disjunctive-preconditions
-    let imply = map(
-        prefix_expr("imply", (parse_gd, preceded(sep, parse_gd))),
-        GoalDefinition::new_imply_tuple,
-    );
-
-    // :existential-preconditions
-    let exists = map(
-        prefix_expr(
-            "exists",
-            (parens(typed_list(parse_variable)), preceded(sep, parse_gd)),
-        ),
-        GoalDefinition::new_exists_tuple,
-    );
-
-    // :universal-preconditions
-    let forall = map(
-        prefix_expr(
-            "forall",
-            (parens(typed_list(parse_variable)), preceded(sep, parse_gd)),
-        ),
-        GoalDefinition::new_forall_tuple,
-    );
-
-    // :numeric-fluents
-    let f_comp = map(parse_f_comp, GoalDefinition::new_f_comp);
-
-    alt((and, or, not, imply, exists, forall, af, literal, f_comp)).parse(input.into())
+/// ## Requirements
+/// - `(not <GD>)` requires `:negative-preconditions` on atomic formulas, or
+///   `:disjunctive-preconditions` otherwise.
+/// - `or` and `imply` require `:disjunctive-preconditions`.
+/// - `exists` requires `:existential-preconditions`, `forall` `:universal-preconditions`.
+/// - Comparisons require `:numeric-fluents`.
+pub(crate) fn parse_gd(node: &Node) -> R<GoalDefinition> {
+    alt(
+        node,
+        &[
+            &|n| prefix(n, "and", |args| args.list0(parse_gd)).map(GoalDefinition::new_and),
+            &|n| prefix(n, "or", |args| args.list0(parse_gd)).map(GoalDefinition::new_or),
+            &|n| prefix(n, "not", |args| parse_gd(args.next()?)).map(GoalDefinition::new_not),
+            &|n| {
+                prefix(n, "imply", |args| {
+                    Ok((parse_gd(args.next()?)?, parse_gd(args.next()?)?))
+                })
+                .map(GoalDefinition::new_imply_tuple)
+            },
+            &|n| {
+                prefix(n, "exists", |args| {
+                    Ok((typed_variables(args.next()?)?, parse_gd(args.next()?)?))
+                })
+                .map(GoalDefinition::new_exists_tuple)
+            },
+            &|n| {
+                prefix(n, "forall", |args| {
+                    Ok((typed_variables(args.next()?)?, parse_gd(args.next()?)?))
+                })
+                .map(GoalDefinition::new_forall_tuple)
+            },
+            &|n| atomic_formula(n, parse_term).map(GoalDefinition::new_atomic_formula),
+            &|n| literal(n, parse_term).map(GoalDefinition::new_literal),
+            &|n| parse_f_comp(n).map(GoalDefinition::new_f_comp),
+        ],
+    )
 }
 
-impl crate::parsers::Parser for GoalDefinition {
-    type Item = GoalDefinition;
-
-    /// See [`parse_gd`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_gd(input)
-    }
-}
+crate::parsers::impl_parser!(GoalDefinition => parse_gd);
 
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{
-        AtomicFormula, BinaryComparison, BinaryOp, FluentComparison, FluentExpression,
-        GoalDefinition, Parser, Term, TypedList, Variable,
-    };
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
         assert!(
-            GoalDefinition::parse("(= x y)").is_value(GoalDefinition::AtomicFormula(
+            GoalDefinition::from_str("(= x y)").is_value(GoalDefinition::AtomicFormula(
                 AtomicFormula::equality(Term::Name("x".into()), Term::Name("y".into()))
             ))
         );
 
         // Literal
         assert!(
-            GoalDefinition::parse("(not (= x y))").is_value(GoalDefinition::not(
+            GoalDefinition::from_str("(not (= x y))").is_value(GoalDefinition::not(
                 GoalDefinition::atomic_formula(AtomicFormula::equality(
                     Term::Name("x".into()),
                     Term::Name("y".into())
@@ -223,21 +75,23 @@ mod tests {
 
         // Conjunction (and)
         assert!(
-            GoalDefinition::parse("(and (not (= x y)) (= x z))").is_value(GoalDefinition::and([
-                GoalDefinition::not(GoalDefinition::atomic_formula(AtomicFormula::equality(
-                    Term::Name("x".into()),
-                    Term::Name("y".into())
-                ))),
-                GoalDefinition::AtomicFormula(AtomicFormula::equality(
-                    Term::Name("x".into()),
-                    Term::Name("z".into())
-                ))
-            ]))
+            GoalDefinition::from_str("(and (not (= x y)) (= x z))").is_value(GoalDefinition::and(
+                [
+                    GoalDefinition::not(GoalDefinition::atomic_formula(AtomicFormula::equality(
+                        Term::Name("x".into()),
+                        Term::Name("y".into())
+                    ))),
+                    GoalDefinition::AtomicFormula(AtomicFormula::equality(
+                        Term::Name("x".into()),
+                        Term::Name("z".into())
+                    ))
+                ]
+            ))
         );
 
         // Disjunction (or)
         assert!(
-            GoalDefinition::parse("(or (not (= x y)) (= x z))").is_value(GoalDefinition::or([
+            GoalDefinition::from_str("(or (not (= x y)) (= x z))").is_value(GoalDefinition::or([
                 GoalDefinition::not(GoalDefinition::atomic_formula(AtomicFormula::equality(
                     Term::Name("x".into()),
                     Term::Name("y".into())
@@ -251,21 +105,23 @@ mod tests {
 
         // Implication
         assert!(
-            GoalDefinition::parse("(imply (not (= x y)) (= x z))").is_value(GoalDefinition::imply(
-                GoalDefinition::not(GoalDefinition::atomic_formula(AtomicFormula::equality(
-                    Term::Name("x".into()),
-                    Term::Name("y".into())
-                ))),
-                GoalDefinition::AtomicFormula(AtomicFormula::equality(
-                    Term::Name("x".into()),
-                    Term::Name("z".into())
-                ))
-            ))
+            GoalDefinition::from_str("(imply (not (= x y)) (= x z))").is_value(
+                GoalDefinition::imply(
+                    GoalDefinition::not(GoalDefinition::atomic_formula(AtomicFormula::equality(
+                        Term::Name("x".into()),
+                        Term::Name("y".into())
+                    ))),
+                    GoalDefinition::AtomicFormula(AtomicFormula::equality(
+                        Term::Name("x".into()),
+                        Term::Name("z".into())
+                    ))
+                )
+            )
         );
 
         // Existential preconditions
         assert!(
-            GoalDefinition::parse("(exists (?x ?y) (not (= ?x ?y)))").is_value(
+            GoalDefinition::from_str("(exists (?x ?y) (not (= ?x ?y)))").is_value(
                 GoalDefinition::exists(
                     TypedList::from_iter([
                         Variable::new_string("x").into(),
@@ -281,7 +137,7 @@ mod tests {
 
         // Universal preconditions
         assert!(
-            GoalDefinition::parse("(forall (?x ?y) (not (= ?x ?y)))").is_value(
+            GoalDefinition::from_str("(forall (?x ?y) (not (= ?x ?y)))").is_value(
                 GoalDefinition::forall(
                     TypedList::from_iter([
                         Variable::new_string("x").into(),
@@ -296,7 +152,123 @@ mod tests {
         );
 
         assert!(
-            GoalDefinition::parse("(= (+ 1.23 2.34) (+ 1.23 2.34))").is_value(
+            GoalDefinition::from_str("(= (+ 1.23 2.34) (+ 1.23 2.34))").is_value(
+                GoalDefinition::fluent_comparison(FluentComparison::new(
+                    BinaryComparison::Equal,
+                    FluentExpression::binary_op(
+                        BinaryOp::Addition,
+                        FluentExpression::number(1.23),
+                        FluentExpression::number(2.34),
+                    ),
+                    FluentExpression::binary_op(
+                        BinaryOp::Addition,
+                        FluentExpression::number(1.23),
+                        FluentExpression::number(2.34),
+                    )
+                ))
+            )
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        // Atomic formula
+        assert!(
+            GoalDefinition::from_str("(= x y)").is_value(GoalDefinition::AtomicFormula(
+                AtomicFormula::equality(Term::Name("x".into()), Term::Name("y".into()))
+            ))
+        );
+
+        // Literal
+        assert!(
+            GoalDefinition::from_str("(not (= x y))").is_value(GoalDefinition::not(
+                GoalDefinition::atomic_formula(AtomicFormula::equality(
+                    Term::Name("x".into()),
+                    Term::Name("y".into())
+                ))
+            ))
+        );
+
+        // Conjunction (and)
+        assert!(
+            GoalDefinition::from_str("(and (not (= x y)) (= x z))").is_value(GoalDefinition::and(
+                [
+                    GoalDefinition::not(GoalDefinition::atomic_formula(AtomicFormula::equality(
+                        Term::Name("x".into()),
+                        Term::Name("y".into())
+                    ))),
+                    GoalDefinition::AtomicFormula(AtomicFormula::equality(
+                        Term::Name("x".into()),
+                        Term::Name("z".into())
+                    ))
+                ]
+            ))
+        );
+
+        // Disjunction (or)
+        assert!(
+            GoalDefinition::from_str("(or (not (= x y)) (= x z))").is_value(GoalDefinition::or([
+                GoalDefinition::not(GoalDefinition::atomic_formula(AtomicFormula::equality(
+                    Term::Name("x".into()),
+                    Term::Name("y".into())
+                ))),
+                GoalDefinition::AtomicFormula(AtomicFormula::equality(
+                    Term::Name("x".into()),
+                    Term::Name("z".into())
+                ))
+            ]))
+        );
+
+        // Implication
+        assert!(
+            GoalDefinition::from_str("(imply (not (= x y)) (= x z))").is_value(
+                GoalDefinition::imply(
+                    GoalDefinition::not(GoalDefinition::atomic_formula(AtomicFormula::equality(
+                        Term::Name("x".into()),
+                        Term::Name("y".into())
+                    ))),
+                    GoalDefinition::AtomicFormula(AtomicFormula::equality(
+                        Term::Name("x".into()),
+                        Term::Name("z".into())
+                    ))
+                )
+            )
+        );
+
+        // Existential preconditions
+        assert!(
+            GoalDefinition::from_str("(exists (?x ?y) (not (= ?x ?y)))").is_value(
+                GoalDefinition::exists(
+                    TypedList::from_iter([
+                        Variable::new_string("x").into(),
+                        Variable::new_string("y").into()
+                    ]),
+                    GoalDefinition::not(GoalDefinition::atomic_formula(AtomicFormula::equality(
+                        Term::Variable("x".into()),
+                        Term::Variable("y".into())
+                    )))
+                )
+            )
+        );
+
+        // Universal preconditions
+        assert!(
+            GoalDefinition::from_str("(forall (?x ?y) (not (= ?x ?y)))").is_value(
+                GoalDefinition::forall(
+                    TypedList::from_iter([
+                        Variable::new_string("x").into(),
+                        Variable::new_string("y").into()
+                    ]),
+                    GoalDefinition::not(GoalDefinition::atomic_formula(AtomicFormula::equality(
+                        Term::Variable("x".into()),
+                        Term::Variable("y".into())
+                    )))
+                )
+            )
+        );
+
+        assert!(
+            GoalDefinition::from_str("(= (+ 1.23 2.34) (+ 1.23 2.34))").is_value(
                 GoalDefinition::fluent_comparison(FluentComparison::new(
                     BinaryComparison::Equal,
                     FluentExpression::binary_op(

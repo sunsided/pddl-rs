@@ -1,66 +1,30 @@
 //! Provides parsers for timeless definitions.
 
-use crate::parsers::{literal, parse_name, prefix_expr, space_separated_list1, ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{literal, parse_name, prefix};
 use crate::types::Timeless;
-use nom::combinator::map;
-use nom::Parser;
 
-/// Parser for timeless definitions.
-/// This is a PDDL 1.2 construct.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_timeless_def, preamble::*};
-/// # use pddl::{AtomicFormula, EqualityAtomicFormula, Literal, Name, Objects, Timeless, ToTyped, Type};
-/// let input = "(:timeless (= x y) (= a b))";
-/// assert!(parse_timeless_def(input).is_value(
-///     Timeless::from_iter([
-///         Literal::AtomicFormula(
-///             AtomicFormula::Equality(
-///                 EqualityAtomicFormula::new(
-///                     "x".into(),
-///                     "y".into()
-///                 )
-///             )
-///         ),
-///         Literal::AtomicFormula(
-///             // ...
-///             # AtomicFormula::Equality(
-///             #     EqualityAtomicFormula::new(
-///             #         "a".into(),
-///             #         "b".into()
-///             #     )
-///             # )
-///         )
-///     ])
-/// ));
-/// ```
-pub fn parse_timeless_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Timeless> {
-    map(
-        prefix_expr(":timeless", space_separated_list1(literal(parse_name))),
-        Timeless::from_iter,
-    )
-    .parse(input.into())
+/// Parses a timeless definition, i.e. `(:timeless <literal (name)>⁺)`.
+pub(crate) fn parse_timeless_def(node: &Node) -> R<Timeless> {
+    prefix(node, ":timeless", |args| {
+        args.list1(|n| literal(n, parse_name))
+            .map(Timeless::from_iter)
+    })
 }
 
-impl crate::parsers::Parser for Timeless {
-    type Item = Timeless;
-
-    /// See [`parse_timeless_def`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_timeless_def(input)
-    }
-}
+crate::parsers::impl_parser!(Timeless => parse_timeless_def);
 
 #[cfg(test)]
 mod tests {
-    use crate::parsers::preamble::*;
-    use crate::{AtomicFormula, EqualityAtomicFormula, Literal, Timeless};
+    use crate::parsers::UnwrapValue;
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
         let input = "(:timeless (= x y) (= a b))";
-        assert!(Timeless::parse(input).is_value(Timeless::from_iter([
+        assert!(Timeless::from_str(input).is_value(Timeless::from_iter([
             Literal::AtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new(
                 "x".into(),
                 "y".into()
@@ -69,6 +33,21 @@ mod tests {
                 "a".into(),
                 "b".into()
             )))
+        ])));
+    }
+
+    #[test]
+    fn doc_example_0() {
+        let input = "(:timeless (= x y) (= a b))";
+        assert!(Timeless::from_str(input).is_value(Timeless::from_iter([
+            Literal::AtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new(
+                "x".into(),
+                "y".into()
+            ))),
+            Literal::AtomicFormula(
+                // ...
+                AtomicFormula::Equality(EqualityAtomicFormula::new("a".into(), "b".into()))
+            )
         ])));
     }
 }

@@ -1,82 +1,70 @@
 //! Provides parsers for basic function terms.
 
-use crate::parsers::{
-    parens, parse_function_symbol, parse_name, space_separated_list0, ws, ParseResult, Span,
-};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{parens, parse_function_symbol, parse_name};
 use crate::types::BasicFunctionTerm;
-use nom::branch::alt;
-use nom::combinator::map;
-use nom::Parser;
 
-/// Parses a basic function term.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_basic_function_term, UnwrapValue, Span};
-/// # use pddl::{BasicFunctionTerm, Term};
-/// assert!(parse_basic_function_term(Span::new("abcde")).is_value(
-///     BasicFunctionTerm::new("abcde".into(), [])
-/// ));
-///
-/// assert!(parse_basic_function_term(Span::new("(abcde)")).is_value(
-///     BasicFunctionTerm::new("abcde".into(), [])
-/// ));
-///
-/// assert!(parse_basic_function_term(Span::new("(abcde x y z)")).is_value(
-///     BasicFunctionTerm::new("abcde".into(), ["x".into(), "y".into(), "z".into()])
-/// ));
-///```
-pub fn parse_basic_function_term<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, BasicFunctionTerm> {
-    let direct = map(parse_function_symbol, |s| BasicFunctionTerm::new(s, []));
-    let named = map(
-        parens((parse_function_symbol, ws(space_separated_list0(parse_name)))),
-        |(s, ns)| BasicFunctionTerm::new(s, ns),
-    );
-    alt((direct, named)).parse(input.into())
-}
-
-impl crate::parsers::Parser for BasicFunctionTerm {
-    type Item = BasicFunctionTerm;
-
-    /// Parses a basic function term.
-    ///
-    /// ## Example
-    /// ```
-    /// # use pddl::{BasicFunctionTerm, Parser};
-    /// let (_, value) = BasicFunctionTerm::parse("abcde").unwrap();
-    /// assert_eq!(value,  BasicFunctionTerm::new("abcde".into(), []));
-    ///
-    /// let (_, value) = BasicFunctionTerm::parse("(abcde)").unwrap();
-    /// assert_eq!(value,  BasicFunctionTerm::new("abcde".into(), []));
-    ///
-    /// let (_, value) = BasicFunctionTerm::parse("(abcde x y z)").unwrap();
-    /// assert_eq!(value,  BasicFunctionTerm::new("abcde".into(), [
-    ///     "x".into(), "y".into(), "z".into()]
-    /// ));
-    /// ```
-    ///
-    /// ## See also
-    /// See [`parse_basic_function_term`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_basic_function_term(input)
+/// Parses a basic function term, i.e. `<function-symbol> | (<function-symbol> <name>*)`.
+pub(crate) fn parse_basic_function_term(node: &Node) -> R<BasicFunctionTerm> {
+    if node.atom().is_some() {
+        return parse_function_symbol(node).map(|symbol| BasicFunctionTerm::new(symbol, []));
     }
+    parens(node, |args| {
+        let symbol = parse_function_symbol(args.next()?)?;
+        let names = args.list0(parse_name)?;
+        Ok(BasicFunctionTerm::new(symbol, names))
+    })
 }
+
+crate::parsers::impl_parser!(BasicFunctionTerm => parse_basic_function_term);
 
 #[cfg(test)]
 mod tests {
-    use crate::{BasicFunctionTerm, Parser};
+    use crate::parsers::UnwrapValue;
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
-        let (_, value) = BasicFunctionTerm::parse("abcde").unwrap();
+        let value = BasicFunctionTerm::from_str("abcde").unwrap();
         assert_eq!(value, BasicFunctionTerm::new("abcde".into(), []));
 
-        let (_, value) = BasicFunctionTerm::parse("(abcde)").unwrap();
+        let value = BasicFunctionTerm::from_str("(abcde)").unwrap();
         assert_eq!(value, BasicFunctionTerm::new("abcde".into(), []));
 
-        let (_, value) = BasicFunctionTerm::parse("(abcde x y z)").unwrap();
+        let value = BasicFunctionTerm::from_str("(abcde x y z)").unwrap();
+        assert_eq!(
+            value,
+            BasicFunctionTerm::new("abcde".into(), ["x".into(), "y".into(), "z".into()])
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        assert!(BasicFunctionTerm::from_str("abcde")
+            .is_value(BasicFunctionTerm::new("abcde".into(), [])));
+
+        assert!(BasicFunctionTerm::from_str("(abcde)")
+            .is_value(BasicFunctionTerm::new("abcde".into(), [])));
+
+        assert!(
+            BasicFunctionTerm::from_str("(abcde x y z)").is_value(BasicFunctionTerm::new(
+                "abcde".into(),
+                ["x".into(), "y".into(), "z".into()]
+            ))
+        );
+    }
+
+    #[test]
+    fn doc_example_1() {
+        let value = BasicFunctionTerm::from_str("abcde").unwrap();
+        assert_eq!(value, BasicFunctionTerm::new("abcde".into(), []));
+
+        let value = BasicFunctionTerm::from_str("(abcde)").unwrap();
+        assert_eq!(value, BasicFunctionTerm::new("abcde".into(), []));
+
+        let value = BasicFunctionTerm::from_str("(abcde x y z)").unwrap();
         assert_eq!(
             value,
             BasicFunctionTerm::new("abcde".into(), ["x".into(), "y".into(), "z".into()])

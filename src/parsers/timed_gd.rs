@@ -1,99 +1,92 @@
 //! Provides parsers for timed goal definitions.
 
-use crate::parsers::sep;
-use crate::parsers::{parse_gd, parse_interval, parse_time_specifier};
-use crate::parsers::{prefix_expr, ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{alt, parse_gd, parse_interval, parse_time_specifier, prefix};
 use crate::types::TimedGoalDefinition;
-use nom::branch::alt;
-use nom::combinator::map;
-use nom::sequence::preceded;
-use nom::Parser;
 
-/// Parser for timed goal definitions.
-///
-/// ## Examples
-/// ```
-/// # use pddl::parsers::{parse_timed_gd, preamble::*};
-/// # use pddl::{AtomicFormula, GoalDefinition, Interval, Term, TimedGoalDefinition, TimeSpecifier};
-/// assert!(parse_timed_gd("(at start (= x y))").is_value(
-///     TimedGoalDefinition::at(
-///         TimeSpecifier::Start,
-///         GoalDefinition::AtomicFormula(
-///             AtomicFormula::new_equality(
-///                 Term::Name("x".into()),
-///                 Term::Name("y".into())
-///             )
-///         )
-///     )
-/// ));
-///
-/// assert!(parse_timed_gd("(over all (= x y))").is_value(
-///     TimedGoalDefinition::over(
-///         Interval::All,
-///         GoalDefinition::AtomicFormula(
-///             AtomicFormula::new_equality(
-///                 Term::Name("x".into()),
-///                 Term::Name("y".into())
-///             )
-///         )
-///     )
-/// ));
-/// ```
-pub fn parse_timed_gd<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedGoalDefinition> {
-    let at = map(
-        prefix_expr("at", (parse_time_specifier, preceded(sep, parse_gd))),
-        TimedGoalDefinition::from,
-    );
-
-    let over = map(
-        prefix_expr("over", (parse_interval, preceded(sep, parse_gd))),
-        TimedGoalDefinition::from,
-    );
-
-    alt((at, over)).parse(input.into())
+/// Parses a timed goal definition, i.e. `(at <time-specifier> <GD>) | (over <interval> <GD>)`.
+pub(crate) fn parse_timed_gd(node: &Node) -> R<TimedGoalDefinition> {
+    alt(
+        node,
+        &[
+            &|n| {
+                prefix(n, "at", |args| {
+                    Ok((parse_time_specifier(args.next()?)?, parse_gd(args.next()?)?))
+                })
+                .map(TimedGoalDefinition::from)
+            },
+            &|n| {
+                prefix(n, "over", |args| {
+                    Ok((parse_interval(args.next()?)?, parse_gd(args.next()?)?))
+                })
+                .map(TimedGoalDefinition::from)
+            },
+        ],
+    )
 }
 
-impl crate::parsers::Parser for TimedGoalDefinition {
-    type Item = TimedGoalDefinition;
-
-    /// See [`parse_timed_gd`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_timed_gd(input)
-    }
-}
+crate::parsers::impl_parser!(TimedGoalDefinition => parse_timed_gd);
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::parsers::UnwrapValue;
-    use crate::{AtomicFormula, GoalDefinition, Interval, Parser, Term, TimeSpecifier};
+
+    use crate::*;
 
     #[test]
     fn it_works() {
         let input = "(over all (can-move ?from-waypoint ?to-waypoint))";
-        let (_, _gd) = parse_timed_gd(Span::new(input)).unwrap();
+        let _gd = TimedGoalDefinition::from_str(input).unwrap();
     }
 
     #[test]
     fn test_parse() {
-        assert!(TimedGoalDefinition::parse("(at start (= x y))").is_value(
-            TimedGoalDefinition::at(
+        assert!(
+            TimedGoalDefinition::from_str("(at start (= x y))").is_value(TimedGoalDefinition::at(
                 TimeSpecifier::Start,
                 GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
                     Term::Name("x".into()),
                     Term::Name("y".into())
                 ))
-            )
-        ));
+            ))
+        );
 
         assert!(
-            parse_timed_gd("(over all (= x y))").is_value(TimedGoalDefinition::over(
-                Interval::All,
+            TimedGoalDefinition::from_str("(over all (= x y))").is_value(
+                TimedGoalDefinition::over(
+                    Interval::All,
+                    GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                        Term::Name("x".into()),
+                        Term::Name("y".into())
+                    ))
+                )
+            )
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        assert!(
+            TimedGoalDefinition::from_str("(at start (= x y))").is_value(TimedGoalDefinition::at(
+                TimeSpecifier::Start,
                 GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
                     Term::Name("x".into()),
                     Term::Name("y".into())
                 ))
             ))
+        );
+
+        assert!(
+            TimedGoalDefinition::from_str("(over all (= x y))").is_value(
+                TimedGoalDefinition::over(
+                    Interval::All,
+                    GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                        Term::Name("x".into()),
+                        Term::Name("y".into())
+                    ))
+                )
+            )
         );
     }
 }

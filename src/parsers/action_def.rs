@@ -1,125 +1,37 @@
 //! Provides parsers for action definitions.
 
-use nom::combinator::{map, opt};
-use nom::sequence::preceded;
-use nom::Parser;
-
-use crate::parsers::keyword_arg;
-use crate::parsers::sep;
-use crate::parsers::{empty_or, parens, prefix_expr, typed_list, ws, ParseResult, Span};
-use crate::parsers::{parse_action_symbol, parse_effect, parse_pre_gd, parse_variable};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{
+    empty_or, keyword_arg, opt_keyword_arg, parse_action_symbol, parse_effect, parse_pre_gd,
+    prefix, typed_variables,
+};
 use crate::types::ActionDefinition;
 
-/// Parses an action definition.
-///
-/// ## Example
-/// ```
-/// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, ConditionalEffect, Effects, GoalDefinition, Name, PrimitiveEffect, Predicate, PreferenceGoalDefinition, PreconditionGoalDefinitions, PreconditionGoalDefinition, Term, ToTyped, TypedList, Variable};
-/// # use pddl::parsers::{parse_action_def, Span, UnwrapValue};
-/// let input = r#"(:action take-out
-///                     :parameters (?x - physob)
-///                     :precondition (not (= ?x B))
-///                     :effect (not (in ?x))
-///                 )"#;
-///
-/// let action = parse_action_def(Span::new(input));
-///
-/// assert!(action.is_value(
-///     ActionDefinition::new(
-///         ActionSymbol::string("take-out"),
-///         TypedList::from_iter([
-///             Variable::new_string("x").to_typed("physob")
-///         ]),
-///         PreconditionGoalDefinitions::from(
-///             PreconditionGoalDefinition::Preference(PreferenceGoalDefinition::from_gd(
-///                 GoalDefinition::new_not(
-///                     GoalDefinition::AtomicFormula(
-///                         AtomicFormula::new_equality(
-///                             Term::Variable(Variable::new_string("x")),
-///                             Term::Name(Name::new("B"))
-///                         )
-///                     )
-///                 )
-///             )
-///         )),
-///         Some(Effects::new(ConditionalEffect::new_primitive_effect(
-///             PrimitiveEffect::NotAtomicFormula(
-///                 AtomicFormula::new_predicate(
-///                     Predicate::new_string("in"),
-///                     vec![Term::Variable(Variable::new_string("x"))]
-///                 )
-///             )
-///         )))
-///     )
-/// ));
-/// ```
-pub fn parse_action_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, ActionDefinition> {
-    let precondition = keyword_arg(":precondition", empty_or(parse_pre_gd));
-    let effect = keyword_arg(":effect", empty_or(parse_effect));
-    let action_def_body = (opt(ws(precondition)), opt(ws(effect)));
-    let parameters = keyword_arg(":parameters", parens(typed_list(parse_variable)));
-    let action_def = prefix_expr(
-        ":action",
-        (
-            parse_action_symbol,
-            preceded(sep, parameters),
-            ws(action_def_body),
-        ),
-    );
-
-    map(action_def, |(symbol, params, (preconditions, effects))| {
-        ActionDefinition::new(
+/// Parses an action definition, i.e. `(:action <action-symbol> :parameters (<typed list (variable)>)
+/// [:precondition <pre-GD>] [:effect <effect>])`. `()` stands for no precondition or effect.
+pub(crate) fn parse_action_def(node: &Node) -> R<ActionDefinition> {
+    prefix(node, ":action", |args| {
+        let symbol = parse_action_symbol(args.next()?)?;
+        let parameters = keyword_arg(args, ":parameters", typed_variables)?;
+        let precondition = opt_keyword_arg(args, ":precondition", |n| empty_or(n, parse_pre_gd))?;
+        let effect = opt_keyword_arg(args, ":effect", |n| empty_or(n, parse_effect))?;
+        Ok(ActionDefinition::new(
             symbol,
-            params,
-            preconditions.flatten().into(),
-            effects.flatten(),
-        )
+            parameters,
+            precondition.flatten().into(),
+            effect.flatten(),
+        ))
     })
-    .parse(input.into())
 }
 
-impl crate::parsers::Parser for ActionDefinition {
-    type Item = ActionDefinition;
-
-    /// Parses an action definition.
-    ///
-    /// ## Example
-    /// ```
-    /// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, ConditionalEffect, Effects, GoalDefinition, Name, PrimitiveEffect, Predicate, PreferenceGoalDefinition, PreconditionGoalDefinitions, PreconditionGoalDefinition, Term, ToTyped, TypedList, Variable, Parser};
-    /// # use pddl::parsers::{parse_action_def, Span, UnwrapValue};
-    /// let input = r#"(:action take-out
-    ///                     :parameters (?x - physob)
-    ///                     :precondition (not (= ?x B))
-    ///                     :effect (not (in ?x))
-    ///                 )"#;
-    ///
-    /// let (_, action) = ActionDefinition::parse(input).unwrap();
-    ///
-    /// assert_eq!(action,
-    ///     ActionDefinition::new(
-    ///         ActionSymbol::string("take-out"),
-    ///         TypedList::from_iter([
-    ///             Variable::new_string("x").to_typed("physob")
-    ///         ]),
-    ///         PreconditionGoalDefinitions::from_str("(not (= ?x B))").unwrap(),
-    ///         Some(Effects::from_str("(not (in ?x))").unwrap())
-    ///     )
-    /// );
-    /// ```
-    ///
-    /// ## See also
-    /// See [`parse_action_def`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_action_def(input)
-    }
-}
+crate::parsers::impl_parser!(ActionDefinition => parse_action_def);
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        ActionDefinition, ActionSymbol, Effects, Parser, PreconditionGoalDefinitions, ToTyped,
-        TypedList, Variable,
-    };
+    use crate::parsers::UnwrapValue;
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
@@ -129,7 +41,58 @@ mod tests {
                             :effect (not (in ?x))
                         )"#;
 
-        let (_, action) = ActionDefinition::parse(input).unwrap();
+        let action = ActionDefinition::from_str(input).unwrap();
+
+        assert_eq!(
+            action,
+            ActionDefinition::new(
+                ActionSymbol::string("take-out"),
+                TypedList::from_iter([Variable::new_string("x").to_typed("physob")]),
+                PreconditionGoalDefinitions::from_str("(not (= ?x B))").unwrap(),
+                Some(Effects::from_str("(not (in ?x))").unwrap())
+            )
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        let input = r#"(:action take-out
+                            :parameters (?x - physob)
+                            :precondition (not (= ?x B))
+                            :effect (not (in ?x))
+                        )"#;
+
+        let action = ActionDefinition::from_str(input);
+
+        assert!(action.is_value(ActionDefinition::new(
+            ActionSymbol::string("take-out"),
+            TypedList::from_iter([Variable::new_string("x").to_typed("physob")]),
+            PreconditionGoalDefinitions::from(PreconditionGoalDefinition::Preference(
+                PreferenceGoalDefinition::from_gd(GoalDefinition::new_not(
+                    GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                        Term::Variable(Variable::new_string("x")),
+                        Term::Name(Name::new("B"))
+                    ))
+                ))
+            )),
+            Some(Effects::new(ConditionalEffect::new_primitive_effect(
+                PrimitiveEffect::NotAtomicFormula(AtomicFormula::new_predicate(
+                    Predicate::new_string("in"),
+                    vec![Term::Variable(Variable::new_string("x"))]
+                ))
+            )))
+        )));
+    }
+
+    #[test]
+    fn doc_example_1() {
+        let input = r#"(:action take-out
+                            :parameters (?x - physob)
+                            :precondition (not (= ?x B))
+                            :effect (not (in ?x))
+                        )"#;
+
+        let action = ActionDefinition::from_str(input).unwrap();
 
         assert_eq!(
             action,

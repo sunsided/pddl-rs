@@ -1,99 +1,35 @@
 //! Provides parsers for durative action definitions.
 
-use crate::parsers::keyword_arg;
-use crate::parsers::sep;
-use crate::parsers::{empty_or, parens, prefix_expr, typed_list, ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
 use crate::parsers::{
-    parse_da_effect, parse_da_gd, parse_da_symbol, parse_duration_constraint, parse_variable,
+    empty_or, keyword_arg, parse_da_effect, parse_da_gd, parse_da_symbol,
+    parse_duration_constraint, prefix, typed_variables,
 };
 use crate::types::DurativeActionDefinition;
-use nom::combinator::map;
-use nom::sequence::preceded;
-use nom::Parser;
 
-/// Parses a durative action definition.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_action_def, parse_da_def, preamble::*};
-/// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, ConditionalEffect, Effects, GoalDefinition, Literal, PrimitiveEffect, Predicate, Preference, PreferenceGoalDefinition, PreconditionGoalDefinition, Term, Variable};
-/// let input = r#"(:durative-action move
-///         :parameters
-///             (?r - rover
-///              ?fromwp - waypoint
-///              ?towp - waypoint)
-///
-///         :duration
-///             (= ?duration 5)
-///
-///         :condition
-///             (and
-///                 (at start (rover ?rover))
-///                 (at start (waypoint ?from-waypoint))
-///                 (at start (waypoint ?to-waypoint))
-///                 (over all (can-move ?from-waypoint ?to-waypoint))
-///                 (at start (at ?rover ?from-waypoint))
-///                 (at start (> (battery-amount ?rover) 8)))
-///
-///         :effect
-///             (and
-///                 (decrease (fuel-level ?t) (* 2 #t))
-///                 (at end (at ?rover ?to-waypoint))
-///                 (at end (been-at ?rover ?to-waypoint))
-///                 (at start (not (at ?rover ?from-waypoint)))
-///                 (at start (decrease (battery-amount ?rover) 8))
-///                 (at end (increase (distance-travelled) 5))
-///                 )
-///     )"#;
-///
-/// let (_, da_def) = parse_da_def(input).unwrap();
-/// assert_eq!(da_def.symbol(), &"move".into());
-/// assert_eq!(da_def.parameters().len(), 3);
-/// assert!(da_def.duration().is_some());
-/// assert!(da_def.condition().is_some());
-/// assert!(da_def.effect().is_some());
-/// ```
-pub fn parse_da_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DurativeActionDefinition> {
-    let parameters = keyword_arg(":parameters", parens(typed_list(parse_variable)));
-
-    let duration = keyword_arg(":duration", parse_duration_constraint);
-    let condition = keyword_arg(":condition", empty_or(parse_da_gd));
-    let effect = keyword_arg(":effect", empty_or(parse_da_effect));
-
-    let da_def = prefix_expr(
-        ":durative-action",
-        (
-            parse_da_symbol,
-            preceded(sep, parameters),
-            // <da-def body>
-            preceded(sep, duration),
-            preceded(sep, condition),
-            preceded(sep, effect),
-        ),
-    );
-
-    map(
-        da_def,
-        |(symbol, parameters, duration, condition, effect)| {
-            DurativeActionDefinition::new(symbol, parameters, duration, condition, effect)
-        },
-    )
-    .parse(input.into())
+/// Parses a durative action definition, i.e. `(:durative-action <da-symbol>
+/// :parameters (<typed list (variable)>) :duration <duration-constraint>
+/// :condition <da-GD> :effect <da-effect>)`. `()` stands for no condition or effect.
+pub(crate) fn parse_da_def(node: &Node) -> R<DurativeActionDefinition> {
+    prefix(node, ":durative-action", |args| {
+        let symbol = parse_da_symbol(args.next()?)?;
+        let parameters = keyword_arg(args, ":parameters", typed_variables)?;
+        let duration = keyword_arg(args, ":duration", parse_duration_constraint)?;
+        let condition = keyword_arg(args, ":condition", |n| empty_or(n, parse_da_gd))?;
+        let effect = keyword_arg(args, ":effect", |n| empty_or(n, parse_da_effect))?;
+        Ok(DurativeActionDefinition::new(
+            symbol, parameters, duration, condition, effect,
+        ))
+    })
 }
 
-impl crate::parsers::Parser for DurativeActionDefinition {
-    type Item = DurativeActionDefinition;
-
-    /// See [`parse_da_def`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_da_def(input)
-    }
-}
+crate::parsers::impl_parser!(DurativeActionDefinition => parse_da_def);
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::Parser;
+
+    use crate::*;
 
     #[test]
     fn it_works() {
@@ -125,6 +61,45 @@ mod tests {
                         (at end (increase (distance-travelled) 5))
                         )
             )"#;
-        let (_, _gd) = DurativeActionDefinition::parse(Span::new(input)).unwrap();
+        let _gd = DurativeActionDefinition::from_str(input).unwrap();
+    }
+
+    #[test]
+    fn doc_example_0() {
+        let input = r#"(:durative-action move
+                :parameters
+                    (?r - rover
+                     ?fromwp - waypoint
+                     ?towp - waypoint)
+        
+                :duration
+                    (= ?duration 5)
+        
+                :condition
+                    (and
+                        (at start (rover ?rover))
+                        (at start (waypoint ?from-waypoint))
+                        (at start (waypoint ?to-waypoint))
+                        (over all (can-move ?from-waypoint ?to-waypoint))
+                        (at start (at ?rover ?from-waypoint))
+                        (at start (> (battery-amount ?rover) 8)))
+        
+                :effect
+                    (and
+                        (decrease (fuel-level ?t) (* 2 #t))
+                        (at end (at ?rover ?to-waypoint))
+                        (at end (been-at ?rover ?to-waypoint))
+                        (at start (not (at ?rover ?from-waypoint)))
+                        (at start (decrease (battery-amount ?rover) 8))
+                        (at end (increase (distance-travelled) 5))
+                        )
+            )"#;
+
+        let da_def = DurativeActionDefinition::from_str(input).unwrap();
+        assert_eq!(da_def.symbol(), &"move".into());
+        assert_eq!(da_def.parameters().len(), 3);
+        assert!(da_def.duration().is_some());
+        assert!(da_def.condition().is_some());
+        assert!(da_def.effect().is_some());
     }
 }

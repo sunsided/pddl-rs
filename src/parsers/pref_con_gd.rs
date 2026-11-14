@@ -1,139 +1,53 @@
-//! Provides parsers for preferred goal definitions.
+//! Provides parsers for preference constraint goal definitions.
 
-use crate::parsers::sep;
-use crate::parsers::{
-    parens, parse_con_gd, parse_pref_name, parse_variable, prefix_expr, space_separated_list0,
-    typed_list, ParseResult, Span,
-};
-use crate::PreferenceConstraintGoalDefinitions;
-use nom::branch::alt;
-use nom::combinator::map;
-use nom::sequence::preceded;
-use nom::Parser;
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{alt, parse_con_gd, parse_pref_name, prefix, typed_variables};
+use crate::types::PreferenceConstraintGoalDefinitions;
 
-/// Parses preferred goal definitions.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_pref_con_gd, preamble::*};
-/// # use pddl::{AtomicFormula, ConstraintGoalDefinitionInner, ConstraintGoalDefinition, GoalDefinition, Number, PreferenceConstraintGoalDefinition, PreferenceConstraintGoalDefinitions, Term, ToTyped, Type, TypedList, Variable};
-/// // (= x y)
-/// let gd_a =
-///     GoalDefinition::atomic_formula(
-///         AtomicFormula::equality(
-///             Term::Name("x".into()),
-///             Term::Name("y".into())
-///         )
-///     );
-///
-/// // (not (= x z))
-/// let gd_b =
-///     GoalDefinition::not(
-///         GoalDefinition::atomic_formula(
-///             AtomicFormula::equality(
-///                 Term::Name("x".into()),
-///                 Term::Name("z".into())
-///             )
-///         )
-///     );
-///
-/// assert!(parse_pref_con_gd("(and)").is_value(
-///     PreferenceConstraintGoalDefinitions::default()
-/// ));
-///
-/// assert!(parse_pref_con_gd("(and (at end (= x y)) (at end (not (= x z))))").is_value(
-///     PreferenceConstraintGoalDefinitions::from_iter([
-///         PreferenceConstraintGoalDefinition::goal(ConstraintGoalDefinition::at_end(gd_a.clone())),
-///         PreferenceConstraintGoalDefinition::goal(ConstraintGoalDefinition::at_end(gd_b.clone())),
-///     ])
-/// ));
-///
-/// assert!(parse_pref_con_gd("(forall (?x ?z) (sometime (= ?x ?z)))").is_value(
-///     PreferenceConstraintGoalDefinitions::forall(
-///         TypedList::from_iter([
-///             Variable::from("x").to_typed(Type::OBJECT),
-///             Variable::from("z").to_typed(Type::OBJECT),
-///         ]),
-///         PreferenceConstraintGoalDefinitions::goal(ConstraintGoalDefinition::sometime(
-///                 // gd ...
-///                 # ConstraintGoalDefinitionInner::Goal(
-///                     # GoalDefinition::atomic_formula(
-///                     #    AtomicFormula::equality(
-///                     #        Term::Variable("x".into()),
-///                     #        Term::Variable("z".into())
-///                     #    )
-///                     # )
-///                 # )
-///             )
-///         )
-///     )
-/// ));
-///
-/// assert!(parse_pref_con_gd("(at end (= x y))").is_value(
-///     PreferenceConstraintGoalDefinitions::goal(ConstraintGoalDefinition::AtEnd(gd_a.clone()))
-/// ));
-///
-/// assert!(parse_pref_con_gd("(preference (at end (= x y)))").is_value(
-///     PreferenceConstraintGoalDefinitions::preference(None, ConstraintGoalDefinition::AtEnd(gd_a.clone()))
-/// ));
-///
-/// assert!(parse_pref_con_gd("(preference name (at end (= x y)))").is_value(
-///     PreferenceConstraintGoalDefinitions::preference(Some("name".into()), ConstraintGoalDefinition::AtEnd(gd_a.clone()))
-/// ));
-/// ```
-pub fn parse_pref_con_gd<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, PreferenceConstraintGoalDefinitions> {
-    let and = map(
-        prefix_expr("and", space_separated_list0(parse_pref_con_gd)),
-        |x| PreferenceConstraintGoalDefinitions::from_iter(x.into_iter().flatten()),
-    );
-
-    // :universal-preconditions
-    let forall = map(
-        prefix_expr(
-            "forall",
-            (
-                parens(typed_list(parse_variable)),
-                preceded(sep, parse_pref_con_gd),
-            ),
-        ),
-        |(vars, gd)| PreferenceConstraintGoalDefinitions::forall(vars, gd),
-    );
-
-    // :preferences
-    let named_preference = map(
-        prefix_expr("preference", (parse_pref_name, preceded(sep, parse_con_gd))),
-        |(name, gd)| PreferenceConstraintGoalDefinitions::preference(Some(name), gd),
-    );
-
-    // :preferences
-    let unnamed_preference = map(prefix_expr("preference", parse_con_gd), |gd| {
-        PreferenceConstraintGoalDefinitions::preference(None, gd)
-    });
-
-    let goal = map(parse_con_gd, PreferenceConstraintGoalDefinitions::new_goal);
-
-    alt((and, forall, named_preference, unnamed_preference, goal)).parse(input.into())
+/// Parses preference constraint goal definitions, i.e. `(and <pref-con-GD>*)
+/// | (forall (<typed list (variable)>) <pref-con-GD>) | (preference [<pref-name>] <con-GD>)
+/// | <con-GD>`.
+pub(crate) fn parse_pref_con_gd(node: &Node) -> R<PreferenceConstraintGoalDefinitions> {
+    type P = PreferenceConstraintGoalDefinitions;
+    alt(
+        node,
+        &[
+            &|n| {
+                prefix(n, "and", |args| args.list0(parse_pref_con_gd))
+                    .map(|x| P::from_iter(x.into_iter().flatten()))
+            },
+            &|n| {
+                prefix(n, "forall", |args| {
+                    Ok((
+                        typed_variables(args.next()?)?,
+                        parse_pref_con_gd(args.next()?)?,
+                    ))
+                })
+                .map(|(variables, gd)| P::forall(variables, gd))
+            },
+            &|n| {
+                prefix(n, "preference", |args| {
+                    Ok((parse_pref_name(args.next()?)?, parse_con_gd(args.next()?)?))
+                })
+                .map(|(name, gd)| P::preference(Some(name), gd))
+            },
+            &|n| {
+                prefix(n, "preference", |args| parse_con_gd(args.next()?))
+                    .map(|gd| P::preference(None, gd))
+            },
+            &|n| parse_con_gd(n).map(P::new_goal),
+        ],
+    )
 }
 
-impl crate::parsers::Parser for PreferenceConstraintGoalDefinitions {
-    type Item = PreferenceConstraintGoalDefinitions;
-
-    /// See [`parse_pref_con_gd`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_pref_con_gd(input)
-    }
-}
+crate::parsers::impl_parser!(PreferenceConstraintGoalDefinitions => parse_pref_con_gd);
 
 #[cfg(test)]
 mod tests {
-    use crate::parsers::preamble::*;
-    use crate::{
-        AtomicFormula, ConstraintGoalDefinition, ConstraintGoalDefinitionInner, GoalDefinition,
-        PreferenceConstraintGoalDefinition, PreferenceConstraintGoalDefinitions, Term, ToTyped,
-        Type, TypedList, Variable,
-    };
+    use crate::parsers::UnwrapValue;
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
@@ -149,10 +63,10 @@ mod tests {
             Term::Name("z".into()),
         )));
 
-        assert!(PreferenceConstraintGoalDefinitions::parse("(and)")
+        assert!(PreferenceConstraintGoalDefinitions::from_str("(and)")
             .is_value(PreferenceConstraintGoalDefinitions::default()));
 
-        assert!(PreferenceConstraintGoalDefinitions::parse(
+        assert!(PreferenceConstraintGoalDefinitions::from_str(
             "(and (at end (= x y)) (at end (not (= x z))))"
         )
         .is_value(PreferenceConstraintGoalDefinitions::from_iter([
@@ -164,7 +78,7 @@ mod tests {
             )),
         ])));
 
-        assert!(PreferenceConstraintGoalDefinitions::parse(
+        assert!(PreferenceConstraintGoalDefinitions::from_str(
             "(forall (?x ?z) (sometime (= ?x ?z)))"
         )
         .is_value(PreferenceConstraintGoalDefinitions::forall(
@@ -180,7 +94,7 @@ mod tests {
         )));
 
         assert!(
-            PreferenceConstraintGoalDefinitions::parse("(at end (= x y))").is_value(
+            PreferenceConstraintGoalDefinitions::from_str("(at end (= x y))").is_value(
                 PreferenceConstraintGoalDefinitions::goal(ConstraintGoalDefinition::AtEnd(
                     gd_a.clone()
                 ))
@@ -188,20 +102,89 @@ mod tests {
         );
 
         assert!(
-            PreferenceConstraintGoalDefinitions::parse("(preference (at end (= x y)))").is_value(
-                PreferenceConstraintGoalDefinitions::preference(
+            PreferenceConstraintGoalDefinitions::from_str("(preference (at end (= x y)))")
+                .is_value(PreferenceConstraintGoalDefinitions::preference(
                     None,
                     ConstraintGoalDefinition::AtEnd(gd_a.clone())
-                )
+                ))
+        );
+
+        assert!(PreferenceConstraintGoalDefinitions::from_str(
+            "(preference name (at end (= x y)))"
+        )
+        .is_value(PreferenceConstraintGoalDefinitions::preference(
+            Some("name".into()),
+            ConstraintGoalDefinition::AtEnd(gd_a.clone())
+        )));
+    }
+
+    #[test]
+    fn doc_example_0() {
+        // (= x y)
+        let gd_a = GoalDefinition::atomic_formula(AtomicFormula::equality(
+            Term::Name("x".into()),
+            Term::Name("y".into()),
+        ));
+
+        // (not (= x z))
+        let gd_b = GoalDefinition::not(GoalDefinition::atomic_formula(AtomicFormula::equality(
+            Term::Name("x".into()),
+            Term::Name("z".into()),
+        )));
+
+        assert!(PreferenceConstraintGoalDefinitions::from_str("(and)")
+            .is_value(PreferenceConstraintGoalDefinitions::default()));
+
+        assert!(PreferenceConstraintGoalDefinitions::from_str(
+            "(and (at end (= x y)) (at end (not (= x z))))"
+        )
+        .is_value(PreferenceConstraintGoalDefinitions::from_iter([
+            PreferenceConstraintGoalDefinition::goal(ConstraintGoalDefinition::at_end(
+                gd_a.clone()
+            )),
+            PreferenceConstraintGoalDefinition::goal(ConstraintGoalDefinition::at_end(
+                gd_b.clone()
+            )),
+        ])));
+
+        assert!(PreferenceConstraintGoalDefinitions::from_str(
+            "(forall (?x ?z) (sometime (= ?x ?z)))"
+        )
+        .is_value(PreferenceConstraintGoalDefinitions::forall(
+            TypedList::from_iter([
+                Variable::from("x").to_typed(Type::OBJECT),
+                Variable::from("z").to_typed(Type::OBJECT),
+            ]),
+            PreferenceConstraintGoalDefinitions::goal(ConstraintGoalDefinition::sometime(
+                // gd ...
+                ConstraintGoalDefinitionInner::Goal(GoalDefinition::atomic_formula(
+                    AtomicFormula::equality(Term::Variable("x".into()), Term::Variable("z".into()))
+                ))
+            ))
+        )));
+
+        assert!(
+            PreferenceConstraintGoalDefinitions::from_str("(at end (= x y))").is_value(
+                PreferenceConstraintGoalDefinitions::goal(ConstraintGoalDefinition::AtEnd(
+                    gd_a.clone()
+                ))
             )
         );
 
         assert!(
-            PreferenceConstraintGoalDefinitions::parse("(preference name (at end (= x y)))")
+            PreferenceConstraintGoalDefinitions::from_str("(preference (at end (= x y)))")
                 .is_value(PreferenceConstraintGoalDefinitions::preference(
-                    Some("name".into()),
+                    None,
                     ConstraintGoalDefinition::AtEnd(gd_a.clone())
                 ))
         );
+
+        assert!(PreferenceConstraintGoalDefinitions::from_str(
+            "(preference name (at end (= x y)))"
+        )
+        .is_value(PreferenceConstraintGoalDefinitions::preference(
+            Some("name".into()),
+            ConstraintGoalDefinition::AtEnd(gd_a.clone())
+        )));
     }
 }

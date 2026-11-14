@@ -1,57 +1,33 @@
-//! Provides parsers for assignment operations.
+//! Provides parsers for timed assignment operators.
 
-use nom::branch::alt;
-use nom::bytes::complete::tag_no_case;
-use nom::combinator::value;
-use nom::Parser;
-
-use crate::parsers::{ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::word;
 use crate::types::assign_op_t::names;
 use crate::types::TimedAssignOperator;
 
-/// Parses an assignment operation, i.e. `increase | decrease`.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_assign_op_t, Span, UnwrapValue};
-/// # use pddl::{TimedAssignOperator};
-/// assert!(parse_assign_op_t(Span::new("increase")).is_value(TimedAssignOperator::Increase));
-/// assert!(parse_assign_op_t(Span::new("decrease")).is_value(TimedAssignOperator::Decrease));
-///```
-pub fn parse_assign_op_t<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedAssignOperator> {
-    alt((
-        value(TimedAssignOperator::Increase, tag_no_case(names::INCREASE)),
-        value(TimedAssignOperator::Decrease, tag_no_case(names::DECREASE)),
-    ))
-    .parse(input.into())
+/// Parses a timed assignment operator, ignoring case.
+pub(crate) fn parse_assign_op_t(node: &Node) -> R<TimedAssignOperator> {
+    word(
+        node,
+        &[
+            (names::INCREASE, TimedAssignOperator::Increase),
+            (names::DECREASE, TimedAssignOperator::Decrease),
+        ],
+    )
 }
 
-impl crate::parsers::Parser for TimedAssignOperator {
-    type Item = TimedAssignOperator;
-
-    /// Parses an assignment operation.
-    ///
-    /// ## Example
-    /// ```
-    /// # use pddl::{TimedAssignOperator, Parser};
-    /// let (_, value) = TimedAssignOperator::parse("increase").unwrap();
-    /// assert_eq!(value, TimedAssignOperator::Increase);
-    ///```
-    ///
-    /// ## See also
-    /// See [`parse_assign_op_t`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_assign_op_t(input)
-    }
-}
+crate::parsers::impl_parser!(TimedAssignOperator => parse_assign_op_t);
 
 #[cfg(test)]
 mod tests {
+    use crate::parsers::UnwrapValue;
     use crate::{Parser, TimedAssignOperator};
 
     #[test]
     fn test_parse() {
-        let (_, value) = TimedAssignOperator::parse("increase").unwrap();
-        assert_eq!(value, TimedAssignOperator::Increase);
+        assert!(TimedAssignOperator::from_str("increase").is_value(TimedAssignOperator::Increase));
+        assert!(TimedAssignOperator::from_str("assign").is_err());
+        assert!(TimedAssignOperator::from_str("(increase)").is_err());
     }
 }

@@ -68,12 +68,11 @@ impl FromIterator<PrimitiveEffect> for EffectCondition {
 #[cfg(all(test, feature = "parser"))]
 mod tests {
     use super::*;
-    use crate::parsers::Span;
     use crate::Parser;
 
     #[test]
     fn flatten_with_single_element_works() {
-        let (_, effect_a) = PrimitiveEffect::parse(Span::new("(= x y)")).unwrap();
+        let effect_a = PrimitiveEffect::from_str("(= x y)").unwrap();
 
         let mut iter = EffectCondition::new(effect_a).into_iter();
         assert!(iter.next().is_some());
@@ -82,8 +81,8 @@ mod tests {
 
     #[test]
     fn flatten_with_many_elements_works() {
-        let (_, effect_a) = PrimitiveEffect::parse(Span::new("(= x y)")).unwrap();
-        let (_, effect_b) = PrimitiveEffect::parse(Span::new("(assign fun-sym 1.23)")).unwrap();
+        let effect_a = PrimitiveEffect::from_str("(= x y)").unwrap();
+        let effect_b = PrimitiveEffect::from_str("(assign fun-sym 1.23)").unwrap();
 
         let mut iter = EffectCondition::from_iter([effect_a, effect_b]).into_iter();
         assert!(iter.next().is_some());

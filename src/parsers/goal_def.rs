@@ -1,64 +1,45 @@
-//! Provides parsers for pre-GD goal definitions.
+//! Provides parsers for problem goal definitions.
 
-use crate::parsers::{parse_pre_gd, prefix_expr, ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{parse_pre_gd, prefix};
 use crate::types::ProblemGoalDefinition;
-use nom::combinator::map;
-use nom::Parser;
 
-/// Parses pre-GD goal definitions.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_problem_goal_def, preamble::*};
-/// # use pddl::{AtomicFormula, GoalDefinition, ProblemGoalDefinition, PreferenceGoalDefinition, PreconditionGoalDefinition, Term};
-/// let input = "(:goal (= x y))";
-/// assert!(parse_problem_goal_def(input).is_value(
-///     ProblemGoalDefinition::from(
-///         PreconditionGoalDefinition::Preference(
-///             PreferenceGoalDefinition::Goal(
-///                 GoalDefinition::AtomicFormula(
-///                     AtomicFormula::new_equality(
-///                         Term::Name("x".into()),
-///                         Term::Name("y".into())
-///                     )
-///                 )
-///             )
-///         )
-///     )
-/// ));
-/// ```
-pub fn parse_problem_goal_def<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, ProblemGoalDefinition> {
-    map(
-        prefix_expr(":goal", parse_pre_gd),
-        ProblemGoalDefinition::new,
-    )
-    .parse(input.into())
+/// Parses a problem goal definition, i.e. `(:goal <pre-GD>)`.
+pub(crate) fn parse_problem_goal_def(node: &Node) -> R<ProblemGoalDefinition> {
+    prefix(node, ":goal", |args| {
+        parse_pre_gd(args.next()?).map(ProblemGoalDefinition::new)
+    })
 }
 
-impl crate::parsers::Parser for ProblemGoalDefinition {
-    type Item = ProblemGoalDefinition;
-
-    /// See [`parse_problem_goal_def`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_problem_goal_def(input)
-    }
-}
+crate::parsers::impl_parser!(ProblemGoalDefinition => parse_problem_goal_def);
 
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{
-        AtomicFormula, GoalDefinition, Parser, PreconditionGoalDefinition,
-        PreferenceGoalDefinition, ProblemGoalDefinition, Term,
-    };
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
         let input = "(:goal (= x y))";
         assert!(
-            ProblemGoalDefinition::parse(input).is_value(ProblemGoalDefinition::from(
+            ProblemGoalDefinition::from_str(input).is_value(ProblemGoalDefinition::from(
+                PreconditionGoalDefinition::Preference(PreferenceGoalDefinition::Goal(
+                    GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
+                        Term::Name("x".into()),
+                        Term::Name("y".into())
+                    ))
+                ))
+            ))
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        let input = "(:goal (= x y))";
+        assert!(
+            ProblemGoalDefinition::from_str(input).is_value(ProblemGoalDefinition::from(
                 PreconditionGoalDefinition::Preference(PreferenceGoalDefinition::Goal(
                     GoalDefinition::AtomicFormula(AtomicFormula::new_equality(
                         Term::Name("x".into()),

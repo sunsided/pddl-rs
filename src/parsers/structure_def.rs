@@ -1,81 +1,31 @@
-//! Provides parsers for domain structure definitions.
+//! Provides parsers for structure definitions.
 
-use nom::branch::alt;
-use nom::combinator::map;
-use nom::Parser;
-
-use crate::parsers::{parse_action_def, parse_da_def, parse_derived_predicate, ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{alt, parse_action_def, parse_da_def, parse_derived_predicate};
 use crate::types::StructureDef;
 
-/// Parses a domain structure definition.
-///
-/// ## Example
-///
-/// ```
-/// # use pddl::parsers::{parse_structure_def, preamble::*};
-/// # use pddl::{ActionDefinition, ActionSymbol, AtomicFormula, ConditionalEffect, Effects, GoalDefinition, Literal, PrimitiveEffect, Predicate, Preference, PreferenceGoalDefinition, PreconditionGoalDefinitions, StructureDef, Term, Variable};
-/// # use pddl::{Name, ToTyped, TypedList};
-/// let input = r#"(:action take-out
-///                     :parameters (?x - physob)
-///                     :precondition (not (= ?x B))
-///                     :effect (not (in ?x))
-///                 )"#;
-///
-/// let action = parse_structure_def(input);
-///
-/// assert!(action.is_value(
-///     StructureDef::action(ActionDefinition::new(
-///         ActionSymbol::from("take-out"),
-///         TypedList::from_iter([
-///             Variable::from("x").to_typed("physob")
-///         ]),
-///         PreconditionGoalDefinitions::preference(PreferenceGoalDefinition::from_gd(
-///             GoalDefinition::not(
-///                 GoalDefinition::atomic_formula(
-///                     AtomicFormula::equality(
-///                         Term::Variable(Variable::from("x")),
-///                         Term::Name(Name::new("B"))
-///                     )
-///                 )
-///             )
-///         )),
-///         Some(Effects::new(ConditionalEffect::new_primitive_effect(
-///             PrimitiveEffect::NotAtomicFormula(
-///                 AtomicFormula::predicate(
-///                     Predicate::from("in"),
-///                     vec![Term::Variable(Variable::from("x"))]
-///                 )
-///             )
-///         )))
-///     )
-/// )));
-/// ```
-pub fn parse_structure_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, StructureDef> {
-    let action = map(parse_action_def, StructureDef::new_action);
-    // :durative-actions
-    let durative = map(parse_da_def, StructureDef::new_durative_action);
-    // :derived-predicates
-    let derived = map(parse_derived_predicate, StructureDef::new_derived);
-    alt((derived, action, durative)).parse(input.into())
+/// Parses a structure definition, i.e. `<action-def> | <durative-action-def> | <derived-def>`.
+pub(crate) fn parse_structure_def(node: &Node) -> R<StructureDef> {
+    alt(
+        node,
+        &[
+            // :derived-predicates
+            &|n| parse_derived_predicate(n).map(StructureDef::new_derived),
+            &|n| parse_action_def(n).map(StructureDef::new_action),
+            // :durative-actions
+            &|n| parse_da_def(n).map(StructureDef::new_durative_action),
+        ],
+    )
 }
 
-impl crate::parsers::Parser for StructureDef {
-    type Item = StructureDef;
-
-    /// See [`parse_structure_def`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_structure_def(input)
-    }
-}
+crate::parsers::impl_parser!(StructureDef => parse_structure_def);
 
 #[cfg(test)]
 mod tests {
-    use crate::parsers::preamble::*;
-    use crate::{
-        ActionDefinition, ActionSymbol, AtomicFormula, ConditionalEffect, Effects, GoalDefinition,
-        Name, PreconditionGoalDefinitions, Predicate, PreferenceGoalDefinition, PrimitiveEffect,
-        StructureDef, Term, ToTyped, TypedList, Variable,
-    };
+    use crate::parsers::UnwrapValue;
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
@@ -85,7 +35,35 @@ mod tests {
                              :effect (not (in ?x))
                          )"#;
 
-        let action = StructureDef::parse(input);
+        let action = StructureDef::from_str(input);
+
+        assert!(action.is_value(StructureDef::action(ActionDefinition::new(
+            ActionSymbol::from("take-out"),
+            TypedList::from_iter([Variable::from("x").to_typed("physob")]),
+            PreconditionGoalDefinitions::preference(PreferenceGoalDefinition::from_gd(
+                GoalDefinition::not(GoalDefinition::atomic_formula(AtomicFormula::equality(
+                    Term::Variable(Variable::from("x")),
+                    Term::Name(Name::new("B"))
+                )))
+            )),
+            Some(Effects::new(ConditionalEffect::new_primitive_effect(
+                PrimitiveEffect::NotAtomicFormula(AtomicFormula::predicate(
+                    Predicate::from("in"),
+                    vec![Term::Variable(Variable::from("x"))]
+                ))
+            )))
+        ))));
+    }
+
+    #[test]
+    fn doc_example_0() {
+        let input = r#"(:action take-out
+                            :parameters (?x - physob)
+                            :precondition (not (= ?x B))
+                            :effect (not (in ?x))
+                        )"#;
+
+        let action = StructureDef::from_str(input);
 
         assert!(action.is_value(StructureDef::action(ActionDefinition::new(
             ActionSymbol::from("take-out"),

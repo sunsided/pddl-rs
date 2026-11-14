@@ -1,73 +1,63 @@
-//! Provides parsers for literals.
+//! Provides the [`literal`] rule.
 
-use nom::branch::alt;
-use nom::combinator::map;
-use nom::Parser;
-
-use crate::parsers::prefix_expr;
-use crate::parsers::{atomic_formula, NomError, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{alt, atomic_formula, prefix};
 use crate::types::Literal;
 
-/// Parser combinator that parses a literal, i.e. `<atomic formula(t)> | (not <atomic formula(t)>)`.
-///
-/// ## Example
-/// ```
-/// # use nom::character::complete::alpha1;
-/// # use nom::Parser;
-/// # use pddl::parsers::{literal, parse_name, preamble::*};
-/// # use pddl::{AtomicFormula, EqualityAtomicFormula, PredicateAtomicFormula, Predicate, Literal};
-/// assert!(literal(parse_name).parse(Span::new("(= x y)")).is_value(
-///     Literal::AtomicFormula(
-///         AtomicFormula::Equality(
-///             EqualityAtomicFormula::new(
-///                 "x".into(),
-///                 "y".into()
-///             )
-///         )
-///     )
-/// ));
-/// assert!(literal(parse_name).parse(Span::new("(not (= x y))")).is_value(
-///     Literal::NotAtomicFormula(
-///         AtomicFormula::Equality(
-///             EqualityAtomicFormula::new(
-///                 "x".into(),
-///                 "y".into()
-///             )
-///         )
-///     )
-/// ));
-/// ```
-pub fn literal<'a, F, O>(
-    inner: F,
-) -> impl Parser<Span<'a>, Output = Literal<O>, Error = NomError<'a>>
-where
-    F: Clone + Parser<Span<'a>, Output = O, Error = NomError<'a>>,
-{
-    let is = map(atomic_formula(inner.clone()), |af| Literal::new(af));
-    let is_not = map(prefix_expr("not", atomic_formula(inner)), |af| {
-        Literal::new_not(af)
-    });
-
-    alt((is_not, is))
+/// Parses a literal, i.e. `<atomic formula(t)> | (not <atomic formula(t)>)`, with `inner` for each `t`.
+pub(crate) fn literal<'n, 'a, O>(
+    node: &'n Node<'a>,
+    inner: impl Fn(&'n Node<'a>) -> R<O>,
+) -> R<Literal<O>> {
+    alt(
+        node,
+        &[
+            &|n| {
+                prefix(n, "not", |args| atomic_formula(args.next()?, &inner)).map(Literal::new_not)
+            },
+            &|n| atomic_formula(n, &inner).map(Literal::new),
+        ],
+    )
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::parsers::{literal, parse_name, Span, UnwrapValue};
-    use crate::{AtomicFormula, EqualityAtomicFormula, Literal};
-    use nom::Parser;
+    use crate::parsers::UnwrapValue;
+    use crate::parsers::{literal, parse_name, parse_one};
+    use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(literal(parse_name)
-            .parse(Span::new("(= x y)"))
-            .is_value(Literal::AtomicFormula(AtomicFormula::Equality(
-                EqualityAtomicFormula::new("x".into(), "y".into())
-            ))));
-        assert!(literal(parse_name)
-            .parse(Span::new("(not (= x y))"))
-            .is_value(Literal::NotAtomicFormula(AtomicFormula::Equality(
-                EqualityAtomicFormula::new("x".into(), "y".into())
-            ))));
+        assert!(
+            parse_one("(= x y)", |n| literal(n, parse_name)).is_value(Literal::AtomicFormula(
+                AtomicFormula::Equality(EqualityAtomicFormula::new("x".into(), "y".into()))
+            ))
+        );
+        assert!(
+            parse_one("(not (= x y))", |n| literal(n, parse_name)).is_value(
+                Literal::NotAtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new(
+                    "x".into(),
+                    "y".into()
+                )))
+            )
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        assert!(
+            parse_one("(= x y)", |n| literal(n, parse_name)).is_value(Literal::AtomicFormula(
+                AtomicFormula::Equality(EqualityAtomicFormula::new("x".into(), "y".into()))
+            ))
+        );
+        assert!(
+            parse_one("(not (= x y))", |n| literal(n, parse_name)).is_value(
+                Literal::NotAtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new(
+                    "x".into(),
+                    "y".into()
+                )))
+            )
+        );
     }
 }

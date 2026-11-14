@@ -1,143 +1,83 @@
-//! Provides parsers for p-effects.
+//! Provides parsers for primitive effects.
 
-use crate::parsers::sep;
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
 use crate::parsers::{
-    atomic_formula, parse_assign_op, parse_f_exp, parse_f_head, parse_function_term, parse_term,
-    ParseResult, Span,
+    alt, atomic_formula, parens, parse_assign_op, parse_f_exp, parse_f_head, parse_function_term,
+    parse_term, prefix,
 };
-use crate::parsers::{parens, prefix_expr};
 use crate::types::PrimitiveEffect;
-use nom::branch::alt;
-use nom::bytes::complete::tag_no_case;
-use nom::combinator::map;
-use nom::sequence::{preceded, terminated};
-use nom::Parser;
 
-/// Parses p-effects.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_p_effect, preamble::*};
-/// # use pddl::{AssignOp, AtomicFormula, EqualityAtomicFormula, FluentExpression, FunctionHead, FunctionSymbol, FunctionTerm, PrimitiveEffect, Term};
-/// assert!(parse_p_effect("(= x y)").is_value(
-///     PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
-///         EqualityAtomicFormula::new(
-///             Term::Name("x".into()),
-///             Term::Name("y".into()))
-///         )
-///     )
-/// ));
-///
-/// assert!(parse_p_effect("(not (= ?a B))").is_value(
-///     PrimitiveEffect::NotAtomicFormula(AtomicFormula::Equality(
-///         EqualityAtomicFormula::new(
-///             Term::Variable("a".into()),
-///             Term::Name("B".into()))
-///         )
-///     )
-/// ));
-///
-/// assert!(parse_p_effect("(assign fun-sym 1.23)").is_value(
-///     PrimitiveEffect::numeric_fluent(
-///         AssignOp::Assign,
-///         FunctionHead::new(FunctionSymbol::string("fun-sym")),
-///         FluentExpression::number(1.23)
-///     )
-/// ));
-///
-/// assert!(parse_p_effect("(assign fun-sym 1.23)").is_value(
-///     PrimitiveEffect::numeric_fluent(
-///         AssignOp::Assign,
-///         FunctionHead::new(FunctionSymbol::string("fun-sym")),
-///         FluentExpression::number(1.23)
-///     )
-/// ));
-///
-/// assert!(parse_p_effect("(assign (fun-sym) undefined)").is_value(
-///     PrimitiveEffect::object_fluent(
-///         FunctionTerm::new(FunctionSymbol::string("fun-sym"), []),
-///         None
-///     )
-/// ));
-///
-/// assert!(parse_p_effect("(assign (fun-sym) something)").is_value(
-///     PrimitiveEffect::object_fluent(
-///         FunctionTerm::new(FunctionSymbol::string("fun-sym"), []),
-///         Some(Term::Name("something".into()))
-///     )
-/// ));
-/// ```
-pub fn parse_p_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PrimitiveEffect> {
-    let is = map(atomic_formula(parse_term), PrimitiveEffect::new);
-    let is_not = map(prefix_expr("not", atomic_formula(parse_term)), |af| {
-        PrimitiveEffect::not(af)
-    });
-
-    // :numeric-fluents
-    let numeric = map(
-        parens((
-            parse_assign_op,
-            preceded(sep, parse_f_head),
-            preceded(sep, parse_f_exp),
-        )),
-        |(op, head, exp)| PrimitiveEffect::numeric_fluent(op, head, exp),
-    );
-
-    // :object-fluents
-    let object_undefined = map(
-        prefix_expr(
-            "assign",
-            terminated(parse_function_term, (sep, tag_no_case("undefined"))),
-        ),
-        |f_term| PrimitiveEffect::object_fluent(f_term, None),
-    );
-    let object = map(
-        prefix_expr("assign", (parse_function_term, preceded(sep, parse_term))),
-        |(f_term, term)| PrimitiveEffect::object_fluent(f_term, Some(term)),
-    );
-
-    alt((is_not, object_undefined, object, numeric, is)).parse(input.into())
+/// Parses a primitive effect, i.e. `<atomic formula(term)> | (not <atomic formula(term)>)
+/// | (<assign-op> <f-head> <f-exp>) | (assign <function-term> <term>)
+/// | (assign <function-term> undefined)`.
+pub(crate) fn parse_p_effect(node: &Node) -> R<PrimitiveEffect> {
+    alt(
+        node,
+        &[
+            &|n| {
+                prefix(n, "not", |args| atomic_formula(args.next()?, parse_term))
+                    .map(PrimitiveEffect::not)
+            },
+            &|n| {
+                prefix(n, "assign", |args| {
+                    let term = parse_function_term(args.next()?)?;
+                    args.expect("undefined")?;
+                    Ok(term)
+                })
+                .map(|term| PrimitiveEffect::object_fluent(term, None))
+            },
+            &|n| {
+                prefix(n, "assign", |args| {
+                    Ok((
+                        parse_function_term(args.next()?)?,
+                        parse_term(args.next()?)?,
+                    ))
+                })
+                .map(|(f_term, term)| PrimitiveEffect::object_fluent(f_term, Some(term)))
+            },
+            &|n| {
+                parens(n, |args| {
+                    Ok((
+                        parse_assign_op(args.next()?)?,
+                        parse_f_head(args.next()?)?,
+                        parse_f_exp(args.next()?)?,
+                    ))
+                })
+                .map(|(op, head, exp)| PrimitiveEffect::numeric_fluent(op, head, exp))
+            },
+            &|n| atomic_formula(n, parse_term).map(PrimitiveEffect::new),
+        ],
+    )
 }
 
-impl crate::parsers::Parser for PrimitiveEffect {
-    type Item = PrimitiveEffect;
-
-    /// See [`parse_p_effect`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_p_effect(input)
-    }
-}
+crate::parsers::impl_parser!(PrimitiveEffect => parse_p_effect);
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::parsers::UnwrapValue;
-    use crate::{
-        AssignOp, AtomicFormula, EqualityAtomicFormula, FluentExpression, FunctionHead,
-        FunctionSymbol, FunctionTerm, Parser, Term,
-    };
+
+    use crate::*;
 
     #[test]
     fn it_works() {
         let input = "(can-move ?from-waypoint ?to-waypoint)";
-        let (_, _effect) = parse_p_effect(Span::new(input)).unwrap();
+        let _effect = PrimitiveEffect::from_str(input).unwrap();
     }
 
     #[test]
     fn not_works() {
         let input = "(not (at B ?m))";
-        let mut is_not = map(prefix_expr("not", atomic_formula(parse_term)), |af| {
-            PrimitiveEffect::not(af)
-        });
-
-        let result: Result<(_, _), _> = nom::Parser::parse(&mut is_not, input.into());
-        assert!(result.is_ok());
+        assert!(matches!(
+            PrimitiveEffect::from_str(input),
+            Ok(PrimitiveEffect::NotAtomicFormula(_))
+        ));
     }
 
     #[test]
     fn test_parse() {
         assert!(
-            PrimitiveEffect::parse("(= x y)").is_value(PrimitiveEffect::AtomicFormula(
+            PrimitiveEffect::from_str("(= x y)").is_value(PrimitiveEffect::AtomicFormula(
                 AtomicFormula::Equality(EqualityAtomicFormula::new(
                     Term::Name("x".into()),
                     Term::Name("y".into())
@@ -145,14 +85,14 @@ mod tests {
             ))
         );
 
-        assert!(PrimitiveEffect::parse("(not (= ?a B))").is_value(
+        assert!(PrimitiveEffect::from_str("(not (= ?a B))").is_value(
             PrimitiveEffect::NotAtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new(
                 Term::Variable("a".into()),
                 Term::Name("B".into())
             )))
         ));
 
-        assert!(PrimitiveEffect::parse("(assign fun-sym 1.23)").is_value(
+        assert!(PrimitiveEffect::from_str("(assign fun-sym 1.23)").is_value(
             PrimitiveEffect::numeric_fluent(
                 AssignOp::Assign,
                 FunctionHead::new(FunctionSymbol::string("fun-sym")),
@@ -160,7 +100,7 @@ mod tests {
             )
         ));
 
-        assert!(PrimitiveEffect::parse("(assign fun-sym 1.23)").is_value(
+        assert!(PrimitiveEffect::from_str("(assign fun-sym 1.23)").is_value(
             PrimitiveEffect::numeric_fluent(
                 AssignOp::Assign,
                 FunctionHead::new(FunctionSymbol::string("fun-sym")),
@@ -169,7 +109,7 @@ mod tests {
         ));
 
         assert!(
-            PrimitiveEffect::parse("(assign (fun-sym) undefined)").is_value(
+            PrimitiveEffect::from_str("(assign (fun-sym) undefined)").is_value(
                 PrimitiveEffect::object_fluent(
                     FunctionTerm::new(FunctionSymbol::string("fun-sym"), []),
                     None
@@ -178,7 +118,60 @@ mod tests {
         );
 
         assert!(
-            PrimitiveEffect::parse("(assign (fun-sym) something)").is_value(
+            PrimitiveEffect::from_str("(assign (fun-sym) something)").is_value(
+                PrimitiveEffect::object_fluent(
+                    FunctionTerm::new(FunctionSymbol::string("fun-sym"), []),
+                    Some(Term::Name("something".into()))
+                )
+            )
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        assert!(
+            PrimitiveEffect::from_str("(= x y)").is_value(PrimitiveEffect::AtomicFormula(
+                AtomicFormula::Equality(EqualityAtomicFormula::new(
+                    Term::Name("x".into()),
+                    Term::Name("y".into())
+                ))
+            ))
+        );
+
+        assert!(PrimitiveEffect::from_str("(not (= ?a B))").is_value(
+            PrimitiveEffect::NotAtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new(
+                Term::Variable("a".into()),
+                Term::Name("B".into())
+            )))
+        ));
+
+        assert!(PrimitiveEffect::from_str("(assign fun-sym 1.23)").is_value(
+            PrimitiveEffect::numeric_fluent(
+                AssignOp::Assign,
+                FunctionHead::new(FunctionSymbol::string("fun-sym")),
+                FluentExpression::number(1.23)
+            )
+        ));
+
+        assert!(PrimitiveEffect::from_str("(assign fun-sym 1.23)").is_value(
+            PrimitiveEffect::numeric_fluent(
+                AssignOp::Assign,
+                FunctionHead::new(FunctionSymbol::string("fun-sym")),
+                FluentExpression::number(1.23)
+            )
+        ));
+
+        assert!(
+            PrimitiveEffect::from_str("(assign (fun-sym) undefined)").is_value(
+                PrimitiveEffect::object_fluent(
+                    FunctionTerm::new(FunctionSymbol::string("fun-sym"), []),
+                    None
+                )
+            )
+        );
+
+        assert!(
+            PrimitiveEffect::from_str("(assign (fun-sym) something)").is_value(
                 PrimitiveEffect::object_fluent(
                     FunctionTerm::new(FunctionSymbol::string("fun-sym"), []),
                     Some(Term::Name("something".into()))

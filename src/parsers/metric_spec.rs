@@ -1,56 +1,42 @@
-//! Provides parsers for metric specification.
+//! Provides parsers for metric specifications.
 
-use nom::combinator::map;
-use nom::sequence::preceded;
-use nom::Parser;
-
-use crate::parsers::sep;
-use crate::parsers::{parse_metric_f_exp, parse_optimization, prefix_expr, ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{parse_metric_f_exp, parse_optimization, prefix};
 use crate::types::MetricSpec;
 
-/// Parses a metric specification.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_problem_metric_spec, preamble::*};
-/// # use pddl::{MetricFluentExpression, MetricSpec, Optimization};
-/// assert!(parse_problem_metric_spec("(:metric minimize total-time)").is_value(
-///     MetricSpec::new(
-///         Optimization::Minimize,
-///         MetricFluentExpression::TotalTime
-///     )
-/// ));
-///```
-pub fn parse_problem_metric_spec<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, MetricSpec> {
-    // :numeric-fluents
-    map(
-        prefix_expr(
-            ":metric",
-            (parse_optimization, preceded(sep, parse_metric_f_exp)),
-        ),
-        |(optimization, exp)| MetricSpec::new(optimization, exp),
-    )
-    .parse(input.into())
+/// Parses a metric specification, i.e. `(:metric <optimization> <metric-f-exp>)`.
+pub(crate) fn parse_problem_metric_spec(node: &Node) -> R<MetricSpec> {
+    prefix(node, ":metric", |args| {
+        Ok(MetricSpec::new(
+            parse_optimization(args.next()?)?,
+            parse_metric_f_exp(args.next()?)?,
+        ))
+    })
 }
 
-impl crate::parsers::Parser for MetricSpec {
-    type Item = MetricSpec;
-
-    /// See [`parse_problem_metric_spec`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_problem_metric_spec(input)
-    }
-}
+crate::parsers::impl_parser!(MetricSpec => parse_problem_metric_spec);
 
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{MetricFluentExpression, MetricSpec, Optimization, Parser};
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
         assert!(
-            MetricSpec::parse("(:metric minimize total-time)").is_value(MetricSpec::new(
+            MetricSpec::from_str("(:metric minimize total-time)").is_value(MetricSpec::new(
+                Optimization::Minimize,
+                MetricFluentExpression::TotalTime
+            ))
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        assert!(
+            MetricSpec::from_str("(:metric minimize total-time)").is_value(MetricSpec::new(
                 Optimization::Minimize,
                 MetricFluentExpression::TotalTime
             ))

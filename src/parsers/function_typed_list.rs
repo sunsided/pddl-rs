@@ -1,107 +1,67 @@
-use nom::character::complete::char;
-use nom::combinator::map;
-use nom::multi::many0;
-use nom::sequence::preceded;
-use nom::Parser;
+//! Provides the [`function_typed_list`] rule.
 
-use crate::parsers::{
-    parse_type, space_separated_list0, space_separated_list1, ws, NomError, Span,
-};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::typed_list::typed_groups;
+use crate::parsers::Args;
 use crate::types::{FunctionType, FunctionTyped, FunctionTypedList};
 
-/// Parses a typed list, i.e. `x* | x⁺ - <type> <typed-list (x)>`.
-///
-/// ## Example
-/// ```
-/// # use nom::Parser;
-/// # use pddl::parsers::{function_typed_list, parse_atomic_function_skeleton, preamble::*};
-/// # use pddl::{AtomicFunctionSkeleton, FunctionSymbol, FunctionTyped, FunctionTypedList, Variable};
-/// # use pddl::{Type, Typed, TypedList};
-/// // Single implicitly typed element.
-/// assert!(function_typed_list(parse_atomic_function_skeleton).parse(
-///     "(battery-amount ?r - rover)".into()
-/// )
-/// .is_value(FunctionTypedList::from_iter([FunctionTyped::number(
-///     AtomicFunctionSkeleton::new(
-///         FunctionSymbol::string("battery-amount"),
-///         TypedList::from_iter([
-///             Typed::new(
-///                 Variable::from("r"),
-///                 Type::Exactly("rover".into())
-///             )
-///         ])
-///     )
-/// )])));
-/// ```
-pub fn function_typed_list<'a, F, O>(
-    inner: F,
-) -> impl Parser<Span<'a>, Output = FunctionTypedList<O>, Error = NomError<'a>>
-where
-    F: Clone + Parser<Span<'a>, Output = O, Error = NomError<'a>>,
-{
-    // `x*`
-    let implicitly_typed = map(inner.clone(), |o| FunctionTyped::number(o));
-    let implicitly_typed_list = space_separated_list0(implicitly_typed);
-
-    // `x⁺ - <type>`
-    let explicitly_typed = map(
-        (
-            space_separated_list1(inner.clone()),
-            preceded(ws(char('-')), parse_type),
-        ),
-        |(os, t)| {
-            os.into_iter()
-                .map(move |o| FunctionTyped::new(o, FunctionType::new(t.clone())))
-                .collect::<Vec<_>>()
-        },
-    );
-
-    let typed_list_choice = (
-        map(many0(explicitly_typed), |vec| {
-            vec.into_iter().flatten().collect::<Vec<_>>()
-        }),
-        implicitly_typed_list,
-    );
-
-    map(typed_list_choice, |(mut explicit, mut implicit)| {
-        explicit.append(&mut implicit);
-        FunctionTypedList::new(explicit)
-    })
+/// Parses the remaining `args` as a function typed list, i.e.
+/// `x* | x⁺ - <function-type> <function-typed-list (x)>`; untyped elements are `number`.
+pub(crate) fn function_typed_list<'n, 'a, O>(
+    args: &mut Args<'n, 'a>,
+    inner: impl Fn(&'n Node<'a>) -> R<O>,
+) -> R<FunctionTypedList<O>> {
+    let typed = |o, t| FunctionTyped::new(o, FunctionType::new(t));
+    typed_groups(args, inner, typed, FunctionTyped::number).map(FunctionTypedList::new)
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::parsers::{function_typed_list, parse_atomic_function_skeleton, UnwrapValue};
-    use crate::{
-        AtomicFunctionSkeleton, FunctionSymbol, FunctionTyped, FunctionTypedList, Type, Typed,
-        TypedList, Variable,
-    };
-    use nom::Parser;
+    use super::*;
+    use crate::parsers::{parens, parse_atomic_function_skeleton, parse_one};
+    use crate::{AtomicFunctionSkeleton, FunctionSymbol, Type, Typed, TypedList, Variable};
+
+    fn parse(input: &str) -> FunctionTypedList<AtomicFunctionSkeleton> {
+        parse_one(input, |node| {
+            parens(node, |args| {
+                function_typed_list(args, parse_atomic_function_skeleton)
+            })
+        })
+        .unwrap()
+    }
 
     #[test]
     fn test_parse() {
-        assert!(function_typed_list(parse_atomic_function_skeleton)
-            .parse("(battery-amount ?r - rover)".into())
-            .is_value(FunctionTypedList::from_iter([FunctionTyped::number(
-                AtomicFunctionSkeleton::new(
-                    FunctionSymbol::string("battery-amount"),
-                    TypedList::from_iter([Typed::new(
-                        Variable::from("r"),
-                        Type::Exactly("rover".into())
-                    )])
-                )
-            )])));
+        assert_eq!(
+            parse("((battery-amount ?r - rover))"),
+            FunctionTypedList::from_iter([FunctionTyped::number(AtomicFunctionSkeleton::new(
+                FunctionSymbol::string("battery-amount"),
+                TypedList::from_iter([Typed::new(
+                    Variable::from("r"),
+                    Type::Exactly("rover".into())
+                )])
+            ))])
+        );
 
-        assert!(function_typed_list(parse_atomic_function_skeleton)
-            .parse("(move ?from ?to - location)".into())
-            .is_value(FunctionTypedList::from_iter([FunctionTyped::number(
-                AtomicFunctionSkeleton::new(
-                    FunctionSymbol::string("move"),
-                    TypedList::from_iter([
-                        Typed::new(Variable::from("from"), Type::Exactly("location".into())),
-                        Typed::new(Variable::from("to"), Type::Exactly("location".into()))
-                    ])
-                )
-            )])));
+        assert_eq!(
+            parse("((move ?from ?to - location) - number (f))"),
+            FunctionTypedList::from_iter([
+                FunctionTyped::new(
+                    AtomicFunctionSkeleton::new(
+                        FunctionSymbol::string("move"),
+                        TypedList::from_iter([
+                            Typed::new(Variable::from("from"), Type::Exactly("location".into())),
+                            Typed::new(Variable::from("to"), Type::Exactly("location".into()))
+                        ])
+                    ),
+                    FunctionType::new(Type::Exactly("number".into()))
+                ),
+                FunctionTyped::number(AtomicFunctionSkeleton::new(
+                    FunctionSymbol::string("f"),
+                    TypedList::default()
+                )),
+            ])
+        );
     }
 }

@@ -3,10 +3,10 @@
 use pddl::{Domain, Parser, Pretty, Problem};
 
 fn round_trip_domain(input: &str, width: usize, label: &str) {
-    let (_, original) = Domain::parse(input).unwrap_or_else(|_| panic!("{label}: parse original"));
+    let original = Domain::from_str(input).unwrap_or_else(|_| panic!("{label}: parse original"));
     let printed = original.pretty(width).to_string();
-    let (_, reparsed) =
-        Domain::parse(&*printed).unwrap_or_else(|e| panic!("{label}: parse printed output at width {width}\n--- Printed ---\n{printed}\n--- Error ---\n{e:?}"));
+    let reparsed =
+        Domain::from_str(&printed).unwrap_or_else(|e| panic!("{label}: parse printed output at width {width}\n--- Printed ---\n{printed}\n--- Error ---\n{e:?}"));
     assert_eq!(
         original, reparsed,
         "{label}: AST mismatch at width {width}\n--- Printed ---\n{printed}"
@@ -14,10 +14,10 @@ fn round_trip_domain(input: &str, width: usize, label: &str) {
 }
 
 fn round_trip_problem(input: &str, width: usize, label: &str) {
-    let (_, original) = Problem::parse(input).unwrap_or_else(|_| panic!("{label}: parse original"));
+    let original = Problem::from_str(input).unwrap_or_else(|_| panic!("{label}: parse original"));
     let printed = original.pretty(width).to_string();
-    let (_, reparsed) =
-        Problem::parse(&*printed).unwrap_or_else(|e| panic!("{label}: parse printed output at width {width}\n--- Printed ---\n{printed}\n--- Error ---\n{e:?}"));
+    let reparsed =
+        Problem::from_str(&printed).unwrap_or_else(|e| panic!("{label}: parse printed output at width {width}\n--- Printed ---\n{printed}\n--- Error ---\n{e:?}"));
     assert_eq!(
         original, reparsed,
         "{label}: AST mismatch at width {width}\n--- Printed ---\n{printed}"

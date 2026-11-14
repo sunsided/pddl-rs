@@ -1,57 +1,35 @@
 //! Provides parsers for variables.
 
-use nom::bytes::complete::tag_no_case;
-use nom::combinator::map;
-use nom::sequence::preceded;
-use nom::Parser;
+use crate::parsers::error::R;
+use crate::parsers::is_name;
+use crate::parsers::sexpr::Node;
+use crate::types::{Name, Variable};
 
-use crate::parsers::{parse_name, ParseResult, Span};
-use crate::types::Variable;
-
-/// Parses a variable, i.e. `?<name>` and returns its name.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_variable, preamble::*};
-/// assert!(parse_variable(Span::new("?abcde")).is_value("abcde".into()));
-/// assert!(parse_variable(Span::new("?a-1_2")).is_value("a-1_2".into()));
-/// assert!(parse_variable(Span::new("?Z01")).is_value("Z01".into()));
-/// assert!(parse_variable(Span::new("?x-_-_")).is_value("x-_-_".into()));
-///
-/// assert!(parse_variable(Span::new("abcde")).is_err());
-/// assert!(parse_variable(Span::new("?-")).is_err());
-/// assert!(parse_variable(Span::new("?1")).is_err());
-///```
-pub fn parse_variable<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Variable> {
-    map(preceded(tag_no_case("?"), parse_name), Variable::from).parse(input.into())
-}
-
-impl crate::parsers::Parser for Variable {
-    type Item = Variable;
-
-    /// Parses a variable.
-    ///
-    /// ## Example
-    /// ```
-    /// # use pddl::{Variable, Parser};
-    /// let (_, value) = Variable::parse("?abcde").unwrap();
-    /// assert_eq!(value, "abcde".into());
-    ///```
-    ///
-    /// ## See also
-    /// See [`parse_variable`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_variable(input)
+/// Parses a variable, i.e. `?<name>`.
+pub(crate) fn parse_variable(node: &Node) -> R<Variable> {
+    match node.atom().and_then(|text| text.strip_prefix('?')) {
+        Some(name) if is_name(name) => Ok(Variable::from(Name::from(name))),
+        _ => Err(node.error()),
     }
 }
 
+crate::parsers::impl_parser!(Variable => parse_variable);
+
 #[cfg(test)]
 mod tests {
+    use crate::parsers::UnwrapValue;
     use crate::{Parser, Variable};
 
     #[test]
     fn test_parse() {
-        let (_, value) = Variable::parse("?abcde").unwrap();
-        assert_eq!(value, "abcde".into());
+        assert!(Variable::from_str("?abcde").is_value("abcde".into()));
+        assert!(Variable::from_str("?a-1_2").is_value("a-1_2".into()));
+        assert!(Variable::from_str("?Z01").is_value("Z01".into()));
+        assert!(Variable::from_str("?x-_-_").is_value("x-_-_".into()));
+        assert!(Variable::from_str("abcde").is_err());
+        assert!(Variable::from_str("?-").is_err());
+        assert!(Variable::from_str("?1").is_err());
+        assert!(Variable::from_str("?").is_err());
+        assert!(Variable::from_str("? x").is_err());
     }
 }

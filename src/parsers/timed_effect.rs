@@ -1,123 +1,69 @@
 //! Provides parsers for timed effects.
 
-use crate::parsers::sep;
-use crate::parsers::{parens, prefix_expr, ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
 use crate::parsers::{
-    parse_assign_op_t, parse_effect_condition, parse_f_assign_da, parse_f_exp_t, parse_f_head,
-    parse_time_specifier,
+    alt, parens, parse_assign_op_t, parse_effect_condition, parse_f_assign_da, parse_f_exp_t,
+    parse_f_head, parse_time_specifier, prefix,
 };
 use crate::types::TimedEffect;
-use nom::branch::alt;
-use nom::combinator::map;
-use nom::sequence::preceded;
-use nom::Parser;
 
-/// Parses timed effects.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_timed_effect, preamble::*};
-/// # use pddl::{AssignOp, TimedAssignOperator, AtomicFormula, EffectCondition, EqualityAtomicFormula, DurativeActionFunctionAssignment, DurativeActionFluentExpression, FunctionHead, PrimitiveEffect, Term, TimedEffect, TimedFluentExpression, TimeSpecifier};
-/// # use pddl::DurativeActionFluentExpression::Duration;
-/// assert!(parse_timed_effect("(at start (= x y))").is_value(
-///     TimedEffect::conditional(
-///         TimeSpecifier::Start,
-///         EffectCondition::new(
-///             PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
-///                 EqualityAtomicFormula::new(
-///                     Term::Name("x".into()),
-///                     Term::Name("y".into()))
-///                 )
-///             )
-///         )
-///     )
-/// ));
-///
-/// assert!(parse_timed_effect("(at end (assign fun-sym ?duration))").is_value(
-///     TimedEffect::fluent(
-///         TimeSpecifier::End,
-///         DurativeActionFunctionAssignment::new(
-///             AssignOp::Assign,
-///             FunctionHead::Simple("fun-sym".into()),
-///             DurativeActionFluentExpression::Duration
-///         )
-///     )
-/// ));
-///
-/// assert!(parse_timed_effect("(increase fun-sym #t)").is_value(
-///     TimedEffect::continuous(
-///         TimedAssignOperator::Increase,
-///         FunctionHead::Simple("fun-sym".into()),
-///         TimedFluentExpression::Now
-///     )
-/// ));
-/// ```
-pub fn parse_timed_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedEffect> {
-    let cond = map(
-        prefix_expr(
-            "at",
-            (parse_time_specifier, preceded(sep, parse_effect_condition)),
-        ),
-        TimedEffect::from,
-    );
-
-    // :numeric-fluents
-    let fluent = map(
-        prefix_expr(
-            "at",
-            (parse_time_specifier, preceded(sep, parse_f_assign_da)),
-        ),
-        TimedEffect::from,
-    );
-
-    // :continuous-effects + :numeric-fluents
-    let continuous = map(
-        parens((
-            parse_assign_op_t,
-            preceded(sep, parse_f_head),
-            preceded(sep, parse_f_exp_t),
-        )),
-        TimedEffect::from,
-    );
-
-    alt((fluent, cond, continuous)).parse(input.into())
+/// Parses a timed effect, i.e. `(at <time-specifier> <f-assign-da>)
+/// | (at <time-specifier> <cond-effect>) | (<assign-op-t> <f-head> <f-exp-t>)`.
+pub(crate) fn parse_timed_effect(node: &Node) -> R<TimedEffect> {
+    alt(
+        node,
+        &[
+            &|n| {
+                prefix(n, "at", |args| {
+                    Ok((
+                        parse_time_specifier(args.next()?)?,
+                        parse_f_assign_da(args.next()?)?,
+                    ))
+                })
+                .map(TimedEffect::from)
+            },
+            &|n| {
+                prefix(n, "at", |args| {
+                    Ok((
+                        parse_time_specifier(args.next()?)?,
+                        parse_effect_condition(args.next()?)?,
+                    ))
+                })
+                .map(TimedEffect::from)
+            },
+            &|n| {
+                parens(n, |args| {
+                    Ok((
+                        parse_assign_op_t(args.next()?)?,
+                        parse_f_head(args.next()?)?,
+                        parse_f_exp_t(args.next()?)?,
+                    ))
+                })
+                .map(TimedEffect::from)
+            },
+        ],
+    )
 }
 
-/// Alias for [`parse_timed_effect`].
-#[deprecated(since = "0.2.0", note = "Use `parse_timed_effect` instead")]
-pub fn parse_timed_eff<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedEffect> {
-    parse_timed_effect(input)
-}
-
-impl crate::parsers::Parser for TimedEffect {
-    type Item = TimedEffect;
-
-    /// See [`parse_timed_effect`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_timed_effect(input)
-    }
-}
+crate::parsers::impl_parser!(TimedEffect => parse_timed_effect);
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::parsers::UnwrapValue;
-    use crate::{
-        AssignOp, AtomicFormula, DurativeActionFluentExpression, DurativeActionFunctionAssignment,
-        EffectCondition, EqualityAtomicFormula, FunctionHead, Parser, PrimitiveEffect, Term,
-        TimeSpecifier, TimedAssignOperator, TimedFluentExpression,
-    };
+
+    use crate::*;
 
     #[test]
     fn it_works() {
         let input = "(at end (increase (distance-travelled) 5))";
-        let (_, _effect) = parse_timed_effect(Span::new(input)).unwrap();
+        let _effect = TimedEffect::from_str(input).unwrap();
     }
 
     #[test]
     fn test_parse() {
         assert!(
-            TimedEffect::parse("(at start (= x y))").is_value(TimedEffect::conditional(
+            TimedEffect::from_str("(at start (= x y))").is_value(TimedEffect::conditional(
                 TimeSpecifier::Start,
                 EffectCondition::new(PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
                     EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
@@ -126,7 +72,7 @@ mod tests {
         );
 
         assert!(
-            TimedEffect::parse("(at end (assign fun-sym ?duration))").is_value(
+            TimedEffect::from_str("(at end (assign fun-sym ?duration))").is_value(
                 TimedEffect::fluent(
                     TimeSpecifier::End,
                     DurativeActionFunctionAssignment::new(
@@ -139,7 +85,40 @@ mod tests {
         );
 
         assert!(
-            TimedEffect::parse("(increase fun-sym #t)").is_value(TimedEffect::continuous(
+            TimedEffect::from_str("(increase fun-sym #t)").is_value(TimedEffect::continuous(
+                TimedAssignOperator::Increase,
+                FunctionHead::Simple("fun-sym".into()),
+                TimedFluentExpression::Now
+            ))
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        assert!(
+            TimedEffect::from_str("(at start (= x y))").is_value(TimedEffect::conditional(
+                TimeSpecifier::Start,
+                EffectCondition::new(PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
+                    EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
+                )))
+            ))
+        );
+
+        assert!(
+            TimedEffect::from_str("(at end (assign fun-sym ?duration))").is_value(
+                TimedEffect::fluent(
+                    TimeSpecifier::End,
+                    DurativeActionFunctionAssignment::new(
+                        AssignOp::Assign,
+                        FunctionHead::Simple("fun-sym".into()),
+                        DurativeActionFluentExpression::Duration
+                    )
+                )
+            )
+        );
+
+        assert!(
+            TimedEffect::from_str("(increase fun-sym #t)").is_value(TimedEffect::continuous(
                 TimedAssignOperator::Increase,
                 FunctionHead::Simple("fun-sym".into()),
                 TimedFluentExpression::Now

@@ -1,143 +1,44 @@
-//! Contains helper traits for dealing with [`ParseResult`] values.
+//! Helpers for asserting on [`Parser::from_str`](crate::parsers::Parser::from_str) results.
 
-use crate::parsers::{ParseResult, Span};
-use crate::Type;
+use crate::parsers::ParseError;
 
-/// A helper trait for dealing with [`ParseResult`] values.
-pub trait UnwrapValue<V> {
-    /// Unwraps the value or panicks if there was none.
+/// Shorthands for checking a parse result in tests.
+pub(crate) trait UnwrapValue<V> {
+    /// Unwraps the value or panics with the error.
     fn unwrap_value(self) -> V;
 
-    /// Unwraps the value and compares it with the specified value.
+    /// Whether parsing succeeded with exactly `value`.
     fn is_value(&self, value: V) -> bool;
 }
 
-impl<'a, V> UnwrapValue<V> for ParseResult<'a, V>
-where
-    V: PartialEq,
-{
+impl<V: PartialEq> UnwrapValue<V> for Result<V, ParseError> {
     fn unwrap_value(self) -> V {
-        self.expect("expected a value").1
+        self.unwrap_or_else(|e| panic!("expected a value: {e}"))
     }
 
     fn is_value(&self, value: V) -> bool {
-        match self {
-            Ok((_, lhs)) => lhs.eq(&value),
-            Err(_) => false,
-        }
-    }
-}
-
-/// A helper trait for dealing with [`ParseResult`] values.
-pub trait Match<V> {
-    /// Ensures the parser produced the specified value
-    /// and leaves no remaining value to be parsed.
-    #[allow(unused)]
-    fn is_exactly(&self, value: V) -> bool {
-        self.is_result("", value)
-    }
-
-    /// Ensures the remainder value are as specified.
-    #[allow(unused)]
-    fn is_result(&self, remainder: &str, value: V) -> bool;
-}
-
-impl<'a, E> Match<Option<&str>> for ParseResult<'a, Option<Span<'a>>, E> {
-    fn is_result(&self, remainder: &str, value: Option<&str>) -> bool {
-        if let Ok((lhs, rhs)) = self {
-            if !remainder.eq(*lhs.fragment()) {
-                false
-            } else if value.is_none() {
-                rhs.is_none()
-            } else if let Some(rhs) = rhs {
-                value.eq(&Some(*rhs.fragment()))
-            } else {
-                false
-            }
-        } else {
-            false
-        }
-    }
-}
-
-impl<'a, T, E> Match<&'a str> for ParseResult<'a, T, E>
-where
-    T: From<&'a str> + PartialEq,
-{
-    fn is_result(&self, remainder: &str, value: &'a str) -> bool {
-        if let Ok((lhs, rhs)) = self {
-            if !remainder.eq(*lhs.fragment()) {
-                false
-            } else {
-                T::from(value).eq(rhs)
-            }
-        } else {
-            false
-        }
-    }
-}
-
-impl<'a, E> Match<Type> for ParseResult<'a, Type, E> {
-    fn is_result(&self, remainder: &str, value: Type) -> bool {
-        if let Ok((lhs, rhs)) = self {
-            if !remainder.eq(*lhs.fragment()) {
-                false
-            } else {
-                value.eq(rhs)
-            }
-        } else {
-            false
-        }
-    }
-}
-
-impl<'a, T, E> Match<Vec<T>> for ParseResult<'a, Vec<T>, E>
-where
-    T: PartialEq,
-{
-    fn is_result(&self, remainder: &str, value: Vec<T>) -> bool {
-        if let Ok((lhs, rhs)) = self {
-            if !remainder.eq(*lhs.fragment()) {
-                false
-            } else {
-                value.eq(rhs)
-            }
-        } else {
-            false
-        }
+        self.as_ref().is_ok_and(|v| *v == value)
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::parsers::name::parse_any_char;
-    use crate::parsers::Match;
     use crate::{Name, Parser};
 
     #[test]
     fn test_is_value() {
-        assert!(Name::parse("abcde").is_value("abcde".into()));
+        assert!(Name::from_str("abcde").is_value("abcde".into()));
     }
 
     #[test]
     fn test_is_value_fails() {
-        assert!(!Name::parse("abcde").is_value("xyz".into()));
-        assert!(!Name::parse("-").is_value("abcde".into()));
+        assert!(!Name::from_str("abcde").is_value("xyz".into()));
+        assert!(!Name::from_str("-").is_value("abcde".into()));
     }
 
     #[test]
     fn test_unwrap_value() {
-        assert_eq!(Name::parse("abcde").unwrap_value(), "abcde");
-    }
-
-    #[test]
-    fn test_is_exactly() {
-        assert!(Name::parse(Span::new("abcde")).is_exactly("abcde"));
-    }
-
-    #[test]
-    fn test_is_er() {
-        assert!(parse_any_char(Span::new(".")).is_err());
+        assert_eq!(Name::from_str("abcde").unwrap_value(), "abcde");
     }
 }

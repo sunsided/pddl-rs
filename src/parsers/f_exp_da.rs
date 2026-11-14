@@ -1,81 +1,53 @@
-//! Provides parsers for f-exp-da values..
+//! Provides parsers for durative action fluent expressions.
 
-use nom::branch::alt;
-use nom::bytes::complete::tag_no_case;
-use nom::combinator::map;
-use nom::Parser;
-
-use crate::parsers::f_exp::op_expr;
-use crate::parsers::{parse_f_exp, ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{alt, op_expr, parse_f_exp};
 use crate::types::DurativeActionFluentExpression;
 
-/// Parses an f-exp-da.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_f_exp_da, preamble::*};
-/// # use pddl::{BinaryOp, DurativeActionFluentExpression, FluentExpression, FunctionSymbol, MultiOp};
-/// assert!(parse_f_exp_da("?duration").is_value(
-///     DurativeActionFluentExpression::Duration
-/// ));
-///
-/// assert!(parse_f_exp_da("(+ 1.23 2.34)").is_value(
-///     DurativeActionFluentExpression::new_binary_op(
-///         BinaryOp::Addition,
-///             DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(1.23)),
-///             DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(2.34))
-///     )
-/// ));
-///
-/// assert!(parse_f_exp_da("(+ 1.23 2.34 3.45)").is_value(
-///     DurativeActionFluentExpression::new_multi_op(
-///         MultiOp::Addition,
-///         DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(1.23)),
-///         [FluentExpression::new_number(2.34).into(), FluentExpression::new_number(3.45).into()]
-///     )
-/// ));
-///```
-pub fn parse_f_exp_da<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, DurativeActionFluentExpression> {
-    // :duration-inequalities
-    let duration = map(tag_no_case("?duration"), |_| {
-        DurativeActionFluentExpression::new_duration()
-    });
-
-    let op = op_expr(
-        parse_f_exp_da,
-        DurativeActionFluentExpression::new_negative,
-        DurativeActionFluentExpression::new_binary_op,
-        DurativeActionFluentExpression::new_multi_op,
-    );
-
-    let f_exp = map(parse_f_exp, DurativeActionFluentExpression::new_f_exp);
-
-    alt((duration, op, f_exp)).parse(input.into())
+/// Parses a durative action fluent expression, i.e. `?duration | <f-exp>`, or an
+/// arithmetic expression over them.
+pub(crate) fn parse_f_exp_da(node: &Node) -> R<DurativeActionFluentExpression> {
+    type E = DurativeActionFluentExpression;
+    alt(
+        node,
+        &[
+            &|n| {
+                if n.is("?duration") {
+                    Ok(E::new_duration())
+                } else {
+                    Err(n.error())
+                }
+            },
+            &|n| {
+                op_expr(
+                    n,
+                    parse_f_exp_da,
+                    E::new_negative,
+                    E::new_binary_op,
+                    E::new_multi_op,
+                )
+            },
+            &|n| parse_f_exp(n).map(E::new_f_exp),
+        ],
+    )
 }
 
-impl crate::parsers::Parser for DurativeActionFluentExpression {
-    type Item = DurativeActionFluentExpression;
-
-    /// See [`parse_f_exp_da`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_f_exp_da(input)
-    }
-}
+crate::parsers::impl_parser!(DurativeActionFluentExpression => parse_f_exp_da);
 
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{BinaryOp, DurativeActionFluentExpression, FluentExpression, MultiOp, Parser};
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(DurativeActionFluentExpression::parse("?duration")
+        assert!(DurativeActionFluentExpression::from_str("?duration")
             .is_value(DurativeActionFluentExpression::Duration));
 
         assert!(
-            DurativeActionFluentExpression::parse("(+ 1.23 2.34)").is_value(
+            DurativeActionFluentExpression::from_str("(+ 1.23 2.34)").is_value(
                 DurativeActionFluentExpression::new_binary_op(
                     BinaryOp::Addition,
                     DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(1.23)),
@@ -85,7 +57,36 @@ mod tests {
         );
 
         assert!(
-            DurativeActionFluentExpression::parse("(+ 1.23 2.34 3.45)").is_value(
+            DurativeActionFluentExpression::from_str("(+ 1.23 2.34 3.45)").is_value(
+                DurativeActionFluentExpression::new_multi_op(
+                    MultiOp::Addition,
+                    DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(1.23)),
+                    [
+                        FluentExpression::new_number(2.34).into(),
+                        FluentExpression::new_number(3.45).into()
+                    ]
+                )
+            )
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        assert!(DurativeActionFluentExpression::from_str("?duration")
+            .is_value(DurativeActionFluentExpression::Duration));
+
+        assert!(
+            DurativeActionFluentExpression::from_str("(+ 1.23 2.34)").is_value(
+                DurativeActionFluentExpression::new_binary_op(
+                    BinaryOp::Addition,
+                    DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(1.23)),
+                    DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(2.34))
+                )
+            )
+        );
+
+        assert!(
+            DurativeActionFluentExpression::from_str("(+ 1.23 2.34 3.45)").is_value(
                 DurativeActionFluentExpression::new_multi_op(
                     MultiOp::Addition,
                     DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(1.23)),

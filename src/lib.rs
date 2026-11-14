@@ -1,6 +1,6 @@
 //! # A PDDL 3.1 parser, strongly typed
 //!
-//! This crates provides a PDDL 3.1 parser implementation based on [nom](https://crates.io/crates/nom).
+//! This crate provides a PDDL 3.1 parser and a strongly typed syntax tree.
 //!
 //! ## Default crate features
 //!
@@ -9,6 +9,11 @@
 //! * `pretty` - Enables pretty-printing of PDDL types via the
 //!   `Pretty` extension trait. The feature provides round-trip-safe
 //!   rendering: `parse → pretty() → parse` preserves AST equality.
+//!
+//! ## Optional crate features
+//!
+//! * `miette` - Implements `miette::Diagnostic` for [`ParseError`], so parse errors
+//!   render with the offending input marked.
 //!
 //! ## Example
 //!

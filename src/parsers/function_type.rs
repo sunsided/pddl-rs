@@ -1,32 +1,16 @@
 //! Provides parsers for function types.
 
-use crate::parsers::{parse_type, ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::parse_type;
+use crate::parsers::sexpr::Node;
 use crate::types::FunctionType;
-use nom::combinator::map;
-use nom::Parser;
 
-/// Parses a primitive type, i.e. `object | <name>`.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_function_type, preamble::*};
-/// # use pddl::{FunctionType};
-/// # use pddl::Type;
-/// assert!(parse_function_type("number").is_value(FunctionType::new(Type::Exactly("number".into()))));
-/// assert!(parse_function_type("(either object number)").is_value(FunctionType::new(Type::from_iter(["object", "number"]))));
-///```
-pub fn parse_function_type<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FunctionType> {
-    map(parse_type, FunctionType::from).parse(input.into())
+/// Parses a function type, i.e. `<type>`.
+pub(crate) fn parse_function_type(node: &Node) -> R<FunctionType> {
+    parse_type(node).map(FunctionType::from)
 }
 
-impl crate::parsers::Parser for FunctionType {
-    type Item = FunctionType;
-
-    /// See [`parse_function_type`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_function_type(input)
-    }
-}
+crate::parsers::impl_parser!(FunctionType => parse_function_type);
 
 #[cfg(test)]
 mod tests {
@@ -35,9 +19,9 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        assert!(FunctionType::parse("number")
+        assert!(FunctionType::from_str("number")
             .is_value(FunctionType::new(Type::Exactly("number".into()))));
-        assert!(FunctionType::parse("(either object number)")
+        assert!(FunctionType::from_str("(either object number)")
             .is_value(FunctionType::new(Type::from_iter(["object", "number"]))));
     }
 }

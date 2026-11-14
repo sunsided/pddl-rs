@@ -1,58 +1,45 @@
-//! Provides parsers for d-values.
+//! Provides parsers for duration values.
 
-use nom::branch::alt;
-use nom::combinator::map;
-use nom::Parser;
-
-use crate::parsers::parse_number;
-use crate::parsers::{parse_f_exp, ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{alt, parse_f_exp, parse_number};
 use crate::types::DurationValue;
 
-/// Parses a d-value.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_d_value, preamble::*};
-/// # use pddl::{BinaryOp, DurationValue, FluentExpression, FunctionHead, FunctionSymbol, MultiOp};
-/// assert!(parse_d_value("1.23").is_value(
-///     DurationValue::number(1.23)
-/// ));
-///
-/// assert!(parse_d_value("fun-sym").is_value(
-///     DurationValue::fluent_expression(
-///         FluentExpression::function(FunctionHead::Simple("fun-sym".into()))
-///     )
-/// ));
-///```
-pub fn parse_d_value<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DurationValue> {
-    let number = map(parse_number, DurationValue::new_number);
-
-    // :numeric-fluents
-    let f_exp = map(parse_f_exp, DurationValue::new_f_exp);
-
-    alt((number, f_exp)).parse(input.into())
+/// Parses a duration value, i.e. `<number> | <f-exp>`.
+pub(crate) fn parse_d_value(node: &Node) -> R<DurationValue> {
+    alt(
+        node,
+        &[&|n| parse_number(n).map(DurationValue::new_number), &|n| {
+            parse_f_exp(n).map(DurationValue::new_f_exp)
+        }],
+    )
 }
 
-impl crate::parsers::Parser for DurationValue {
-    type Item = DurationValue;
-
-    /// See [`parse_d_value`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_d_value(input)
-    }
-}
+crate::parsers::impl_parser!(DurationValue => parse_d_value);
 
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{DurationValue, FluentExpression, FunctionHead, Parser};
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(DurationValue::parse("1.23").is_value(DurationValue::number(1.23)));
+        assert!(DurationValue::from_str("1.23").is_value(DurationValue::number(1.23)));
 
         assert!(
-            DurationValue::parse("fun-sym").is_value(DurationValue::fluent_expression(
+            DurationValue::from_str("fun-sym").is_value(DurationValue::fluent_expression(
+                FluentExpression::function(FunctionHead::Simple("fun-sym".into()))
+            ))
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        assert!(DurationValue::from_str("1.23").is_value(DurationValue::number(1.23)));
+
+        assert!(
+            DurationValue::from_str("fun-sym").is_value(DurationValue::fluent_expression(
                 FluentExpression::function(FunctionHead::Simple("fun-sym".into()))
             ))
         );

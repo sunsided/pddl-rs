@@ -1,85 +1,45 @@
-//! Provides parsers for f-exps.
+//! Provides parsers for timed fluent expressions.
 
-use nom::branch::alt;
-use nom::bytes::complete::tag_no_case;
-use nom::combinator::map;
-use nom::sequence::{preceded, terminated};
-use nom::Parser;
-
-use crate::parsers::prefix_expr;
-use crate::parsers::sep;
-use crate::parsers::{parse_f_exp, ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{parse_f_exp, prefix};
 use crate::types::TimedFluentExpression;
 
-/// Parses an f-exp-t.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_f_exp, parse_f_exp_t, preamble::*};
-/// # use pddl::{BinaryOp, FluentExpression, TimedFluentExpression, FunctionHead, FunctionSymbol, MultiOp, Term, Variable};
-/// assert!(parse_f_exp_t("#t").is_value(TimedFluentExpression::Now));
-///
-/// assert!(parse_f_exp_t("(* (fuel ?tank) #t)").is_value(
-///     TimedFluentExpression::scaled(
-///         FluentExpression::function(
-///             FunctionHead::with_terms(
-///                 FunctionSymbol::string("fuel"),
-///                 [Term::Variable(Variable::string("tank"))]
-///             )
-///         )
-///     )
-/// ));
-///
-/// assert!(parse_f_exp_t("(* #t (fuel ?tank))").is_value(
-///     TimedFluentExpression::scaled(
-///         FluentExpression::function(
-///             FunctionHead::with_terms(
-///                 FunctionSymbol::string("fuel"),
-///                 [Term::Variable(Variable::string("tank"))]
-///             )
-///         )
-///     )
-/// ));
-///```
-pub fn parse_f_exp_t<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, TimedFluentExpression> {
-    let now = map(tag_no_case("#t"), |_| TimedFluentExpression::new());
-    let scaled = map(
-        prefix_expr(
-            "*",
-            alt((
-                preceded((tag_no_case("#t"), sep), parse_f_exp),
-                terminated(parse_f_exp, (sep, tag_no_case("#t"))),
-            )),
-        ),
-        TimedFluentExpression::new_scaled,
-    );
-
-    alt((scaled, now)).parse(input.into())
-}
-
-impl crate::parsers::Parser for TimedFluentExpression {
-    type Item = TimedFluentExpression;
-
-    /// See [`parse_f_exp_t`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_f_exp_t(input)
+/// Parses a timed fluent expression, i.e. `(* <f-exp> #t) | (* #t <f-exp>) | #t`.
+pub(crate) fn parse_f_exp_t(node: &Node) -> R<TimedFluentExpression> {
+    if node.atom().is_some() {
+        return if node.is("#t") {
+            Ok(TimedFluentExpression::new())
+        } else {
+            Err(node.error())
+        };
     }
+    prefix(node, "*", |args| {
+        let first = args.next()?;
+        if first.is("#t") {
+            return parse_f_exp(args.next()?);
+        }
+        let exp = parse_f_exp(first)?;
+        args.expect("#t")?;
+        Ok(exp)
+    })
+    .map(TimedFluentExpression::new_scaled)
 }
+
+crate::parsers::impl_parser!(TimedFluentExpression => parse_f_exp_t);
 
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{
-        FluentExpression, FunctionHead, FunctionSymbol, Parser, Term, TimedFluentExpression,
-        Variable,
-    };
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(TimedFluentExpression::parse("#t").is_value(TimedFluentExpression::Now));
+        assert!(TimedFluentExpression::from_str("#t").is_value(TimedFluentExpression::Now));
 
         assert!(
-            TimedFluentExpression::parse("(* (fuel ?tank) #t)").is_value(
+            TimedFluentExpression::from_str("(* (fuel ?tank) #t)").is_value(
                 TimedFluentExpression::scaled(FluentExpression::function(
                     FunctionHead::with_terms(
                         FunctionSymbol::string("fuel"),
@@ -90,7 +50,34 @@ mod tests {
         );
 
         assert!(
-            TimedFluentExpression::parse("(* #t (fuel ?tank))").is_value(
+            TimedFluentExpression::from_str("(* #t (fuel ?tank))").is_value(
+                TimedFluentExpression::scaled(FluentExpression::function(
+                    FunctionHead::with_terms(
+                        FunctionSymbol::string("fuel"),
+                        [Term::Variable(Variable::string("tank"))]
+                    )
+                ))
+            )
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        assert!(TimedFluentExpression::from_str("#t").is_value(TimedFluentExpression::Now));
+
+        assert!(
+            TimedFluentExpression::from_str("(* (fuel ?tank) #t)").is_value(
+                TimedFluentExpression::scaled(FluentExpression::function(
+                    FunctionHead::with_terms(
+                        FunctionSymbol::string("fuel"),
+                        [Term::Variable(Variable::string("tank"))]
+                    )
+                ))
+            )
+        );
+
+        assert!(
+            TimedFluentExpression::from_str("(* #t (fuel ?tank))").is_value(
                 TimedFluentExpression::scaled(FluentExpression::function(
                     FunctionHead::with_terms(
                         FunctionSymbol::string("fuel"),

@@ -1,47 +1,32 @@
-//! Provides parsers for predicates.
+//! Provides parsers for durative action symbols.
 
-use crate::parsers::{parse_name, ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::parse_name;
+use crate::parsers::sexpr::Node;
 use crate::types::DurativeActionSymbol;
-use nom::combinator::map;
-use nom::Parser;
 
 /// Parses a durative action symbol, i.e. `<name>`.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_da_symbol, preamble::*};
-/// assert!(parse_da_symbol("abcde").is_value("abcde".into()));
-///```
-pub fn parse_da_symbol<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, DurativeActionSymbol> {
-    map(parse_name, DurativeActionSymbol::from).parse(input.into())
+pub(crate) fn parse_da_symbol(node: &Node) -> R<DurativeActionSymbol> {
+    parse_name(node).map(DurativeActionSymbol::from)
 }
 
-impl crate::parsers::Parser for DurativeActionSymbol {
-    type Item = DurativeActionSymbol;
-
-    /// Parses a durative action symbol.
-    ///
-    /// ## Example
-    /// ```
-    /// # use pddl::{DurativeActionSymbol, Parser};
-    /// let (_, value) = DurativeActionSymbol::parse("abcde").unwrap();
-    /// assert_eq!(value, "abcde".into());
-    ///```
-    ///
-    /// ## See also
-    /// See [`parse_da_symbol`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_da_symbol(input)
-    }
-}
+crate::parsers::impl_parser!(DurativeActionSymbol => parse_da_symbol);
 
 #[cfg(test)]
 mod tests {
+    use crate::parsers::UnwrapValue;
     use crate::{DurativeActionSymbol, Parser};
 
     #[test]
     fn test_parse() {
-        let (_, value) = DurativeActionSymbol::parse("abcde").unwrap();
-        assert_eq!(value, "abcde".into());
+        assert!(DurativeActionSymbol::from_str("abcde").is_value("abcde".into()));
+        assert!(DurativeActionSymbol::from_str("a-1_2").is_value("a-1_2".into()));
+        assert!(DurativeActionSymbol::from_str("Z01").is_value("Z01".into()));
+        assert!(DurativeActionSymbol::from_str("x-_-_").is_value("x-_-_".into()));
+        assert!(DurativeActionSymbol::from_str("").is_err());
+        assert!(DurativeActionSymbol::from_str(".").is_err());
+        assert!(DurativeActionSymbol::from_str("-abc").is_err());
+        assert!(DurativeActionSymbol::from_str("0124").is_err());
+        assert!(DurativeActionSymbol::from_str("-1").is_err());
     }
 }

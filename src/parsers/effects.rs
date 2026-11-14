@@ -1,90 +1,64 @@
 //! Provides parsers for effects.
 
-use nom::branch::alt;
-use nom::combinator::map;
-use nom::Parser;
-
-use crate::parsers::{parse_c_effect, ParseResult, Span};
-use crate::parsers::{prefix_expr, space_separated_list0};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{alt, parse_c_effect, prefix};
 use crate::types::Effects;
 
-/// Parser for effects.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_effect, preamble::*};
-/// # use pddl::{AtomicFormula, ConditionalEffect, Effects, EqualityAtomicFormula, PrimitiveEffect, Term};
-/// assert!(parse_effect("(= x y)").is_value(
-///     Effects::new(
-///         ConditionalEffect::Effect(
-///             PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
-///                 EqualityAtomicFormula::new(
-///                     Term::Name("x".into()),
-///                     Term::Name("y".into()))
-///                 )
-///             )
-///         )
-///     )
-/// ));
-/// assert!(parse_effect("(and (= x y) (not (= ?a B)))").is_value(
-///     Effects::from_iter([
-///         ConditionalEffect::Effect(
-///             PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
-///                 EqualityAtomicFormula::new(
-///                     Term::Name("x".into()),
-///                     Term::Name("y".into()))
-///                 )
-///             )
-///         ),
-///         ConditionalEffect::Effect(
-///             PrimitiveEffect::NotAtomicFormula(AtomicFormula::Equality(
-///                 EqualityAtomicFormula::new(
-///                     Term::Variable("a".into()),
-///                     Term::Name("B".into()))
-///                 )
-///             )
-///         )
-///     ])
-/// ));
-/// ```
-pub fn parse_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Effects> {
-    let exactly = map(parse_c_effect, Effects::from);
-    let all = map(
-        prefix_expr("and", space_separated_list0(parse_c_effect)),
-        Effects::from,
-    );
-
-    alt((all, exactly)).parse(input.into())
+/// Parses effects, i.e. `(and <c-effect>*) | <c-effect>`.
+pub(crate) fn parse_effect(node: &Node) -> R<Effects> {
+    alt(
+        node,
+        &[
+            &|n| prefix(n, "and", |args| args.list0(parse_c_effect)).map(Effects::from),
+            &|n| parse_c_effect(n).map(Effects::from),
+        ],
+    )
 }
 
-impl crate::parsers::Parser for Effects {
-    type Item = Effects;
-
-    /// See [`parse_effect`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_effect(input)
-    }
-}
+crate::parsers::impl_parser!(Effects => parse_effect);
 
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{
-        AtomicFormula, ConditionalEffect, Effects, EqualityAtomicFormula, Parser, PrimitiveEffect,
-        Term,
-    };
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
         assert!(
-            Effects::parse("(= x y)").is_value(Effects::new(ConditionalEffect::Effect(
+            Effects::from_str("(= x y)").is_value(Effects::new(ConditionalEffect::Effect(
                 PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
                     EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
                 ))
             )))
         );
         assert!(
-            Effects::parse("(and (= x y) (not (= ?a B)))").is_value(Effects::from_iter([
+            Effects::from_str("(and (= x y) (not (= ?a B)))").is_value(Effects::from_iter([
+                ConditionalEffect::Effect(PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
+                    EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
+                ))),
+                ConditionalEffect::Effect(PrimitiveEffect::NotAtomicFormula(
+                    AtomicFormula::Equality(EqualityAtomicFormula::new(
+                        Term::Variable("a".into()),
+                        Term::Name("B".into())
+                    ))
+                ))
+            ]))
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        assert!(
+            Effects::from_str("(= x y)").is_value(Effects::new(ConditionalEffect::Effect(
+                PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
+                    EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
+                ))
+            )))
+        );
+        assert!(
+            Effects::from_str("(and (= x y) (not (= ?a B)))").is_value(Effects::from_iter([
                 ConditionalEffect::Effect(PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
                     EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
                 ))),

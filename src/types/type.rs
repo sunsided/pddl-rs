@@ -177,7 +177,6 @@ impl Display for Type {
 #[cfg(all(test, feature = "parser"))]
 mod tests {
     use super::*;
-    use crate::parsers::Span;
     use crate::Parser;
 
     #[test]
@@ -188,7 +187,7 @@ mod tests {
 
     #[test]
     fn flatten_with_single_element_works() {
-        let (_, t) = Type::parse(Span::new("object")).unwrap();
+        let t = Type::from_str("object").unwrap();
 
         let mut iter = t.into_iter();
         assert!(iter.next().is_some());
@@ -197,7 +196,7 @@ mod tests {
 
     #[test]
     fn flatten_with_many_elements_works() {
-        let (_, t) = Type::parse(Span::new("(either object number)")).unwrap();
+        let t = Type::from_str("(either object number)").unwrap();
 
         let mut iter = t.into_iter();
         assert!(iter.next().is_some());

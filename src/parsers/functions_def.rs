@@ -1,74 +1,50 @@
-//! Provides parsers for constant definitions.
+//! Provides parsers for functions definitions.
 
-use nom::combinator::map;
-use nom::Parser;
-
-use crate::parsers::{function_typed_list, parse_atomic_function_skeleton};
-use crate::parsers::{prefix_expr, ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{function_typed_list, parse_atomic_function_skeleton, prefix};
 use crate::types::Functions;
 
-/// Parses constant definitions, i.e. `(:constants <typed list (name)>)`.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_functions_def, preamble::*};
-/// # use pddl::{Variable, AtomicFormulaSkeleton, Predicate, PredicateDefinitions, FunctionTypedList, FunctionTyped, AtomicFunctionSkeleton, FunctionSymbol, Functions};
-/// # use pddl::{Type, Typed, TypedList};
-/// let input = "(:functions (battery-amount ?r - rover))";
-/// assert!(parse_functions_def(input).is_value(
-///     Functions::from_iter([
-///         FunctionTyped::number(
-///             AtomicFunctionSkeleton::new(
-///                 FunctionSymbol::string("battery-amount"),
-///                 TypedList::from_iter([
-///                     Typed::new(Variable::from("r"), Type::Exactly("rover".into()))
-///                 ])
-///             )
-///         )
-///     ])
-/// ));
-/// ```
-pub fn parse_functions_def<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Functions> {
-    map(
-        prefix_expr(
-            ":functions",
-            function_typed_list(parse_atomic_function_skeleton),
-        ),
-        Functions::new,
-    )
-    .parse(input.into())
+/// Parses a functions definition, i.e. `(:functions <function typed list (atomic function skeleton)>)`.
+pub(crate) fn parse_functions_def(node: &Node) -> R<Functions> {
+    prefix(node, ":functions", |args| {
+        function_typed_list(args, parse_atomic_function_skeleton).map(Functions::new)
+    })
 }
 
-impl crate::parsers::Parser for Functions {
-    type Item = Functions;
-
-    /// See [`parse_functions_def`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_functions_def(input)
-    }
-}
+crate::parsers::impl_parser!(Functions => parse_functions_def);
 
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{
-        AtomicFunctionSkeleton, FunctionSymbol, FunctionTyped, Functions, Parser, Type, Typed,
-        TypedList, Variable,
-    };
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
         let input = "(:functions (battery-amount ?r - rover))";
-        assert!(
-            Functions::parse(input).is_value(Functions::from_iter([FunctionTyped::number(
-                AtomicFunctionSkeleton::new(
-                    FunctionSymbol::string("battery-amount"),
-                    TypedList::from_iter([Typed::new(
-                        Variable::from("r"),
-                        Type::Exactly("rover".into())
-                    )])
-                )
-            )]))
-        );
+        assert!(Functions::from_str(input).is_value(Functions::from_iter([
+            FunctionTyped::number(AtomicFunctionSkeleton::new(
+                FunctionSymbol::string("battery-amount"),
+                TypedList::from_iter([Typed::new(
+                    Variable::from("r"),
+                    Type::Exactly("rover".into())
+                )])
+            ))
+        ])));
+    }
+
+    #[test]
+    fn doc_example_0() {
+        let input = "(:functions (battery-amount ?r - rover))";
+        assert!(Functions::from_str(input).is_value(Functions::from_iter([
+            FunctionTyped::number(AtomicFunctionSkeleton::new(
+                FunctionSymbol::string("battery-amount"),
+                TypedList::from_iter([Typed::new(
+                    Variable::from("r"),
+                    Type::Exactly("rover".into())
+                )])
+            ))
+        ])));
     }
 }

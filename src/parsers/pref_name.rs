@@ -1,36 +1,32 @@
 //! Provides parsers for preference names.
-use crate::parsers::{parse_name, ParseResult, Span};
+
+use crate::parsers::error::R;
+use crate::parsers::parse_name;
+use crate::parsers::sexpr::Node;
 use crate::types::PreferenceName;
-use nom::combinator::map;
-use nom::Parser;
 
-/// Parses a preference name.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_pref_name, preamble::*};
-/// assert!(parse_pref_name("abcde").is_value("abcde".into()));
-///```
-pub fn parse_pref_name<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, PreferenceName> {
-    map(parse_name, PreferenceName::new).parse(input.into())
+/// Parses a preference name, i.e. `<name>`.
+pub(crate) fn parse_pref_name(node: &Node) -> R<PreferenceName> {
+    parse_name(node).map(PreferenceName::new)
 }
 
-impl crate::parsers::Parser for PreferenceName {
-    type Item = PreferenceName;
-
-    /// See [`parse_pref_name`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_pref_name(input)
-    }
-}
+crate::parsers::impl_parser!(PreferenceName => parse_pref_name);
 
 #[cfg(test)]
 mod tests {
-    use crate::parsers::preamble::*;
-    use crate::PreferenceName;
+    use crate::parsers::UnwrapValue;
+    use crate::{Parser, PreferenceName};
 
     #[test]
     fn test_parse() {
-        assert!(PreferenceName::parse("abcde").is_value("abcde".into()));
+        assert!(PreferenceName::from_str("abcde").is_value("abcde".into()));
+        assert!(PreferenceName::from_str("a-1_2").is_value("a-1_2".into()));
+        assert!(PreferenceName::from_str("Z01").is_value("Z01".into()));
+        assert!(PreferenceName::from_str("x-_-_").is_value("x-_-_".into()));
+        assert!(PreferenceName::from_str("").is_err());
+        assert!(PreferenceName::from_str(".").is_err());
+        assert!(PreferenceName::from_str("-abc").is_err());
+        assert!(PreferenceName::from_str("0124").is_err());
+        assert!(PreferenceName::from_str("-1").is_err());
     }
 }

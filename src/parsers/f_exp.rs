@@ -1,114 +1,75 @@
-//! Provides parsers for f-exps.
+//! Provides parsers for fluent expressions.
 
-use nom::branch::alt;
-use nom::combinator::{map, map_opt};
-use nom::Parser;
-
-use crate::parsers::{parens, parse_number, space_separated_list1, NomError, ParseResult, Span};
-use crate::parsers::{parse_binary_op, parse_f_head};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{alt, parens, parse_binary_op, parse_f_head, parse_number};
 use crate::types::{BinaryOp, FluentExpression, MultiOp};
 
-/// Parses an f-exp.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_f_exp, preamble::*};
-/// # use pddl::{BinaryOp, FluentExpression, FunctionHead, FunctionSymbol, MultiOp};
-/// assert!(parse_f_exp("1.23").is_value(
-///     FluentExpression::new_number(1.23)
-/// ));
-///
-/// assert!(parse_f_exp("(+ 1.23 2.34)").is_value(
-///     FluentExpression::new_binary_op(
-///         BinaryOp::Addition,
-///         FluentExpression::new_number(1.23),
-///         FluentExpression::new_number(2.34)
-///     )
-/// ));
-///
-/// assert!(parse_f_exp("(+ 1.23 2.34 3.45)").is_value(
-///     FluentExpression::new_multi_op(
-///         MultiOp::Addition,
-///         FluentExpression::new_number(1.23),
-///         [FluentExpression::new_number(2.34), FluentExpression::new_number(3.45)]
-///     )
-/// ));
-///
-/// assert!(parse_f_exp("(- 1.23)").is_value(
-///     FluentExpression::new_negative(FluentExpression::new_number(1.23))
-/// ));
-///
-/// assert!(parse_f_exp("fun-sym").is_value(
-///     FluentExpression::new_function(
-///         FunctionHead::new(FunctionSymbol::new_string("fun-sym"))
-///     )
-/// ));
-///```
-pub fn parse_f_exp<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FluentExpression> {
-    // :numeric-fluents
-    let number = map(parse_number, FluentExpression::new_number);
-
-    // :numeric-fluents
-    let op = op_expr(
-        parse_f_exp,
-        FluentExpression::new_negative,
-        FluentExpression::new_binary_op,
-        FluentExpression::new_multi_op,
-    );
-
-    // :numeric-fluents
-    let f_head = map(parse_f_head, FluentExpression::new_function);
-
-    alt((number, op, f_head)).parse(input.into())
-}
-
-/// Parses `(<op> <arg>+)` as a negation, binary or multi op, chosen by the
-/// argument count. Parsing the arguments once, instead of trying each form in
-/// turn, keeps nested expressions such as `(- (- (- x)))` linear.
-pub(crate) fn op_expr<'a, E>(
-    arg: impl Parser<Span<'a>, Output = E, Error = NomError<'a>>,
-    negative: fn(E) -> E,
-    binary: fn(BinaryOp, E, E) -> E,
-    multi: fn(MultiOp, E, Vec<E>) -> E,
-) -> impl Parser<Span<'a>, Output = E, Error = NomError<'a>> {
-    map_opt(
-        parens((parse_binary_op, space_separated_list1(arg))),
-        move |(op, mut args)| match args.len() {
-            1 if op == BinaryOp::Subtraction => args.pop().map(negative),
-            2 => {
-                let rhs = args.pop()?;
-                let lhs = args.pop()?;
-                Some(binary(op, lhs, rhs))
-            }
-            3.. => {
-                let op = MultiOp::try_from(op).ok()?;
-                let rest = args.split_off(1);
-                Some(multi(op, args.pop()?, rest))
-            }
-            _ => None,
-        },
+/// Parses a fluent expression, i.e. `<number> | (<binary-op> <f-exp> <f-exp>)
+/// | (<multi-op> <f-exp> <f-exp>⁺) | (- <f-exp>) | <f-head>`.
+pub(crate) fn parse_f_exp(node: &Node) -> R<FluentExpression> {
+    alt(
+        node,
+        &[
+            &|n| parse_number(n).map(FluentExpression::new_number),
+            &|n| {
+                op_expr(
+                    n,
+                    parse_f_exp,
+                    FluentExpression::new_negative,
+                    FluentExpression::new_binary_op,
+                    FluentExpression::new_multi_op,
+                )
+            },
+            &|n| parse_f_head(n).map(FluentExpression::new_function),
+        ],
     )
 }
 
-impl crate::parsers::Parser for FluentExpression {
-    type Item = FluentExpression;
-
-    /// See [`parse_f_exp`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_f_exp(input)
-    }
+/// Parses an arithmetic expression `(<op> <arg>⁺)`: `-` with one argument is a
+/// negation, any operator with two is a binary operation, and `*` or `+` with
+/// more is a multi-operand operation.
+pub(crate) fn op_expr<'n, 'a, E>(
+    node: &'n Node<'a>,
+    arg: impl Fn(&'n Node<'a>) -> R<E>,
+    negative: fn(E) -> E,
+    binary: fn(BinaryOp, E, E) -> E,
+    multi: fn(MultiOp, E, Vec<E>) -> E,
+) -> R<E> {
+    parens(node, |args| {
+        let op_node = args.next()?;
+        let op = parse_binary_op(op_node)?;
+        let mut operands = args.list1(&arg)?;
+        match operands.len() {
+            1 if op == BinaryOp::Subtraction => Ok(negative(operands.remove(0))),
+            2 => {
+                let rhs = operands.remove(1);
+                let lhs = operands.remove(0);
+                Ok(binary(op, lhs, rhs))
+            }
+            3.. => {
+                let op = MultiOp::try_from(op).map_err(|_| op_node.error())?;
+                let rest = operands.split_off(1);
+                Ok(multi(op, operands.remove(0), rest))
+            }
+            _ => Err(op_node.error()),
+        }
+    })
 }
+
+crate::parsers::impl_parser!(FluentExpression => parse_f_exp);
 
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{BinaryOp, FluentExpression, FunctionHead, FunctionSymbol, MultiOp, Parser};
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(FluentExpression::parse("1.23").is_value(FluentExpression::new_number(1.23)));
+        assert!(FluentExpression::from_str("1.23").is_value(FluentExpression::new_number(1.23)));
 
-        assert!(FluentExpression::parse("(+ 1.23 2.34)").is_value(
+        assert!(FluentExpression::from_str("(+ 1.23 2.34)").is_value(
             FluentExpression::new_binary_op(
                 BinaryOp::Addition,
                 FluentExpression::new_number(1.23),
@@ -116,7 +77,7 @@ mod tests {
             )
         ));
 
-        assert!(FluentExpression::parse("(+ 1.23 2.34 3.45)").is_value(
+        assert!(FluentExpression::from_str("(+ 1.23 2.34 3.45)").is_value(
             FluentExpression::new_multi_op(
                 MultiOp::Addition,
                 FluentExpression::new_number(1.23),
@@ -128,12 +89,12 @@ mod tests {
         ));
 
         assert!(
-            FluentExpression::parse("(- 1.23)").is_value(FluentExpression::new_negative(
+            FluentExpression::from_str("(- 1.23)").is_value(FluentExpression::new_negative(
                 FluentExpression::new_number(1.23)
             ))
         );
 
-        assert!(FluentExpression::parse("(- 1.23 2.34)").is_value(
+        assert!(FluentExpression::from_str("(- 1.23 2.34)").is_value(
             FluentExpression::new_binary_op(
                 BinaryOp::Subtraction,
                 FluentExpression::new_number(1.23),
@@ -147,7 +108,7 @@ mod tests {
         assert!(FluentExpression::from_str("(/ 1 2 3)").is_err());
 
         assert!(
-            FluentExpression::parse("fun-sym").is_value(FluentExpression::new_function(
+            FluentExpression::from_str("fun-sym").is_value(FluentExpression::new_function(
                 FunctionHead::new(FunctionSymbol::new_string("fun-sym"))
             ))
         );
@@ -161,5 +122,59 @@ mod tests {
         let start = std::time::Instant::now();
         assert!(FluentExpression::from_str(&input).is_ok());
         assert!(start.elapsed() < std::time::Duration::from_secs(1));
+    }
+
+    #[test]
+    fn doc_example_0() {
+        assert!(FluentExpression::from_str("1.23").is_value(FluentExpression::new_number(1.23)));
+
+        assert!(FluentExpression::from_str("(+ 1.23 2.34)").is_value(
+            FluentExpression::new_binary_op(
+                BinaryOp::Addition,
+                FluentExpression::new_number(1.23),
+                FluentExpression::new_number(2.34)
+            )
+        ));
+
+        assert!(FluentExpression::from_str("(+ 1.23 2.34 3.45)").is_value(
+            FluentExpression::new_multi_op(
+                MultiOp::Addition,
+                FluentExpression::new_number(1.23),
+                [
+                    FluentExpression::new_number(2.34),
+                    FluentExpression::new_number(3.45)
+                ]
+            )
+        ));
+
+        assert!(
+            FluentExpression::from_str("(- 1.23)").is_value(FluentExpression::new_negative(
+                FluentExpression::new_number(1.23)
+            ))
+        );
+
+        assert!(
+            FluentExpression::from_str("fun-sym").is_value(FluentExpression::new_function(
+                FunctionHead::new(FunctionSymbol::new_string("fun-sym"))
+            ))
+        );
+    }
+
+    /// A space after an arithmetic operator is optional.
+    #[test]
+    fn operators_need_no_space_after_them() {
+        let x = || FluentExpression::new_function(FunctionHead::new(FunctionSymbol::from("x")));
+        assert_eq!(
+            FluentExpression::from_str("(+x 1)"),
+            Ok(FluentExpression::new_binary_op(
+                BinaryOp::Addition,
+                x(),
+                FluentExpression::new_number(1)
+            ))
+        );
+        assert_eq!(
+            FluentExpression::from_str("(-x)"),
+            Ok(FluentExpression::new_negative(x()))
+        );
     }
 }

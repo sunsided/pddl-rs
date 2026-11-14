@@ -1,108 +1,51 @@
 //! Provides parsers for duration constraints.
 
-use nom::branch::alt;
-use nom::bytes::complete::tag_no_case;
-use nom::combinator::map;
-use nom::Parser;
-
-use crate::parsers::{parse_simple_duration_constraint, ParseResult, Span};
-use crate::parsers::{prefix_expr, space_separated_list1};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{alt, empty_or, parse_one, parse_simple_duration_constraint, prefix};
 use crate::types::DurationConstraint;
 
-/// Parses a duration constraint.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_duration_constraint, preamble::*};
-/// # use pddl::{DurationOperator, DurationConstraint, DurationValue, FunctionType, SimpleDurationConstraint, TimeSpecifier};
-/// let input = "()";
-/// assert!(parse_duration_constraint(input).is_value(None));
-///
-/// let input = "(= ?duration 5)";
-/// assert!(parse_duration_constraint(input).is_value(
-///     Some(DurationConstraint::new(
-///         SimpleDurationConstraint::Op(
-///             DurationOperator::Equal,
-///             DurationValue::Number(5.into())
-///         )
-///     ))
-/// ));
-///
-/// let input = "(at end (<= ?duration 1.23))";
-/// assert!(parse_duration_constraint(input).is_value(
-///     Some(DurationConstraint::new(
-///         SimpleDurationConstraint::new_at(
-///             TimeSpecifier::End,
-///             SimpleDurationConstraint::Op(
-///                 DurationOperator::LessThanOrEqual,
-///                 DurationValue::Number(1.23.into())
-///             )
-///         )
-///     ))
-/// ));
-///
-/// let input = "(and (at end (<= ?duration 1.23)) (>= ?duration 1.0))";
-/// assert!(parse_duration_constraint(input).is_value(
-///     Some(DurationConstraint::new_all([
-///         SimpleDurationConstraint::new_at(
-///             TimeSpecifier::End,
-///             SimpleDurationConstraint::Op(
-///                 DurationOperator::LessThanOrEqual,
-///                 DurationValue::Number(1.23.into())
-///             )
-///         ),
-///         SimpleDurationConstraint::new_op(
-///             DurationOperator::GreaterOrEqual,
-///             DurationValue::Number(1.0.into())
-///         )
-///     ]))
-/// ));
-///```
-pub fn parse_duration_constraint<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, Option<DurationConstraint>> {
-    let none = map(tag_no_case("()"), |_| None);
-    let simple = map(parse_simple_duration_constraint, |c| {
-        Some(DurationConstraint::from(c))
-    });
-
-    // : duration-inequalities
-    let and = map(
-        prefix_expr(
-            "and",
-            space_separated_list1(parse_simple_duration_constraint),
-        ),
-        |cs| Some(DurationConstraint::from_iter(cs)),
-    );
-
-    alt((none, simple, and)).parse(input.into())
+/// Parses a duration constraint, i.e. `() | <simple-duration-constraint>
+/// | (and <simple-duration-constraint>⁺)`. The empty list `()` is `None`.
+pub(crate) fn parse_duration_constraint(node: &Node) -> R<Option<DurationConstraint>> {
+    empty_or(node, |node| {
+        alt(
+            node,
+            &[
+                &|n| parse_simple_duration_constraint(n).map(DurationConstraint::from),
+                &|n| {
+                    prefix(n, "and", |args| {
+                        args.list1(parse_simple_duration_constraint)
+                    })
+                    .map(DurationConstraint::from_iter)
+                },
+            ],
+        )
+    })
 }
 
 impl crate::parsers::Parser for DurationConstraint {
     type Item = Option<DurationConstraint>;
 
-    /// See [`parse_duration_constraint`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_duration_constraint(input)
+    fn from_str(input: &str) -> Result<Self::Item, crate::parsers::ParseError> {
+        parse_one(input, parse_duration_constraint)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{
-        DurationConstraint, DurationOperator, DurationValue, Parser, SimpleDurationConstraint,
-        TimeSpecifier,
-    };
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
         let input = "()";
-        assert!(DurationConstraint::parse(input).is_value(None));
+        assert!(DurationConstraint::from_str(input).is_value(None));
 
         let input = "(= ?duration 5)";
         assert!(
-            DurationConstraint::parse(input).is_value(Some(DurationConstraint::new(
+            DurationConstraint::from_str(input).is_value(Some(DurationConstraint::new(
                 SimpleDurationConstraint::Op(
                     DurationOperator::Equal,
                     DurationValue::Number(5.into())
@@ -112,7 +55,7 @@ mod tests {
 
         let input = "(at end (<= ?duration 1.23))";
         assert!(
-            DurationConstraint::parse(input).is_value(Some(DurationConstraint::new(
+            DurationConstraint::from_str(input).is_value(Some(DurationConstraint::new(
                 SimpleDurationConstraint::new_at(
                     TimeSpecifier::End,
                     SimpleDurationConstraint::Op(
@@ -125,7 +68,53 @@ mod tests {
 
         let input = "(and (at end (<= ?duration 1.23)) (>= ?duration 1.0))";
         assert!(
-            DurationConstraint::parse(input).is_value(Some(DurationConstraint::new_all([
+            DurationConstraint::from_str(input).is_value(Some(DurationConstraint::new_all([
+                SimpleDurationConstraint::new_at(
+                    TimeSpecifier::End,
+                    SimpleDurationConstraint::Op(
+                        DurationOperator::LessThanOrEqual,
+                        DurationValue::Number(1.23.into())
+                    )
+                ),
+                SimpleDurationConstraint::new_op(
+                    DurationOperator::GreaterOrEqual,
+                    DurationValue::Number(1.0.into())
+                )
+            ])))
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        let input = "()";
+        assert!(DurationConstraint::from_str(input).is_value(None));
+
+        let input = "(= ?duration 5)";
+        assert!(
+            DurationConstraint::from_str(input).is_value(Some(DurationConstraint::new(
+                SimpleDurationConstraint::Op(
+                    DurationOperator::Equal,
+                    DurationValue::Number(5.into())
+                )
+            )))
+        );
+
+        let input = "(at end (<= ?duration 1.23))";
+        assert!(
+            DurationConstraint::from_str(input).is_value(Some(DurationConstraint::new(
+                SimpleDurationConstraint::new_at(
+                    TimeSpecifier::End,
+                    SimpleDurationConstraint::Op(
+                        DurationOperator::LessThanOrEqual,
+                        DurationValue::Number(1.23.into())
+                    )
+                )
+            )))
+        );
+
+        let input = "(and (at end (<= ?duration 1.23)) (>= ?duration 1.0))";
+        assert!(
+            DurationConstraint::from_str(input).is_value(Some(DurationConstraint::new_all([
                 SimpleDurationConstraint::new_at(
                     TimeSpecifier::End,
                     SimpleDurationConstraint::Op(

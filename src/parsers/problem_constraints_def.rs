@@ -1,56 +1,43 @@
-//! Provides parsers for problem constraint definitions.
+//! Provides parsers for problem constraints definitions.
 
-use nom::combinator::map;
-use nom::Parser;
-
-use crate::parsers::{parse_pref_con_gd, prefix_expr, ParseResult, Span};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{parse_pref_con_gd, prefix};
 use crate::types::ProblemConstraintsDef;
 
-/// Parses problem constraint definitions, i.e. `(:constraints <pref-con-GD>)`.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_problem_constraints_def, preamble::*};
-/// # use pddl::{ConstraintGoalDefinition, ProblemConstraintsDef, PreferenceConstraintGoalDefinitions};
-/// let input = "(:constraints (preference test (and)))";
-/// assert!(parse_problem_constraints_def(input).is_value(
-///     ProblemConstraintsDef::new(
-///         PreferenceConstraintGoalDefinitions::preference(Some("test".into()), ConstraintGoalDefinition::and([]))
-///     )
-/// ));
-/// ```
-pub fn parse_problem_constraints_def<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, ProblemConstraintsDef> {
-    // :constraints
-    map(
-        prefix_expr(":constraints", parse_pref_con_gd),
-        ProblemConstraintsDef::new,
-    )
-    .parse(input.into())
+/// Parses a problem constraints definition, i.e. `(:constraints <pref-con-GD>)`.
+pub(crate) fn parse_problem_constraints_def(node: &Node) -> R<ProblemConstraintsDef> {
+    prefix(node, ":constraints", |args| {
+        parse_pref_con_gd(args.next()?).map(ProblemConstraintsDef::new)
+    })
 }
 
-impl crate::parsers::Parser for ProblemConstraintsDef {
-    type Item = ProblemConstraintsDef;
-
-    /// See [`parse_problem_constraints_def`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_problem_constraints_def(input)
-    }
-}
+crate::parsers::impl_parser!(ProblemConstraintsDef => parse_problem_constraints_def);
 
 #[cfg(test)]
 mod tests {
-    use crate::parsers::preamble::*;
-    use crate::{
-        ConstraintGoalDefinition, PreferenceConstraintGoalDefinitions, ProblemConstraintsDef,
-    };
+    use crate::parsers::UnwrapValue;
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
         let input = "(:constraints (preference test (and)))";
         assert!(
-            ProblemConstraintsDef::parse(input).is_value(ProblemConstraintsDef::new(
+            ProblemConstraintsDef::from_str(input).is_value(ProblemConstraintsDef::new(
+                PreferenceConstraintGoalDefinitions::preference(
+                    Some("test".into()),
+                    ConstraintGoalDefinition::and([])
+                )
+            ))
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        let input = "(:constraints (preference test (and)))";
+        assert!(
+            ProblemConstraintsDef::from_str(input).is_value(ProblemConstraintsDef::new(
                 PreferenceConstraintGoalDefinitions::preference(
                     Some("test".into()),
                     ConstraintGoalDefinition::and([])

@@ -1,84 +1,34 @@
 //! Provides parsers for effect conditions.
 
-use nom::branch::alt;
-use nom::combinator::map;
-use nom::Parser;
-
-use crate::parsers::{parse_p_effect, ParseResult, Span};
-use crate::parsers::{prefix_expr, space_separated_list0};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{alt, parse_p_effect, prefix};
 use crate::types::EffectCondition;
 
-/// Parses effect conditions.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_effect_condition, preamble::*};
-/// # use pddl::{AtomicFormula, EffectCondition, EqualityAtomicFormula, PrimitiveEffect, Term};
-/// assert!(parse_effect_condition("(= x y)").is_value(
-///     EffectCondition::Single(
-///         PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
-///             EqualityAtomicFormula::new(
-///                 Term::Name("x".into()),
-///                 Term::Name("y".into()))
-///             )
-///         )
-///     )
-/// ));
-///
-/// assert!(parse_effect_condition("(and (= x y) (not (= ?a B)))").is_value(
-///     EffectCondition::All(vec![
-///         PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
-///             EqualityAtomicFormula::new(
-///                 Term::Name("x".into()),
-///                 Term::Name("y".into()))
-///             )
-///         ),
-///         PrimitiveEffect::NotAtomicFormula(AtomicFormula::Equality(
-///             EqualityAtomicFormula::new(
-///                 Term::Variable("a".into()),
-///                 Term::Name("B".into()))
-///             )
-///         )
-///     ])
-/// ));
-/// ```
+/// Parses an effect condition, i.e. `(and <p-effect>*) | <p-effect>`.
 #[allow(deprecated)]
-pub fn parse_effect_condition<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, EffectCondition> {
-    let exactly = map(parse_p_effect, EffectCondition::from);
-    let all = map(
-        prefix_expr("and", space_separated_list0(parse_p_effect)),
-        EffectCondition::from,
-    );
-
-    alt((all, exactly)).parse(input.into())
+pub(crate) fn parse_effect_condition(node: &Node) -> R<EffectCondition> {
+    alt(
+        node,
+        &[
+            &|n| prefix(n, "and", |args| args.list0(parse_p_effect)).map(EffectCondition::from),
+            &|n| parse_p_effect(n).map(EffectCondition::from),
+        ],
+    )
 }
 
-/// Alias for [`parse_effect_condition`].
-#[deprecated(since = "0.2.0", note = "Use `parse_effect_condition` instead")]
-pub fn parse_cond_effect<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, EffectCondition> {
-    parse_effect_condition(input)
-}
-
-impl crate::parsers::Parser for EffectCondition {
-    type Item = EffectCondition;
-
-    /// See [`parse_effect_condition`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_effect_condition(input)
-    }
-}
+crate::parsers::impl_parser!(EffectCondition => parse_effect_condition);
 
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
-    use crate::{
-        AtomicFormula, EffectCondition, EqualityAtomicFormula, Parser, PrimitiveEffect, Term,
-    };
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
         assert!(
-            EffectCondition::parse("(= x y)").is_value(EffectCondition::Single(
+            EffectCondition::from_str("(= x y)").is_value(EffectCondition::Single(
                 PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
                     EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
                 ))
@@ -86,8 +36,8 @@ mod tests {
         );
 
         assert!(
-            EffectCondition::parse("(and (= x y) (not (= ?a B)))").is_value(EffectCondition::All(
-                vec![
+            EffectCondition::from_str("(and (= x y) (not (= ?a B)))").is_value(
+                EffectCondition::All(vec![
                     PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
                         EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
                     )),
@@ -97,13 +47,40 @@ mod tests {
                             Term::Name("B".into())
                         )
                     ))
-                ]
-            ))
+                ])
+            )
         );
     }
 
     #[test]
     fn test_parse_empty_and() {
-        assert!(EffectCondition::parse("(and)").is_value(EffectCondition::All(vec![])));
+        assert!(EffectCondition::from_str("(and)").is_value(EffectCondition::All(vec![])));
+    }
+
+    #[test]
+    fn doc_example_0() {
+        assert!(
+            EffectCondition::from_str("(= x y)").is_value(EffectCondition::Single(
+                PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
+                    EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
+                ))
+            ))
+        );
+
+        assert!(
+            EffectCondition::from_str("(and (= x y) (not (= ?a B)))").is_value(
+                EffectCondition::All(vec![
+                    PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
+                        EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
+                    )),
+                    PrimitiveEffect::NotAtomicFormula(AtomicFormula::Equality(
+                        EqualityAtomicFormula::new(
+                            Term::Variable("a".into()),
+                            Term::Name("B".into())
+                        )
+                    ))
+                ])
+            )
+        );
     }
 }

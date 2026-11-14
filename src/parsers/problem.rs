@@ -1,173 +1,87 @@
 //! Provides parsers for problem definitions.
 
-use nom::branch::alt;
-use nom::combinator::map;
-use nom::Parser;
-
-use crate::parsers::utilities::skip_whitespace_and_comments;
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
 use crate::parsers::{
-    failure_at, fold_sections, parse_name, prefix_expr, set_once, ws2, NomError, ParseResult, Span,
-};
-use crate::parsers::{
-    parse_problem_constraints_def, parse_problem_goal_def, parse_problem_init_def,
+    parse_name, parse_problem_constraints_def, parse_problem_goal_def, parse_problem_init_def,
     parse_problem_length_spec, parse_problem_metric_spec, parse_problem_objects_declaration,
-    parse_require_def,
+    parse_require_def, prefix, set_once,
 };
-use crate::types::{
-    InitElements, LengthSpec, MetricSpec, Name, Objects, Problem, ProblemConstraintsDef,
-    ProblemGoalDefinition, Requirements,
-};
+use crate::types::Problem;
 
-/// Parses a problem definitions.
+/// Parses a problem definition, i.e. `(define (problem <name>) <section>*)`.
 ///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_action_def, parse_problem, preamble::*};
-/// # use pddl::{Name, PreconditionGoalDefinition};
-/// let input = r#"(define (problem get-paid)
-///         (:domain briefcase-world)
-///         (:init (place home) (place office)
-///                (object p) (object d) (object b)
-///                (at B home) (at P home) (at D home) (in P))
-///         (:goal (and (at B office) (at D office) (at P home)))
-///     )"#;
-///
-/// let (remainder, problem) = parse_problem(input).unwrap();
-///
-/// assert!(remainder.is_empty());
-/// assert_eq!(problem.name(), &Name::new("get-paid"));
-/// assert_eq!(problem.domain(), &Name::new("briefcase-world"));
-/// assert!(problem.requirements().is_empty());
-/// assert_eq!(problem.init().len(), 9);
-/// assert_eq!(problem.goals().len(), 3);
-/// ```
-pub fn parse_problem<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Problem> {
-    ws2(prefix_expr("define", parse_problem_body)).parse(input.into())
+/// The sections may appear in any order, each at most once; `:domain`, `:init`
+/// and `:goal` are required.
+pub(crate) fn parse_problem(node: &Node) -> R<Problem> {
+    prefix(node, "define", |args| {
+        let name = prefix(args.next()?, "problem", |args| parse_name(args.next()?))?;
+        let mut domain = None;
+        let mut requirements = None;
+        let mut objects = None;
+        let mut init = None;
+        let mut goal = None;
+        let mut constraints = None;
+        let mut metric = None;
+        let mut length = None;
+        for section in args.rest() {
+            if section.atom().is_some() {
+                return Err(section.error());
+            }
+            let head = section.head().unwrap_or_default().to_ascii_lowercase();
+            match head.as_str() {
+                ":domain" => {
+                    let value = prefix(section, ":domain", |args| parse_name(args.next()?))?;
+                    set_once(&mut domain, value, section)?;
+                }
+                ":requirements" => {
+                    set_once(&mut requirements, parse_require_def(section)?, section)?;
+                }
+                ":objects" => {
+                    let value = parse_problem_objects_declaration(section)?;
+                    set_once(&mut objects, value, section)?;
+                }
+                ":init" => set_once(&mut init, parse_problem_init_def(section)?, section)?,
+                ":goal" => set_once(&mut goal, parse_problem_goal_def(section)?, section)?,
+                ":constraints" => {
+                    let value = parse_problem_constraints_def(section)?;
+                    set_once(&mut constraints, value, section)?;
+                }
+                // :numeric-fluents
+                ":metric" => set_once(&mut metric, parse_problem_metric_spec(section)?, section)?,
+                // Deprecated since PDDL 2.1
+                ":length" => set_once(&mut length, parse_problem_length_spec(section)?, section)?,
+                _ => return Err(section.error().reason("unknown section").fatal()),
+            }
+        }
+        // Exhaustive per section, so a new required section can't be reported as another one.
+        let missing = |reason| Err(args.error_at_close().reason(reason).fatal());
+        let (domain, init, goal) = match (domain, init, goal) {
+            (Some(domain), Some(init), Some(goal)) => (domain, init, goal),
+            (None, _, _) => return missing("missing `:domain`"),
+            (_, None, _) => return missing("missing `:init`"),
+            (_, _, None) => return missing("missing `:goal`"),
+        };
+        Ok(Problem::new(
+            name,
+            domain,
+            requirements.unwrap_or_default(),
+            objects.unwrap_or_default(),
+            init,
+            goal,
+            constraints.unwrap_or_default(),
+            metric,
+            length,
+        ))
+    })
 }
 
-/// A top-level part of a problem definition.
-enum Section {
-    Domain(Name),
-    Requirements(Requirements),
-    Objects(Objects),
-    Init(InitElements),
-    Goal(ProblemGoalDefinition),
-    Constraints(ProblemConstraintsDef),
-    Metric(MetricSpec),
-    Length(LengthSpec),
-}
-
-/// Parses `(problem <name>)` followed by the sections in any order.
-///
-/// Each section may appear at most once; `:domain`, `:init` and `:goal` are required.
-fn parse_problem_body(input: Span) -> ParseResult<Problem> {
-    let (input, name) = prefix_expr("problem", parse_name).parse(input)?;
-
-    let mut domain = None;
-    let mut requirements = None;
-    let mut objects = None;
-    let mut init = None;
-    let mut goal = None;
-    let mut constraints = None;
-    let mut metric = None;
-    let mut length = None;
-
-    let section = alt((
-        map(prefix_expr(":domain", parse_name), Section::Domain),
-        map(parse_require_def, Section::Requirements),
-        map(parse_problem_objects_declaration, Section::Objects),
-        map(parse_problem_init_def, Section::Init),
-        map(parse_problem_goal_def, Section::Goal),
-        map(parse_problem_constraints_def, Section::Constraints),
-        // :numeric-fluents
-        map(parse_problem_metric_spec, Section::Metric),
-        // Deprecated since PDDL 2.1
-        map(parse_problem_length_spec, Section::Length),
-    ));
-    let (input, ()) = fold_sections(input, section, |section, at| match section {
-        Section::Domain(v) => set_once(&mut domain, v, at),
-        Section::Requirements(v) => set_once(&mut requirements, v, at),
-        Section::Objects(v) => set_once(&mut objects, v, at),
-        Section::Init(v) => set_once(&mut init, v, at),
-        Section::Goal(v) => set_once(&mut goal, v, at),
-        Section::Constraints(v) => set_once(&mut constraints, v, at),
-        Section::Metric(v) => set_once(&mut metric, v, at),
-        Section::Length(v) => set_once(&mut length, v, at),
-    })?;
-
-    // Exhaustive per section, so a new required section can't be reported as another one.
-    let (domain, init, goal) = match (domain, init, goal) {
-        (Some(domain), Some(init), Some(goal)) => (domain, init, goal),
-        (None, _, _) => return Err(missing_section(input, "missing `:domain`")),
-        (_, None, _) => return Err(missing_section(input, "missing `:init`")),
-        (_, _, None) => return Err(missing_section(input, "missing `:goal`")),
-    };
-
-    let problem = Problem::new(
-        name,
-        domain,
-        requirements.unwrap_or_default(), // TODO: Do we need to imply STRIPS if empty?
-        objects.unwrap_or_default(),
-        init,
-        goal,
-        constraints.unwrap_or_default(),
-        metric,
-        length,
-    );
-    Ok((input, problem))
-}
-
-/// The error for a required section that's absent where the sections end at `input`.
-fn missing_section<'a>(input: Span<'a>, reason: &'a str) -> nom::Err<NomError<'a>> {
-    let at = match skip_whitespace_and_comments(input) {
-        Ok((at, ())) => at,
-        Err(e) => return e,
-    };
-    // Only call a section missing where the sections really end; anything
-    // else (e.g. `:goal (and)` without parentheses) is just unexpected.
-    if at.fragment().is_empty() || at.fragment().starts_with(')') {
-        failure_at(at, reason)
-    } else {
-        nom::Err::Failure(NomError::new(at, nom::error::ErrorKind::Tag))
-    }
-}
-
-impl crate::parsers::Parser for Problem {
-    type Item = Problem;
-
-    /// Parses a problem definitions.
-    ///
-    /// ## Example
-    /// ```
-    /// # use pddl::{Name, Parser, Problem};
-    /// let input = r#"(define (problem get-paid)
-    ///         (:domain briefcase-world)
-    ///         (:init (place home) (place office)
-    ///                (object p) (object d) (object b)
-    ///                (at B home) (at P home) (at D home) (in P))
-    ///         (:goal (and (at B office) (at D office) (at P home)))
-    ///     )"#;
-    ///
-    /// let (_, problem) = Problem::parse(input).unwrap();
-    ///
-    /// assert_eq!(problem.name(), &Name::new("get-paid"));
-    /// assert_eq!(problem.domain(), &Name::new("briefcase-world"));
-    /// assert!(problem.requirements().is_empty());
-    /// assert_eq!(problem.init().len(), 9);
-    /// assert_eq!(problem.goals().len(), 3);
-    /// ```
-    ///
-    /// ## See also
-    /// See [`parse_problem`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_problem(input)
-    }
-}
+crate::parsers::impl_parser!(Problem => parse_problem);
 
 #[cfg(test)]
 mod tests {
-    use crate::parsers::preamble::*;
-    use crate::{Name, Problem};
+
+    use crate::*;
 
     #[test]
     fn sections_in_any_order() {
@@ -209,9 +123,44 @@ mod tests {
                  (:goal (and (at B office) (at D office) (at P home)))
              )"#;
 
-        let (remainder, problem) = Problem::parse(input).unwrap();
+        let problem = Problem::from_str(input).unwrap();
+        assert_eq!(problem.name(), &Name::new("get-paid"));
+        assert_eq!(problem.domain(), &Name::new("briefcase-world"));
+        assert!(problem.requirements().is_empty());
+        assert_eq!(problem.init().len(), 9);
+        assert_eq!(problem.goals().len(), 3);
+    }
 
-        assert!(remainder.is_empty());
+    #[test]
+    fn doc_example_0() {
+        let input = r#"(define (problem get-paid)
+                (:domain briefcase-world)
+                (:init (place home) (place office)
+                       (object p) (object d) (object b)
+                       (at B home) (at P home) (at D home) (in P))
+                (:goal (and (at B office) (at D office) (at P home)))
+            )"#;
+
+        let problem = Problem::from_str(input).unwrap();
+        assert_eq!(problem.name(), &Name::new("get-paid"));
+        assert_eq!(problem.domain(), &Name::new("briefcase-world"));
+        assert!(problem.requirements().is_empty());
+        assert_eq!(problem.init().len(), 9);
+        assert_eq!(problem.goals().len(), 3);
+    }
+
+    #[test]
+    fn doc_example_1() {
+        let input = r#"(define (problem get-paid)
+                (:domain briefcase-world)
+                (:init (place home) (place office)
+                       (object p) (object d) (object b)
+                       (at B home) (at P home) (at D home) (in P))
+                (:goal (and (at B office) (at D office) (at P home)))
+            )"#;
+
+        let problem = Problem::from_str(input).unwrap();
+
         assert_eq!(problem.name(), &Name::new("get-paid"));
         assert_eq!(problem.domain(), &Name::new("briefcase-world"));
         assert!(problem.requirements().is_empty());

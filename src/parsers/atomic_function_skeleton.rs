@@ -1,71 +1,55 @@
 //! Provides parsers for atomic function skeletons.
 
-use crate::parsers::{parens, typed_list, ws, ParseResult, Span};
-use crate::parsers::{parse_function_symbol, parse_variable};
+use crate::parsers::error::R;
+use crate::parsers::sexpr::Node;
+use crate::parsers::{parens, parse_function_symbol, parse_variable, typed_list};
 use crate::types::AtomicFunctionSkeleton;
-use nom::combinator::map;
-use nom::Parser;
 
 /// Parses an atomic function skeleton, i.e. `(<function-symbol> <typed list (variable)>)`.
-///
-/// ## Example
-/// ```
-/// # use pddl::parsers::{parse_atomic_function_skeleton, Span, UnwrapValue};
-/// # use pddl::{Variable, AtomicFunctionSkeleton, Predicate, FunctionSymbol};
-/// # use pddl::{ToTyped, TypedList};
-/// assert!(parse_atomic_function_skeleton(Span::new("(battery-amount ?r - rover)")).is_value(
-///     AtomicFunctionSkeleton::new(
-///         FunctionSymbol::from("battery-amount"),
-///         TypedList::from_iter([
-///             Variable::from("r").to_typed("rover")
-///         ]))
-/// ));
-/// ```
-pub fn parse_atomic_function_skeleton<'a, T: Into<Span<'a>>>(
-    input: T,
-) -> ParseResult<'a, AtomicFunctionSkeleton> {
-    map(
-        parens((parse_function_symbol, ws(typed_list(parse_variable)))),
-        AtomicFunctionSkeleton::from,
-    )
-    .parse(input.into())
+pub(crate) fn parse_atomic_function_skeleton(node: &Node) -> R<AtomicFunctionSkeleton> {
+    parens(node, |args| {
+        let symbol = parse_function_symbol(args.next()?)?;
+        let variables = typed_list(args, parse_variable)?;
+        Ok(AtomicFunctionSkeleton::from((symbol, variables)))
+    })
 }
 
-impl crate::parsers::Parser for AtomicFunctionSkeleton {
-    type Item = AtomicFunctionSkeleton;
-
-    /// Parses an atomic function skeleton, i.e. `(<function-symbol> <typed list (variable)>)`.
-    ///
-    /// ## Example
-    /// ```
-    /// # use pddl::{Variable, AtomicFunctionSkeleton, FunctionSymbol, Parser};
-    /// # use pddl::{ToTyped, TypedList};
-    /// let (_, value) = AtomicFunctionSkeleton::parse("(battery-amount ?r - rover)").unwrap();
-    ///
-    /// assert_eq!(value,
-    ///     AtomicFunctionSkeleton::new(
-    ///         FunctionSymbol::from("battery-amount"),
-    ///         TypedList::from_iter([
-    ///             Variable::from("r").to_typed("rover")
-    ///         ]))
-    /// );
-    /// ```
-    ///
-    /// ## See also
-    /// See [`parse_atomic_function_skeleton`].
-    fn parse<'a, S: Into<Span<'a>>>(input: S) -> ParseResult<'a, Self::Item> {
-        parse_atomic_function_skeleton(input)
-    }
-}
+crate::parsers::impl_parser!(AtomicFunctionSkeleton => parse_atomic_function_skeleton);
 
 #[cfg(test)]
 mod tests {
-    use crate::{AtomicFunctionSkeleton, FunctionSymbol, Parser, Variable};
-    use crate::{ToTyped, TypedList};
+    use crate::parsers::UnwrapValue;
+
+    use crate::*;
 
     #[test]
     fn test_parse() {
-        let (_, value) = AtomicFunctionSkeleton::parse("(battery-amount ?r - rover)").unwrap();
+        let value = AtomicFunctionSkeleton::from_str("(battery-amount ?r - rover)").unwrap();
+        assert_eq!(
+            value,
+            AtomicFunctionSkeleton::new(
+                FunctionSymbol::from("battery-amount"),
+                TypedList::from_iter([Variable::from("r").to_typed("rover")])
+            )
+        );
+    }
+
+    #[test]
+    fn doc_example_0() {
+        assert!(
+            AtomicFunctionSkeleton::from_str("(battery-amount ?r - rover)").is_value(
+                AtomicFunctionSkeleton::new(
+                    FunctionSymbol::from("battery-amount"),
+                    TypedList::from_iter([Variable::from("r").to_typed("rover")])
+                )
+            )
+        );
+    }
+
+    #[test]
+    fn doc_example_1() {
+        let value = AtomicFunctionSkeleton::from_str("(battery-amount ?r - rover)").unwrap();
+
         assert_eq!(
             value,
             AtomicFunctionSkeleton::new(
