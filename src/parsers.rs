@@ -1,88 +1,31 @@
 //! Provides the [`Parser`] trait and the [`ParseError`] it reports.
 //!
 //! Parsing runs in two steps: `sexpr` reads the text into a tree of atoms and
-//! parenthesized lists, each with its position, and the grammar rules in the
-//! other modules turn that tree into the typed AST.
+//! parenthesized lists, each with its position, and the grammar rules turn that
+//! tree into the typed AST. The rules are grouped by grammar area, mirroring
+//! `crate::types`: `structure` (domains, problems and their sections), `actions`,
+//! `goals`, `durative`, `expressions` and `terms`. `utilities` holds the helpers
+//! they share.
 
-mod action_def;
-mod action_symbol;
-mod assign_op;
-mod assign_op_t;
-mod atomic_formula;
-mod atomic_formula_skeleton;
-mod atomic_function_skeleton;
-mod basic_function_term;
-mod binary_comp;
-mod binary_op;
-mod c_effect;
-mod con_gd;
-mod cond_effect;
-mod constants_def;
-mod d_op;
-mod d_value;
-mod da_def;
-mod da_effect;
-mod da_gd;
-mod da_symbol;
-mod derived_predicate;
-mod domain;
-mod domain_constraints_def;
-mod duration_constraint;
-mod effects;
+mod actions;
+mod durative;
+mod expressions;
+mod goals;
+mod structure;
+mod terms;
+
+pub(crate) use actions::*;
+pub(crate) use durative::*;
+pub(crate) use expressions::*;
+pub(crate) use goals::*;
+pub(crate) use structure::*;
+pub(crate) use terms::*;
+
 mod error;
-mod f_assign_da;
-mod f_comp;
-mod f_exp;
-mod f_exp_da;
-mod f_exp_t;
-mod f_head;
-mod function_symbol;
-mod function_term;
-mod function_type;
-mod function_typed_list;
-mod functions_def;
-mod gd;
-mod goal_def;
-mod init_def;
-mod init_el;
-mod interval;
-mod length_spec;
-mod literal;
-mod metric_f_exp;
-mod metric_spec;
-mod multi_op;
-mod name;
-mod number;
-mod objects_def;
-mod optimization;
-mod p_effect;
-mod pddl_file;
-mod pre_gd;
-mod predicate;
-mod predicates_def;
-mod pref_con_gd;
-mod pref_gd;
-mod pref_name;
-mod pref_timed_gd;
-mod primitive_type;
-mod problem;
-mod problem_constraints_def;
-mod requirements;
 mod sexpr;
-mod simple_duration_constraint;
-mod structure_def;
-mod term;
 #[cfg(test)]
 mod test_helpers;
-mod time_specifier;
-mod timed_effect;
-mod timed_gd;
-mod timeless_def;
-mod r#type;
-mod typed_list;
-mod types_def;
 mod utilities;
-mod variable;
 
 pub use error::ParseError;
 
@@ -93,80 +36,9 @@ use sexpr::Node;
 pub(crate) use test_helpers::UnwrapValue;
 
 // Grammar rules, shared between the rule modules.
-pub(crate) use action_def::parse_action_def;
-pub(crate) use action_symbol::parse_action_symbol;
-pub(crate) use assign_op::parse_assign_op;
-pub(crate) use assign_op_t::parse_assign_op_t;
-pub(crate) use atomic_formula::atomic_formula;
-pub(crate) use atomic_formula_skeleton::parse_atomic_formula_skeleton;
-pub(crate) use atomic_function_skeleton::parse_atomic_function_skeleton;
-pub(crate) use basic_function_term::parse_basic_function_term;
-pub(crate) use binary_comp::parse_binary_comp;
-pub(crate) use binary_op::parse_binary_op;
-pub(crate) use c_effect::parse_c_effect;
-pub(crate) use con_gd::parse_con_gd;
-pub(crate) use cond_effect::parse_effect_condition;
-pub(crate) use constants_def::parse_constants_def;
-pub(crate) use d_op::parse_d_op;
-pub(crate) use d_value::parse_d_value;
-pub(crate) use da_def::parse_da_def;
-pub(crate) use da_effect::parse_da_effect;
-pub(crate) use da_gd::parse_da_gd;
-pub(crate) use da_symbol::parse_da_symbol;
-pub(crate) use derived_predicate::parse_derived_predicate;
-pub(crate) use domain::parse_domain;
-pub(crate) use domain_constraints_def::parse_domain_constraints_def;
-pub(crate) use duration_constraint::parse_duration_constraint;
-pub(crate) use effects::parse_effect;
-pub(crate) use f_assign_da::parse_f_assign_da;
-pub(crate) use f_comp::parse_f_comp;
-pub(crate) use f_exp::{op_expr, parse_f_exp};
-pub(crate) use f_exp_da::parse_f_exp_da;
-pub(crate) use f_exp_t::parse_f_exp_t;
-pub(crate) use f_head::parse_f_head;
-pub(crate) use function_symbol::parse_function_symbol;
-pub(crate) use function_term::parse_function_term;
-pub(crate) use function_typed_list::function_typed_list;
-pub(crate) use functions_def::parse_functions_def;
-pub(crate) use gd::parse_gd;
-pub(crate) use goal_def::parse_problem_goal_def;
-pub(crate) use init_def::parse_problem_init_def;
-pub(crate) use init_el::parse_init_el;
-pub(crate) use interval::parse_interval;
-pub(crate) use length_spec::parse_problem_length_spec;
-pub(crate) use literal::literal;
-pub(crate) use metric_f_exp::parse_metric_f_exp;
-pub(crate) use metric_spec::parse_problem_metric_spec;
-pub(crate) use name::{is_name, parse_name};
-pub(crate) use number::parse_number;
-pub(crate) use objects_def::parse_problem_objects_declaration;
-pub(crate) use optimization::parse_optimization;
-pub(crate) use p_effect::parse_p_effect;
-pub(crate) use pre_gd::parse_pre_gd;
-pub(crate) use predicate::parse_predicate;
-pub(crate) use predicates_def::parse_predicates_def;
-pub(crate) use pref_con_gd::parse_pref_con_gd;
-pub(crate) use pref_gd::parse_pref_gd;
-pub(crate) use pref_name::parse_pref_name;
-pub(crate) use pref_timed_gd::parse_pref_timed_gd;
-pub(crate) use primitive_type::parse_primitive_type;
-pub(crate) use problem::parse_problem;
-pub(crate) use problem_constraints_def::parse_problem_constraints_def;
-pub(crate) use r#type::parse_type;
-pub(crate) use requirements::parse_require_def;
-pub(crate) use simple_duration_constraint::parse_simple_duration_constraint;
-pub(crate) use structure_def::parse_structure_def;
-pub(crate) use term::parse_term;
-pub(crate) use time_specifier::parse_time_specifier;
-pub(crate) use timed_effect::parse_timed_effect;
-pub(crate) use timed_gd::parse_timed_gd;
-pub(crate) use timeless_def::parse_timeless_def;
-pub(crate) use typed_list::{typed_list, typed_variables};
-pub(crate) use types_def::parse_types_def;
 pub(crate) use utilities::{
     alt, empty_or, keyword_arg, opt_keyword_arg, parens, prefix, set_once, word, Args,
 };
-pub(crate) use variable::parse_variable;
 
 /// Provides the [`Parser::from_str`] method.
 pub trait Parser {
@@ -262,24 +134,24 @@ mod tests {
             }};
         }
         use crate::types::*;
-        check!(AssignOp, crate::types::assign_op::names:
+        check!(AssignOp, crate::types::expressions::assign_op::names:
             CHANGE, ASSIGN, SCALE_UP, SCALE_DOWN, INCREASE, DECREASE);
-        check!(TimedAssignOperator, crate::types::assign_op_t::names:
+        check!(TimedAssignOperator, crate::types::durative::assign_op_t::names:
             INCREASE, DECREASE);
-        check!(BinaryOp, crate::types::binary_op::names:
+        check!(BinaryOp, crate::types::expressions::binary_op::names:
             MULTIPLICATION, ADDITION, SUBTRACTION, DIVISION);
-        check!(BinaryComparison, crate::types::binary_comp::names:
+        check!(BinaryComparison, crate::types::expressions::binary_comp::names:
             GREATER_THAN, LESS_THAN, EQUAL, GREATER_THAN_OR_EQUAL, LESS_THAN_OR_EQUAL);
-        check!(DurationOperator, crate::types::d_op::names:
+        check!(DurationOperator, crate::types::durative::d_op::names:
             EQUAL, GREATER_OR_EQUAL, LESS_THAN_OR_EQUAL);
-        check!(Interval, crate::types::interval::names: ALL);
-        check!(MultiOp, crate::types::multi_op::names:
+        check!(Interval, crate::types::durative::interval::names: ALL);
+        check!(MultiOp, crate::types::expressions::multi_op::names:
             MULTIPLICATION, ADDITION);
-        check!(Optimization, crate::types::optimization::names:
+        check!(Optimization, crate::types::expressions::optimization::names:
             MINIMIZE, MAXIMIZE);
-        check!(TimeSpecifier, crate::types::time_specifier::names:
+        check!(TimeSpecifier, crate::types::durative::time_specifier::names:
             START, END);
-        check!(Requirement, crate::types::requirement::names:
+        check!(Requirement, crate::types::structure::requirement::names:
             STRIPS, TYPING, NEGATIVE_PRECONDITIONS, DISJUNCTIVE_PRECONDITIONS, EQUALITY,
             EXISTENTIAL_PRECONDITIONS, UNIVERSAL_PRECONDITIONS, QUANTIFIED_PRECONDITIONS,
             CONDITIONAL_EFFECTS, FLUENTS, NUMERIC_FLUENTS, OBJECT_FLUENTS, ADL,

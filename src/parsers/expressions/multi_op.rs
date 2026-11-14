@@ -3,7 +3,7 @@
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::word;
-use crate::types::multi_op::names;
+use crate::types::expressions::multi_op::names;
 use crate::types::MultiOp;
 
 /// Parses a multi-operand operator (`<multi-op>`), ignoring case.

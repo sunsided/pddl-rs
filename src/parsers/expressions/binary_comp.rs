@@ -3,7 +3,7 @@
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::word;
-use crate::types::binary_comp::names;
+use crate::types::expressions::binary_comp::names;
 use crate::types::BinaryComparison;
 
 /// Parses a binary comparison (`<binary-comp>`), ignoring case.

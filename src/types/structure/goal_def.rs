@@ -1,6 +1,6 @@
 //! Contains the [`ProblemGoalDescription`] type.
 
-use crate::types::pre_gd::PreconditionGoalDescriptions;
+use crate::types::PreconditionGoalDescriptions;
 use crate::PreconditionGoalDescription;
 use std::ops::Deref;
 

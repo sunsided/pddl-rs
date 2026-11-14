@@ -3,7 +3,7 @@
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::word;
-use crate::types::interval::names;
+use crate::types::durative::interval::names;
 use crate::types::Interval;
 
 /// Parses an interval (`<interval>`), ignoring case.

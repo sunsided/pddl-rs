@@ -3,7 +3,7 @@
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::word;
-use crate::types::binary_op::names;
+use crate::types::expressions::binary_op::names;
 use crate::types::BinaryOp;
 
 /// Parses a binary operator (`<binary-op>`), ignoring case.

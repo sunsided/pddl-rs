@@ -3,7 +3,7 @@
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::word;
-use crate::types::assign_op_t::names;
+use crate::types::durative::assign_op_t::names;
 use crate::types::TimedAssignOperator;
 
 /// Parses a timed assignment operator (`<assign-op-t>`), ignoring case.

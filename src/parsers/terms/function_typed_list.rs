@@ -1,8 +1,8 @@
 //! Provides the [`function_typed_list`] rule.
 
+use super::typed_list::typed_groups;
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
-use crate::parsers::typed_list::typed_groups;
 use crate::parsers::Args;
 use crate::types::{FunctionType, FunctionTyped, FunctionTypedList};
 

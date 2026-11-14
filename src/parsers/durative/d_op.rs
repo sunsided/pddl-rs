@@ -3,7 +3,7 @@
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::word;
-use crate::types::d_op::names;
+use crate::types::durative::d_op::names;
 use crate::types::DurationOperator;
 
 /// Parses a duration operator (`<d-op>`), ignoring case.

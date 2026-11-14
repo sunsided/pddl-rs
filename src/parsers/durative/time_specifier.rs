@@ -3,7 +3,7 @@
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::word;
-use crate::types::time_specifier::names;
+use crate::types::durative::time_specifier::names;
 use crate::types::TimeSpecifier;
 
 /// Parses a time specifier (`<time-specifier>`), ignoring case.

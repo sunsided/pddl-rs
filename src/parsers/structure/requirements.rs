@@ -3,7 +3,7 @@
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{is_name, prefix, word};
-use crate::types::requirement::names;
+use crate::types::structure::requirement::names;
 use crate::types::{Name, Requirement, Requirements};
 
 /// The known requirement keys.

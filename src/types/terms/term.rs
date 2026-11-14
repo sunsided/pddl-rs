@@ -1,4 +1,4 @@
-use crate::types::function_term::FunctionTerm;
+use crate::types::FunctionTerm;
 use crate::types::Name;
 use crate::types::Variable;
 
