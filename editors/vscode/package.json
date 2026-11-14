@@ -140,6 +140,12 @@
         "command": "pddl.restartServer",
         "title": "PDDL: Restart Language Server"
       }
+    ],
+    "snippets": [
+      {
+        "language": "pddl",
+        "path": "./snippets/pddl.json"
+      }
     ]
   },
   "scripts": {

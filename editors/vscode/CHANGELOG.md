@@ -7,6 +7,8 @@ All notable changes to the PDDL (pddl-lsp) extension are documented in this file
 ### Added
 
 - An icon for the Marketplace.
+- Snippets for a domain, problem, action, durative action, derived predicate,
+  `forall`, `exists` and `when`.
 
 ### Fixed
 

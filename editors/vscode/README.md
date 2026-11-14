@@ -46,6 +46,9 @@ that corrects it.
   objects and constants, and the variables in scope after `?`.
 - **Signature help** shows a predicate's parameters while you type its
   arguments.
+- **Snippets** for a domain, problem, action, durative action, derived
+  predicate, `forall`, `exists` and `when`: type the name, such as `domain` or
+  `:action`, and pick the snippet.
 - **Format Document** indents by nesting, puts each section and each
   `:keyword value` pair on its own line, and keeps short lists on one line.
   It keeps your comments and blank lines.
