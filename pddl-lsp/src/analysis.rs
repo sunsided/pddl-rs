@@ -1102,6 +1102,40 @@ atom
     }
 
     #[test]
+    fn records_what_needs_a_requirement() {
+        let a = analyze(
+            "(define (domain d)
+  (:constraints (always (not (and (p) (q)))))
+  (:durative-action a :parameters () :duration (<= ?duration 5)
+    :condition (at start (p))
+    :effect (and (increase (f) (* #t 2)) (when (p))))
+  (:durative-action b :parameters () :duration (= ?duration 5) :effect ()))
+(define (problem p) (:domain d) (:constraints (sometime (p))))",
+        );
+        let needs: Vec<_> = a
+            .needs
+            .iter()
+            .map(|n| (n.word.as_str(), n.any_of[0].as_str()))
+            .collect();
+        check!(
+            needs
+                == [
+                    (":constraints", ":constraints"),
+                    // Negating a compound goal needs disjunctive preconditions.
+                    ("not", ":disjunctive-preconditions"),
+                    (":durative-action", ":durative-actions"),
+                    ("<=", ":duration-inequalities"),
+                    ("increase", ":numeric-fluents"),
+                    ("#t", ":continuous-effects"),
+                    ("when", ":conditional-effects"),
+                    // `(= ?duration 5)` needs nothing beyond durative actions.
+                    (":durative-action", ":durative-actions"),
+                    (":constraints", ":constraints"),
+                ]
+        );
+    }
+
+    #[test]
     fn finds_the_occurrence_at_an_offset() {
         let a = analyze(DOMAIN);
         let offset = DOMAIN.find("(ready))))))").unwrap() + 2;

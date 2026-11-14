@@ -384,10 +384,9 @@ impl Workspace {
         let mut hierarchies = HashMap::new();
         let mut problems = Vec::new();
         for (index, reference) in analysis.references.iter().enumerate() {
-            let Some(target) = &targets[index] else {
-                continue;
-            };
-            let Some(callee) = self.definition(target) else {
+            let resolved = targets[index].as_ref();
+            let Some((target, callee)) = resolved.and_then(|t| Some((t, self.definition(t)?)))
+            else {
                 continue;
             };
             if callee.parameters.len() != reference.argument_starts.len() {
@@ -794,7 +793,7 @@ mod tests {
     :effect (and (at ?t ?to) (at ?to ?t) (at ?any ?any) (at ?t depot))))";
         let problem = "(define (problem p) (:domain d)
   (:objects t1 - truck v1 - van home - place a - area x - ghost)
-  (:init (at t1 home) (at v1 t1) (in a) (in t1) (at x home))
+  (:init (at t1 home) (at v1 t1) (in a) (in t1) (at x home) (at t1 5))
   (:goal (at home home)))";
         let ws = workspace(&[("d.pddl", domain), ("p.pddl", problem)]);
         check!(
@@ -850,6 +849,18 @@ mod tests {
         check!(
             messages(&ws, "p.pddl") == ["`at` needs `:timed-initial-literals` in `:requirements`"]
         );
+
+        // Without its domain, a problem's requirements are unknown, so nothing is reported.
+        let ws = workspace(&[("p.pddl", problem)]);
+        check!(
+            messages(&ws, "p.pddl")
+                == ["domain `d` is not in the workspace, so names from it are not checked"]
+        );
+
+        // `:timed-initial-literals` implies `:durative-actions`.
+        let durative = "(define (domain t) (:requirements :timed-initial-literals)
+  (:durative-action a :parameters () :duration (= ?duration 1) :condition () :effect ()))";
+        check!(messages(&workspace(&[("t.pddl", durative)]), "t.pddl").is_empty());
     }
 
     #[test]
