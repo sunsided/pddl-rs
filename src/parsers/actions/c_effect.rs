@@ -91,9 +91,9 @@ mod tests {
                 )
         );
 
-        let input = r#"(when
+        let input = r"(when
             (and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))
-            (and (person-is-happy ?p)))"#;
+            (and (person-is-happy ?p)))";
         let value = ConditionalEffect::from_str(input).unwrap();
         check!(
             value
@@ -124,9 +124,9 @@ mod tests {
 
     #[test]
     fn test_parse_when() {
-        let input = r#"(when
+        let input = r"(when
             (and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))
-            (and (person-is-happy ?p)))"#;
+            (and (person-is-happy ?p)))";
 
         let value = WhenConditionalEffect::from_str(input).unwrap();
         check!(
@@ -175,9 +175,9 @@ mod tests {
             )
         );
 
-        let input = r#"(when
+        let input = r"(when
             (and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))
-            (and (person-is-happy ?p)))"#;
+            (and (person-is-happy ?p)))";
         check!(
             ConditionalEffect::from_str(input).is_value(ConditionalEffect::when(
                 GoalDescription::new_and([
@@ -220,9 +220,9 @@ mod tests {
 
     #[test]
     fn doc_example_2() {
-        let input = r#"(when
+        let input = r"(when
             (and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))
-            (and (person-is-happy ?p)))"#;
+            (and (person-is-happy ?p)))";
 
         check!(
             WhenConditionalEffect::from_str(input).is_value(WhenConditionalEffect::new(
@@ -274,9 +274,9 @@ mod tests {
                 )
         );
 
-        let input = r#"(when
+        let input = r"(when
             (and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))
-            (and (person-is-happy ?p)))"#;
+            (and (person-is-happy ?p)))";
         let value = ConditionalEffect::from_str(input).unwrap();
         check!(
             value
@@ -307,9 +307,9 @@ mod tests {
 
     #[test]
     fn doc_example_5() {
-        let input = r#"(when
+        let input = r"(when
             (and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))
-            (and (person-is-happy ?p)))"#;
+            (and (person-is-happy ?p)))";
 
         let value = WhenConditionalEffect::from_str(input).unwrap();
         check!(

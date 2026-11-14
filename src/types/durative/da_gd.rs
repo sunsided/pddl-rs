@@ -22,11 +22,13 @@ pub enum DurativeActionGoalDescription {
 impl DurativeActionGoalDescription {
     /// Creates a timed goal from a [`PreferenceTimedGoalDescription`].
     #[doc(alias = "new_timed")]
+    #[must_use]
     pub fn timed(pref: PreferenceTimedGoalDescription) -> Self {
         Self::Timed(pref)
     }
 
     /// Alias for [`Self::timed`].
+    #[must_use]
     pub fn new_timed(pref: PreferenceTimedGoalDescription) -> Self {
         Self::timed(pref)
     }
@@ -44,11 +46,13 @@ impl DurativeActionGoalDescription {
 
     /// Creates a universal quantification `(forall (<variables>) <da-GD>)`.
     #[doc(alias = "new_forall")]
+    #[must_use]
     pub fn r#forall(variables: TypedVariables, gd: DurativeActionGoalDescription) -> Self {
         Self::Forall(variables, Box::new(gd))
     }
 
     /// Alias for [`Self::forall`].
+    #[must_use]
     pub fn new_forall(variables: TypedVariables, gd: DurativeActionGoalDescription) -> Self {
         Self::r#forall(variables, gd)
     }

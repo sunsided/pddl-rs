@@ -27,7 +27,7 @@ pub enum FluentExpression {
 
 impl FluentExpression {
     /// Creates a numeric literal.
-    #[inline(always)]
+    #[inline]
     #[doc(alias = "new_number")]
     pub fn number<N: Into<Number>>(number: N) -> Self {
         Self::Number(number.into())
@@ -40,11 +40,13 @@ impl FluentExpression {
 
     /// Creates a binary operation, `(<binary-op> <f-exp> <f-exp>)`.
     #[doc(alias = "new_binary_op")]
+    #[must_use]
     pub fn binary_op(op: BinaryOp, lhs: FluentExpression, rhs: FluentExpression) -> Self {
         Self::BinaryOp(op, Box::new(lhs), Box::new(rhs))
     }
 
     /// Creates a binary operation, `(<binary-op> <f-exp> <f-exp>)`.
+    #[must_use]
     pub fn new_binary_op(op: BinaryOp, lhs: FluentExpression, rhs: FluentExpression) -> Self {
         Self::binary_op(op, lhs, rhs)
     }
@@ -70,22 +72,26 @@ impl FluentExpression {
 
     /// Creates a negation, `(- <f-exp>)`.
     #[doc(alias = "new_negative")]
+    #[must_use]
     pub fn negative(value: FluentExpression) -> Self {
         Self::Negative(Box::new(value))
     }
 
     /// Creates a negation, `(- <f-exp>)`.
+    #[must_use]
     pub fn new_negative(value: FluentExpression) -> Self {
         Self::negative(value)
     }
 
     /// Creates a fluent expression from a function head.
     #[doc(alias = "new_function")]
+    #[must_use]
     pub const fn function(f_head: FunctionHead) -> Self {
         Self::Function(f_head)
     }
 
     /// Creates a fluent expression from a function head.
+    #[must_use]
     pub fn new_function(f_head: FunctionHead) -> Self {
         Self::function(f_head)
     }

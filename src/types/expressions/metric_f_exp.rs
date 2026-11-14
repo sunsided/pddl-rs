@@ -31,11 +31,13 @@ pub enum MetricFluentExpression {
 impl MetricFluentExpression {
     /// Creates a binary operation, `(<binary-op> <metric-f-exp> <metric-f-exp>)`.
     #[doc(alias = "new_binary_op")]
+    #[must_use]
     pub fn binary_op(op: BinaryOp, lhs: Self, rhs: Self) -> Self {
         Self::BinaryOp(op, Box::new(lhs), Box::new(rhs))
     }
 
     /// Creates a binary operation, `(<binary-op> <metric-f-exp> <metric-f-exp>)`.
+    #[must_use]
     pub fn new_binary_op(op: BinaryOp, lhs: Self, rhs: Self) -> Self {
         Self::binary_op(op, lhs, rhs)
     }
@@ -60,11 +62,13 @@ impl MetricFluentExpression {
 
     /// Creates a negation, `(- <metric-f-exp>)`.
     #[doc(alias = "new_negative")]
+    #[must_use]
     pub fn negative(exp: Self) -> Self {
         Self::Negative(Box::new(exp))
     }
 
     /// Creates a negation, `(- <metric-f-exp>)`.
+    #[must_use]
     pub fn new_negative(exp: Self) -> Self {
         Self::negative(exp)
     }
@@ -93,22 +97,26 @@ impl MetricFluentExpression {
 
     /// Creates the `total-time` expression.
     #[doc(alias = "new_total_time")]
+    #[must_use]
     pub const fn total_time() -> Self {
         Self::TotalTime
     }
 
     /// Creates the `total-time` expression.
+    #[must_use]
     pub fn new_total_time() -> Self {
         Self::total_time()
     }
 
     /// Creates an `(is-violated <pref-name>)` expression.
     #[doc(alias = "new_is_violated")]
+    #[must_use]
     pub const fn is_violated(pref: PreferenceName) -> Self {
         Self::IsViolated(pref)
     }
 
     /// Creates an `(is-violated <pref-name>)` expression.
+    #[must_use]
     pub fn new_is_violated(pref: PreferenceName) -> Self {
         Self::is_violated(pref)
     }

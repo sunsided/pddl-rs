@@ -4,13 +4,12 @@ use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::FunctionType;
 use crate::visitor::{Accept, Visitor};
 use pretty::RcDoc;
-use std::ops::Deref;
 
 impl sealed::Sealed for FunctionType {}
 
 impl Visitor<FunctionType, RcDoc<'static>> for PrettyRenderer {
     fn visit(&self, value: &FunctionType) -> RcDoc<'static> {
-        let t: &crate::types::Type = value.deref();
+        let t: &crate::types::Type = value;
         t.accept(self)
     }
 }

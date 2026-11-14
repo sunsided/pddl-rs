@@ -19,11 +19,13 @@ pub struct Timeless(Vec<NameLiteral>);
 
 impl Timeless {
     /// Creates a new set of timeless literals, i.e. the content of `(:timeless <literal (name)>+)`.
+    #[must_use]
     pub fn new(literal: Vec<NameLiteral>) -> Self {
         Self(literal)
     }
 
     /// Gets the literals.
+    #[must_use]
     pub fn values(&self) -> &[NameLiteral] {
         self.0.as_slice()
     }
@@ -38,7 +40,7 @@ impl FromIterator<NameLiteral> for Timeless {
 impl Deref for Timeless {
     type Target = [NameLiteral];
 
-    #[inline(always)]
+    #[inline]
     fn deref(&self) -> &Self::Target {
         &self.0
     }

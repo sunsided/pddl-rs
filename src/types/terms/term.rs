@@ -19,16 +19,19 @@ pub enum Term {
 
 impl Term {
     /// Creates a name term.
+    #[must_use]
     pub const fn new_name(name: Name) -> Self {
         Self::Name(name)
     }
 
     /// Creates a variable term.
+    #[must_use]
     pub const fn new_variable(var: Variable) -> Self {
         Self::Variable(var)
     }
 
     /// Creates a function term.
+    #[must_use]
     pub const fn new_function(fun: FunctionTerm) -> Self {
         Self::Function(fun)
     }

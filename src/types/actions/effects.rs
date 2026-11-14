@@ -15,28 +15,33 @@ pub struct Effects(Vec<ConditionalEffect>);
 
 impl Effects {
     /// Constructs a new instance from the value.
+    #[must_use]
     pub fn new(effect: ConditionalEffect) -> Self {
         Self(vec![effect])
     }
 
     /// Creates effects from the given conditional effects, `(and <c-effect>*)`.
     #[doc(alias = "new_and")]
+    #[must_use]
     pub fn and(effects: Vec<ConditionalEffect>) -> Self {
         Self(effects)
     }
 
     /// Creates effects from the given conditional effects, `(and <c-effect>*)`.
+    #[must_use]
     pub fn new_and(effects: Vec<ConditionalEffect>) -> Self {
         Self::and(effects)
     }
 
     /// Returns `true` if the list contains no elements.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
     /// Returns the number of elements in the list, also referred to
     /// as its 'length'.
+    #[must_use]
     pub fn len(&self) -> usize {
         self.0.len()
     }
@@ -50,6 +55,7 @@ impl Effects {
 
     /// Get the only element of this list if the list has
     /// exactly one element. Returns [`None`] in all other cases.
+    #[must_use]
     pub fn try_get_single(self) -> Option<ConditionalEffect> {
         if self.len() == 1 {
             self.into_iter().next()
@@ -105,6 +111,15 @@ impl TryInto<ConditionalEffect> for Effects {
 
     fn try_into(self) -> Result<ConditionalEffect, Self::Error> {
         self.try_get_single().ok_or(())
+    }
+}
+
+impl<'a> IntoIterator for &'a Effects {
+    type Item = &'a ConditionalEffect;
+    type IntoIter = std::slice::Iter<'a, ConditionalEffect>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
     }
 }
 

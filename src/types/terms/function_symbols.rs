@@ -13,26 +13,30 @@ pub struct FunctionSymbol(Name);
 
 impl FunctionSymbol {
     /// Creates a new function symbol from a name.
-    #[inline(always)]
+    #[inline]
+    #[must_use]
     pub fn new(name: Name) -> Self {
         Self(name)
     }
 
     /// Creates a new function symbol from a string.
-    #[inline(always)]
+    #[inline]
     #[doc(alias = "new_string")]
+    #[must_use]
     pub fn string(name: &str) -> Self {
         Self(Name::new(name))
     }
 
     /// Creates a new function symbol from a string.
-    #[inline(always)]
+    #[inline]
+    #[must_use]
     pub fn new_string(name: &str) -> Self {
         Self::string(name)
     }
 
     /// Creates a new function symbol from a name.
-    #[inline(always)]
+    #[inline]
+    #[must_use]
     pub const fn from_name(name: Name) -> Self {
         Self(name)
     }
@@ -42,21 +46,21 @@ impl<T> From<T> for FunctionSymbol
 where
     T: Into<Name>,
 {
-    #[inline(always)]
+    #[inline]
     fn from(value: T) -> Self {
         FunctionSymbol::new(value.into())
     }
 }
 
 impl AsRef<Name> for FunctionSymbol {
-    #[inline(always)]
+    #[inline]
     fn as_ref(&self) -> &Name {
         &self.0
     }
 }
 
 impl AsRef<str> for FunctionSymbol {
-    #[inline(always)]
+    #[inline]
     fn as_ref(&self) -> &str {
         self.0.as_ref()
     }
@@ -65,7 +69,7 @@ impl AsRef<str> for FunctionSymbol {
 impl Deref for FunctionSymbol {
     type Target = Name;
 
-    #[inline(always)]
+    #[inline]
     fn deref(&self) -> &Self::Target {
         &self.0
     }

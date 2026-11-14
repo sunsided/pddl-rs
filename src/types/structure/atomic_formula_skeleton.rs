@@ -18,6 +18,7 @@ pub struct AtomicFormulaSkeleton {
 impl AtomicFormulaSkeleton {
     /// Creates a skeleton `(<predicate> <typed list(variable)>)` from a predicate
     /// and its typed parameters.
+    #[must_use]
     pub const fn new(predicate: Predicate, formula: TypedVariables) -> Self {
         Self {
             predicate,
@@ -26,16 +27,19 @@ impl AtomicFormulaSkeleton {
     }
 
     /// Gets the name of the predicate.
+    #[must_use]
     pub fn name(&self) -> &Name {
         self.predicate.as_ref()
     }
 
     /// Gets a reference to the predicate.
+    #[must_use]
     pub const fn predicate(&self) -> &Predicate {
         &self.predicate
     }
 
     /// Gets a reference to the variables.
+    #[must_use]
     pub fn variables(&self) -> &TypedVariables {
         &self.variables
     }

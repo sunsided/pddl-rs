@@ -14,21 +14,25 @@ pub struct Preference(Option<PreferenceName>, GoalDescription); // TODO: A simil
 
 impl Preference {
     /// Creates a preference `(preference [<pref-name>] <GD>)` with an optional name.
+    #[must_use]
     pub const fn new(name: Option<PreferenceName>, gd: GoalDescription) -> Self {
         Self(name, gd)
     }
 
     /// Gets the optional preference name.
+    #[must_use]
     pub fn name(&self) -> &Option<PreferenceName> {
         &self.0
     }
 
     /// Gets the goal description.
+    #[must_use]
     pub fn goal(&self) -> &GoalDescription {
         &self.1
     }
 
     /// Returns `true` if the goal description is empty.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.1.is_empty()
     }

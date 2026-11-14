@@ -40,6 +40,7 @@ pub struct DurativeActionDefinition {
 impl DurativeActionDefinition {
     /// Creates a new durative action definition from its name, parameters,
     /// duration constraint, conditions and effects.
+    #[must_use]
     pub const fn new(
         symbol: DurativeActionSymbol,
         parameters: TypedVariables,
@@ -57,6 +58,7 @@ impl DurativeActionDefinition {
     }
 
     /// Gets the durative action's name.
+    #[must_use]
     pub const fn symbol(&self) -> &DurativeActionSymbol {
         &self.symbol
     }
@@ -89,18 +91,20 @@ impl DurativeActionDefinition {
     /// which you're trying to solve. For example here we haven't modelled the person who's
     /// actually going to perform the work, but maybe if we were the manager of a larger
     /// building site we might want to and therefore we would need to adapt my models.
+    #[must_use]
     pub const fn parameters(&self) -> &TypedVariables {
         &self.parameters
     }
 
     /// A duration can be expressed as either a fixed value or an inequality.
     /// It is also possible to express duration as the value of a Numeric Fluent
-    /// ([AtomicFunctionSkeleton](crate::types::AtomicFunctionSkeleton)), which means
+    /// ([`AtomicFunctionSkeleton`](crate::types::AtomicFunctionSkeleton)), which means
     /// an action such as move can have a duration dependent on say distance between two points.
     ///
     /// ```pddl
     /// :duration (= ?duration 10)
     /// ```
+    #[must_use]
     pub const fn duration(&self) -> &Option<DurationConstraint> {
         &self.duration
     }
@@ -111,6 +115,7 @@ impl DurativeActionDefinition {
     /// Because a durative action occurs over time, we may wish to express that additional
     /// conditions be met for the duration or end of the action, not just the start.
     /// This gives rise to three new keywords `at start`, `at end` and `over all`.
+    #[must_use]
     pub const fn condition(&self) -> &Option<DurativeActionGoalDescription> {
         &self.condition
     }
@@ -118,6 +123,7 @@ impl DurativeActionDefinition {
     /// An effect is a condition which is made true when an action is applied.
     /// Note that the effect is always more restrictive than an action and typically only
     /// allows `and` and `not` as logical expressions.
+    #[must_use]
     pub const fn effect(&self) -> &Option<DurativeActionEffect> {
         &self.effect
     }

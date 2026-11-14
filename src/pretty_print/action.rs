@@ -122,7 +122,7 @@ mod tests {
 
     #[test]
     fn action_with_effect() {
-        let input = r#"(define (domain test)
+        let input = r"(define (domain test)
   (:requirements :strips)
   (:predicates (p))
   (:action move
@@ -130,7 +130,7 @@ mod tests {
     :precondition (and)
     :effect (and (p))
   )
-)"#;
+)";
         let domain = crate::Domain::from_str(input).unwrap();
         let output = domain.pretty(80).to_string();
         check!(output.contains(":effect"));
@@ -139,14 +139,14 @@ mod tests {
 
     #[test]
     fn action_without_effect() {
-        let input = r#"(define (domain test)
+        let input = r"(define (domain test)
   (:requirements :strips)
   (:predicates (p))
   (:action noop
     :parameters ()
     :precondition (and)
   )
-)"#;
+)";
         let domain = crate::Domain::from_str(input).unwrap();
         let output = domain.pretty(80).to_string();
         check!(output.contains(":effect (and)"));
@@ -154,7 +154,7 @@ mod tests {
 
     #[test]
     fn durative_action_all_options() {
-        let input = r#"(define (domain test)
+        let input = r"(define (domain test)
   (:requirements :durative-actions)
   (:predicates (p))
   (:durative-action move
@@ -163,7 +163,7 @@ mod tests {
     :condition (and (at start (p)))
     :effect (and (at end (p)))
   )
-)"#;
+)";
         let domain = crate::Domain::from_str(input).unwrap();
         let output = domain.pretty(80).to_string();
         check!(output.contains(":duration"));
@@ -173,7 +173,7 @@ mod tests {
 
     #[test]
     fn durative_action_no_duration() {
-        let input = r#"(define (domain test)
+        let input = r"(define (domain test)
   (:requirements :durative-actions :strips)
   (:predicates (p))
   (:durative-action move
@@ -181,7 +181,7 @@ mod tests {
     :condition (and (at start (p)))
     :effect (and (at start (p)))
   )
-)"#;
+)";
         let domain = crate::Domain::from_str(input);
         // May or may not parse depending on parser implementation
         if let Ok(domain) = domain {
@@ -194,12 +194,12 @@ mod tests {
 
     #[test]
     fn durative_action_minimal() {
-        let input = r#"(define (domain test)
+        let input = r"(define (domain test)
   (:requirements :durative-actions :strips)
   (:durative-action noop
     :parameters ()
   )
-)"#;
+)";
         let domain = crate::Domain::from_str(input);
         if let Ok(domain) = domain {
             let output = domain.pretty(80).to_string();
@@ -209,11 +209,11 @@ mod tests {
 
     #[test]
     fn derived_predicate() {
-        let input = r#"(define (domain test)
+        let input = r"(define (domain test)
   (:requirements :derived-predicates)
   (:predicates (p) (q))
   (:derived (p) (and))
-)"#;
+)";
         let domain = crate::Domain::from_str(input).unwrap();
         let output = domain.pretty(80).to_string();
         check!(output.contains("(:derived"));
@@ -221,14 +221,14 @@ mod tests {
 
     #[test]
     fn structure_def_action() {
-        let input = r#"(define (domain test)
+        let input = r"(define (domain test)
   (:requirements :strips)
   (:action a
     :parameters ()
     :precondition (and)
     :effect (and)
   )
-)"#;
+)";
         let domain = crate::Domain::from_str(input).unwrap();
         let output = domain.pretty(80).to_string();
         check!(output.contains("(:action a"));

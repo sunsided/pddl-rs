@@ -12,16 +12,19 @@ pub struct DerivedPredicate(AtomicFormulaSkeleton, GoalDescription);
 impl DerivedPredicate {
     /// Creates a new derived predicate, i.e. `(:derived <atomic formula skeleton> <GD>)`,
     /// from the predicate and the goal description that derives it.
+    #[must_use]
     pub const fn new(formula: AtomicFormulaSkeleton, gd: GoalDescription) -> Self {
         Self(formula, gd)
     }
 
     /// Gets the derived predicate's atomic formula skeleton, i.e. its name and parameters.
+    #[must_use]
     pub const fn predicate(&self) -> &AtomicFormulaSkeleton {
         &self.0
     }
 
     /// Gets the goal description under which the predicate holds.
+    #[must_use]
     pub const fn expression(&self) -> &GoalDescription {
         &self.1
     }

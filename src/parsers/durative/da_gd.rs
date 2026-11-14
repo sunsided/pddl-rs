@@ -35,13 +35,13 @@ mod tests {
 
     #[test]
     fn complex_works() {
-        let input = r#"(and
+        let input = r"(and
                 (at start (rover ?rover))
                 (at start (waypoint ?from-waypoint))
                 (at start (waypoint ?to-waypoint))
                 (over all (can-move ?from-waypoint ?to-waypoint))
                 (at start (at ?rover ?from-waypoint))
-                (at start (> (battery-amount ?rover) 8)))"#;
+                (at start (> (battery-amount ?rover) 8)))";
         let _gd = DurativeActionGoalDescription::from_str(input).unwrap();
     }
 

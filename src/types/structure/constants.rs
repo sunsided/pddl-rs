@@ -12,6 +12,7 @@ pub struct Constants(TypedNames);
 
 impl Constants {
     /// Creates a new set of constants, i.e. the content of `(:constants <typed list (name)>)`.
+    #[must_use]
     pub const fn new(predicates: TypedNames) -> Self {
         Self(predicates)
     }

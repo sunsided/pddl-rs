@@ -22,17 +22,20 @@ pub enum EffectCondition {
 
 impl EffectCondition {
     /// Creates an effect condition consisting of exactly one primitive effect.
+    #[must_use]
     pub const fn new(effect: PrimitiveEffect) -> Self {
         Self::Single(effect)
     }
 
     /// Creates a conjunction of primitive effects, `(and <p-effect>*)`.
+    #[must_use]
     pub const fn all(effect: Vec<PrimitiveEffect>) -> Self {
         Self::All(effect)
     }
 
     /// Creates a conjunction of primitive effects, `(and <p-effect>*)`.
     #[deprecated(since = "0.2.0", note = "Use `all` instead")]
+    #[must_use]
     pub const fn new_and(effect: Vec<PrimitiveEffect>) -> Self {
         Self::all(effect)
     }

@@ -17,17 +17,20 @@ pub struct PreferenceConstraintGoalDescriptions(Vec<PreferenceConstraintGoalDesc
 
 impl PreferenceConstraintGoalDescriptions {
     /// Constructs a new instance from the provided vector of values.
+    #[must_use]
     pub const fn new(gds: Vec<PreferenceConstraintGoalDescription>) -> Self {
         Self(gds)
     }
 
     /// Constructs a list containing a single [`PreferenceConstraintGoalDescription::Goal`] variant.
     #[doc(alias = "new_goal")]
+    #[must_use]
     pub fn goal(gd: ConstraintGoalDescription) -> Self {
         Self::new(vec![PreferenceConstraintGoalDescription::goal(gd)])
     }
 
     /// Alias for [`Self::goal`].
+    #[must_use]
     pub fn new_goal(gd: ConstraintGoalDescription) -> Self {
         Self::goal(gd)
     }
@@ -37,6 +40,7 @@ impl PreferenceConstraintGoalDescriptions {
     /// ## Requirements
     /// Requires [Preferences](crate::Requirement::Preferences).
     #[doc(alias = "new_preference")]
+    #[must_use]
     pub fn preference(name: Option<PreferenceName>, gd: ConstraintGoalDescription) -> Self {
         Self::new(vec![PreferenceConstraintGoalDescription::preference(
             name, gd,
@@ -44,6 +48,7 @@ impl PreferenceConstraintGoalDescriptions {
     }
 
     /// Alias for [`Self::preference`].
+    #[must_use]
     pub fn new_preference(name: Option<PreferenceName>, gd: ConstraintGoalDescription) -> Self {
         Self::preference(name, gd)
     }
@@ -53,6 +58,7 @@ impl PreferenceConstraintGoalDescriptions {
     /// ## Requirements
     /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
     #[doc(alias = "new_forall")]
+    #[must_use]
     pub fn r#forall(variables: TypedVariables, gd: PreferenceConstraintGoalDescriptions) -> Self {
         Self::new(vec![PreferenceConstraintGoalDescription::r#forall(
             variables, gd,
@@ -60,17 +66,20 @@ impl PreferenceConstraintGoalDescriptions {
     }
 
     /// Alias for [`Self::forall`].
+    #[must_use]
     pub fn new_forall(variables: TypedVariables, gd: PreferenceConstraintGoalDescriptions) -> Self {
         Self::r#forall(variables, gd)
     }
 
     /// Returns `true` if the list contains no elements.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
     /// Returns the number of elements in the list, also referred to
     /// as its 'length'.
+    #[must_use]
     pub fn len(&self) -> usize {
         self.0.len()
     }
@@ -84,6 +93,7 @@ impl PreferenceConstraintGoalDescriptions {
 
     /// Get the only element of this list if the list has
     /// exactly one element. Returns [`None`] in all other cases.
+    #[must_use]
     pub fn try_get_single(self) -> Option<PreferenceConstraintGoalDescription> {
         if self.len() == 1 {
             self.into_iter().next()
@@ -190,11 +200,13 @@ pub enum PreferenceConstraintGoalDescription {
 impl PreferenceConstraintGoalDescription {
     /// Creates a required constraint goal.
     #[doc(alias = "new_goal")]
+    #[must_use]
     pub const fn goal(gd: ConstraintGoalDescription) -> Self {
         Self::Goal(gd)
     }
 
     /// Alias for [`Self::goal`].
+    #[must_use]
     pub fn new_goal(gd: ConstraintGoalDescription) -> Self {
         Self::goal(gd)
     }
@@ -202,11 +214,13 @@ impl PreferenceConstraintGoalDescription {
     /// ## Requirements
     /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
     #[doc(alias = "new_forall")]
+    #[must_use]
     pub fn r#forall(variables: TypedVariables, gd: PreferenceConstraintGoalDescriptions) -> Self {
         Self::Forall(variables, gd)
     }
 
     /// Alias for [`Self::forall`].
+    #[must_use]
     pub fn new_forall(variables: TypedVariables, gd: PreferenceConstraintGoalDescriptions) -> Self {
         Self::r#forall(variables, gd)
     }
@@ -214,16 +228,23 @@ impl PreferenceConstraintGoalDescription {
     /// ## Requirements
     /// Requires [Preferences](crate::Requirement::Preferences).
     #[doc(alias = "new_preference")]
+    #[must_use]
     pub const fn preference(name: Option<PreferenceName>, gd: ConstraintGoalDescription) -> Self {
         Self::Preference(name, gd)
     }
 
     /// Alias for [`Self::preference`].
+    #[must_use]
     pub fn new_preference(name: Option<PreferenceName>, gd: ConstraintGoalDescription) -> Self {
         Self::preference(name, gd)
     }
 
     /// Returns `true` if the contained constraint goal description is empty.
+    #[allow(
+        clippy::match_same_arms,
+        reason = "the `x` bindings have different types"
+    )]
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         match self {
             PreferenceConstraintGoalDescription::Forall(_, x) => x.is_empty(),
@@ -246,6 +267,15 @@ pub type PrefConGD = PreferenceConstraintGoalDescription;
     note = "Use `PreferenceConstraintGoalDescriptions` instead"
 )]
 pub type PrefConGDs = PreferenceConstraintGoalDescriptions;
+
+impl<'a> IntoIterator for &'a PreferenceConstraintGoalDescriptions {
+    type Item = &'a PreferenceConstraintGoalDescription;
+    type IntoIter = std::slice::Iter<'a, PreferenceConstraintGoalDescription>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
 
 #[cfg(test)]
 mod tests {

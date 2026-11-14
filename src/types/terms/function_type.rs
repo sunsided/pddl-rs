@@ -26,6 +26,7 @@ impl FunctionType {
     }
 
     /// Creates a new function type from the given type.
+    #[must_use]
     pub const fn from(r#type: Type) -> Self {
         Self(r#type)
     }
@@ -79,7 +80,7 @@ mod tests {
 
     #[test]
     fn number_constant() {
-        check!(FunctionType::NUMBER.deref() == &Type::NUMBER);
+        check!(&*FunctionType::NUMBER == &Type::NUMBER);
     }
 
     #[test]

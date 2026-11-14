@@ -21,6 +21,7 @@ pub enum FunctionHead {
 
 impl FunctionHead {
     /// Creates a function head without arguments.
+    #[must_use]
     pub const fn new(symbol: FunctionSymbol) -> Self {
         Self::Simple(symbol)
     }

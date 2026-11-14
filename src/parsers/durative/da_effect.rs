@@ -49,28 +49,28 @@ mod tests {
 
     #[test]
     fn simple_works() {
-        let input = r#"(and
+        let input = r"(and
                 (decrease (fuel-level ?t) (* 2 #t))
                 (at end (at ?rover ?to-waypoint))
                 (at end (been-at ?rover ?to-waypoint))
                 (at start (not (at ?rover ?from-waypoint)))
                 (at start (decrease (battery-amount ?rover) 8))
                 (at end (increase (distance-travelled) 5))
-                )"#;
+                )";
 
         let _effect = DurativeActionEffect::from_str(input).unwrap();
     }
 
     #[test]
     fn complex_works() {
-        let input = r#"(and
+        let input = r"(and
                 (decrease (fuel-level ?t) (* 2 #t))
                 (at end (at ?rover ?to-waypoint))
                 (at end (been-at ?rover ?to-waypoint))
                 (at start (not (at ?rover ?from-waypoint)))
                 (at start (decrease (battery-amount ?rover) 8))
                 (at end (increase (distance-travelled) 5))
-                )"#;
+                )";
 
         let _effect = DurativeActionEffect::from_str(input).unwrap();
     }

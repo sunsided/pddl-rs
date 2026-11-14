@@ -30,11 +30,13 @@ impl DurationValue {
 
     /// Creates a duration value from a fluent expression.
     #[doc(alias = "new_f_exp")]
+    #[must_use]
     pub fn fluent_expression(exp: FluentExpression) -> Self {
         Self::FluentExpression(exp)
     }
 
     /// Creates a duration value from a fluent expression. Same as [`fluent_expression`](Self::fluent_expression).
+    #[must_use]
     pub fn new_f_exp(exp: FluentExpression) -> Self {
         Self::fluent_expression(exp)
     }

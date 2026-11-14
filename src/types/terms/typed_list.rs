@@ -30,11 +30,13 @@ pub struct TypedList<T>(Vec<Typed<T>>);
 
 impl<T> TypedList<T> {
     /// Creates a new typed list.
+    #[must_use]
     pub const fn new(list: Vec<Typed<T>>) -> Self {
         Self(list)
     }
 
     /// Gets the values.
+    #[must_use]
     pub fn value(&self) -> &[Typed<T>] {
         self.0.as_slice()
     }
@@ -115,7 +117,7 @@ where
             // it was already stated (since we are iterating backwards).
             // Therefore, we can skip it.
             if last_type.eq(item.type_()) {
-                stack.push(format!("{}", item.value()))
+                stack.push(format!("{}", item.value()));
             } else {
                 stack.push(format!("{} - {}", item.value(), item.type_()));
                 last_type = item.type_();

@@ -15,11 +15,13 @@ pub struct DomainConstraintsDef(ConstraintGoalDescription);
 
 impl DomainConstraintsDef {
     /// Creates a new domain constraints definition, i.e. `(:constraints <con-GD>)`.
+    #[must_use]
     pub const fn new(gd: ConstraintGoalDescription) -> Self {
         Self(gd)
     }
 
     /// Gets the value.
+    #[must_use]
     pub const fn value(&self) -> &ConstraintGoalDescription {
         &self.0
     }

@@ -85,11 +85,11 @@ mod tests {
 
     #[test]
     fn problem_basic() {
-        let input = r#"(define (problem test-prob)
+        let input = r"(define (problem test-prob)
   (:domain test)
   (:init (block a) (block b))
   (:goal (and))
-)"#;
+)";
         let problem = crate::Problem::from_str(input).unwrap();
         let output = problem.pretty(80).to_string();
         check!(output.contains("(define"));
@@ -99,12 +99,12 @@ mod tests {
 
     #[test]
     fn problem_with_requirements() {
-        let input = r#"(define (problem test-prob)
+        let input = r"(define (problem test-prob)
   (:domain test)
   (:requirements :strips)
   (:init)
   (:goal (and))
-)"#;
+)";
         let problem = crate::Problem::from_str(input).unwrap();
         let output = problem.pretty(80).to_string();
         check!(output.contains("(:requirements :strips)"));
@@ -112,12 +112,12 @@ mod tests {
 
     #[test]
     fn problem_with_objects() {
-        let input = r#"(define (problem test-prob)
+        let input = r"(define (problem test-prob)
   (:domain test)
   (:objects a b)
   (:init)
   (:goal (and))
-)"#;
+)";
         let problem = crate::Problem::from_str(input).unwrap();
         let output = problem.pretty(80).to_string();
         check!(output.contains("(:objects a b)"));
@@ -125,13 +125,13 @@ mod tests {
 
     #[test]
     fn problem_with_constraints() {
-        let input = r#"(define (problem test-prob)
+        let input = r"(define (problem test-prob)
   (:domain test)
   (:init)
   (:goal (and))
   (:constraints (always (p)))
   (:requirements :constraints)
-)"#;
+)";
         let problem = crate::Problem::from_str(input).unwrap();
         let output = problem.pretty(80).to_string();
         check!(output.contains("(:constraints"), "{output}");
@@ -139,12 +139,12 @@ mod tests {
 
     #[test]
     fn problem_with_metric() {
-        let input = r#"(define (problem test-prob)
+        let input = r"(define (problem test-prob)
   (:domain test)
   (:init)
   (:goal (and))
   (:metric minimize total-time)
-)"#;
+)";
         let problem = crate::Problem::from_str(input).unwrap();
         let output = problem.pretty(80).to_string();
         check!(output.contains("(:metric minimize total-time)"));
@@ -152,12 +152,12 @@ mod tests {
 
     #[test]
     fn problem_with_length_spec() {
-        let input = r#"(define (problem test-prob)
+        let input = r"(define (problem test-prob)
   (:domain test)
   (:init)
   (:goal (and))
   (:length (:serial 10))
-)"#;
+)";
         let problem = crate::Problem::from_str(input).unwrap();
         let output = problem.pretty(80).to_string();
         check!(output.contains("(:length (:serial 10))"));

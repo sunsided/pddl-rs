@@ -24,11 +24,13 @@ pub enum DurativeActionEffect {
 impl DurativeActionEffect {
     /// Creates a timed effect.
     #[doc(alias = "new_timed")]
+    #[must_use]
     pub const fn timed(effect: TimedEffect) -> Self {
         Self::Timed(effect)
     }
 
     /// Creates a timed effect.
+    #[must_use]
     pub fn new_timed(effect: TimedEffect) -> Self {
         Self::timed(effect)
     }
@@ -46,22 +48,26 @@ impl DurativeActionEffect {
 
     /// Creates a universal effect, `(forall (<typed list(variable)>) <da-effect>)`.
     #[doc(alias = "new_forall")]
+    #[must_use]
     pub fn r#forall(variables: TypedVariables, effect: DurativeActionEffect) -> Self {
         Self::Forall(variables, Box::new(effect))
     }
 
     /// Creates a universal effect, `(forall (<typed list(variable)>) <da-effect>)`.
+    #[must_use]
     pub fn new_forall(variables: TypedVariables, effect: DurativeActionEffect) -> Self {
         Self::r#forall(variables, effect)
     }
 
     /// Creates a conditional effect, `(when <da-GD> <timed-effect>)`.
     #[doc(alias = "new_when")]
+    #[must_use]
     pub const fn when(gd: DurativeActionGoalDescription, effect: TimedEffect) -> Self {
         Self::When(gd, effect)
     }
 
     /// Creates a conditional effect, `(when <da-GD> <timed-effect>)`.
+    #[must_use]
     pub fn new_when(gd: DurativeActionGoalDescription, effect: TimedEffect) -> Self {
         Self::when(gd, effect)
     }

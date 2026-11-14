@@ -44,6 +44,7 @@ impl Number {
     /// ## Panics
     /// Panics if the provided `value` is not finite. Use [`Number::try_new`]
     /// if you need the function to not panic.
+    #[must_use]
     pub fn new(value: UnderlyingType) -> Self {
         assert!(value.is_finite(), "The value must be finite");
         Self(value)
@@ -54,9 +55,8 @@ impl Number {
     /// ## Arguments
     /// * `value` - A finite value to construct the instance from.
     ///
-    /// ## Returns
-    /// A new [`Number`] instance if successful or an error if the
-    /// input was not a finite number.
+    /// ## Errors
+    /// Returns `NumberError::NotFinite` if `value` is NaN or infinite.
     pub fn try_new(value: UnderlyingType) -> Result<Self, NumberError> {
         if !value.is_finite() {
             return Err(NumberError::NotFinite);
@@ -124,9 +124,9 @@ impl Hash for Number {
     fn hash<H: Hasher>(&self, state: &mut H) {
         debug_assert!(self.0.is_finite());
         if self.0 == 0.0 || self.0 == -0.0 {
-            state.write_u64(0)
+            state.write_u64(0);
         } else {
-            state.write_u64(self.0.to_bits())
+            state.write_u64(self.0.to_bits());
         }
     }
 }
@@ -141,37 +141,37 @@ impl Deref for Number {
 
 impl From<i8> for Number {
     fn from(value: i8) -> Self {
-        Number::new(value as UnderlyingType)
+        Number::new(UnderlyingType::from(value))
     }
 }
 
 impl From<u8> for Number {
     fn from(value: u8) -> Self {
-        Number::new(value as UnderlyingType)
+        Number::new(UnderlyingType::from(value))
     }
 }
 
 impl From<i16> for Number {
     fn from(value: i16) -> Self {
-        Number::new(value as UnderlyingType)
+        Number::new(UnderlyingType::from(value))
     }
 }
 
 impl From<u16> for Number {
     fn from(value: u16) -> Self {
-        Number::new(value as UnderlyingType)
+        Number::new(UnderlyingType::from(value))
     }
 }
 
 impl From<i32> for Number {
     fn from(value: i32) -> Self {
-        Number::new(value as UnderlyingType)
+        Number::new(UnderlyingType::from(value))
     }
 }
 
 impl From<u32> for Number {
     fn from(value: u32) -> Self {
-        Number::new(value as UnderlyingType)
+        Number::new(UnderlyingType::from(value))
     }
 }
 
@@ -212,6 +212,7 @@ impl From<f32> for Number {
 }
 
 #[cfg(test)]
+#[allow(clippy::float_cmp, reason = "the tests check exact values")]
 mod tests {
     use super::*;
     use assert2::check;
@@ -412,7 +413,7 @@ mod tests {
         // Widening the bits would give 1.100000023841858.
         check!(*Number::from(1.1f32) == 1.1);
         check!(Number::from(1.1f64) == 1.1f32);
-        check!(*Number::from(f32::MAX) == 3.4028235e38);
+        check!(*Number::from(f32::MAX) == 3.402_823_5e38);
     }
 
     #[test]

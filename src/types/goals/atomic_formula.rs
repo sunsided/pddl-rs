@@ -83,16 +83,19 @@ impl<T> EqualityAtomicFormula<T> {
 
 impl<T> PredicateAtomicFormula<T> {
     /// Creates a predicate formula from a predicate and its arguments.
+    #[must_use]
     pub const fn new(predicate: Predicate, values: Vec<T>) -> Self {
         Self { predicate, values }
     }
 
     /// Returns the predicate.
+    #[must_use]
     pub const fn predicate(&self) -> &Predicate {
         &self.predicate
     }
 
     /// Gets a reference to the values.
+    #[must_use]
     pub fn values(&self) -> &[T] {
         self.values.as_slice()
     }

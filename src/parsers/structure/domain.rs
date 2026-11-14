@@ -99,7 +99,7 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        let input = r#"
+        let input = r"
          ; A toy domain.
          (define (domain briefcase-world)
               ; If no requirements are provided, :strips is implied.
@@ -131,7 +131,7 @@ mod tests {
                    :parameters (?x - physob)
                    :precondition (not (= ?x B))
                    :effect (not (in ?x)) )
-            )"#;
+            )";
 
         let domain = Domain::from_str(input).unwrap();
 
@@ -146,7 +146,7 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        let input = r#"(define (domain briefcase-world)
+        let input = r"(define (domain briefcase-world)
               (:requirements :strips :equality :typing :conditional-effects)
               (:types location physob)
               (:constants B P D - physob)
@@ -172,7 +172,7 @@ mod tests {
                    :parameters (?x - physob)
                    :precondition (not (= ?x B))
                    :effect (not (in ?x)) )
-            )"#;
+            )";
 
         let domain = Domain::from_str(input).unwrap();
         check!(domain.name() == &Name::new("briefcase-world"));
@@ -186,7 +186,7 @@ mod tests {
 
     #[test]
     fn doc_example_1() {
-        let input = r#"
+        let input = r"
          ; A toy domain.
          (define (domain briefcase-world)
               ; If no requirements are provided, :strips is implied.
@@ -218,7 +218,7 @@ mod tests {
                    :parameters (?x - physob)
                    :precondition (not (= ?x B))
                    :effect (not (in ?x)) )
-            )"#;
+            )";
 
         let domain = Domain::from_str(input).unwrap();
 

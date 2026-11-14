@@ -34,7 +34,7 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let input = r#"(:durative-action move
+        let input = r"(:durative-action move
                 :parameters
                     (?r - rover
                      ?fromwp - waypoint
@@ -61,13 +61,13 @@ mod tests {
                         (at start (decrease (battery-amount ?rover) 8))
                         (at end (increase (distance-travelled) 5))
                         )
-            )"#;
+            )";
         let _gd = DurativeActionDefinition::from_str(input).unwrap();
     }
 
     #[test]
     fn doc_example_0() {
-        let input = r#"(:durative-action move
+        let input = r"(:durative-action move
                 :parameters
                     (?r - rover
                      ?fromwp - waypoint
@@ -94,7 +94,7 @@ mod tests {
                         (at start (decrease (battery-amount ?rover) 8))
                         (at end (increase (distance-travelled) 5))
                         )
-            )"#;
+            )";
 
         let da_def = DurativeActionDefinition::from_str(input).unwrap();
         check!(da_def.symbol() == &"move".into());

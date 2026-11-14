@@ -116,13 +116,13 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        let input = r#"(define (problem get-paid)
+        let input = r"(define (problem get-paid)
                  (:domain briefcase-world)
                  (:init (place home) (place office)
                         (object p) (object d) (object b)
                         (at B home) (at P home) (at D home) (in P))
                  (:goal (and (at B office) (at D office) (at P home)))
-             )"#;
+             )";
 
         let problem = Problem::from_str(input).unwrap();
         check!(problem.name() == &Name::new("get-paid"));
@@ -134,13 +134,13 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        let input = r#"(define (problem get-paid)
+        let input = r"(define (problem get-paid)
                 (:domain briefcase-world)
                 (:init (place home) (place office)
                        (object p) (object d) (object b)
                        (at B home) (at P home) (at D home) (in P))
                 (:goal (and (at B office) (at D office) (at P home)))
-            )"#;
+            )";
 
         let problem = Problem::from_str(input).unwrap();
         check!(problem.name() == &Name::new("get-paid"));
@@ -152,13 +152,13 @@ mod tests {
 
     #[test]
     fn doc_example_1() {
-        let input = r#"(define (problem get-paid)
+        let input = r"(define (problem get-paid)
                 (:domain briefcase-world)
                 (:init (place home) (place office)
                        (object p) (object d) (object b)
                        (at B home) (at P home) (at D home) (in P))
                 (:goal (and (at B office) (at D office) (at P home)))
-            )"#;
+            )";
 
         let problem = Problem::from_str(input).unwrap();
 

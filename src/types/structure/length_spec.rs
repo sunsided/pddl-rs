@@ -14,26 +14,31 @@ pub struct LengthSpec {
 
 impl LengthSpec {
     /// Creates a length specification `(:length [(:serial n)] [(:parallel n)])`.
+    #[must_use]
     pub const fn new(serial: Option<u64>, parallel: Option<u64>) -> Self {
         Self { serial, parallel }
     }
 
     /// Creates a length specification with only a serial length.
+    #[must_use]
     pub const fn new_serial(serial: u64) -> Self {
         Self::new(Some(serial), None)
     }
 
     /// Creates a length specification with only a parallel length.
+    #[must_use]
     pub const fn new_parallel(parallel: u64) -> Self {
         Self::new(None, Some(parallel))
     }
 
     /// Gets the serial value.
+    #[must_use]
     pub const fn serial(&self) -> Option<u64> {
         self.serial
     }
 
     /// Gets the parallel value.
+    #[must_use]
     pub const fn parallel(&self) -> Option<u64> {
         self.parallel
     }

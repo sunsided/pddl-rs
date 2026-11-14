@@ -16,38 +16,45 @@ pub struct PddlFile {
 
 impl PddlFile {
     /// Creates a new empty [`PddlFile`].
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Creates a [`PddlFile`] with the given domains and problems.
+    #[must_use]
     pub fn with_domains_and_problems(domains: Vec<Domain>, problems: Vec<Problem>) -> Self {
         Self { domains, problems }
     }
 
     /// Adds a domain to this file.
+    #[must_use]
     pub fn with_domain(mut self, domain: Domain) -> Self {
         self.domains.push(domain);
         self
     }
 
     /// Adds a problem to this file.
+    #[must_use]
     pub fn with_problem(mut self, problem: Problem) -> Self {
         self.problems.push(problem);
         self
     }
 
     /// Returns `true` if this file contains no domains and no problems.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.domains.is_empty() && self.problems.is_empty()
     }
 
     /// Returns the number of domains in this file.
+    #[must_use]
     pub fn domain_count(&self) -> usize {
         self.domains.len()
     }
 
     /// Returns the number of problems in this file.
+    #[must_use]
     pub fn problem_count(&self) -> usize {
         self.problems.len()
     }
@@ -138,7 +145,7 @@ mod tests {
     #[test]
     fn test_debug_format() {
         let file = PddlFile::new();
-        let debug = format!("{:?}", file);
+        let debug = format!("{file:?}");
         check!(debug.contains("PddlFile"));
     }
 }

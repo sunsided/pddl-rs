@@ -16,16 +16,19 @@ pub struct MetricSpec {
 
 impl MetricSpec {
     /// Creates a new metric specification, `(:metric <optimization> <metric-f-exp>)`.
+    #[must_use]
     pub const fn new(optimization: Optimization, exp: MetricFluentExpression) -> Self {
         Self { optimization, exp }
     }
 
     /// Gets the optimization instruction.
+    #[must_use]
     pub const fn optimization(&self) -> Optimization {
         self.optimization
     }
 
     /// Gets the expression to optimize.
+    #[must_use]
     pub const fn expression(&self) -> &MetricFluentExpression {
         &self.exp
     }

@@ -17,11 +17,13 @@ pub struct ProblemGoalDescription(PreconditionGoalDescriptions);
 
 impl ProblemGoalDescription {
     /// Creates a new problem goal description, i.e. `(:goal <pre-GD>)`.
+    #[must_use]
     pub const fn new(gd: PreconditionGoalDescriptions) -> Self {
         Self(gd)
     }
 
     /// Gets the value.
+    #[must_use]
     pub const fn value(&self) -> &PreconditionGoalDescriptions {
         &self.0
     }
@@ -84,9 +86,10 @@ mod tests {
 
     #[test]
     fn problem_goal_description_from_precondition_goal_description() {
-        let pref_gd = crate::PreferenceGoalDescription::from_gd(GoalDescription::and(Vec::new()));
-        let pre_gd = PreconditionGoalDescription::preference(pref_gd);
-        let pgd: ProblemGoalDescription = pre_gd.into();
+        let preference =
+            crate::PreferenceGoalDescription::from_gd(GoalDescription::and(Vec::new()));
+        let precondition = PreconditionGoalDescription::preference(preference);
+        let pgd: ProblemGoalDescription = precondition.into();
         check!(pgd.len() == 1);
     }
 

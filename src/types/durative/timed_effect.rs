@@ -38,18 +38,21 @@ pub enum TimedEffect {
 impl TimedEffect {
     /// Creates an effect at a point in time, `(at <time-specifier> <cond-effect>)`.
     #[doc(alias = "new_conditional")]
+    #[must_use]
     pub const fn conditional(at: TimeSpecifier, effect: EffectCondition) -> Self {
         Self::Conditional(at, effect)
     }
 
     /// Creates a numeric fluent assignment at a point in time, `(at <time-specifier> <f-assign-da>)`.
     #[doc(alias = "new_fluent")]
+    #[must_use]
     pub const fn fluent(at: TimeSpecifier, action: DurativeActionFunctionAssignment) -> Self {
         Self::NumericFluent(at, action)
     }
 
     /// Creates a continuous effect, `(<assign-op-t> <f-head> <f-exp-t>)`.
     #[doc(alias = "new_continuous")]
+    #[must_use]
     pub const fn continuous(
         operation: TimedAssignOperator,
         f_head: FunctionHead,
@@ -60,18 +63,21 @@ impl TimedEffect {
 
     /// Creates an effect at a point in time, `(at <time-specifier> <cond-effect>)`.
     #[deprecated(since = "0.2.0", note = "Use `conditional` instead")]
+    #[must_use]
     pub const fn new_conditional(at: TimeSpecifier, effect: EffectCondition) -> Self {
         Self::conditional(at, effect)
     }
 
     /// Creates a numeric fluent assignment at a point in time, `(at <time-specifier> <f-assign-da>)`.
     #[deprecated(since = "0.2.0", note = "Use `fluent` instead")]
+    #[must_use]
     pub const fn new_fluent(at: TimeSpecifier, action: DurativeActionFunctionAssignment) -> Self {
         Self::fluent(at, action)
     }
 
     /// Creates a continuous effect, `(<assign-op-t> <f-head> <f-exp-t>)`.
     #[deprecated(since = "0.2.0", note = "Use `continuous` instead")]
+    #[must_use]
     pub const fn new_continuous(
         operation: TimedAssignOperator,
         f_head: FunctionHead,

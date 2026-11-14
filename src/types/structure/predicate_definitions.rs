@@ -17,11 +17,13 @@ impl PredicateDefinitions {
     }
 
     /// Creates the definitions from a vector of predicate skeletons.
+    #[must_use]
     pub const fn from(predicates: Vec<AtomicFormulaSkeleton>) -> Self {
         Self(predicates)
     }
 
     /// Gets the values.
+    #[must_use]
     pub fn values(&self) -> &[AtomicFormulaSkeleton] {
         self.0.as_slice()
     }

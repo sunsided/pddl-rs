@@ -413,9 +413,9 @@ mod tests {
     fn precondition_goal_description_preference_works() {
         use crate::PreferenceGoalDescription;
         let gd = make_simple_gd();
-        let pref_gd = PreferenceGoalDescription::from_gd(gd);
-        let pre_gd = PreconditionGoalDescription::preference(pref_gd);
-        check!(prettify!(pre_gd, 40) == "(at ?r loc1)");
+        let preference = PreferenceGoalDescription::from_gd(gd);
+        let precondition = PreconditionGoalDescription::preference(preference);
+        check!(prettify!(precondition, 40) == "(at ?r loc1)");
     }
 
     #[test]

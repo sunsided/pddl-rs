@@ -13,39 +13,46 @@ pub struct PreconditionGoalDescriptions(Vec<PreconditionGoalDescription>);
 
 impl PreconditionGoalDescriptions {
     /// Constructs a new instance from the provided vector of values.
+    #[must_use]
     pub const fn new(values: Vec<PreconditionGoalDescription>) -> Self {
         Self(values)
     }
 
     /// Constructs a list containing a single [`PreconditionGoalDescription::Preference`] variant.
     #[doc(alias = "new_preference")]
+    #[must_use]
     pub fn preference(pref: PreferenceGoalDescription) -> Self {
         PreconditionGoalDescription::preference(pref).into()
     }
 
     /// Alias for [`Self::preference`].
+    #[must_use]
     pub fn new_preference(pref: PreferenceGoalDescription) -> Self {
         Self::preference(pref)
     }
 
     /// Constructs a list containing a single [`PreconditionGoalDescription::Forall`] variant.
     #[doc(alias = "new_forall")]
+    #[must_use]
     pub fn r#forall(variables: TypedVariables, gd: PreconditionGoalDescriptions) -> Self {
         PreconditionGoalDescription::r#forall(variables, gd).into()
     }
 
     /// Alias for [`Self::forall`].
+    #[must_use]
     pub fn new_forall(variables: TypedVariables, gd: PreconditionGoalDescriptions) -> Self {
         Self::r#forall(variables, gd)
     }
 
     /// Returns `true` if the list contains no elements.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
     /// Returns the number of elements in the list, also referred to
     /// as its 'length'.
+    #[must_use]
     pub fn len(&self) -> usize {
         self.0.len()
     }
@@ -59,6 +66,7 @@ impl PreconditionGoalDescriptions {
 
     /// Get the only element of this list if the list has
     /// exactly one element. Returns [`None`] in all other cases.
+    #[must_use]
     pub fn try_get_single(self) -> Option<PreconditionGoalDescription> {
         if self.len() == 1 {
             self.into_iter().next()
@@ -167,22 +175,26 @@ impl PreconditionGoalDescription {
 
     /// Constructs a new [`Preference`](Self::Preference) variant.
     #[doc(alias = "new_preference")]
+    #[must_use]
     pub const fn preference(pref: PreferenceGoalDescription) -> Self {
         Self::Preference(pref)
     }
 
     /// Alias for [`Self::preference`].
+    #[must_use]
     pub fn new_preference(pref: PreferenceGoalDescription) -> Self {
         Self::preference(pref)
     }
 
     /// Constructs a new [`Forall`](Self::Forall) variant.
     #[doc(alias = "new_forall")]
+    #[must_use]
     pub const fn r#forall(variables: TypedVariables, gd: PreconditionGoalDescriptions) -> Self {
         Self::Forall(variables, gd)
     }
 
     /// Alias for [`Self::forall`].
+    #[must_use]
     pub fn new_forall(variables: TypedVariables, gd: PreconditionGoalDescriptions) -> Self {
         Self::r#forall(variables, gd)
     }
@@ -197,6 +209,15 @@ impl From<PreferenceGoalDescription> for PreconditionGoalDescription {
 impl From<Preference> for PreconditionGoalDescription {
     fn from(value: Preference) -> Self {
         PreconditionGoalDescription::preference(PreferenceGoalDescription::from_preference(value))
+    }
+}
+
+impl<'a> IntoIterator for &'a PreconditionGoalDescriptions {
+    type Item = &'a PreconditionGoalDescription;
+    type IntoIter = std::slice::Iter<'a, PreconditionGoalDescription>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
     }
 }
 

@@ -50,23 +50,27 @@ pub enum TimedGoalDescription {
 
 impl TimedGoalDescription {
     /// Creates an `(at <time-specifier> <GD>)` goal, e.g. `(at start <GD>)`.
+    #[must_use]
     pub const fn at(time: TimeSpecifier, gd: GoalDescription) -> Self {
         Self::At(time, gd)
     }
 
     /// Deprecated alias for [`Self::at`].
     #[deprecated(since = "0.2.0", note = "Use `at` instead")]
+    #[must_use]
     pub const fn new_at(time: TimeSpecifier, gd: GoalDescription) -> Self {
         Self::at(time, gd)
     }
 
     /// Creates an `(over <interval> <GD>)` goal, e.g. `(over all <GD>)`.
+    #[must_use]
     pub const fn over(interval: Interval, gd: GoalDescription) -> Self {
         Self::Over(interval, gd)
     }
 
     /// Deprecated alias for [`Self::over`].
     #[deprecated(since = "0.2.0", note = "Use `over` instead")]
+    #[must_use]
     pub const fn new_over(interval: Interval, gd: GoalDescription) -> Self {
         Self::over(interval, gd)
     }

@@ -118,7 +118,7 @@ mod tests {
 
     #[test]
     fn parse_single_domain_and_problem() {
-        let input = r#"
+        let input = r"
             (define (domain briefcase-world)
                 (:requirements :strips)
                 (:predicates (at ?x))
@@ -128,7 +128,7 @@ mod tests {
                 (:init (at home))
                 (:goal (at office))
             )
-        "#;
+        ";
 
         let pddl_file = PddlFile::from_str(input).unwrap();
         check!(pddl_file.domain_count() == 1);
@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn parse_two_domains_and_one_problem() {
-        let input = r#"
+        let input = r"
             (define (domain d1)
                 (:requirements :strips)
                 (:predicates (p))
@@ -153,7 +153,7 @@ mod tests {
                 (:init)
                 (:goal (and))
             )
-        "#;
+        ";
 
         let pddl_file = PddlFile::from_str(input).unwrap();
         check!(pddl_file.domain_count() == 2);
@@ -164,7 +164,7 @@ mod tests {
 
     #[test]
     fn parse_one_domain_and_two_problems() {
-        let input = r#"
+        let input = r"
             (define (domain d1)
                 (:requirements :strips)
                 (:predicates (p))
@@ -179,7 +179,7 @@ mod tests {
                 (:init)
                 (:goal (and))
             )
-        "#;
+        ";
 
         let pddl_file = PddlFile::from_str(input).unwrap();
         check!(pddl_file.domain_count() == 1);
@@ -188,7 +188,7 @@ mod tests {
 
     #[test]
     fn parse_mixed_order_problem_before_domain() {
-        let input = r#"
+        let input = r"
             (define (problem p1)
                 (:domain d1)
                 (:init)
@@ -198,7 +198,7 @@ mod tests {
                 (:requirements :strips)
                 (:predicates (p))
             )
-        "#;
+        ";
 
         let pddl_file = PddlFile::from_str(input).unwrap();
         check!(pddl_file.domain_count() == 1);
@@ -210,14 +210,14 @@ mod tests {
 
     #[test]
     fn parse_file_with_leading_comments() {
-        let input = r#"
+        let input = r"
             ; This is a comment
             ; Another comment
             (define (domain test)
                 (:requirements :strips)
                 (:predicates (p))
             )
-        "#;
+        ";
 
         let pddl_file = PddlFile::from_str(input).unwrap();
         check!(pddl_file.domain_count() == 1);
@@ -236,10 +236,10 @@ mod tests {
 
     #[test]
     fn parse_file_with_only_whitespace_and_comments() {
-        let input = r#"; Just a comment
+        let input = r"; Just a comment
 
 ; Another comment
-"#;
+";
 
         let pddl_file = PddlFile::from_str(input).unwrap();
         check!(pddl_file.is_empty());
@@ -247,7 +247,7 @@ mod tests {
 
     #[test]
     fn parse_using_parser_trait() {
-        let input = r#"
+        let input = r"
             (define (domain d1)
                 (:requirements :strips)
                 (:predicates (p))
@@ -257,7 +257,7 @@ mod tests {
                 (:init)
                 (:goal (and))
             )
-        "#;
+        ";
 
         let pddl_file = PddlFile::from_str(input).unwrap();
         check!(pddl_file.domain_count() == 1);
@@ -266,7 +266,7 @@ mod tests {
 
     #[test]
     fn parse_domains_only() {
-        let input = r#"
+        let input = r"
             (define (domain d1)
                 (:requirements :strips)
                 (:predicates (p))
@@ -275,7 +275,7 @@ mod tests {
                 (:requirements :strips)
                 (:predicates (q))
             )
-        "#;
+        ";
 
         let domains = PddlFile::from_str(input).unwrap().domains;
         check!(domains.len() == 2);
@@ -285,7 +285,7 @@ mod tests {
 
     #[test]
     fn parse_problems_only() {
-        let input = r#"
+        let input = r"
             (define (problem p1)
                 (:domain d1)
                 (:init)
@@ -296,7 +296,7 @@ mod tests {
                 (:init)
                 (:goal (and))
             )
-        "#;
+        ";
 
         let problems = PddlFile::from_str(input).unwrap().problems;
         check!(problems.len() == 2);
@@ -304,7 +304,7 @@ mod tests {
 
     #[test]
     fn parse_rejects_malformed_define_block_after_valid_ones() {
-        let input = r#"
+        let input = r"
             (define (domain d1)
                 (:requirements :strips)
                 (:predicates (p))
@@ -312,7 +312,7 @@ mod tests {
             (define (domain d2)
                 (:requirements
             )
-        "#;
+        ";
 
         let result = PddlFile::from_str(input);
         check!(
@@ -323,7 +323,7 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        let input = r#"
+        let input = r"
             (define (domain briefcase-world)
                 (:requirements :strips)
                 (:predicates (at ?x))
@@ -333,7 +333,7 @@ mod tests {
                 (:init (at home))
                 (:goal (at office))
             )
-        "#;
+        ";
 
         let pddl_file = PddlFile::from_str(input).unwrap();
         check!(pddl_file.domain_count() == 1);
@@ -342,10 +342,10 @@ mod tests {
 
     #[test]
     fn doc_example_1() {
-        let input = r#"
+        let input = r"
             (define (domain d1) (:requirements :strips) (:predicates (p)))
             (define (domain d2) (:requirements :strips) (:predicates (q)))
-        "#;
+        ";
 
         let domains = PddlFile::from_str(input).unwrap().domains;
         check!(domains.len() == 2);
@@ -353,10 +353,10 @@ mod tests {
 
     #[test]
     fn doc_example_2() {
-        let input = r#"
+        let input = r"
             (define (problem p1) (:domain d) (:init) (:goal (and)))
             (define (problem p2) (:domain d) (:init) (:goal (and)))
-        "#;
+        ";
 
         let problems = PddlFile::from_str(input).unwrap().problems;
         check!(problems.len() == 2);
@@ -374,7 +374,7 @@ mod tests {
 
     #[test]
     fn doc_example_4() {
-        let input = r#"
+        let input = r"
             (define (domain briefcase-world)
                 (:requirements :strips)
                 (:predicates (at ?x))
@@ -384,7 +384,7 @@ mod tests {
                 (:init (at home))
                 (:goal (at office))
             )
-        "#;
+        ";
 
         let pddl_file = PddlFile::from_str(input).unwrap();
         check!(pddl_file.domain_count() == 1);

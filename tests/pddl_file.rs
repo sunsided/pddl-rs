@@ -5,7 +5,7 @@ use assert2::check;
 use pddl::{Name, Parser, PddlFile, Problem};
 
 /// A file with several domain and problem definitions, interleaved.
-pub const MULTI_DEF_FILE: &str = r#"
+pub const MULTI_DEF_FILE: &str = r"
 ; Multi-definition PDDL file containing multiple domains and problems.
 ;
 ; This example demonstrates a PDDL file with several (define ...) blocks
@@ -97,7 +97,7 @@ pub const MULTI_DEF_FILE: &str = r#"
   (:init (on-table a) (on-table b) (on-table c) (clear a) (clear b) (clear c) (hand-empty))
   (:goal (and (on c b) (on b a)))
 )
-"#;
+";
 
 #[test]
 fn parse_multi_definition_file() {

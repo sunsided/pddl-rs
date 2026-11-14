@@ -25,12 +25,12 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        let input = r#"(:derived (train-usable ?t - train)
+        let input = r"(:derived (train-usable ?t - train)
                             (and
                                 (train-has-guard ?t)
                                 (train-has-driver ?t)
                             )
-                        )"#;
+                        )";
 
         let predicate = DerivedPredicate::from_str(input).unwrap();
         check!(predicate.predicate().name() == "train-usable");
@@ -39,12 +39,12 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        let input = r#"(:derived (train-usable ?t - train)
+        let input = r"(:derived (train-usable ?t - train)
                             (and
                                 (train-has-guard ?t)
                                 (train-has-driver ?t)
                             )
-                        )"#;
+                        )";
 
         let predicate = DerivedPredicate::from_str(input).unwrap();
         check!(predicate.predicate().name() == "train-usable");

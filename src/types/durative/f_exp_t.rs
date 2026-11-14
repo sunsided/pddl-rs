@@ -22,17 +22,20 @@ pub enum TimedFluentExpression {
 
 impl TimedFluentExpression {
     /// Creates the elapsed time expression `#t`.
+    #[must_use]
     pub const fn new() -> Self {
         Self::Now
     }
 
     /// Creates a fluent expression scaled by the elapsed time, `(* <f-exp> #t)`.
     #[doc(alias = "new_scaled")]
+    #[must_use]
     pub const fn scaled(exp: FluentExpression) -> Self {
         Self::Scaled(exp)
     }
 
     /// Creates a fluent expression scaled by the elapsed time, `(* <f-exp> #t)`.
+    #[must_use]
     pub fn new_scaled(exp: FluentExpression) -> Self {
         Self::scaled(exp)
     }

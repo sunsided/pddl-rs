@@ -38,11 +38,13 @@ impl<T> Default for FunctionTypedList<T> {
 
 impl<T> FunctionTypedList<T> {
     /// Creates a new list from the typed elements.
+    #[must_use]
     pub const fn new(list: Vec<FunctionTyped<T>>) -> Self {
         Self(list)
     }
 
     /// Gets the values.
+    #[must_use]
     pub fn values(&self) -> &[FunctionTyped<T>] {
         self.0.as_slice()
     }

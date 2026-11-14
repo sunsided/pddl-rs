@@ -17,22 +17,26 @@ pub enum SimpleDurationConstraint {
 impl SimpleDurationConstraint {
     /// Creates a comparison against a duration value, e.g. `(= ?duration 5)`.
     #[doc(alias = "new_op")]
+    #[must_use]
     pub const fn op(op: DurationOperator, value: DurationValue) -> Self {
         Self::Op(op, value)
     }
 
     /// Creates a comparison against a duration value. Same as [`op`](Self::op).
+    #[must_use]
     pub fn new_op(op: DurationOperator, value: DurationValue) -> Self {
         Self::op(op, value)
     }
 
     /// Creates a constraint at a time point, e.g. `(at end (<= ?duration 5))`.
     #[doc(alias = "new_at")]
+    #[must_use]
     pub fn at(time: TimeSpecifier, constraint: SimpleDurationConstraint) -> Self {
         Self::At(time, Box::new(constraint))
     }
 
     /// Creates a constraint at a time point. Same as [`at`](Self::at).
+    #[must_use]
     pub fn new_at(time: TimeSpecifier, constraint: SimpleDurationConstraint) -> Self {
         Self::at(time, constraint)
     }

@@ -128,8 +128,11 @@ pub trait Parser {
     /// trailing input is an error. To read several `(define ...)` blocks from
     /// one input, parse it as a [`PddlFile`](crate::PddlFile) instead.
     ///
-    /// On failure, returns a [`ParseError`] with the line, column and an
-    /// excerpt of the input at which parsing stopped.
+    /// ## Errors
+    ///
+    /// Returns a [`ParseError`] with the line, column and an excerpt of the
+    /// input at which parsing stopped, if `input` isn't a valid
+    /// [`Item`](Self::Item).
     ///
     /// ## Example
     /// ```
@@ -166,7 +169,7 @@ pub(crate) fn parse_nodes<T>(
             None => Ok(value),
         }
     };
-    run().map_err(|e| ParseError::new(input, e))
+    run().map_err(|e| ParseError::new(input, &e))
 }
 
 /// Parses `input` as exactly one atom or list with `rule`.

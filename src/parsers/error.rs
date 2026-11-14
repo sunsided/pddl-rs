@@ -47,6 +47,7 @@ pub struct ParseError {
 
 impl ParseError {
     /// The byte offset into the input at which parsing stopped.
+    #[must_use]
     pub const fn offset(&self) -> usize {
         self.offset
     }
@@ -54,22 +55,26 @@ impl ParseError {
     /// The byte range of the input that parsing stopped at: an atom, the start
     /// of a list up to its first atom (e.g. `(:bogus`), a single parenthesis,
     /// or an empty range at the end of the input.
+    #[must_use]
     pub const fn span(&self) -> Range<usize> {
         self.offset..self.offset + self.len
     }
 
     /// The 1-based line at which parsing stopped.
+    #[must_use]
     pub const fn line(&self) -> usize {
         self.line
     }
 
     /// The 1-based column (in characters) at which parsing stopped.
+    #[must_use]
     pub const fn column(&self) -> usize {
         self.column
     }
 
     /// A short excerpt of the input at which parsing stopped,
     /// or `None` if the input ended early.
+    #[must_use]
     pub fn found(&self) -> Option<&str> {
         self.found.as_deref()
     }
@@ -79,6 +84,7 @@ impl ParseError {
     ///
     /// Made safe for display like [`found`](Self::found): characters outside
     /// printable ASCII are escaped, and long values are cut and end in `...`.
+    #[must_use]
     pub fn keyword(&self) -> Option<&str> {
         self.keyword.as_deref()
     }
@@ -88,12 +94,13 @@ impl ParseError {
     ///
     /// Made safe for display like [`found`](Self::found): characters outside
     /// printable ASCII are escaped, and long values are cut and end in `...`.
+    #[must_use]
     pub fn reason(&self) -> Option<&str> {
         self.reason.as_deref()
     }
 
     /// Describes `error` within `input`.
-    pub(crate) fn new(input: &str, error: Error) -> Self {
+    pub(crate) fn new(input: &str, error: &Error) -> Self {
         let offset = error.offset.min(input.len());
         let before = &input[..offset];
         let line_start = before.rfind('\n').map_or(0, |i| i + 1);
@@ -247,14 +254,14 @@ mod tests {
     /// keyword and a reason where known.
     #[test]
     fn typical_mistakes_are_reported_where_they_are() {
+        // (label, parser, input, expected start of the error message)
+        type Case<'a> = (&'a str, &'a dyn Fn(&str) -> ParseError, String, &'a str);
         const HEAD: &str = "(define (domain d) (:requirements :strips) (:predicates (p ?x) (q))\n";
         let action = |body: &str| format!("{HEAD}  (:action a {body}))");
         let domain = |s: &str| Domain::from_str(s).unwrap_err();
         let problem = |s: &str| Problem::from_str(s).unwrap_err();
         let file = |s: &str| PddlFile::from_str(s).unwrap_err();
 
-        // (label, parser, input, expected start of the error message)
-        type Case<'a> = (&'a str, &'a dyn Fn(&str) -> ParseError, String, &'a str);
         let cases: [Case; 11] = [
             (
                 "incomplete typed parameter",
@@ -358,7 +365,7 @@ mod tests {
         let error = Error::at(0, 1)
             .reason("bad\x1b[2J\nreason")
             .keyword(":act\x07ion");
-        let parsed = ParseError::new("x", error);
+        let parsed = ParseError::new("x", &error);
         check!(parsed.keyword() == Some(r":act\u{7}ion"));
         check!(parsed.reason() == Some(r"bad\u{1b}[2J reason"));
         check!(
@@ -375,7 +382,7 @@ mod tests {
             .unwrap()
             .unbalanced
             .unwrap();
-        let error = ParseError::new(input, unclosed);
+        let error = ParseError::new(input, &unclosed);
         check!(error.keyword() == Some(r":\u{202e}x"));
     }
 
@@ -406,7 +413,7 @@ mod tests {
     #[test]
     fn keyword_and_reason_are_bounded() {
         let long: &'static str = "x".repeat(10_000).leak();
-        let parsed = ParseError::new("x", Error::at(0, 1).reason(long).keyword(long));
+        let parsed = ParseError::new("x", &Error::at(0, 1).reason(long).keyword(long));
         check!(parsed.keyword().unwrap().chars().count() == EXCERPT_CHARS + 3);
         check!(parsed.reason().unwrap().chars().count() == EXCERPT_CHARS + 3);
     }
@@ -477,7 +484,7 @@ mod tests {
     fn end_of_input_has_no_excerpt() {
         let error = Domain::from_str("ab\n").unwrap_err();
         check!(error.found() == Some("ab "));
-        let error = ParseError::new("ab\ncd", Error::at(5, 0));
+        let error = ParseError::new("ab\ncd", &Error::at(5, 0));
         check!((error.line(), error.column(), error.offset()) == (2, 3, 5));
         check!(error.found() == None);
         check!(error.span() == (5..5));
@@ -497,7 +504,7 @@ mod tests {
 
     #[test]
     fn column_counts_characters() {
-        let error = ParseError::new("ä(x", Error::at(3, 1));
+        let error = ParseError::new("ä(x", &Error::at(3, 1));
         check!(error.column() == 3);
     }
 }

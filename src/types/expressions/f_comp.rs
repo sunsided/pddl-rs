@@ -13,21 +13,25 @@ pub struct FluentComparison(BinaryComparison, FluentExpression, FluentExpression
 
 impl FluentComparison {
     /// Creates a new comparison, `(<binary-comp> <f-exp> <f-exp>)`.
+    #[must_use]
     pub const fn new(comp: BinaryComparison, lhs: FluentExpression, rhs: FluentExpression) -> Self {
         Self(comp, lhs, rhs)
     }
 
     /// Returns the comparison operator.
+    #[must_use]
     pub const fn comparison(&self) -> &BinaryComparison {
         &self.0
     }
 
     /// Returns the first operand.
+    #[must_use]
     pub const fn first(&self) -> &FluentExpression {
         &self.1
     }
 
     /// Returns the second operand.
+    #[must_use]
     pub const fn second(&self) -> &FluentExpression {
         &self.2
     }

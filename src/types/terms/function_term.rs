@@ -20,11 +20,13 @@ impl FunctionTerm {
     }
 
     /// Gets the function symbol.
+    #[must_use]
     pub const fn symbol(&self) -> &FunctionSymbol {
         &self.0
     }
 
     /// Gets the function terms.
+    #[must_use]
     pub fn terms(&self) -> &[Term] {
         self.1.as_ref()
     }

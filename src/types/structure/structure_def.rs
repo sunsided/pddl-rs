@@ -21,33 +21,39 @@ pub enum StructureDef {
 impl StructureDef {
     /// Creates a new action structure definition.
     #[doc(alias = "new_action")]
+    #[must_use]
     pub const fn action(action: ActionDefinition) -> Self {
         Self::Action(action)
     }
 
     /// Creates a new action structure definition; same as [`action`](Self::action).
+    #[must_use]
     pub fn new_action(action: ActionDefinition) -> Self {
         Self::action(action)
     }
 
     /// Creates a new durative action structure definition, boxing the action.
     #[doc(alias = "new_durative_action")]
+    #[must_use]
     pub fn durative_action(action: DurativeActionDefinition) -> Self {
         Self::DurativeAction(Box::new(action))
     }
 
     /// Creates a new durative action structure definition; same as [`durative_action`](Self::durative_action).
+    #[must_use]
     pub fn new_durative_action(action: DurativeActionDefinition) -> Self {
         Self::durative_action(action)
     }
 
     /// Creates a new derived predicate structure definition.
     #[doc(alias = "new_derived")]
+    #[must_use]
     pub const fn derived(predicate: DerivedPredicate) -> Self {
         Self::Derived(predicate)
     }
 
     /// Creates a new derived predicate structure definition; same as [`derived`](Self::derived).
+    #[must_use]
     pub fn new_derived(predicate: DerivedPredicate) -> Self {
         Self::derived(predicate)
     }

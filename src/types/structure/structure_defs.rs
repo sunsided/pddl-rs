@@ -17,6 +17,7 @@ impl StructureDefs {
     }
 
     /// Gets the values.
+    #[must_use]
     pub fn values(&self) -> &[StructureDef] {
         self.0.as_slice()
     }

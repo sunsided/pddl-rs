@@ -17,11 +17,13 @@ pub enum PreferenceGoalDescription {
 
 impl PreferenceGoalDescription {
     /// Creates a required goal from a [`GoalDescription`].
+    #[must_use]
     pub const fn from_gd(gd: GoalDescription) -> Self {
         Self::Goal(gd)
     }
 
     /// Creates a preference goal from a [`Preference`].
+    #[must_use]
     pub fn from_preference(pref: Preference) -> Self {
         Self::Preference(pref)
     }

@@ -18,32 +18,37 @@ pub struct Variable(Name);
 
 impl Variable {
     /// Creates a variable from a [`Name`] (without the leading `?`).
-    #[inline(always)]
+    #[inline]
+    #[must_use]
     pub const fn new(name: Name) -> Self {
         Self(name)
     }
 
     /// Creates a variable from a string slice (without the leading `?`).
-    #[inline(always)]
+    #[inline]
     #[doc(alias = "new_string")]
+    #[must_use]
     pub fn string(name: &str) -> Self {
         Self(Name::new(name))
     }
 
     /// Alias for [`Self::string`].
-    #[inline(always)]
+    #[inline]
+    #[must_use]
     pub fn new_string(name: &str) -> Self {
         Self::string(name)
     }
 
     /// Creates a variable from a `'static` string; usable in `const` contexts.
-    #[inline(always)]
+    #[inline]
+    #[must_use]
     pub const fn from_static(name: &'static str) -> Self {
         Self(Name::new_static(name))
     }
 
     /// Creates a variable from a [`Name`]; same as [`Self::new`].
-    #[inline(always)]
+    #[inline]
+    #[must_use]
     pub const fn from_name(name: Name) -> Self {
         Self(name)
     }
@@ -65,21 +70,21 @@ impl<T> From<T> for Variable
 where
     T: Into<Name>,
 {
-    #[inline(always)]
+    #[inline]
     fn from(value: T) -> Self {
         Variable::new(value.into())
     }
 }
 
 impl AsRef<Name> for Variable {
-    #[inline(always)]
+    #[inline]
     fn as_ref(&self) -> &Name {
         &self.0
     }
 }
 
 impl AsRef<str> for Variable {
-    #[inline(always)]
+    #[inline]
     fn as_ref(&self) -> &str {
         self.0.as_ref()
     }
@@ -88,7 +93,7 @@ impl AsRef<str> for Variable {
 impl Deref for Variable {
     type Target = Name;
 
-    #[inline(always)]
+    #[inline]
     fn deref(&self) -> &Self::Target {
         &self.0
     }

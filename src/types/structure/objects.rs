@@ -18,6 +18,7 @@ impl Objects {
     }
 
     /// Gets the typed object names.
+    #[must_use]
     pub fn values(&self) -> &TypedNames {
         &self.0
     }
@@ -38,7 +39,7 @@ impl FromIterator<Typed<Name>> for Objects {
 impl Deref for Objects {
     type Target = TypedNames;
 
-    #[inline(always)]
+    #[inline]
     fn deref(&self) -> &Self::Target {
         &self.0
     }
