@@ -56,9 +56,24 @@ Syntax highlighting for keywords, variables, numbers and comments. Semantic
 highlighting then colors types, predicates, functions, actions, objects and
 variables differently, depending on what each name refers to.
 
-PDDL in Markdown code blocks marked ` ```pddl ` is highlighted too, in the
-Markdown editor. The Markdown preview and the checks above don't cover these
-blocks.
+PDDL embedded elsewhere is highlighted too:
+
+- Markdown code blocks marked ` ```pddl `.
+- Strings in Rust, JavaScript, TypeScript and Python that follow a
+  `language=pddl` comment, also inside Markdown code blocks:
+
+  ```rust
+  const DOMAIN: &str =
+      // language=pddl
+      r#"(define (domain d) (:predicates (at ?x)))"#;
+  ```
+
+  This covers Rust raw and normal strings, JavaScript and TypeScript
+  template literals, and Python triple-quoted strings (`# language=pddl`).
+  The string has to be the next one after the comment.
+
+Only highlighting applies there: the Markdown preview, error checking and
+the other features above don't cover embedded PDDL.
 
 ## Settings
 

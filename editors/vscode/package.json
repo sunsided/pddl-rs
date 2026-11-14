@@ -56,6 +56,52 @@
         "embeddedLanguages": {
           "meta.embedded.block.pddl": "pddl"
         }
+      },
+      {
+        "scopeName": "pddl.language-comment.rust",
+        "path": "./syntaxes/pddl.rust-injection.tmLanguage.json",
+        "injectTo": [
+          "source.rust",
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.pddl": "pddl"
+        }
+      },
+      {
+        "scopeName": "pddl.language-comment.javascript",
+        "path": "./syntaxes/pddl.javascript-injection.tmLanguage.json",
+        "injectTo": [
+          "source.js",
+          "source.js.jsx",
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.pddl": "pddl"
+        }
+      },
+      {
+        "scopeName": "pddl.language-comment.typescript",
+        "path": "./syntaxes/pddl.typescript-injection.tmLanguage.json",
+        "injectTo": [
+          "source.ts",
+          "source.tsx",
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.pddl": "pddl"
+        }
+      },
+      {
+        "scopeName": "pddl.language-comment.python",
+        "path": "./syntaxes/pddl.python-injection.tmLanguage.json",
+        "injectTo": [
+          "source.python",
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.pddl": "pddl"
+        }
       }
     ],
     "configuration": {
