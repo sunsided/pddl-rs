@@ -114,8 +114,9 @@ pub(crate) fn read(input: &str) -> Result<Forest<'_>, Error> {
         }
     }
     // Close what is still open at the end of the input, innermost first.
-    let unbalanced = (!open.is_empty()).then(|| {
-        let error = Error::at(input.len(), 0).reason("expected `)`");
+    let unbalanced = open.last().map(|(innermost, _)| {
+        let mut error = Error::at(input.len(), 0).reason("expected `)`");
+        error.unclosed = Some(*innermost);
         match innermost_keyword(&open) {
             Some(keyword) => error.keyword(keyword.to_ascii_lowercase()),
             None => error,

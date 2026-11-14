@@ -43,6 +43,9 @@ pub struct ParseError {
     keyword: Option<String>,
     /// Sanitized description of why parsing stopped.
     reason: Option<String>,
+    /// Byte offset of the `(` that is never closed, for an error at the end of the input.
+    #[cfg_attr(not(feature = "miette"), allow(dead_code))]
+    unclosed: Option<usize>,
 }
 
 impl ParseError {
@@ -113,6 +116,7 @@ impl ParseError {
             found: (!rest.is_empty()).then(|| sanitize(rest)),
             keyword: error.keyword.as_deref().map(sanitize),
             reason: error.reason.map(sanitize),
+            unclosed: error.unclosed,
         }
     }
 }
@@ -148,7 +152,15 @@ impl miette::Diagnostic for ParseError {
             None => "unexpected end of input".to_string(),
         });
         let label = miette::LabeledSpan::new_primary_with_span(Some(text), self.span());
-        Some(Box::new(std::iter::once(label)))
+        // An error at the end of the input has an empty span, which a report can't mark;
+        // the `(` that is never closed shows where the missing `)` belongs.
+        let unclosed = self.unclosed.map(|offset| {
+            miette::LabeledSpan::new_with_span(
+                Some("this `(` is never closed".to_string()),
+                offset..offset + 1,
+            )
+        });
+        Some(Box::new(std::iter::once(label).chain(unclosed)))
     }
 }
 
@@ -193,6 +205,8 @@ pub(crate) struct Error {
     /// A fatal error ends parsing; otherwise the grammar may try another alternative.
     /// Errors inside a `:keyword` form are fatal: nothing else can start with it.
     pub fatal: bool,
+    /// Byte offset of the `(` that is never closed, for an error at the end of the input.
+    pub unclosed: Option<usize>,
 }
 
 /// The result of a grammar rule.
@@ -207,6 +221,7 @@ impl Error {
             keyword: None,
             reason: None,
             fatal: false,
+            unclosed: None,
         }
     }
 
