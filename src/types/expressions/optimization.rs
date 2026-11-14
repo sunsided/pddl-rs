@@ -10,6 +10,7 @@ use std::fmt::{Display, Formatter};
 /// ## Usage
 /// Used by [`MetricSpec`](crate::MetricSpec).
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Optimization {
     /// The associated metric should be minimized.
     Minimize,

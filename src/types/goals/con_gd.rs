@@ -15,6 +15,7 @@ use crate::types::{GoalDescription, Number, TypedVariables};
 /// Used by [`PreferenceConstraintGoalDescription`](crate::types::PreferenceConstraintGoalDescription) and [`ConstraintGoalDescriptionInner`].
 #[doc(alias = "con-GD")]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ConstraintGoalDescription {
     /// A conjunction, `(and <con-GD>*)`.
     And(Vec<ConstraintGoalDescription>),
@@ -70,6 +71,7 @@ pub type ConGD = ConstraintGoalDescription;
 /// Used by [`ConstraintGoalDescription`].
 #[doc(alias = "con2-GD")]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ConstraintGoalDescriptionInner {
     /// A plain goal description, `<GD>`.
     Goal(GoalDescription),

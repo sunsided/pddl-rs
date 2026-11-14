@@ -8,6 +8,8 @@ use std::ops::Deref;
 /// ## Requirements
 /// Requires [Constraints](crate::Requirement::Constraints).
 #[derive(Debug, Default, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct ProblemConstraintsDef(PreferenceConstraintGoalDescriptions);
 
 impl ProblemConstraintsDef {

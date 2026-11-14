@@ -11,6 +11,7 @@ use crate::types::Term;
 /// ## Usage
 /// Used by [`Term`], and [`PrimitiveEffect`](crate::PrimitiveEffect).
 #[derive(Debug, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FunctionTerm(FunctionSymbol, Vec<Term>);
 
 impl FunctionTerm {

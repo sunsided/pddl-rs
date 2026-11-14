@@ -13,6 +13,8 @@ use std::ops::Deref;
 /// Used by [`Problem`](crate::Problem).
 #[doc(alias("goal"))]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct ProblemGoalDescription(PreconditionGoalDescriptions);
 
 impl ProblemGoalDescription {

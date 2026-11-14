@@ -8,6 +8,8 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`Problem`](crate::Problem).
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct Objects(TypedNames);
 
 impl Objects {

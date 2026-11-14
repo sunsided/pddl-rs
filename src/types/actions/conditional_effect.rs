@@ -13,6 +13,7 @@ use crate::types::PrimitiveEffect;
 #[doc(alias("conditional-effect"))]
 #[doc(alias("ConditionalEffect"))]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum EffectCondition {
     /// Exactly the specified effect applies.
     Single(PrimitiveEffect), // TODO: Unify with `All`; vector is allowed to be empty.

@@ -10,6 +10,7 @@ use crate::types::{BinaryOp, FunctionSymbol, MultiOp, Name, Number, PreferenceNa
 /// ## Usage
 /// Used by [`MetricSpec`](crate::MetricSpec).
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum MetricFluentExpression {
     /// A binary operation, `(<binary-op> <metric-f-exp> <metric-f-exp>)`.
     BinaryOp(BinaryOp, Box<Self>, Box<Self>),

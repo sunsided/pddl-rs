@@ -23,6 +23,7 @@ use crate::types::{
 /// ## Usage
 /// Used by [`DurativeActionEffect`](crate::DurativeActionEffect).
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum TimedEffect {
     /// An effect at a point in time, `(at <time-specifier> <cond-effect>)`.
     Conditional(TimeSpecifier, EffectCondition),

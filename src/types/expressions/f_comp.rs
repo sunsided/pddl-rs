@@ -9,6 +9,7 @@ use crate::types::{BinaryComparison, FluentExpression};
 /// Used by [`GoalDescription`](crate::GoalDescription).
 #[doc(alias("f-comp"))]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FluentComparison(BinaryComparison, FluentExpression, FluentExpression);
 
 impl FluentComparison {

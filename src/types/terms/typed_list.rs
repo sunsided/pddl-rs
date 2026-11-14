@@ -26,6 +26,8 @@ use std::ops::Deref;
 /// [`Objects`](crate::Objects) in [`Problem`](crate::Problem), [`PrefConGD`](crate::PrefConGD) and
 /// [`ConGD`](crate::ConGD).
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct TypedList<T>(Vec<Typed<T>>);
 
 impl<T> TypedList<T> {

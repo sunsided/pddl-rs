@@ -261,6 +261,23 @@ impl Display for Name {
     }
 }
 
+/// Serializes as the plain string, in its original spelling.
+#[cfg(feature = "serde")]
+impl serde::Serialize for Name {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self)
+    }
+}
+
+/// Deserializes from a string through [`Name::new`], so names are interned as when parsed.
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for Name {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let name = <std::borrow::Cow<'de, str>>::deserialize(deserializer)?;
+        Ok(Self::new(name))
+    }
+}
+
 impl ToTyped<Name> for Name {
     fn to_typed<I: Into<Type>>(self, r#type: I) -> Typed<Name> {
         Typed::new(self, r#type.into())

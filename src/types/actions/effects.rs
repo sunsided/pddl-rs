@@ -11,6 +11,8 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`ActionDefinition`](crate::ActionDefinition).
 #[derive(Debug, Clone, PartialEq, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct Effects(Vec<ConditionalEffect>);
 
 impl Effects {

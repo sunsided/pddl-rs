@@ -12,6 +12,7 @@ use crate::types::{FunctionSymbol, Term};
 /// and [`DurativeActionFunctionAssignment`](crate::DurativeActionFunctionAssignment).
 #[doc(alias("f-head"))]
 #[derive(Debug, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum FunctionHead {
     /// A function without arguments, `<function-symbol>` or `(<function-symbol>)`.
     Simple(FunctionSymbol), // TODO: Unify with `WithTerms`?

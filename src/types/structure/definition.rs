@@ -7,6 +7,7 @@ use crate::{Domain, Problem};
 /// Parse it when the input must hold exactly one definition of either kind;
 /// use [`PddlFile`](crate::PddlFile) for inputs with several definitions.
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Definition {
     /// A `(define (domain ...))` block.
     Domain(Domain),

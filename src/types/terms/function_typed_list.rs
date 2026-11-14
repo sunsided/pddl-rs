@@ -28,6 +28,8 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`Functions`](crate::Functions).
 #[derive(Debug, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct FunctionTypedList<T>(Vec<FunctionTyped<T>>);
 
 impl<T> Default for FunctionTypedList<T> {

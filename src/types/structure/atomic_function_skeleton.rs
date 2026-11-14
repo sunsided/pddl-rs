@@ -31,6 +31,7 @@ use crate::types::{FunctionSymbol, TypedVariables, Variable};
 /// ## Usage
 /// Used by [`Functions`](crate::Functions).
 #[derive(Debug, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AtomicFunctionSkeleton {
     /// The name of the fluent, e.g. `battery-level`.
     symbol: FunctionSymbol,

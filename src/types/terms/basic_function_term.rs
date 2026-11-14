@@ -5,6 +5,7 @@ use crate::types::{FunctionSymbol, Name};
 /// ## Usage
 /// Used by [`InitElement`](crate::InitElement).
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct BasicFunctionTerm(FunctionSymbol, Vec<Name>);
 
 impl BasicFunctionTerm {

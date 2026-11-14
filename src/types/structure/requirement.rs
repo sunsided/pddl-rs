@@ -16,6 +16,7 @@ use std::fmt::{Display, Formatter};
 /// ## References
 /// - "Complete BNF description of PDDL 3.1 (completely corrected)", Daniel L. Kovacs (`dkovacs@mit.bme.hu`).
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Requirement {
     /// Basic STRIPS-style adds and deletes.
     #[default]

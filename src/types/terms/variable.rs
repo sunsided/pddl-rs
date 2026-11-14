@@ -14,6 +14,8 @@ use std::ops::Deref;
 /// [`DurativeActionGoalDescription`](crate::DurativeActionGoalDescription), [`DurativeActionEffect`](crate::DurativeActionEffect),
 /// [`PrefConGD`](crate::PrefConGD) and [`ConGD`](crate::ConGD).
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct Variable(Name);
 
 impl Variable {

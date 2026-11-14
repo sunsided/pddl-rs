@@ -7,6 +7,7 @@ use std::fmt::{Display, Formatter};
 /// ## Usage
 /// Used by [`TimedGD`](crate::TimedGD).
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Interval {
     /// The condition must be true during the entire plan.
     All,

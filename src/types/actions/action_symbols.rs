@@ -8,6 +8,8 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`ActionDefinition`](crate::ActionDefinition).
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct ActionSymbol(Name);
 
 impl ActionSymbol {

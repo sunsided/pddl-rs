@@ -9,6 +9,7 @@ use crate::types::{AssignOp, AtomicFormula, FluentExpression, FunctionHead, Func
 /// Used by [`ConditionalEffect`](crate::ConditionalEffect) and [`EffectCondition`](crate::EffectCondition).
 #[doc(alias("p-effect"))]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum PrimitiveEffect {
     /// Makes an atomic formula true.
     AtomicFormula(AtomicFormula<Term>),

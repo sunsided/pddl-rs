@@ -66,6 +66,7 @@ use std::ops::Deref;
 /// # fn main() {}
 /// ```
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Requirements(Vec<Requirement>, Vec<Name>);
 
 impl Requirements {

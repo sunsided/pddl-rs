@@ -13,6 +13,8 @@ use std::ops::Deref;
 /// Used by [`ProblemConstraintsDef`](crate::ProblemConstraintsDef).
 #[derive(Debug, Clone, PartialEq, Default)]
 #[doc(alias = "pref-con-GD")]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct PreferenceConstraintGoalDescriptions(Vec<PreferenceConstraintGoalDescription>);
 
 impl PreferenceConstraintGoalDescriptions {
@@ -186,6 +188,7 @@ impl TryInto<PreferenceConstraintGoalDescription> for PreferenceConstraintGoalDe
 /// Used by [`PreferenceConstraintGoalDescriptions`] itself, as well as [`ProblemConstraintsDef`](crate::ProblemConstraintsDef).
 #[derive(Debug, Clone, PartialEq)]
 #[doc(alias = "pref-con-GD")]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum PreferenceConstraintGoalDescription {
     /// A required constraint goal, `<con-GD>`.
     Goal(ConstraintGoalDescription),

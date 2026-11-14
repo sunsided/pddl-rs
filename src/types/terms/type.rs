@@ -20,6 +20,8 @@ pub const TYPE_NUMBER: PrimitiveType = PrimitiveType(Name::new_static("number"))
 /// ## Usage
 /// Used by [`Type`].
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct PrimitiveType(Name);
 
 /// A type selection from `<primitive-type> | (either <primitive-type>)`.
@@ -31,6 +33,7 @@ pub struct PrimitiveType(Name);
 /// Used by [`Typed`](crate::Typed) in [`TypedList`](crate::TypedList),
 /// [`FunctionType`](crate::FunctionType).
 #[derive(Debug, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Type {
     /// The type is exactly this named type.
     Exactly(PrimitiveType),

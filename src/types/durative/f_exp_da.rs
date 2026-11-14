@@ -6,6 +6,7 @@ use crate::types::{AssignOp, BinaryOp, FluentExpression, FunctionHead, MultiOp};
 /// Used by [`DurativeActionFluentExpression`] itself, as well as [`DurativeActionFunctionAssignment`](crate::DurativeActionFunctionAssignment).
 #[doc(alias("f-exp-da"))]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum DurativeActionFluentExpression {
     /// An assignment, `(<assign-op> <f-head> <f-exp-da>)`. Not part of the PDDL 3.1
     /// `<f-exp-da>` grammar; the parser never produces it.

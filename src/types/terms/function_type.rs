@@ -14,6 +14,8 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`FunctionTyped`](crate::FunctionTyped) in [`FunctionTypedList`](crate::FunctionTypedList).
 #[derive(Debug, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct FunctionType(Type);
 
 impl FunctionType {

@@ -12,6 +12,7 @@ use crate::types::FluentExpression;
 /// Used by [`TimedEffect`](crate::TimedEffect).
 #[doc(alias("f-exp-t"))]
 #[derive(Debug, Clone, PartialEq, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum TimedFluentExpression {
     /// The elapsed time, `#t`.
     #[default]

@@ -30,7 +30,25 @@ type UnderlyingType = f64;
 /// Used by [`InitElement`](crate::InitElement), [`ConGD`](crate::ConGD),
 /// [`MetricFluentExpression`](crate::MetricFluentExpression) and [`DurationValue`](crate::DurationValue).
 #[derive(Debug, Copy, Clone, Default)]
-pub struct Number(UnderlyingType);
+#[cfg_attr(
+    feature = "serde",
+    derive(serde::Serialize, serde::Deserialize),
+    serde(transparent)
+)]
+pub struct Number(
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "deserialize_finite"))] UnderlyingType,
+);
+
+/// Deserializes a number, rejecting values [`Number::try_new`] rejects.
+#[cfg(feature = "serde")]
+fn deserialize_finite<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<UnderlyingType, D::Error> {
+    let value = <UnderlyingType as serde::Deserialize>::deserialize(deserializer)?;
+    Number::try_new(value)
+        .map(|_| value)
+        .map_err(serde::de::Error::custom)
+}
 
 impl Number {
     /// Constructs a new number from the provided value.

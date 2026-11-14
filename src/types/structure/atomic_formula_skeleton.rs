@@ -8,6 +8,7 @@ use crate::types::{Name, TypedVariables};
 /// ## Usage
 /// Used by [`PredicateDefinitions`](crate::PredicateDefinitions) and [`DerivedPredicate`](crate::DerivedPredicate).
 #[derive(Debug, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AtomicFormulaSkeleton {
     /// The predicate being declared.
     predicate: Predicate,

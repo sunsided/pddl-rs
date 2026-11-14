@@ -9,6 +9,8 @@ use std::ops::Deref;
 /// Used by [`Preference`](crate::Preference), [`PreferenceTimedGoalDescription`](crate::PrefTimedGD),
 /// [`PreferenceConstraintGoalDescription`](crate::PrefConGD) and [`MetricFluentExpression`](crate::MetricFluentExpression).
 #[derive(Debug, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct PreferenceName(Name);
 
 impl PreferenceName {

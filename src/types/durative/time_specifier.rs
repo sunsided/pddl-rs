@@ -7,6 +7,7 @@ use std::fmt::{Display, Formatter};
 /// ## Usage
 /// Used by [`TimedGD`](crate::TimedGD) and [`TimedEffect`](crate::TimedEffect).
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum TimeSpecifier {
     /// The condition or effect holds or applies at the beginning of a plan.
     Start,

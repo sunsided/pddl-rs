@@ -8,6 +8,7 @@ use crate::types::{PreferenceName, TimedGoalDescription};
 /// Used by [`DurativeActionGoalDescription`](crate::DurativeActionGoalDescription).
 #[doc(alias("pref-timed-GD"))]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum PreferenceTimedGoalDescription {
     /// A required timed goal, `<timed-GD>`.
     Required(TimedGoalDescription),

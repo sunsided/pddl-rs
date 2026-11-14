@@ -7,6 +7,7 @@ use crate::types::{MetricFluentExpression, Optimization};
 /// ## Requirements
 /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MetricSpec {
     /// The optimization direction, `minimize` or `maximize`.
     optimization: Optimization,

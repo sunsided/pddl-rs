@@ -8,6 +8,7 @@ use std::fmt::{Display, Formatter};
 /// ## Usage
 /// Used by [`FExp`](crate::FExp), [`FExpDa`](crate::FExpDa) and [`Optimization`](crate::Optimization).
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum BinaryOp {
     /// The `*` operation.
     Multiplication,

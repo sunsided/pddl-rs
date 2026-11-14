@@ -8,6 +8,7 @@ use std::ops::Deref;
 /// ## Usage
 /// Used by [`TypedList`](crate::TypedList).
 #[derive(Debug, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Typed<O>(O, Type);
 
 impl<O> Typed<O> {
