@@ -26,8 +26,11 @@ pub fn parse_term<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Term> {
         return Ok((remaining, Term::Name(name)));
     }
 
-    if let Ok((remaining, ft)) = parse_function_term(input) {
-        return Ok((remaining, Term::Function(ft)));
+    match parse_function_term(input) {
+        Ok((remaining, ft)) => return Ok((remaining, Term::Function(ft))),
+        // E.g. "nesting too deep": keep the reason, and stop `alt` from retrying.
+        Err(failure @ nom::Err::Failure(_)) => return Err(failure),
+        Err(_) => {}
     }
 
     Err(nom::Err::Error(error_position!(input, ErrorKind::Alt)))
