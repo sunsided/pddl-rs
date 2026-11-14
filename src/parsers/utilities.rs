@@ -91,7 +91,8 @@ pub(crate) fn failure_at<'a>(at: Span<'a>, reason: &'a str) -> nom::Err<NomError
     nom::Err::Failure(NomError::with_context(at, reason))
 }
 
-/// The deepest `(` nesting the parsers accept. Each level costs stack, and a
+/// The deepest `(` nesting the parsers accept: each `(` still open counts once,
+/// whichever form it starts. Each level costs stack, and a
 /// stack overflow aborts the process, so deeper input is an error instead.
 /// Real files nest about 8 deep. At 64, a release build needs well under the
 /// 2 MiB of a spawned thread; a debug build needs about 4 MiB (8 MiB main thread).
@@ -319,35 +320,69 @@ mod tests {
     fn deep_nesting_checks() {
         use crate::{
             DurativeActionFluentExpression, Effects, FluentExpression, FunctionTerm,
-            GoalDefinition, Parser,
+            GoalDefinition, MetricFluentExpression, ParseError, Parser,
         };
-        let nest = |open: &str, leaf: &str, depth: u32| {
-            let depth = depth as usize;
-            format!("{}{leaf}{}", open.repeat(depth), ")".repeat(depth))
-        };
-        let max = MAX_NESTING_DEPTH;
-        for depth in [max, 100_000] {
-            let ok = depth <= max;
-            let gd = nest("(and ", "(p)", depth - 1);
-            assert_eq!(GoalDefinition::from_str(&gd).is_ok(), ok);
-            let gd = nest("(not ", "(p)", depth - 1);
-            assert_eq!(GoalDefinition::from_str(&gd).is_ok(), ok);
-            let f = nest("(- ", "x", depth);
-            assert_eq!(FluentExpression::from_str(&f).is_ok(), ok);
-            let f = nest("(+ 1 ", "x", depth);
-            assert_eq!(FluentExpression::from_str(&f).is_ok(), ok);
-            let f = nest("(* ", "?duration", depth);
-            let f = f.replace(')', " 2)");
-            assert_eq!(DurativeActionFluentExpression::from_str(&f).is_ok(), ok);
-            let t = nest("(f ", "x", depth);
-            assert_eq!(FunctionTerm::from_str(&t).is_ok(), ok);
-            let e = nest("(forall (?x) ", "(p)", (depth - 1) / 2);
-            assert_eq!(Effects::from_str(&e).is_ok(), ok);
+        fn nest(open: &str, leaf: &str, levels: usize) -> String {
+            format!("{}{leaf}{}", open.repeat(levels), ")".repeat(levels))
+        }
+        // `build(n)` has exactly `n` parentheses open at its deepest point.
+        fn check<T>(
+            shape: &str,
+            build: impl Fn(usize) -> String,
+            parse: impl Fn(&str) -> Result<T, ParseError>,
+        ) {
+            let max = MAX_NESTING_DEPTH as usize;
+            assert!(parse(&build(max)).is_ok(), "{shape} at the limit");
+            for depth in [max + 1, 100_000] {
+                let Err(error) = parse(&build(depth)) else {
+                    panic!("{shape} at {depth} parsed");
+                };
+                assert_eq!(error.reason(), Some("nesting too deep"), "{shape}");
+            }
         }
 
-        let deep = nest("(and ", "(p)", 100_000);
-        let error = GoalDefinition::from_str(&deep).unwrap_err();
-        assert_eq!(error.reason(), Some("nesting too deep"));
+        check(
+            "and",
+            |n| nest("(and ", "(p)", n - 1),
+            GoalDefinition::from_str,
+        );
+        check(
+            "not",
+            |n| nest("(not ", "(p)", n - 1),
+            GoalDefinition::from_str,
+        );
+        check(
+            "negation",
+            |n| nest("(- ", "x", n),
+            FluentExpression::from_str,
+        );
+        check("sum", |n| nest("(+ 1 ", "x", n), FluentExpression::from_str);
+        check(
+            "duration product",
+            |n| nest("(* ", "?duration", n).replace(')', " 2)"),
+            DurativeActionFluentExpression::from_str,
+        );
+        check(
+            "metric",
+            |n| nest("(- ", "x", n),
+            MetricFluentExpression::from_str,
+        );
+        check(
+            "function term",
+            |n| nest("(f ", "x", n),
+            FunctionTerm::from_str,
+        );
+        check(
+            "function term in a formula",
+            |n| format!("(p {})", nest("(f ", "x", n - 1)),
+            GoalDefinition::from_str,
+        );
+        // `(?x)` closes before the next level opens, so it doesn't add depth.
+        check(
+            "forall",
+            |n| nest("(forall (?x) ", "(p)", n - 1),
+            Effects::from_str,
+        );
     }
 
     #[test]
