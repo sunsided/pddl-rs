@@ -22,6 +22,9 @@ A problem is checked against the domain named in its `(:domain ...)`. That
 domain can be in the same file, in another open file, or in any `.pddl` file
 in the workspace.
 
+Types, constants, predicates, functions, objects and parameters that nothing
+uses are shown faded.
+
 A misspelled keyword, such as `(:predicats ...)`, comes with a quick fix
 that corrects it.
 

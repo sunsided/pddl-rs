@@ -12,6 +12,9 @@ that speaks the [Language Server Protocol](https://microsoft.github.io/language-
   - variables that no parameter list or quantifier declares,
   - duplicate definitions.
 
+  Types, constants, predicates, functions, objects and parameters that
+  nothing uses get a hint, which editors usually show as faded text.
+
   A problem is checked against the domain named in its `(:domain ...)`. That
   domain can be in the same file, another open file, or any `.pddl` file in the
   workspace.

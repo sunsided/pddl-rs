@@ -7,6 +7,8 @@ All notable changes to the PDDL (pddl-lsp) extension are documented in this file
 ### Added
 
 - An icon for the Marketplace.
+- Unused types, constants, predicates, functions, objects and parameters are
+  shown faded.
 - Snippets for a domain, problem, action, durative action, derived predicate,
   `forall`, `exists` and `when`.
 

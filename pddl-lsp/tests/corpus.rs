@@ -16,6 +16,11 @@ use pddl_lsp::workspace::{Document, Workspace};
 const EXPECTED: &[(&str, &str)] = &[
     // The problem has no `(:init ...)` section.
     ("durative.pddl", "missing `:init`: unexpected `) `"),
+    // These problems declare objects `key2` and `key3` they never use.
+    ("simple-grid1.pddl", "is never used"),
+    ("simple-grid2.pddl", "is never used"),
+    // The domain declares a constant `water` it never uses.
+    ("monkey-domain.pddl", "constant `water` is never used"),
     // The corpus has these problems without their domains.
     ("gripper-40.pddl", "names from it are not checked"),
     ("logistics-e.pddl", "names from it are not checked"),

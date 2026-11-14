@@ -4,7 +4,7 @@
 //! known file: the open documents, and the `.pddl` files found in the
 //! workspace folders when the server started.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fmt::Write as _;
 use std::ops::Range;
 
@@ -59,6 +59,8 @@ pub enum Severity {
     Error,
     /// The file may be fine, but something could not be checked.
     Warning,
+    /// A definition nothing uses; shown faded rather than as a mistake.
+    Unused,
 }
 
 /// A mistake found in a document.
@@ -334,7 +336,77 @@ impl Workspace {
             }
         }
         problems.extend(duplicates(analysis));
+        problems.extend(self.unused(uri));
         problems.sort_by_key(|p| p.span.start);
+        problems
+    }
+}
+
+impl Workspace {
+    /// The definitions in `uri` that nothing refers to.
+    ///
+    /// Predicates, functions, types and constants count as used if any file
+    /// refers to a name like theirs, so one that only another domain uses is
+    /// missed, but nothing used is reported. Objects and variables are checked
+    /// within their own problem or form. Actions, domains and problems are
+    /// used from outside PDDL, and a predicate's or function's parameters
+    /// only name its arguments, so they are never reported.
+    fn unused(&self, uri: &Url) -> Vec<Problem> {
+        let Some(document) = self.documents.get(uri) else {
+            return Vec::new();
+        };
+        let analysis = &document.analysis;
+        let referenced_anywhere = |expect: Expect, name: &str| {
+            let key = (expect, name.to_ascii_lowercase());
+            self.documents
+                .values()
+                .any(|d| d.analysis.referenced.contains(&key))
+        };
+        let skeletons: HashSet<&Range<usize>> = analysis
+            .definitions
+            .iter()
+            .filter(|d| matches!(d.kind, Kind::Predicate | Kind::Function))
+            .map(|d| &d.range)
+            .collect();
+        let mut problems = Vec::new();
+        for (index, definition) in analysis.definitions.iter().enumerate() {
+            let used = match definition.kind {
+                Kind::Predicate => {
+                    referenced_anywhere(Expect::PredicateOrFunction, &definition.name)
+                }
+                Kind::Function => {
+                    referenced_anywhere(Expect::PredicateOrFunction, &definition.name)
+                        || referenced_anywhere(Expect::Term, &definition.name)
+                }
+                Kind::Type => referenced_anywhere(Expect::Type, &definition.name),
+                Kind::Constant => referenced_anywhere(Expect::Term, &definition.name),
+                Kind::Object => analysis.references.iter().any(|r| {
+                    r.context == definition.context
+                        && r.expect == Expect::Term
+                        && r.name.eq_ignore_ascii_case(&definition.name)
+                }),
+                Kind::Variable => {
+                    definition
+                        .scope
+                        .as_ref()
+                        .is_some_and(|s| skeletons.contains(s))
+                        || analysis.variables.iter().any(|v| v.binding == Some(index))
+                }
+                Kind::Action | Kind::Domain | Kind::Problem => true,
+            };
+            if !used && !definition.name.is_empty() {
+                problems.push(Problem {
+                    span: definition.span.clone(),
+                    severity: Severity::Unused,
+                    message: format!(
+                        "{} `{}` is never used",
+                        definition.kind.label(),
+                        definition.name
+                    ),
+                    fix: None,
+                });
+            }
+        }
         problems
     }
 }
@@ -479,6 +551,8 @@ mod tests {
                 == [
                     "unknown type `truk`",
                     "duplicate predicate `at`",
+                    // The first `?t` is shadowed by the second.
+                    "variable `?t` is never used",
                     "duplicate variable `?t`",
                     "predicate `at` takes 1 argument, but 2 are given",
                     "variable `?u` is not declared",
@@ -531,6 +605,38 @@ mod tests {
             .unwrap();
         let definition = ws.definition(&at).unwrap();
         check!(analysis.contexts[definition.context].name == "trucks");
+    }
+
+    #[test]
+    fn hints_at_definitions_nothing_uses() {
+        let domain = "(define (domain d)
+  (:types truck spare)
+  (:constants depot - truck)
+  (:predicates (at ?t - truck) (static ?t) (orphan ?t))
+  (:functions (fuel ?t - truck))
+  (:action a :parameters (?t - truck ?idle)
+    :precondition (and (at ?t) (static depot))
+    :effect (decrease (fuel ?t) 1)))";
+        let problem = "(define (problem p) (:domain d) (:objects t1 t2 - truck)
+  (:init (at t1) (static t1)) (:goal (at t1)))";
+        let ws = workspace(&[("d.pddl", domain), ("p.pddl", problem)]);
+        let hints = |name| {
+            ws.problems(&uri(name))
+                .into_iter()
+                .filter(|p| p.severity == Severity::Unused)
+                .map(|p| p.message)
+                .collect::<Vec<_>>()
+        };
+        // Predicate parameters such as `?t` in `(orphan ?t)` only name arguments.
+        check!(
+            hints("d.pddl")
+                == [
+                    "type `spare` is never used",
+                    "predicate `orphan` is never used",
+                    "variable `?idle` is never used",
+                ]
+        );
+        check!(hints("p.pddl") == ["object `t2` is never used"]);
     }
 
     #[test]

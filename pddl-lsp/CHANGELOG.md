@@ -11,3 +11,4 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   argument counts, undeclared variables and duplicate definitions, checked across domain and
   problem files; hover, go to definition, references, rename, document and workspace symbols,
   completion, signature help, formatting, quick fixes, folding and semantic highlighting.
+- Hints for unused types, constants, predicates, functions, objects and parameters.

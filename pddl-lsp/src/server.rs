@@ -20,7 +20,7 @@ use lsp_types::request::{
 use lsp_types::{
     CodeAction, CodeActionKind, CodeActionOrCommand, CodeActionParams,
     CodeActionProviderCapability, CompletionItem, CompletionItemKind, CompletionOptions,
-    CompletionParams, CompletionResponse, Diagnostic, DiagnosticSeverity,
+    CompletionParams, CompletionResponse, Diagnostic, DiagnosticSeverity, DiagnosticTag,
     DidChangeTextDocumentParams, DidChangeWatchedFilesParams, DidCloseTextDocumentParams,
     DidOpenTextDocumentParams, DocumentFormattingParams, DocumentHighlight,
     DocumentHighlightParams, DocumentSymbol, DocumentSymbolParams, DocumentSymbolResponse,
@@ -466,7 +466,10 @@ impl Server {
                             severity: Some(match problem.severity {
                                 Severity::Error => DiagnosticSeverity::ERROR,
                                 Severity::Warning => DiagnosticSeverity::WARNING,
+                                Severity::Unused => DiagnosticSeverity::HINT,
                             }),
+                            tags: (problem.severity == Severity::Unused)
+                                .then(|| vec![DiagnosticTag::UNNECESSARY]),
                             source: Some("pddl".into()),
                             message: problem.message,
                             ..Diagnostic::default()

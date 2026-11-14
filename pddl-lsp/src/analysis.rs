@@ -5,6 +5,7 @@
 //! It only looks at one file; [`Workspace`](crate::workspace::Workspace) resolves
 //! references across files.
 
+use std::collections::HashSet;
 use std::ops::Range;
 
 use pddl::syntax::{self, Node};
@@ -158,6 +159,9 @@ pub struct Analysis {
     pub references: Vec<Reference>,
     /// Every use of a variable.
     pub variables: Vec<VariableUse>,
+    /// The names this file refers to, in lowercase, by what they're expected to be.
+    /// Lets the workspace find unused definitions without walking every reference.
+    pub referenced: HashSet<(Expect, String)>,
 }
 
 /// What is at a position: a definition, a reference or a variable use, by index.
@@ -184,7 +188,13 @@ impl Analysis {
         for node in &tree.nodes {
             walker.top_level(node);
         }
-        walker.out
+        let mut out = walker.out;
+        out.referenced = out
+            .references
+            .iter()
+            .map(|r| (r.expect, r.name.to_ascii_lowercase()))
+            .collect();
+        out
     }
 
     /// The name at byte `offset`, including an offset just past its end.
