@@ -38,7 +38,9 @@ that speaks the [Language Server Protocol](https://microsoft.github.io/language-
 - **Formatting** that keeps comments and blank lines: one section per line,
   `:keyword value` pairs on their own lines, and lists kept on one line when
   they fit in 80 columns.
-- **Quick fixes** for misspelled keywords, such as `:predicats` → `:predicates`.
+- **Quick fixes** for misspelled keywords, such as `:predicats` → `:predicates`,
+  and for missing requirements, which adds the key to `(:requirements ...)` or
+  adds that section.
 - **Semantic highlighting**, so types, predicates, functions, actions, objects
   and variables each get their own color.
 

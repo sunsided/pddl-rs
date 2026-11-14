@@ -1,6 +1,6 @@
 //! Answers LSP requests from the editor about the [`Workspace`].
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fmt::Write as _;
 use std::ops::Range;
@@ -819,23 +819,25 @@ impl Server {
         Some(vec![TextEdit::new(range, formatted)])
     }
 
-    /// Fixes for misspelled keywords within the requested range.
+    /// Quick fixes for the problems within the requested range, such as a
+    /// misspelled keyword or a missing requirement.
     fn code_actions(&self, params: CodeActionParams) -> Option<Vec<CodeActionOrCommand>> {
         let TextDocumentIdentifier { uri } = params.text_document;
         let document = self.workspace.documents.get(&uri)?;
         let start = document.lines.offset(&document.text, params.range.start);
         let end = document.lines.offset(&document.text, params.range.end);
+        // Several uses of one missing requirement share a fix; offer it once.
+        let mut titles = HashSet::new();
         let actions = self
             .workspace
             .problems(&uri)
             .into_iter()
             .filter(|p| p.span.start <= end && start <= p.span.end)
             .filter_map(|problem| {
-                let fix = problem.fix?;
-                let range = self.range(document, problem.span);
-                let edit = TextEdit::new(range, fix.clone());
+                let fix = problem.fix.filter(|f| titles.insert(f.title.clone()))?;
+                let edit = TextEdit::new(self.range(document, fix.span), fix.text);
                 Some(CodeActionOrCommand::CodeAction(CodeAction {
-                    title: format!("Replace with `{fix}`"),
+                    title: fix.title,
                     kind: Some(CodeActionKind::QUICKFIX),
                     edit: Some(WorkspaceEdit::new(HashMap::from([(
                         uri.clone(),

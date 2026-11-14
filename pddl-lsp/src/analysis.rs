@@ -66,6 +66,19 @@ pub struct Context {
     pub domain: Option<String>,
     /// The requirements its `(:requirements ...)` declares, as written.
     pub requirements: Vec<Requirement>,
+    /// Where another requirement key can be added, or `None` if its
+    /// `(:requirements ...)` is not closed.
+    pub requirements_at: Option<RequirementsAt>,
+}
+
+/// Where a requirement key can be added to a domain or problem.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RequirementsAt {
+    /// Before the `)` of its `(:requirements ...)`, at this byte offset.
+    Section(usize),
+    /// In a new `(:requirements ...)` section at this byte offset: after the
+    /// header, or after a problem's `(:domain ...)`.
+    NewSection(usize),
 }
 
 /// A name being defined.
@@ -514,6 +527,7 @@ impl Walker<'_> {
                 .and_then(Node::atom)
                 .map(str::to_string),
             requirements: Vec::new(),
+            requirements_at: header.map(|h| RequirementsAt::NewSection(node_range(h).end)),
         });
         if let Some(name) = name {
             let detail = format!("{} {}", kind.label(), self.source(name));
@@ -534,7 +548,7 @@ impl Walker<'_> {
         };
         let range = node_range(section);
         match head.atom().map(str::to_ascii_lowercase).as_deref() {
-            Some(":requirements") => self.requirements(args),
+            Some(":requirements") => self.requirements(section, args),
             Some(":types") => {
                 self.typed_defs(Kind::Type, args, &range, None);
             }
@@ -591,8 +605,11 @@ impl Walker<'_> {
         }
     }
 
-    /// The requirement keys of a `(:requirements ...)` section.
-    fn requirements(&mut self, keys: &[Node]) {
+    /// A `(:requirements ...)` section with the requirement keys `keys`.
+    fn requirements(&mut self, section: &Node, keys: &[Node]) {
+        self.out.contexts[self.context].requirements_at = section
+            .closed
+            .then_some(RequirementsAt::Section(section.end));
         let declared = keys
             .iter()
             .filter_map(Node::atom)
@@ -691,8 +708,12 @@ impl Walker<'_> {
                     self.refer(Expect::Domain, name, None);
                     self.out.contexts[self.context].domain = name.atom().map(str::to_string);
                 }
+                let at = &mut self.out.contexts[self.context].requirements_at;
+                if let Some(RequirementsAt::NewSection(_)) = at {
+                    *at = Some(RequirementsAt::NewSection(range.end));
+                }
             }
-            Some(":requirements") => self.requirements(args),
+            Some(":requirements") => self.requirements(section, args),
             Some(":objects") => {
                 self.typed_defs(Kind::Object, args, &range, None);
             }

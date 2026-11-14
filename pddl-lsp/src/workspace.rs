@@ -11,7 +11,9 @@ use std::ops::Range;
 use lsp_types::Url;
 use pddl::{syntax, Requirement};
 
-use crate::analysis::{Analysis, Definition, Expect, Kind, Occurrence, VariableUse};
+use crate::analysis::{
+    Analysis, Definition, Expect, Kind, Need, Occurrence, RequirementsAt, VariableUse,
+};
 use crate::line_index::{Encoding, LineIndex};
 
 /// A PDDL file and its names.
@@ -72,8 +74,19 @@ pub struct Problem {
     pub severity: Severity,
     /// What is wrong.
     pub message: String,
-    /// A word to replace the text at `span` with, to fix the mistake.
-    pub fix: Option<String>,
+    /// An edit that fixes the mistake.
+    pub fix: Option<Fix>,
+}
+
+/// A text edit that fixes a [`Problem`], offered as a quick fix.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Fix {
+    /// What the edit does, such as ``Replace with `:predicates` ``.
+    pub title: String,
+    /// The byte range to replace; empty to insert.
+    pub span: Range<usize>,
+    /// The text to put there.
+    pub text: String,
 }
 
 /// The documents the server knows.
@@ -473,7 +486,7 @@ impl Workspace {
                     need.word,
                     names.join("` or `")
                 ),
-                fix: None,
+                fix: requirement_fix(analysis, need),
             });
         }
         problems
@@ -568,6 +581,21 @@ impl Workspace {
     }
 }
 
+/// Adds the first of the requirements `need` asks for to its domain's or
+/// problem's `(:requirements ...)`, creating that section if there is none.
+fn requirement_fix(analysis: &Analysis, need: &Need) -> Option<Fix> {
+    let key = need.any_of.first()?.as_str();
+    let (at, text) = match analysis.contexts[need.context].requirements_at? {
+        RequirementsAt::Section(at) => (at, format!(" {key}")),
+        RequirementsAt::NewSection(at) => (at, format!("\n  (:requirements {key})")),
+    };
+    Some(Fix {
+        title: format!("Add `{key}` to `:requirements`"),
+        span: at..at,
+        text,
+    })
+}
+
 /// Whether a name of one of the types `given` fits a parameter of one of the
 /// types `wanted`, by the type hierarchy `parents`. Untyped names and parameters
 /// fit anything; `None` if a type is not in the hierarchy.
@@ -642,14 +670,16 @@ fn parse_problem(error: &pddl::ParseError) -> Problem {
     }
     // The help reads "did you mean `word`?"; the error span covers the
     // misspelled atom, after a list's `(`.
-    let fix = error
-        .help()
-        .and_then(|h| h.split('`').nth(1))
-        .map(str::to_string);
+    let word = error.help().and_then(|h| h.split('`').nth(1));
     let mut span = error.span();
-    if fix.is_some() && error.found().is_some_and(|f| f.starts_with('(')) {
+    if word.is_some() && error.found().is_some_and(|f| f.starts_with('(')) {
         span.start += 1;
     }
+    let fix = word.map(|word| Fix {
+        title: format!("Replace with `{word}`"),
+        span: span.clone(),
+        text: word.to_string(),
+    });
     Problem {
         span,
         severity: Severity::Error,
@@ -909,6 +939,56 @@ mod tests {
     }
 
     #[test]
+    fn missing_requirements_carry_a_fix_that_adds_them() {
+        // Applies the fix of the problem with message `message` in `name`.
+        let fixed = |ws: &Workspace, name: &str, message: &str| {
+            let problems = ws.problems(&uri(name));
+            let problem = problems.iter().find(|p| p.message == message).unwrap();
+            let fix = problem.fix.clone().unwrap();
+            let mut text = ws.documents[&uri(name)].text.clone();
+            text.replace_range(fix.span, &fix.text);
+            (fix.title, text)
+        };
+        let domain = "(define (domain d)
+  (:requirements :strips)
+  (:predicates (p ?x))
+  (:action a :parameters (?x) :precondition (forall (?y) (p ?y)) :effect (p ?x)))";
+        let ws = workspace(&[("d.pddl", domain)]);
+        let (title, text) = fixed(
+            &ws,
+            "d.pddl",
+            "`forall` needs `:universal-preconditions` in `:requirements`",
+        );
+        check!(title == "Add `:universal-preconditions` to `:requirements`");
+        check!(text.contains("(:requirements :strips :universal-preconditions)"));
+        check!(messages(&workspace(&[("d.pddl", &text)]), "d.pddl").is_empty());
+
+        // Without a section, one is added after the header, or after `(:domain ...)`.
+        let domain = "(define (domain d) (:types t - object))";
+        let ws = workspace(&[("d.pddl", domain)]);
+        let (_, text) = fixed(&ws, "d.pddl", "`-` needs `:typing` in `:requirements`");
+        check!(text == "(define (domain d)\n  (:requirements :typing) (:types t - object))");
+        let problem = "(define (problem p) (:domain d) (:objects o) (:goal (forall (?x) (p ?x))))";
+        let domain = "(define (domain d) (:predicates (p ?x)))";
+        let ws = workspace(&[("d.pddl", domain), ("p.pddl", problem)]);
+        let (_, text) = fixed(
+            &ws,
+            "p.pddl",
+            "`forall` needs `:universal-preconditions` in `:requirements`",
+        );
+        check!(text.starts_with(
+            "(define (problem p) (:domain d)\n  (:requirements :universal-preconditions) (:objects o)"
+        ));
+
+        // An unclosed section can't take another key.
+        let unclosed = "(define (domain d) (:types t - object) (:requirements :strips";
+        let ws = workspace(&[("d.pddl", unclosed)]);
+        let problems = ws.problems(&uri("d.pddl"));
+        let typing = problems.iter().find(|p| p.message.starts_with("`-` needs"));
+        check!(typing.is_some_and(|p| p.fix.is_none()));
+    }
+
+    #[test]
     fn parse_errors_carry_a_fix() {
         let ws = workspace(&[("d.pddl", "(define (domain d) (:predicats (p)))")]);
         let problems = ws.problems(&uri("d.pddl"));
@@ -916,7 +996,10 @@ mod tests {
             problems[0].message
                 == "unknown section: unexpected `(:predicats (p)))`; did you mean `:predicates`?"
         );
-        check!(problems[0].fix.as_deref() == Some(":predicates"));
+        let fix = problems[0].fix.as_ref().unwrap();
+        check!(fix.title == "Replace with `:predicates`");
+        check!(fix.text == ":predicates");
+        check!(fix.span == problems[0].span);
         let text = &ws.documents[&uri("d.pddl")].text;
         check!(&text[problems[0].span.clone()] == ":predicats");
     }

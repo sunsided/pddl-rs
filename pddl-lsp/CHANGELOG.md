@@ -15,7 +15,8 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   precondition without `:universal-preconditions`, `when` without
   `:conditional-effects`, or typed names without `:typing`. Shorthands such as
   `:adl` and `:fluents` are expanded, and a problem also has its domain's
-  requirements.
+  requirements. A quick fix adds the missing requirement, creating the
+  `(:requirements ...)` section if there is none.
 
 ## [0.1.0] - 2026-11-14
 

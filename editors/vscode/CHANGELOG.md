@@ -9,7 +9,8 @@ All notable changes to the PDDL (pddl-lsp) extension are documented in this file
 - Arguments of the wrong type are reported, such as a `truck` passed where a
   `place` is expected.
 - Constructs the `:requirements` don't allow get a warning, such as `forall`
-  in a precondition without `:universal-preconditions`.
+  in a precondition without `:universal-preconditions`, with a quick fix that
+  adds the requirement.
 
 ## 0.1.1 - 2026-11-14
 
