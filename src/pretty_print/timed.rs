@@ -1,3 +1,5 @@
+//! Pretty-printing of durative-action conditions, effects and duration constraints.
+
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{
     DurationConstraint, DurationValue, DurativeActionEffect, DurativeActionGoalDefinition,

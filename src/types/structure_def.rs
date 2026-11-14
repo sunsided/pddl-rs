@@ -8,6 +8,7 @@ use crate::types::{ActionDefinition, DerivedPredicate, DurativeActionDefinition}
 /// Used by [`StructureDefs`](crate::StructureDefs) in [`Domain`](crate::Domain).
 #[derive(Debug, Clone, PartialEq)]
 pub enum StructureDef {
+    /// An action definition, `(:action ...)`.
     Action(ActionDefinition),
     /// ## Requirements
     /// Requires [Durative Actions](crate::Requirement::DurativeActions).
@@ -18,29 +19,35 @@ pub enum StructureDef {
 }
 
 impl StructureDef {
+    /// Creates a new action structure definition.
     #[doc(alias = "new_action")]
     pub const fn action(action: ActionDefinition) -> Self {
         Self::Action(action)
     }
 
+    /// Creates a new action structure definition; same as [`action`](Self::action).
     pub fn new_action(action: ActionDefinition) -> Self {
         Self::action(action)
     }
 
+    /// Creates a new durative action structure definition, boxing the action.
     #[doc(alias = "new_durative_action")]
     pub fn durative_action(action: DurativeActionDefinition) -> Self {
         Self::DurativeAction(Box::new(action))
     }
 
+    /// Creates a new durative action structure definition; same as [`durative_action`](Self::durative_action).
     pub fn new_durative_action(action: DurativeActionDefinition) -> Self {
         Self::durative_action(action)
     }
 
+    /// Creates a new derived predicate structure definition.
     #[doc(alias = "new_derived")]
     pub const fn derived(predicate: DerivedPredicate) -> Self {
         Self::Derived(predicate)
     }
 
+    /// Creates a new derived predicate structure definition; same as [`derived`](Self::derived).
     pub fn new_derived(predicate: DerivedPredicate) -> Self {
         Self::derived(predicate)
     }

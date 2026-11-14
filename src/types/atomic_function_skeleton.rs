@@ -39,6 +39,7 @@ pub struct AtomicFunctionSkeleton {
 }
 
 impl AtomicFunctionSkeleton {
+    /// Creates a new function skeleton from its symbol and typed parameter list.
     pub const fn new(symbol: FunctionSymbol, variables: TypedVariables) -> Self {
         Self { symbol, variables }
     }

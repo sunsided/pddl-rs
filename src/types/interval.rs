@@ -12,7 +12,9 @@ pub enum Interval {
     All,
 }
 
+/// The PDDL keywords for [`Interval`].
 pub mod names {
+    /// The `all` interval.
     pub const ALL: &str = "all";
 }
 
@@ -35,8 +37,10 @@ impl TryFrom<&str> for Interval {
     }
 }
 
+/// An error when parsing an [`Interval`] from a string.
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum ParseError {
     #[error("Invalid interval")]
+    /// The string is not a valid interval.
     InvalidInterval,
 }

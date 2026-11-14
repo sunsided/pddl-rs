@@ -24,6 +24,7 @@ use crate::types::{
 /// Used by [`DurativeActionEffect`](crate::DurativeActionEffect).
 #[derive(Debug, Clone, PartialEq)]
 pub enum TimedEffect {
+    /// An effect at a point in time, `(at <time-specifier> <cond-effect>)`.
     Conditional(TimeSpecifier, EffectCondition),
     /// ## Requirements
     /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
@@ -35,16 +36,19 @@ pub enum TimedEffect {
 }
 
 impl TimedEffect {
+    /// Creates an effect at a point in time, `(at <time-specifier> <cond-effect>)`.
     #[doc(alias = "new_conditional")]
     pub const fn conditional(at: TimeSpecifier, effect: EffectCondition) -> Self {
         Self::Conditional(at, effect)
     }
 
+    /// Creates a numeric fluent assignment at a point in time, `(at <time-specifier> <f-assign-da>)`.
     #[doc(alias = "new_fluent")]
     pub const fn fluent(at: TimeSpecifier, action: DurativeActionFunctionAssignment) -> Self {
         Self::NumericFluent(at, action)
     }
 
+    /// Creates a continuous effect, `(<assign-op-t> <f-head> <f-exp-t>)`.
     #[doc(alias = "new_continuous")]
     pub const fn continuous(
         operation: TimedAssignOperator,
@@ -54,16 +58,19 @@ impl TimedEffect {
         Self::ContinuousEffect(operation, f_head, f_exp_t)
     }
 
+    /// Creates an effect at a point in time, `(at <time-specifier> <cond-effect>)`.
     #[deprecated(since = "0.2.0", note = "Use `conditional` instead")]
     pub const fn new_conditional(at: TimeSpecifier, effect: EffectCondition) -> Self {
         Self::conditional(at, effect)
     }
 
+    /// Creates a numeric fluent assignment at a point in time, `(at <time-specifier> <f-assign-da>)`.
     #[deprecated(since = "0.2.0", note = "Use `fluent` instead")]
     pub const fn new_fluent(at: TimeSpecifier, action: DurativeActionFunctionAssignment) -> Self {
         Self::fluent(at, action)
     }
 
+    /// Creates a continuous effect, `(<assign-op-t> <f-head> <f-exp-t>)`.
     #[deprecated(since = "0.2.0", note = "Use `continuous` instead")]
     pub const fn new_continuous(
         operation: TimedAssignOperator,

@@ -13,10 +13,12 @@ use crate::types::{AtomicFormula, FluentComparison, Term, TypedVariables};
 /// [`ConstraintGoalDefinitionInner`](crate::ConstraintGoalDefinitionInner).
 #[derive(Debug, Clone, PartialEq)]
 pub enum GoalDefinition {
+    /// An atomic formula, `<atomic formula(term)>`.
     AtomicFormula(AtomicFormula<Term>),
     /// ## Requirements
     /// Requires [Negative Preconditions](crate::Requirement::NegativePreconditions).
     Literal(TermLiteral),
+    /// A conjunction, `(and <GD>*)`.
     And(Vec<GoalDefinition>),
     /// ## Requirements
     /// Requires [Disjunctive Preconditions](crate::Requirement::DisjunctivePreconditions).
@@ -39,26 +41,31 @@ pub enum GoalDefinition {
 }
 
 impl GoalDefinition {
+    /// Creates a goal from an atomic formula.
     #[inline(always)]
     #[doc(alias = "new_atomic_formula")]
     pub const fn atomic_formula(value: AtomicFormula<Term>) -> Self {
         Self::AtomicFormula(value)
     }
 
+    /// Alias for [`Self::atomic_formula`].
     pub fn new_atomic_formula(value: AtomicFormula<Term>) -> Self {
         Self::atomic_formula(value)
     }
 
+    /// Creates a goal from a literal, e.g. `(not <atomic formula(term)>)`.
     #[inline(always)]
     #[doc(alias = "new_literal")]
     pub const fn literal(value: TermLiteral) -> Self {
         Self::Literal(value)
     }
 
+    /// Alias for [`Self::literal`].
     pub fn new_literal(value: TermLiteral) -> Self {
         Self::literal(value)
     }
 
+    /// Creates a conjunction `(and <GD>*)`.
     #[inline(always)]
     #[doc(alias = "new_and")]
     pub fn and<T: IntoIterator<Item = GoalDefinition>>(values: T) -> Self {
@@ -66,10 +73,12 @@ impl GoalDefinition {
         Self::And(values.into_iter().collect())
     }
 
+    /// Alias for [`Self::and`].
     pub fn new_and<T: IntoIterator<Item = GoalDefinition>>(values: T) -> Self {
         Self::and(values)
     }
 
+    /// Creates a disjunction `(or <GD>*)`.
     #[inline(always)]
     #[doc(alias = "new_or")]
     pub fn or<T: IntoIterator<Item = GoalDefinition>>(values: T) -> Self {
@@ -77,10 +86,12 @@ impl GoalDefinition {
         Self::Or(values.into_iter().collect())
     }
 
+    /// Alias for [`Self::or`].
     pub fn new_or<T: IntoIterator<Item = GoalDefinition>>(values: T) -> Self {
         Self::or(values)
     }
 
+    /// Creates a negation `(not <GD>)`.
     #[allow(clippy::should_implement_trait)]
     #[inline(always)]
     #[doc(alias = "new_not")]
@@ -98,80 +109,97 @@ impl Not for GoalDefinition {
 }
 
 impl GoalDefinition {
+    /// Alias for [`Self::not`].
     pub fn new_not(value: GoalDefinition) -> Self {
         Self::not(value)
     }
 
+    /// Creates an implication `(imply <GD> <GD>)` from a `(premise, conclusion)` tuple.
     #[inline(always)]
     #[doc(alias = "new_imply_tuple")]
     pub fn imply_tuple(tuple: (GoalDefinition, GoalDefinition)) -> Self {
         Self::imply(tuple.0, tuple.1)
     }
 
+    /// Alias for [`Self::imply_tuple`].
     pub fn new_imply_tuple(tuple: (GoalDefinition, GoalDefinition)) -> Self {
         Self::imply_tuple(tuple)
     }
 
+    /// Creates an implication `(imply a b)`.
     #[inline(always)]
     #[doc(alias = "new_imply")]
     pub fn imply(a: GoalDefinition, b: GoalDefinition) -> Self {
         Self::Imply(Box::new(a), Box::new(b))
     }
 
+    /// Alias for [`Self::imply`].
     pub fn new_imply(a: GoalDefinition, b: GoalDefinition) -> Self {
         Self::imply(a, b)
     }
 
+    /// Creates an existential quantification `(exists (<variables>) <GD>)` from a tuple.
     #[inline(always)]
     #[doc(alias = "new_exists_tuple")]
     pub fn exists_tuple(tuple: (TypedVariables, GoalDefinition)) -> Self {
         Self::exists(tuple.0, tuple.1)
     }
 
+    /// Alias for [`Self::exists_tuple`].
     pub fn new_exists_tuple(tuple: (TypedVariables, GoalDefinition)) -> Self {
         Self::exists_tuple(tuple)
     }
 
+    /// Creates an existential quantification `(exists (<variables>) <GD>)`.
     #[inline(always)]
     #[doc(alias = "new_exists")]
     pub fn exists(variables: TypedVariables, gd: GoalDefinition) -> Self {
         Self::Exists(variables, Box::new(gd))
     }
 
+    /// Alias for [`Self::exists`].
     pub fn new_exists(variables: TypedVariables, gd: GoalDefinition) -> Self {
         Self::exists(variables, gd)
     }
 
+    /// Creates a universal quantification `(forall (<variables>) <GD>)` from a tuple.
     #[inline(always)]
     #[doc(alias = "new_forall_tuple")]
     pub fn forall_tuple(tuple: (TypedVariables, GoalDefinition)) -> Self {
         Self::forall(tuple.0, tuple.1)
     }
 
+    /// Alias for [`Self::forall_tuple`].
     pub fn new_forall_tuple(tuple: (TypedVariables, GoalDefinition)) -> Self {
         Self::forall_tuple(tuple)
     }
 
+    /// Creates a universal quantification `(forall (<variables>) <GD>)`.
     #[inline(always)]
     #[doc(alias = "new_forall")]
     pub fn r#forall(variables: TypedVariables, gd: GoalDefinition) -> Self {
         Self::ForAll(variables, Box::new(gd))
     }
 
+    /// Alias for [`Self::forall`].
     pub fn new_forall(variables: TypedVariables, gd: GoalDefinition) -> Self {
         Self::r#forall(variables, gd)
     }
 
+    /// Creates a numeric fluent comparison, e.g. `(> <f-exp> <f-exp>)`.
     #[inline(always)]
     #[doc(alias = "new_f_comp")]
     pub const fn fluent_comparison(f_comp: FluentComparison) -> Self {
         Self::FluentComparison(f_comp)
     }
 
+    /// Alias for [`Self::fluent_comparison`].
     pub fn new_f_comp(f_comp: FluentComparison) -> Self {
         Self::fluent_comparison(f_comp)
     }
 
+    /// Returns `true` if this goal contains no atomic formula, literal or comparison,
+    /// e.g. `(and)`.
     pub fn is_empty(&self) -> bool {
         match self {
             GoalDefinition::AtomicFormula(_) => false,

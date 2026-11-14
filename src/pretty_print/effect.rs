@@ -1,3 +1,5 @@
+//! Pretty-printing of action effects.
+
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{
     ConditionalEffect, EffectCondition, Effects, ForallConditionalEffect, PrimitiveEffect,

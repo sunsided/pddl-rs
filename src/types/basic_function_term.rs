@@ -8,6 +8,7 @@ use crate::types::{FunctionSymbol, Name};
 pub struct BasicFunctionTerm(FunctionSymbol, Vec<Name>);
 
 impl BasicFunctionTerm {
+    /// Creates a new basic function term, `(<function-symbol> <name>*)`.
     pub fn new<N: IntoIterator<Item = Name>>(symbol: FunctionSymbol, names: N) -> Self {
         Self(symbol, names.into_iter().collect())
     }

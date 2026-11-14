@@ -1,3 +1,5 @@
+//! Pretty-printing of function types.
+
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::FunctionType;
 use crate::visitor::{Accept, Visitor};

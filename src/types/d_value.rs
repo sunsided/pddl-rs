@@ -2,7 +2,7 @@
 
 use crate::types::{FluentExpression, Number};
 
-/// A duration value, either a [`Number`] or an [`FluentExpression`](FluentExpression).
+/// A duration value, either a [`Number`] or a [`FluentExpression`].
 ///
 /// ## Usage
 /// Used by [`SimpleDurationConstraint`](crate::SimpleDurationConstraint).
@@ -17,20 +17,24 @@ pub enum DurationValue {
 }
 
 impl DurationValue {
+    /// Creates a duration value from a number.
     #[doc(alias = "new_number")]
     pub fn number<I: Into<Number>>(number: I) -> Self {
         Self::Number(number.into())
     }
 
+    /// Creates a duration value from a number. Same as [`number`](Self::number).
     pub fn new_number<I: Into<Number>>(number: I) -> Self {
         Self::number(number)
     }
 
+    /// Creates a duration value from a fluent expression.
     #[doc(alias = "new_f_exp")]
     pub fn fluent_expression(exp: FluentExpression) -> Self {
         Self::FluentExpression(exp)
     }
 
+    /// Creates a duration value from a fluent expression. Same as [`fluent_expression`](Self::fluent_expression).
     pub fn new_f_exp(exp: FluentExpression) -> Self {
         Self::fluent_expression(exp)
     }

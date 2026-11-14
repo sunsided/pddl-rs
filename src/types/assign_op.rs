@@ -21,7 +21,7 @@ pub enum AssignOp {
     /// ```
     Assign,
     /// A scale up effect increases the value of the numeric variable by the given scale factor.
-    /// This resembles the C-style operator `+=`.
+    /// This resembles the C-style operator `*=`.
     ///
     /// ```pddl
     /// (scale-up (battery-level ?r) 2)
@@ -33,7 +33,7 @@ pub enum AssignOp {
     /// ```
     ScaleUp,
     /// A scale down effect decreases the value of the numeric variable by the given scale factor.
-    /// This resembles the C-style operator `-=`.
+    /// This resembles the C-style operator `/=`.
     ///
     /// ```pddl
     /// (scale-down (battery-level ?r) 2)
@@ -45,7 +45,7 @@ pub enum AssignOp {
     /// ```
     ScaleDown,
     /// An increase effect increases the value of a numeric variable by the given amount.
-    /// This resembles the C-style operator `*=`.
+    /// This resembles the C-style operator `+=`.
     ///
     /// ```pddl
     /// (increase (battery-level ?r) 10)
@@ -57,7 +57,7 @@ pub enum AssignOp {
     /// ```
     Increase,
     /// A decrease effect decreases the value of a numeric variable by the given amount.
-    /// This resembles the C-style operator `/=`.
+    /// This resembles the C-style operator `-=`.
     ///
     /// ```pddl
     /// (decrease (battery-level ?r) 10)
@@ -70,17 +70,24 @@ pub enum AssignOp {
     Decrease,
 }
 
+/// The PDDL keywords for [`AssignOp`].
 pub mod names {
     /// [`CHANGE`] is a deprecated name for [`ASSIGN`].
     pub const CHANGE: &str = "change";
+    /// The `assign` operator.
     pub const ASSIGN: &str = "assign";
+    /// The `scale-up` operator.
     pub const SCALE_UP: &str = "scale-up";
+    /// The `scale-down` operator.
     pub const SCALE_DOWN: &str = "scale-down";
+    /// The `increase` operator.
     pub const INCREASE: &str = "increase";
+    /// The `decrease` operator.
     pub const DECREASE: &str = "decrease";
 }
 
 impl AssignOp {
+    /// Returns the PDDL keyword, e.g. `assign`. [`AssignOp::Assign`] is always printed as `assign`, never `change`.
     pub fn as_str(&self) -> &'static str {
         match self {
             AssignOp::Assign => names::ASSIGN,
@@ -108,9 +115,11 @@ impl TryFrom<&str> for AssignOp {
     }
 }
 
+/// An error when parsing an [`AssignOp`] from a string.
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum ParseError {
     #[error("Invalid operation")]
+    /// The string is not a valid assignment operator.
     InvalidOperation,
 }
 

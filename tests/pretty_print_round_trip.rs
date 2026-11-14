@@ -1,3 +1,5 @@
+//! Pretty-printed domains and problems parse back to equal ASTs, at several line widths.
+
 #![cfg(feature = "pretty")]
 
 use pddl::{Domain, Parser, Pretty, Problem};

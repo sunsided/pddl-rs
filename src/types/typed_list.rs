@@ -29,6 +29,7 @@ use std::ops::Deref;
 pub struct TypedList<T>(Vec<Typed<T>>);
 
 impl<T> TypedList<T> {
+    /// Creates a new typed list.
     pub const fn new(list: Vec<Typed<T>>) -> Self {
         Self(list)
     }

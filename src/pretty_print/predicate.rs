@@ -1,3 +1,5 @@
+//! Pretty-printing of predicate, action and preference names.
+
 use std::ops::Deref;
 
 use crate::pretty_print::{sealed, PrettyRenderer};

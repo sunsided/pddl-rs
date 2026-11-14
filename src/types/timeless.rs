@@ -18,6 +18,7 @@ use std::ops::Deref;
 pub struct Timeless(Vec<NameLiteral>);
 
 impl Timeless {
+    /// Creates a new set of timeless literals, i.e. the content of `(:timeless <literal (name)>+)`.
     pub fn new(literal: Vec<NameLiteral>) -> Self {
         Self(literal)
     }

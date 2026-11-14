@@ -9,12 +9,17 @@ use std::fmt::{Display, Formatter};
 #[doc(alias("assign-op-t"))]
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum TimedAssignOperator {
+    /// The `increase` operator, e.g. `(increase (fuel) (* #t (rate)))`.
     Increase,
+    /// The `decrease` operator, e.g. `(decrease (fuel) (* #t (rate)))`.
     Decrease,
 }
 
+/// The PDDL keywords for [`TimedAssignOperator`].
 pub mod names {
+    /// The `increase` operator.
     pub const INCREASE: &str = "increase";
+    /// The `decrease` operator.
     pub const DECREASE: &str = "decrease";
 }
 
@@ -39,9 +44,11 @@ impl TryFrom<&str> for TimedAssignOperator {
     }
 }
 
+/// An error when parsing a [`TimedAssignOperator`] from a string.
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum ParseError {
     #[error("Invalid operation")]
+    /// The string is not a valid timed assignment operator.
     InvalidOperation,
 }
 

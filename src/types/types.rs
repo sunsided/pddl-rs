@@ -11,6 +11,8 @@ use std::ops::Deref;
 pub struct Types(TypedNames);
 
 impl Types {
+    /// Creates a new set of types, i.e. the content of `(:types <typed list (name)>)`;
+    /// each type name is typed with its parent type.
     pub const fn new(predicates: TypedNames) -> Self {
         Self(predicates)
     }

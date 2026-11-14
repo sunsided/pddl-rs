@@ -1,4 +1,5 @@
 //! Type definitions.
+
 mod action_definition;
 mod action_symbols;
 pub(crate) mod assign_op;
@@ -67,13 +68,16 @@ mod requirements;
 mod simple_duration_constraint;
 mod structure_def;
 mod structure_defs;
+/// Contains terms via the [`Term`] type.
 mod term;
 pub(crate) mod time_specifier;
 mod timed_effect;
+/// Contains timed goal definitions via the [`TimedGoalDefinition`] type.
 mod timed_gd;
 mod timeless;
 mod r#type;
 mod typed;
+/// Contains lists of typed elements via the [`TypedList`] type.
 mod typed_list;
 #[allow(clippy::module_inception)]
 mod types;
@@ -191,8 +195,12 @@ pub use variable::Variable;
 #[allow(unused_imports)]
 pub(crate) use r#type::{TYPE_NUMBER, TYPE_OBJECT};
 
+/// A literal over names.
 pub type NameLiteral = Literal<Name>;
+/// A literal over terms.
 pub type TermLiteral = Literal<Term>;
 
+/// A list of typed variables, e.g. action parameters `?x - truck ?l - location`.
 pub type TypedVariables = TypedList<Variable>;
+/// A list of typed names, e.g. objects or constants `t1 t2 - truck`.
 pub type TypedNames = TypedList<Name>;

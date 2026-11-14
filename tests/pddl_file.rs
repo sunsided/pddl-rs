@@ -1,5 +1,8 @@
+//! Parses files that hold several `(define ...)` blocks.
+
 use pddl::{Name, Parser, PddlFile, Problem};
 
+/// A file with several domain and problem definitions, interleaved.
 pub const MULTI_DEF_FILE: &str = r#"
 ; Multi-definition PDDL file containing multiple domains and problems.
 ;

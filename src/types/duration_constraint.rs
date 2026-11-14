@@ -7,6 +7,7 @@ use crate::types::SimpleDurationConstraint;
 /// Used by [`DurativeActionDefinition`](crate::DurativeActionDefinition).
 #[derive(Debug, Clone, PartialEq)]
 pub enum DurationConstraint {
+    /// A single simple duration constraint.
     Single(SimpleDurationConstraint),
     /// ## Requirements
     /// Requires [Duration Inequalities](crate::Requirement::DurationInequalities).
@@ -26,10 +27,13 @@ impl IntoIterator for DurationConstraint {
 }
 
 impl DurationConstraint {
+    /// Creates a constraint from a single simple duration constraint.
     pub const fn new(constraint: SimpleDurationConstraint) -> Self {
         Self::Single(constraint)
     }
 
+    /// Creates a conjunction `(and ...)` of simple duration constraints.
+    /// The iterator should not be empty; this is only checked in debug builds.
     #[doc(alias = "new_all")]
     pub fn all<I: IntoIterator<Item = SimpleDurationConstraint>>(constraints: I) -> Self {
         let vec: Vec<_> = constraints.into_iter().collect();
@@ -37,10 +41,12 @@ impl DurationConstraint {
         Self::All(vec)
     }
 
+    /// Creates a conjunction `(and ...)` of simple duration constraints. Same as [`all`](Self::all).
     pub fn new_all<I: IntoIterator<Item = SimpleDurationConstraint>>(constraints: I) -> Self {
         Self::all(constraints)
     }
 
+    /// Returns the number of simple duration constraints.
     pub fn len(&self) -> usize {
         match self {
             DurationConstraint::Single(_) => 1,
@@ -48,6 +54,7 @@ impl DurationConstraint {
         }
     }
 
+    /// Returns `true` if there are no simple duration constraints.
     pub fn is_empty(&self) -> bool {
         match self {
             DurationConstraint::Single(_) => false,

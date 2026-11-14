@@ -27,6 +27,12 @@ interning = []
 ## Enables pretty-printing of PDDL types via the `pretty` crate.
 pretty = ["dep:pretty"]
 
+[lints.rust]
+missing_docs = "warn"
+
+[lints.clippy]
+missing_docs_in_private_items = "warn"
+
 [dependencies]
 miette = { version = "7", optional = true, default-features = false }
 pretty = { version = "0.12.1", optional = true }

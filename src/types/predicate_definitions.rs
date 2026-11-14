@@ -11,10 +11,12 @@ use std::ops::Deref;
 pub struct PredicateDefinitions(Vec<AtomicFormulaSkeleton>);
 
 impl PredicateDefinitions {
+    /// Creates the definitions from an iterator of predicate skeletons.
     pub fn new<I: IntoIterator<Item = AtomicFormulaSkeleton>>(predicates: I) -> Self {
         Self::from(predicates.into_iter().collect())
     }
 
+    /// Creates the definitions from a vector of predicate skeletons.
     pub const fn from(predicates: Vec<AtomicFormulaSkeleton>) -> Self {
         Self(predicates)
     }

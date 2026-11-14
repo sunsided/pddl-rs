@@ -1,3 +1,5 @@
+//! Pretty-printing of actions, durative actions and derived predicates.
+
 use std::ops::Deref;
 
 use crate::pretty_print::{sealed, PrettyRenderer};

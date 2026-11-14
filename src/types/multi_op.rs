@@ -9,12 +9,17 @@ use std::fmt::{Display, Formatter};
 /// Implicitly used by [`BinaryOp`](crate::BinaryOp).
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum MultiOp {
+    /// The `*` operation.
     Multiplication,
+    /// The `+` operation.
     Addition,
 }
 
+/// The PDDL keywords for [`MultiOp`].
 pub mod names {
+    /// The `*` operation.
     pub const MULTIPLICATION: &str = "*";
+    /// The `+` operation.
     pub const ADDITION: &str = "+";
 }
 
@@ -39,8 +44,10 @@ impl TryFrom<&str> for MultiOp {
     }
 }
 
+/// An error when parsing a [`MultiOp`] from a string.
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum ParseError {
     #[error("Invalid operation")]
+    /// The string is not a valid multi-operand operator.
     InvalidOperation,
 }

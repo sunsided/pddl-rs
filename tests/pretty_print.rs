@@ -1,3 +1,5 @@
+//! Pretty-printing of individual PDDL elements.
+
 #![cfg(feature = "pretty")]
 
 use pddl::{Name, Pretty, Type, Variable};

@@ -12,22 +12,26 @@ use std::ops::Deref;
 pub struct FunctionSymbol(Name);
 
 impl FunctionSymbol {
+    /// Creates a new function symbol from a name.
     #[inline(always)]
     pub fn new(name: Name) -> Self {
         Self(name)
     }
 
+    /// Creates a new function symbol from a string.
     #[inline(always)]
     #[doc(alias = "new_string")]
     pub fn string(name: &str) -> Self {
         Self(Name::new(name))
     }
 
+    /// Creates a new function symbol from a string.
     #[inline(always)]
     pub fn new_string(name: &str) -> Self {
         Self::string(name)
     }
 
+    /// Creates a new function symbol from a name.
     #[inline(always)]
     pub const fn from_name(name: Name) -> Self {
         Self(name)

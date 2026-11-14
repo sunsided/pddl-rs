@@ -1,3 +1,5 @@
+//! Pretty-printing of operators, keywords and requirement keys.
+
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{
     AssignOp, BinaryComparison, BinaryOp, DurationOperator, Interval, MultiOp, Optimization,

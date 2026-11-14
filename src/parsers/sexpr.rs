@@ -21,19 +21,23 @@ pub(crate) struct Node<'a> {
     pub end: usize,
     /// `false` for a list that is never closed.
     pub closed: bool,
+    /// Whether this is an atom or a list, with its content.
     pub kind: Kind<'a>,
 }
 
+/// The content of a [`Node`].
 #[derive(Debug)]
 pub(crate) enum Kind<'a> {
     /// Any run of characters other than whitespace, `(`, `)` and `;`.
     Atom(&'a str),
+    /// A parenthesized list and its children, in order.
     List(Vec<Node<'a>>),
 }
 
 /// The top-level nodes of an input, and the first unbalanced parenthesis, if any.
 #[derive(Debug)]
 pub(crate) struct Forest<'a> {
+    /// The nodes outside any parentheses, in order.
     pub nodes: Vec<Node<'a>>,
     /// An unclosed `(` or a stray `)`. Reported only after the grammar accepted
     /// the nodes before it, because a mistake inside a form is usually closer

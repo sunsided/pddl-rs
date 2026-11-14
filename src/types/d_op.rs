@@ -7,6 +7,7 @@ use std::fmt::{Display, Formatter};
 #[doc(alias("d-op"))]
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum DurationOperator {
+    /// The `=` operator: the duration equals the value.
     Equal,
     /// ## Requirements
     /// Requires [Duration Inequalities](crate::Requirement::DurationInequalities);
@@ -16,9 +17,13 @@ pub enum DurationOperator {
     LessThanOrEqual,
 }
 
+/// The PDDL keywords for [`DurationOperator`].
 pub mod names {
+    /// The `=` operator.
     pub const EQUAL: &str = "=";
+    /// The `>=` operator.
     pub const GREATER_OR_EQUAL: &str = ">=";
+    /// The `<=` operator.
     pub const LESS_THAN_OR_EQUAL: &str = "<=";
 }
 
@@ -45,9 +50,11 @@ impl TryFrom<&str> for DurationOperator {
     }
 }
 
+/// An error when parsing a [`DurationOperator`] from a string.
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum ParseError {
     #[error("Invalid operation")]
+    /// The string is not a valid duration operator.
     InvalidOperation,
 }
 

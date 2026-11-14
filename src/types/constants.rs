@@ -11,6 +11,7 @@ use std::ops::Deref;
 pub struct Constants(TypedNames);
 
 impl Constants {
+    /// Creates a new set of constants, i.e. the content of `(:constants <typed list (name)>)`.
     pub const fn new(predicates: TypedNames) -> Self {
         Self(predicates)
     }

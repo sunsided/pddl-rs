@@ -6,21 +6,25 @@
 
 /// A visitor.
 pub trait Visitor<T, O> {
+    /// Visits `value` and returns the result.
     fn visit(&self, value: &T) -> O;
 }
 
 /// A mutable visitor.
 pub trait VisitorMut<T, O> {
+    /// Visits `value`, possibly updating the visitor, and returns the result.
     fn visit_mut(&mut self, value: &T) -> O;
 }
 
 /// Trait to accept immutable visitors.
 pub trait Accept<V: Visitor<T, O>, T, O> {
+    /// Lets the visitor `v` visit `self`.
     fn accept(&self, v: &V) -> O;
 }
 
 /// Trait to accept mutable visitors.
 pub trait AcceptMut<V: VisitorMut<T, O>, T, O> {
+    /// Lets the mutable visitor `v` visit `self`.
     fn accept_mut(&self, v: &mut V) -> O;
 }
 

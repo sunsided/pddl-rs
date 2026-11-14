@@ -8,6 +8,7 @@ use std::num::ParseFloatError;
 use std::ops::Deref;
 use std::str::FromStr;
 
+/// The primitive type backing a [`Number`].
 type UnderlyingType = f64;
 
 /// A number.
@@ -74,9 +75,12 @@ impl FromStr for Number {
     }
 }
 
+/// An error constructing or parsing a [`Number`].
 #[derive(Debug, Clone)]
 pub enum NumberError {
+    /// The value was NaN or infinite.
     NotFinite,
+    /// The string was not a valid floating-point number.
     InvalidFormat(ParseFloatError),
 }
 

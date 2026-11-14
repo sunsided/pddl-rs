@@ -1,3 +1,5 @@
+//! Pretty-printing of goal definitions, preferences and constraints.
+
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{
     ConstraintGoalDefinition, ConstraintGoalDefinitionInner, GoalDefinition,

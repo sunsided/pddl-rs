@@ -13,6 +13,7 @@ use crate::types::{GoalDefinition, PreferenceName};
 pub struct Preference(Option<PreferenceName>, GoalDefinition); // TODO: A similar type is used for PrefConGD
 
 impl Preference {
+    /// Creates a preference `(preference [<pref-name>] <GD>)` with an optional name.
     pub const fn new(name: Option<PreferenceName>, gd: GoalDefinition) -> Self {
         Self(name, gd)
     }
@@ -27,6 +28,7 @@ impl Preference {
         &self.1
     }
 
+    /// Returns `true` if the goal definition is empty.
     pub fn is_empty(&self) -> bool {
         self.1.is_empty()
     }

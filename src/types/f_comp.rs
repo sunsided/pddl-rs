@@ -12,6 +12,7 @@ use crate::types::{BinaryComparison, FluentExpression};
 pub struct FluentComparison(BinaryComparison, FluentExpression, FluentExpression);
 
 impl FluentComparison {
+    /// Creates a new comparison, `(<binary-comp> <f-exp> <f-exp>)`.
     pub const fn new(comp: BinaryComparison, lhs: FluentExpression, rhs: FluentExpression) -> Self {
         Self(comp, lhs, rhs)
     }

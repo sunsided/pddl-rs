@@ -37,9 +37,9 @@ use crate::{PreconditionGoalDefinitions, PreferenceConstraintGoalDefinitions};
 /// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct Problem {
-    // The problem name.
+    /// The problem name.
     name: Name,
-    /// The name of the [`Domain`] this problem belongs to.
+    /// The name of the [`Domain`](crate::Domain) this problem belongs to.
     domain: Name,
     /// The optional list of requirements.
     requires: Requirements,

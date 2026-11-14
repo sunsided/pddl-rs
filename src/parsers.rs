@@ -170,6 +170,8 @@ pub(crate) use variable::parse_variable;
 
 /// Provides the [`Parser::from_str`] method.
 pub trait Parser {
+    /// The parsed value; `Self` except for
+    /// [`DurationConstraint`](crate::DurationConstraint), which may be empty.
     type Item;
 
     /// Parses the entire `input` into the specified [`Item`](Self::Item) type.

@@ -1,3 +1,5 @@
+//! Pretty-printing of atomic formulas and literals.
+
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{
     AtomicFormula, EqualityAtomicFormula, Literal, Name, PredicateAtomicFormula, Term,

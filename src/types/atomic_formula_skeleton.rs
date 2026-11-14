@@ -9,11 +9,15 @@ use crate::types::{Name, TypedVariables};
 /// Used by [`PredicateDefinitions`](crate::PredicateDefinitions) and [`DerivedPredicate`](crate::DerivedPredicate).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct AtomicFormulaSkeleton {
+    /// The predicate being declared.
     predicate: Predicate,
+    /// The typed parameters of the predicate.
     variables: TypedVariables,
 }
 
 impl AtomicFormulaSkeleton {
+    /// Creates a skeleton `(<predicate> <typed list(variable)>)` from a predicate
+    /// and its typed parameters.
     pub const fn new(predicate: Predicate, formula: TypedVariables) -> Self {
         Self {
             predicate,
@@ -21,6 +25,7 @@ impl AtomicFormulaSkeleton {
         }
     }
 
+    /// Gets the name of the predicate.
     pub fn name(&self) -> &Name {
         self.predicate.as_ref()
     }

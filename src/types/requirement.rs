@@ -45,7 +45,7 @@ pub enum Requirement {
     /// Allow numeric function definitions and use of effects using assignment operators and arithmetic
     /// preconditions.
     NumericFluents,
-    // TODO: document ObjectFluents
+    /// Allow functions (fluents) whose values are objects rather than numbers.
     ObjectFluents,
     /// Same as
     /// * [`Strips`](Self::Strips),
@@ -104,31 +104,54 @@ pub enum Requirement {
     ActionCosts,
 }
 
+/// The PDDL keywords for [`Requirement`].
 pub mod names {
+    /// The `:strips` requirement key.
     pub const STRIPS: &str = ":strips";
+    /// The `:typing` requirement key.
     pub const TYPING: &str = ":typing";
+    /// The `:negative-preconditions` requirement key.
     pub const NEGATIVE_PRECONDITIONS: &str = ":negative-preconditions";
+    /// The `:disjunctive-preconditions` requirement key.
     pub const DISJUNCTIVE_PRECONDITIONS: &str = ":disjunctive-preconditions";
+    /// The `:equality` requirement key.
     pub const EQUALITY: &str = ":equality";
+    /// The `:existential-preconditions` requirement key.
     pub const EXISTENTIAL_PRECONDITIONS: &str = ":existential-preconditions";
+    /// The `:universal-preconditions` requirement key.
     pub const UNIVERSAL_PRECONDITIONS: &str = ":universal-preconditions";
+    /// The `:quantified-preconditions` requirement key.
     pub const QUANTIFIED_PRECONDITIONS: &str = ":quantified-preconditions";
+    /// The `:conditional-effects` requirement key.
     pub const CONDITIONAL_EFFECTS: &str = ":conditional-effects";
+    /// The `:fluents` requirement key.
     pub const FLUENTS: &str = ":fluents";
+    /// The `:numeric-fluents` requirement key.
     pub const NUMERIC_FLUENTS: &str = ":numeric-fluents";
+    /// The `:object-fluents` requirement key.
     pub const OBJECT_FLUENTS: &str = ":object-fluents";
+    /// The `:adl` requirement key.
     pub const ADL: &str = ":adl";
+    /// The `:durative-actions` requirement key.
     pub const DURATIVE_ACTIONS: &str = ":durative-actions";
+    /// The `:duration-inequalities` requirement key.
     pub const DURATION_INEQUALITIES: &str = ":duration-inequalities";
+    /// The `:continuous-effects` requirement key.
     pub const CONTINUOUS_EFFECTS: &str = ":continuous-effects";
+    /// The `:derived-predicates` requirement key.
     pub const DERIVED_PREDICATES: &str = ":derived-predicates";
+    /// The `:timed-initial-literals` requirement key.
     pub const TIMED_INITIAL_LITERALS: &str = ":timed-initial-literals";
+    /// The `:preferences` requirement key.
     pub const PREFERENCES: &str = ":preferences";
+    /// The `:constraints` requirement key.
     pub const CONSTRAINTS: &str = ":constraints";
+    /// The `:action-costs` requirement key.
     pub const ACTION_COSTS: &str = ":action-costs";
 }
 
 impl Requirement {
+    /// Returns whether this requirement is `other` or implies it, e.g. `:fluents` contains `:numeric-fluents`.
     pub fn contains<T: Borrow<Requirement>>(&self, other: T) -> bool {
         let other = other.borrow();
         match self {
@@ -160,6 +183,7 @@ impl Requirement {
         }
     }
 
+    /// Returns the PDDL requirement key, e.g. `:strips`.
     pub fn as_str(&self) -> &'static str {
         match self {
             Requirement::Strips => names::STRIPS,
@@ -243,8 +267,10 @@ impl TryFrom<&str> for Requirement {
 }
 
 #[derive(Debug, Clone, thiserror::Error)]
+/// An error when parsing a [`Requirement`] from a string.
 pub enum ParseError {
     #[error("Invalid requirement")]
+    /// The string is not a known requirement key.
     InvalidRequirement,
 }
 

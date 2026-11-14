@@ -23,6 +23,7 @@ impl PreconditionGoalDefinitions {
         PreconditionGoalDefinition::preference(pref).into()
     }
 
+    /// Alias for [`Self::preference`].
     pub fn new_preference(pref: PreferenceGoalDefinition) -> Self {
         Self::preference(pref)
     }
@@ -33,6 +34,7 @@ impl PreconditionGoalDefinitions {
         PreconditionGoalDefinition::r#forall(variables, gd).into()
     }
 
+    /// Alias for [`Self::forall`].
     pub fn new_forall(variables: TypedVariables, gd: PreconditionGoalDefinitions) -> Self {
         Self::r#forall(variables, gd)
     }
@@ -137,7 +139,7 @@ impl TryInto<PreconditionGoalDefinition> for PreconditionGoalDefinitions {
 #[derive(Debug, Clone, PartialEq)]
 pub enum PreconditionGoalDefinition {
     /// ## Requirements
-    /// None per se: this branch may expand into [`PreferenceGoalDefinition::Goal`](PreferenceGoalDefinition::Goal),
+    /// None per se: this branch may expand into [`PreferenceGoalDefinition::Goal`],
     /// which has no requirements.
     Preference(PreferenceGoalDefinition),
     /// ## Requirements
@@ -146,6 +148,8 @@ pub enum PreconditionGoalDefinition {
 }
 
 impl PreconditionGoalDefinition {
+    /// Creates a conjunction `(and <pre-GD>*)`, represented as a list of
+    /// precondition goal definitions.
     #[doc(alias = "new_and")]
     pub fn and<I: IntoIterator<Item = PreconditionGoalDefinition>>(
         iter: I,
@@ -154,6 +158,7 @@ impl PreconditionGoalDefinition {
         PreconditionGoalDefinitions::from_iter(iter)
     }
 
+    /// Alias for [`Self::and`].
     pub fn new_and<I: IntoIterator<Item = PreconditionGoalDefinition>>(
         iter: I,
     ) -> PreconditionGoalDefinitions {
@@ -166,6 +171,7 @@ impl PreconditionGoalDefinition {
         Self::Preference(pref)
     }
 
+    /// Alias for [`Self::preference`].
     pub fn new_preference(pref: PreferenceGoalDefinition) -> Self {
         Self::preference(pref)
     }
@@ -176,6 +182,7 @@ impl PreconditionGoalDefinition {
         Self::Forall(variables, gd)
     }
 
+    /// Alias for [`Self::forall`].
     pub fn new_forall(variables: TypedVariables, gd: PreconditionGoalDefinitions) -> Self {
         Self::r#forall(variables, gd)
     }

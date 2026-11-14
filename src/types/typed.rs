@@ -11,14 +11,17 @@ use std::ops::Deref;
 pub struct Typed<O>(O, Type);
 
 impl<O> Typed<O> {
+    /// Creates a new typed element with the given value and type.
     pub const fn new(value: O, r#type: Type) -> Self {
         Self(value, r#type)
     }
 
+    /// Creates a new typed element with the value typed as [`Type::OBJECT`].
     pub const fn object(value: O) -> Self {
         Self::new(value, Type::OBJECT)
     }
 
+    /// Creates a new typed element with the value typed as [`Type::OBJECT`].
     #[deprecated(since = "0.2.0", note = "Use `object` instead")]
     pub const fn new_object(value: O) -> Self {
         Self::object(value)
@@ -35,6 +38,7 @@ impl<O> Typed<O> {
     }
 }
 
+/// Converts a value into a [`Typed`] value.
 pub trait ToTyped<T> {
     /// Wraps the value into a [`Typed`] as [`Type::Exactly`] the specified type.
     ///

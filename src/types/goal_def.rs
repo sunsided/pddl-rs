@@ -16,6 +16,7 @@ use std::ops::Deref;
 pub struct ProblemGoalDefinition(PreconditionGoalDefinitions);
 
 impl ProblemGoalDefinition {
+    /// Creates a new problem goal definition, i.e. `(:goal <pre-GD>)`.
     pub const fn new(gd: PreconditionGoalDefinitions) -> Self {
         Self(gd)
     }

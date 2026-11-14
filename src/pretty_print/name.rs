@@ -1,3 +1,5 @@
+//! Pretty-printing of names, variables and function symbols.
+
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{FunctionSymbol, Name, Variable};
 use crate::visitor::Visitor;

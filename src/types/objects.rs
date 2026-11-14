@@ -12,10 +12,12 @@ pub struct Objects(TypedNames);
 
 impl Objects {
     // TODO: Convert to const again that takes `TypedNames` directly.
+    /// Creates a new list of objects, i.e. the content of `(:objects <typed list (name)>)`.
     pub fn new<I: IntoIterator<Item = Typed<Name>>>(objects: I) -> Self {
         Self(objects.into_iter().collect())
     }
 
+    /// Gets the typed object names.
     pub fn values(&self) -> &TypedNames {
         &self.0
     }

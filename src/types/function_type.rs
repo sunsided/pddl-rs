@@ -17,12 +17,15 @@ use std::ops::Deref;
 pub struct FunctionType(Type);
 
 impl FunctionType {
+    /// The `number` type of numeric fluents.
     pub const NUMBER: FunctionType = FunctionType::from(Type::NUMBER);
 
+    /// Creates a new function type from the given type.
     pub fn new<T: Into<Type>>(r#type: T) -> Self {
         Self(r#type.into())
     }
 
+    /// Creates a new function type from the given type.
     pub const fn from(r#type: Type) -> Self {
         Self(r#type)
     }

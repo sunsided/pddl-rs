@@ -16,6 +16,7 @@ use crate::types::{AssignOp, DurativeActionFluentExpression, FunctionHead};
 pub struct DurativeActionFunctionAssignment(AssignOp, FunctionHead, DurativeActionFluentExpression);
 
 impl DurativeActionFunctionAssignment {
+    /// Creates a new assignment, `(<assign-op> <f-head> <f-exp-da>)`.
     pub const fn new(
         comp: AssignOp,
         head: FunctionHead,

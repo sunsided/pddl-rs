@@ -10,20 +10,28 @@ use std::ops::Deref;
 /// [`PrimitiveEffect`](crate::PrimitiveEffect).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum AtomicFormula<T> {
+    /// An equality between two values, `(= <t> <t>)`.
+    ///
+    /// ## Requirements
+    /// Requires [Equality](crate::Requirement::Equality).
     Equality(EqualityAtomicFormula<T>),
+    /// A predicate applied to its arguments, `(<predicate> <t>*)`.
     Predicate(PredicateAtomicFormula<T>),
 }
 
 impl<T> AtomicFormula<T> {
+    /// Creates an equality formula `(= first second)`.
     #[doc(alias = "new_equality")]
     pub const fn equality(first: T, second: T) -> Self {
         Self::Equality(EqualityAtomicFormula::new(first, second))
     }
 
+    /// Alias for [`Self::equality`].
     pub fn new_equality(first: T, second: T) -> Self {
         Self::equality(first, second)
     }
 
+    /// Creates a predicate formula `(<predicate> <values>*)`.
     #[doc(alias = "new_predicate")]
     pub fn predicate<V: IntoIterator<Item = T>>(predicate: Predicate, values: V) -> Self {
         Self::Predicate(PredicateAtomicFormula::new(
@@ -32,24 +40,32 @@ impl<T> AtomicFormula<T> {
         ))
     }
 
+    /// Alias for [`Self::predicate`].
     pub fn new_predicate<V: IntoIterator<Item = T>>(predicate: Predicate, values: V) -> Self {
         Self::predicate(predicate, values)
     }
 }
 
+/// An equality atomic formula, `(= <t> <t>)`.
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
 pub struct EqualityAtomicFormula<T> {
+    /// The left-hand operand.
     first: T,
+    /// The right-hand operand.
     second: T,
 }
 
+/// A predicate atomic formula, `(<predicate> <t>*)`.
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
 pub struct PredicateAtomicFormula<T> {
+    /// The predicate.
     predicate: Predicate,
+    /// The arguments the predicate is applied to.
     values: Vec<T>,
 }
 
 impl<T> EqualityAtomicFormula<T> {
+    /// Creates an equality formula `(= first second)`.
     pub const fn new(first: T, second: T) -> Self {
         Self { first, second }
     }
@@ -66,6 +82,7 @@ impl<T> EqualityAtomicFormula<T> {
 }
 
 impl<T> PredicateAtomicFormula<T> {
+    /// Creates a predicate formula from a predicate and its arguments.
     pub const fn new(predicate: Predicate, values: Vec<T>) -> Self {
         Self { predicate, values }
     }

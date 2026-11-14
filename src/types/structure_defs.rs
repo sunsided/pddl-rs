@@ -11,6 +11,7 @@ use std::ops::Deref;
 pub struct StructureDefs(Vec<StructureDef>);
 
 impl StructureDefs {
+    /// Creates a new set of structure definitions from an iterator.
     pub fn new<I: IntoIterator<Item = StructureDef>>(defs: I) -> Self {
         Self(defs.into_iter().collect())
     }

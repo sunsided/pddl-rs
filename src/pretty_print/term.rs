@@ -1,3 +1,5 @@
+//! Pretty-printing of terms and function terms.
+
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{BasicFunctionTerm, FunctionTerm, Term};
 use crate::visitor::{Accept, Visitor};

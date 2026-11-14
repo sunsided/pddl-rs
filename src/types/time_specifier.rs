@@ -14,8 +14,11 @@ pub enum TimeSpecifier {
     End,
 }
 
+/// The PDDL keywords for [`TimeSpecifier`].
 pub mod names {
+    /// The `start` time specifier.
     pub const START: &str = "start";
+    /// The `end` time specifier.
     pub const END: &str = "end";
 }
 
@@ -40,8 +43,10 @@ impl TryFrom<&str> for TimeSpecifier {
     }
 }
 
+/// An error when parsing a [`TimeSpecifier`] from a string.
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum ParseError {
     #[error("Invalid specifier")]
+    /// The string is not a valid time specifier.
     InvalidSpecifier,
 }

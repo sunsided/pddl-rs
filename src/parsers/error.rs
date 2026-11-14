@@ -1,3 +1,5 @@
+//! The public [`ParseError`] and the grammar's internal [`Error`].
+
 use std::borrow::Cow;
 use std::fmt;
 use std::ops::Range;
@@ -27,12 +29,19 @@ const EXCERPT_CHARS: usize = 40;
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParseError {
+    /// Byte offset of the error in the input.
     offset: usize,
+    /// Length in bytes of the input the error covers; see [`ParseError::span`].
     len: usize,
+    /// 1-based line of `offset`.
     line: usize,
+    /// 1-based column of `offset`, in characters.
     column: usize,
+    /// Sanitized excerpt of the input from `offset`, or `None` at the end of the input.
     found: Option<String>,
+    /// Sanitized `:keyword` of the innermost form containing the error.
     keyword: Option<String>,
+    /// Sanitized description of why parsing stopped.
     reason: Option<String>,
 }
 
@@ -166,10 +175,13 @@ fn sanitize(text: &str) -> String {
 /// [`Parser::from_str`](crate::parsers::Parser::from_str) turns it into a [`ParseError`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Error {
+    /// Byte offset of the error in the input.
     pub offset: usize,
+    /// Length in bytes of the input the error covers.
     pub len: usize,
     /// The `:keyword` of the innermost form the error is in, such as `:action`.
     pub keyword: Option<Cow<'static, str>>,
+    /// Why parsing failed, such as `duplicate section`.
     pub reason: Option<&'static str>,
     /// A fatal error ends parsing; otherwise the grammar may try another alternative.
     /// Errors inside a `:keyword` form are fatal: nothing else can start with it.
@@ -191,16 +203,19 @@ impl Error {
         }
     }
 
+    /// Sets why parsing failed.
     pub fn reason(mut self, reason: &'static str) -> Self {
         self.reason = Some(reason);
         self
     }
 
+    /// Sets the `:keyword` of the form the error is in.
     pub fn keyword(mut self, keyword: impl Into<Cow<'static, str>>) -> Self {
         self.keyword = Some(keyword.into());
         self
     }
 
+    /// Makes the error fatal, so no alternative is tried after it.
     pub const fn fatal(mut self) -> Self {
         self.fatal = true;
         self

@@ -37,6 +37,7 @@ impl<T> Default for FunctionTypedList<T> {
 }
 
 impl<T> FunctionTypedList<T> {
+    /// Creates a new list from the typed elements.
     pub const fn new(list: Vec<FunctionTyped<T>>) -> Self {
         Self(list)
     }

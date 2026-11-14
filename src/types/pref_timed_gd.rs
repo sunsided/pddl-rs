@@ -9,6 +9,7 @@ use crate::types::{PreferenceName, TimedGoalDefinition};
 #[doc(alias("pref-timed-GD"))]
 #[derive(Debug, Clone, PartialEq)]
 pub enum PreferenceTimedGoalDefinition {
+    /// A required timed goal, `<timed-GD>`.
     Required(TimedGoalDefinition),
     /// ## Requirements
     /// Requires [Preferences](crate::Requirement::Preferences).
@@ -16,21 +17,25 @@ pub enum PreferenceTimedGoalDefinition {
 }
 
 impl PreferenceTimedGoalDefinition {
+    /// Creates a required timed goal.
     #[doc(alias = "new_required")]
     pub const fn required(gd: TimedGoalDefinition) -> Self {
         Self::Required(gd)
     }
 
+    /// Creates a preference `(preference [<pref-name>] <timed-GD>)` with an optional name.
     #[doc(alias = "new_preference")]
     pub const fn preference(name: Option<PreferenceName>, gd: TimedGoalDefinition) -> Self {
         Self::Preference(name, gd)
     }
 
+    /// Deprecated alias for [`Self::required`].
     #[deprecated(since = "0.2.0", note = "Use `required` instead")]
     pub const fn new_required(gd: TimedGoalDefinition) -> Self {
         Self::required(gd)
     }
 
+    /// Deprecated alias for [`Self::preference`].
     #[deprecated(since = "0.2.0", note = "Use `preference` instead")]
     pub const fn new_preference(name: Option<PreferenceName>, gd: TimedGoalDefinition) -> Self {
         Self::preference(name, gd)

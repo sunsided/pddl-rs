@@ -8,19 +8,24 @@ use crate::types::AtomicFormula;
 /// Used by [`GoalDefinition`](crate::GoalDefinition) and [`InitElement`](crate::InitElement).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Literal<T> {
+    /// A positive literal, `<atomic formula(t)>`.
     AtomicFormula(AtomicFormula<T>),
+    /// A negated literal, `(not <atomic formula(t)>)`.
     NotAtomicFormula(AtomicFormula<T>),
 }
 
 impl<T> Literal<T> {
+    /// Creates a positive literal.
     pub const fn new(atomic_formula: AtomicFormula<T>) -> Self {
         Self::AtomicFormula(atomic_formula)
     }
 
+    /// Creates a negated literal `(not <atomic formula(t)>)`.
     pub const fn new_not(atomic_formula: AtomicFormula<T>) -> Self {
         Self::NotAtomicFormula(atomic_formula)
     }
 
+    /// Returns `true` if this is a negated literal.
     pub const fn is_negated(&self) -> bool {
         matches!(self, Self::NotAtomicFormula(..))
     }

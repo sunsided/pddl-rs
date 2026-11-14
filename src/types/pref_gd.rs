@@ -8,6 +8,7 @@ use crate::types::{GoalDefinition, Preference};
 /// Used by [`PreconditionGoalDefinition`](crate::PreconditionGoalDefinition).
 #[derive(Debug, Clone, PartialEq)]
 pub enum PreferenceGoalDefinition {
+    /// A required goal, `<GD>`.
     Goal(GoalDefinition),
     /// ## Requirements
     /// Requires [Preferences](crate::Requirement::Preferences).
@@ -15,10 +16,12 @@ pub enum PreferenceGoalDefinition {
 }
 
 impl PreferenceGoalDefinition {
+    /// Creates a required goal from a [`GoalDefinition`].
     pub const fn from_gd(gd: GoalDefinition) -> Self {
         Self::Goal(gd)
     }
 
+    /// Creates a preference goal from a [`Preference`].
     pub fn from_preference(pref: Preference) -> Self {
         Self::Preference(pref)
     }

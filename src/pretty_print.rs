@@ -1,3 +1,9 @@
+//! Renders PDDL types back to PDDL text, wrapped to a target line width.
+//!
+//! Each type gets a [`Visitor`] impl on [`PrettyRenderer`] that turns it into a
+//! [`pretty`] document; [`Pretty::pretty`] renders that document through `Display`.
+//! The output parses back to an equal value.
+
 use std::fmt;
 
 use crate::visitor::{Accept, Visitor};
@@ -23,11 +29,16 @@ mod timeless;
 mod r#type;
 mod typed_list;
 
+/// Keeps [`PrettyVisit`] implemented only for this crate's types.
 mod sealed {
+    /// Marks a type that has a pretty-print [`Visitor`](crate::visitor::Visitor) impl.
     pub trait Sealed {}
 }
 
+/// Converts a value into a [`pretty`] document through its [`Visitor`] impl on
+/// [`PrettyRenderer`]. Implemented for every type that [`Pretty`] supports.
 pub trait PrettyVisit: sealed::Sealed {
+    /// Builds the document for `self` with the renderer `r`.
     fn to_doc(&self, r: &PrettyRenderer) -> RcDoc<'static>;
 }
 
@@ -55,16 +66,21 @@ impl<T: PrettyVisit> fmt::Display for PrettyPrinted<'_, T> {
     }
 }
 
+/// Renders PDDL values as [`pretty`] documents. It holds no state; each value's
+/// layout comes from its [`Visitor`] impl, built from the helpers below.
 #[derive(Default)]
 pub struct PrettyRenderer;
 
 impl PrettyRenderer {
+    /// Renders `doc` to a string, wrapping lines longer than `width`.
     pub fn to_pretty(&self, doc: RcDoc<'static>, width: usize) -> String {
         let mut w = Vec::new();
         doc.render(width, &mut w).unwrap();
         String::from_utf8(w).unwrap()
     }
 
+    /// `(head child ...)` on one line if it fits within the width, otherwise
+    /// with the children on their own lines, indented by four.
     pub fn sexpr(
         &self,
         head: &'static str,
@@ -79,6 +95,8 @@ impl PrettyRenderer {
             .append(")")
     }
 
+    /// `(head` followed by each child on its own line, indented by four, and the
+    /// closing `)` on a line of its own. Used for top-level forms such as `define`.
     pub fn sexpr_nested(
         &self,
         head: &'static str,
@@ -95,6 +113,8 @@ impl PrettyRenderer {
             .append(")")
     }
 
+    /// A section `(:keyword body ...)`, laid out like [`sexpr`](Self::sexpr);
+    /// `keyword` is given without its colon.
     pub fn section(
         &self,
         keyword: &'static str,
@@ -110,10 +130,12 @@ impl PrettyRenderer {
             .append(")")
     }
 
+    /// The keyword `:name`, e.g. `:parameters` before an action's parameter list.
     pub fn keyword_line(&self, name: &'static str) -> RcDoc<'static> {
         RcDoc::text(":").append(RcDoc::text(name))
     }
 
+    /// The `items` separated by `sep`, without surrounding parentheses.
     pub fn list(
         &self,
         items: impl IntoIterator<Item = RcDoc<'static>>,
@@ -128,7 +150,9 @@ impl PrettyRenderer {
 /// Produced by [`Pretty::pretty`]. The `Display` impl runs the pretty-printer
 /// at the stored `width`.
 pub struct PrettyPrinted<'a, T> {
+    /// The value to print.
     value: &'a T,
+    /// The line width to wrap at.
     width: usize,
 }
 

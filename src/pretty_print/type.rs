@@ -1,3 +1,5 @@
+//! Pretty-printing of types, including `(either ...)`.
+
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{PrimitiveType, Type};
 use crate::visitor::{Accept, Visitor};

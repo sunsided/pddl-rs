@@ -14,6 +14,7 @@ use std::ops::Deref;
 pub struct Functions(FunctionTypedList<AtomicFunctionSkeleton>);
 
 impl Functions {
+    /// Creates a new set of function declarations.
     pub const fn new(functions: FunctionTypedList<AtomicFunctionSkeleton>) -> Self {
         Self(functions)
     }

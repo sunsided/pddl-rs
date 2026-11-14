@@ -5,11 +5,14 @@ use crate::parsers::sexpr::Node;
 
 /// The children of a list, read one at a time.
 pub(crate) struct Args<'n, 'a> {
+    /// The list being read, for errors at its `)`.
     list: &'n Node<'a>,
+    /// The children not read yet.
     items: &'n [Node<'a>],
 }
 
 impl<'n, 'a> Args<'n, 'a> {
+    /// Reads `items`, the children of `list` (possibly without its head).
     fn new(list: &'n Node<'a>, items: &'n [Node<'a>]) -> Self {
         Self { list, items }
     }

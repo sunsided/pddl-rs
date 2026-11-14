@@ -1,8 +1,11 @@
+//! Parses the briefcase world domain and problem and checks the resulting AST.
+
 use pddl::{
     AtomicFormula, Domain, GoalDefinition, Parser, PreconditionGoalDefinition,
     PreferenceGoalDefinition, Problem, TermLiteral,
 };
 
+/// The briefcase world domain from the PDDL 1.2 manual.
 pub const BRIEFCASE_WORLD: &str = r#"
     (define (domain briefcase-world)
       (:requirements :strips :equality :typing :conditional-effects)
@@ -40,6 +43,7 @@ pub const BRIEFCASE_WORLD: &str = r#"
     )
     "#;
 
+/// A problem for [`BRIEFCASE_WORLD`]: bring the briefcase and dictionary (`D`) to the office and leave the paycheck at home.
 pub const BRIEFCASE_WORLD_PROBLEM: &str = r#"
     (define (problem get-paid)
         (:domain briefcase-world)

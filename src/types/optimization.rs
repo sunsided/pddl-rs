@@ -17,8 +17,11 @@ pub enum Optimization {
     Maximize,
 }
 
+/// The PDDL keywords for [`Optimization`].
 pub mod names {
+    /// The `minimize` keyword.
     pub const MINIMIZE: &str = "minimize";
+    /// The `maximize` keyword.
     pub const MAXIMIZE: &str = "maximize";
 }
 
@@ -43,8 +46,10 @@ impl TryFrom<&str> for Optimization {
     }
 }
 
+/// An error when parsing an [`Optimization`] from a string.
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum ParseError {
     #[error("Invalid goal")]
+    /// The string is neither `minimize` nor `maximize`.
     InvalidGoal,
 }

@@ -9,6 +9,7 @@ use crate::types::{DurativeActionGoalDefinition, TimedEffect};
 /// Used by [`DurativeActionDefinition`](crate::DurativeActionDefinition).
 #[derive(Debug, Clone, PartialEq)]
 pub enum DurativeActionEffect {
+    /// A timed effect, e.g. `(at end <cond-effect>)`.
     Timed(TimedEffect),
     /// Conjunction: All effects apply (i.e. a and b and c ..).
     All(Vec<DurativeActionEffect>),
@@ -21,38 +22,46 @@ pub enum DurativeActionEffect {
 }
 
 impl DurativeActionEffect {
+    /// Creates a timed effect.
     #[doc(alias = "new_timed")]
     pub const fn timed(effect: TimedEffect) -> Self {
         Self::Timed(effect)
     }
 
+    /// Creates a timed effect.
     pub fn new_timed(effect: TimedEffect) -> Self {
         Self::timed(effect)
     }
 
+    /// Creates a conjunction of durative action effects, `(and <da-effect>*)`.
     #[doc(alias = "new_and")]
     pub fn and<E: IntoIterator<Item = DurativeActionEffect>>(effect: E) -> Self {
         Self::All(effect.into_iter().collect())
     }
 
+    /// Creates a conjunction of durative action effects, `(and <da-effect>*)`.
     pub fn new_and<E: IntoIterator<Item = DurativeActionEffect>>(effect: E) -> Self {
         Self::and(effect)
     }
 
+    /// Creates a universal effect, `(forall (<typed list(variable)>) <da-effect>)`.
     #[doc(alias = "new_forall")]
     pub fn r#forall(variables: TypedVariables, effect: DurativeActionEffect) -> Self {
         Self::Forall(variables, Box::new(effect))
     }
 
+    /// Creates a universal effect, `(forall (<typed list(variable)>) <da-effect>)`.
     pub fn new_forall(variables: TypedVariables, effect: DurativeActionEffect) -> Self {
         Self::r#forall(variables, effect)
     }
 
+    /// Creates a conditional effect, `(when <da-GD> <timed-effect>)`.
     #[doc(alias = "new_when")]
     pub const fn when(gd: DurativeActionGoalDefinition, effect: TimedEffect) -> Self {
         Self::When(gd, effect)
     }
 
+    /// Creates a conditional effect, `(when <da-GD> <timed-effect>)`.
     pub fn new_when(gd: DurativeActionGoalDefinition, effect: TimedEffect) -> Self {
         Self::when(gd, effect)
     }

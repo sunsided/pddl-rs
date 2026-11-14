@@ -1,3 +1,5 @@
+//! Pretty-printing of predicate and function declarations.
+
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{AtomicFormulaSkeleton, AtomicFunctionSkeleton};
 use crate::visitor::{Accept, Visitor};

@@ -30,6 +30,7 @@ fn corpus() -> Vec<(String, String)> {
     files
 }
 
+/// Benchmarks parsing the whole corpus and its largest problem and domain.
 fn parse(c: &mut Criterion) {
     let files = corpus();
     let mut group = c.benchmark_group("parse");

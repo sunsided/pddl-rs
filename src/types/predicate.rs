@@ -11,27 +11,32 @@ use std::ops::Deref;
 pub struct Predicate(Name);
 
 impl Predicate {
+    /// Creates a predicate from a [`Name`].
     #[inline(always)]
     pub const fn new(name: Name) -> Self {
         Self(name)
     }
 
+    /// Creates a predicate from a string slice.
     #[inline(always)]
     #[doc(alias = "new_string")]
     pub fn string(name: &str) -> Self {
         Self(Name::new(name))
     }
 
+    /// Alias for [`Self::string`].
     #[inline(always)]
     pub fn new_string(name: &str) -> Self {
         Self::string(name)
     }
 
+    /// Creates a predicate from a `'static` string; usable in `const` contexts.
     #[inline(always)]
     pub const fn from_static(name: &'static str) -> Self {
         Self(Name::new_static(name))
     }
 
+    /// Creates a predicate from a [`Name`]; same as [`Self::new`].
     #[inline(always)]
     pub const fn from_name(name: Name) -> Self {
         Self(name)

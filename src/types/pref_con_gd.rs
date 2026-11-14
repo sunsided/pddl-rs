@@ -27,6 +27,7 @@ impl PreferenceConstraintGoalDefinitions {
         Self::new(vec![PreferenceConstraintGoalDefinition::goal(gd)])
     }
 
+    /// Alias for [`Self::goal`].
     pub fn new_goal(gd: ConstraintGoalDefinition) -> Self {
         Self::goal(gd)
     }
@@ -42,6 +43,7 @@ impl PreferenceConstraintGoalDefinitions {
         )])
     }
 
+    /// Alias for [`Self::preference`].
     pub fn new_preference(name: Option<PreferenceName>, gd: ConstraintGoalDefinition) -> Self {
         Self::preference(name, gd)
     }
@@ -57,6 +59,7 @@ impl PreferenceConstraintGoalDefinitions {
         )])
     }
 
+    /// Alias for [`Self::forall`].
     pub fn new_forall(variables: TypedVariables, gd: PreferenceConstraintGoalDefinitions) -> Self {
         Self::r#forall(variables, gd)
     }
@@ -174,6 +177,7 @@ impl TryInto<PreferenceConstraintGoalDefinition> for PreferenceConstraintGoalDef
 #[derive(Debug, Clone, PartialEq)]
 #[doc(alias = "pref-con-GD")]
 pub enum PreferenceConstraintGoalDefinition {
+    /// A required constraint goal, `<con-GD>`.
     Goal(ConstraintGoalDefinition),
     /// ## Requirements
     /// Requires [Universal Preconditions](crate::Requirement::UniversalPreconditions).
@@ -184,11 +188,13 @@ pub enum PreferenceConstraintGoalDefinition {
 }
 
 impl PreferenceConstraintGoalDefinition {
+    /// Creates a required constraint goal.
     #[doc(alias = "new_goal")]
     pub const fn goal(gd: ConstraintGoalDefinition) -> Self {
         Self::Goal(gd)
     }
 
+    /// Alias for [`Self::goal`].
     pub fn new_goal(gd: ConstraintGoalDefinition) -> Self {
         Self::goal(gd)
     }
@@ -200,6 +206,7 @@ impl PreferenceConstraintGoalDefinition {
         Self::Forall(variables, gd)
     }
 
+    /// Alias for [`Self::forall`].
     pub fn new_forall(variables: TypedVariables, gd: PreferenceConstraintGoalDefinitions) -> Self {
         Self::r#forall(variables, gd)
     }
@@ -211,10 +218,12 @@ impl PreferenceConstraintGoalDefinition {
         Self::Preference(name, gd)
     }
 
+    /// Alias for [`Self::preference`].
     pub fn new_preference(name: Option<PreferenceName>, gd: ConstraintGoalDefinition) -> Self {
         Self::preference(name, gd)
     }
 
+    /// Returns `true` if the contained constraint goal definition is empty.
     pub fn is_empty(&self) -> bool {
         match self {
             PreferenceConstraintGoalDefinition::Forall(_, x) => x.is_empty(),

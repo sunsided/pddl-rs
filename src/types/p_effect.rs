@@ -10,7 +10,9 @@ use crate::types::{AssignOp, AtomicFormula, FluentExpression, FunctionHead, Func
 #[doc(alias("p-effect"))]
 #[derive(Debug, Clone, PartialEq)]
 pub enum PrimitiveEffect {
+    /// Makes an atomic formula true.
     AtomicFormula(AtomicFormula<Term>),
+    /// Makes an atomic formula false, `(not <atomic formula(term)>)`.
     NotAtomicFormula(AtomicFormula<Term>),
     /// ## Requirements
     /// Requires [Numeric Fluents](crate::Requirement::NumericFluents).
@@ -21,32 +23,39 @@ pub enum PrimitiveEffect {
 }
 
 impl PrimitiveEffect {
+    /// Creates an effect that makes an atomic formula true.
     pub const fn new(atomic_formula: AtomicFormula<Term>) -> Self {
         Self::AtomicFormula(atomic_formula)
     }
 
+    /// Creates an effect that makes an atomic formula true.
     pub const fn atomic_formula(atomic_formula: AtomicFormula<Term>) -> Self {
         Self::AtomicFormula(atomic_formula)
     }
 
+    /// Creates an effect that makes an atomic formula true.
     #[deprecated(since = "0.2.0", note = "Use `atomic_formula` instead")]
     pub const fn new_atomic_formula(atomic_formula: AtomicFormula<Term>) -> Self {
         Self::atomic_formula(atomic_formula)
     }
 
+    /// Creates an effect that makes an atomic formula false, `(not <atomic formula(term)>)`.
     pub const fn not(atomic_formula: AtomicFormula<Term>) -> Self {
         Self::NotAtomicFormula(atomic_formula)
     }
 
+    /// Creates an effect that makes an atomic formula false, `(not <atomic formula(term)>)`.
     #[deprecated(since = "0.2.0", note = "Use `not` instead")]
     pub const fn new_not(atomic_formula: AtomicFormula<Term>) -> Self {
         Self::not(atomic_formula)
     }
 
+    /// Creates a numeric fluent assignment, `(<assign-op> <f-head> <f-exp>)`.
     pub const fn numeric_fluent(op: AssignOp, head: FunctionHead, exp: FluentExpression) -> Self {
         Self::AssignNumericFluent(op, head, exp)
     }
 
+    /// Creates a numeric fluent assignment, `(<assign-op> <f-head> <f-exp>)`.
     #[deprecated(since = "0.2.0", note = "Use `numeric_fluent` instead")]
     pub const fn new_numeric_fluent(
         op: AssignOp,
@@ -56,10 +65,14 @@ impl PrimitiveEffect {
         Self::numeric_fluent(op, head, exp)
     }
 
+    /// Creates an object fluent assignment, `(assign <function-term> <term>)`;
+    /// `None` assigns `undefined`.
     pub const fn object_fluent(f_term: FunctionTerm, term: Option<Term>) -> Self {
         Self::AssignObjectFluent(f_term, term)
     }
 
+    /// Creates an object fluent assignment, `(assign <function-term> <term>)`;
+    /// `None` assigns `undefined`.
     #[deprecated(since = "0.2.0", note = "Use `object_fluent` instead")]
     pub const fn new_object_fluent(f_term: FunctionTerm, term: Option<Term>) -> Self {
         Self::object_fluent(f_term, term)

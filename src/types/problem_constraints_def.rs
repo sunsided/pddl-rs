@@ -11,6 +11,7 @@ use std::ops::Deref;
 pub struct ProblemConstraintsDef(PreferenceConstraintGoalDefinitions);
 
 impl ProblemConstraintsDef {
+    /// Creates a new problem constraints definition, i.e. `(:constraints <pref-con-GD>)`.
     pub const fn new(gd: PreferenceConstraintGoalDefinitions) -> Self {
         Self(gd)
     }

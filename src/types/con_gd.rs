@@ -16,21 +16,37 @@ use crate::types::{GoalDefinition, Number, TypedVariables};
 #[doc(alias = "con-GD")]
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConstraintGoalDefinition {
+    /// A conjunction, `(and <con-GD>*)`.
     And(Vec<ConstraintGoalDefinition>),
+    /// A universal quantification, `(forall (<typed list(variable)>) <con-GD>)`.
     Forall(TypedVariables, Box<ConstraintGoalDefinition>),
+    /// A goal that must hold in the final state, `(at end <GD>)`.
     AtEnd(GoalDefinition),
+    /// A goal that must hold in every state, `(always <con2-GD>)`.
     Always(ConstraintGoalDefinitionInner),
+    /// A goal that must hold in at least one state, `(sometime <con2-GD>)`.
     Sometime(ConstraintGoalDefinitionInner),
+    /// A goal that must become true within the given time, `(within <number> <con2-GD>)`.
     Within(Number, ConstraintGoalDefinitionInner),
+    /// A goal that may become true at most once, `(at-most-once <con2-GD>)`.
     AtMostOnce(ConstraintGoalDefinitionInner),
+    /// Whenever the first goal holds, the second must hold then or later,
+    /// `(sometime-after <con2-GD> <con2-GD>)`.
     SometimeAfter(ConstraintGoalDefinitionInner, ConstraintGoalDefinitionInner),
+    /// Whenever the first goal holds, the second must have held earlier,
+    /// `(sometime-before <con2-GD> <con2-GD>)`.
     SometimeBefore(ConstraintGoalDefinitionInner, ConstraintGoalDefinitionInner),
+    /// Whenever the first goal holds, the second must hold within the given time,
+    /// `(always-within <number> <con2-GD> <con2-GD>)`.
     AlwaysWithin(
         Number,
         ConstraintGoalDefinitionInner,
         ConstraintGoalDefinitionInner,
     ),
+    /// A goal that must hold between the two given times,
+    /// `(hold-during <number> <number> <con2-GD>)`.
     HoldDuring(Number, Number, ConstraintGoalDefinitionInner),
+    /// A goal that must hold after the given time, `(hold-after <number> <con2-GD>)`.
     HoldAfter(Number, ConstraintGoalDefinitionInner),
 }
 
@@ -48,7 +64,9 @@ pub type ConGD = ConstraintGoalDefinition;
 #[doc(alias = "con2-GD")]
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConstraintGoalDefinitionInner {
+    /// A plain goal definition, `<GD>`.
     Goal(GoalDefinition),
+    /// A nested constraint goal definition, `<con-GD>`.
     Nested(Box<ConstraintGoalDefinition>),
 }
 
@@ -63,70 +81,86 @@ impl Default for ConstraintGoalDefinition {
 }
 
 impl ConstraintGoalDefinition {
+    /// Creates a conjunction `(and <con-GD>*)`.
     #[doc(alias = "new_and")]
     pub fn and<G: IntoIterator<Item = ConstraintGoalDefinition>>(goals: G) -> Self {
         // TODO: Flatten `(and (and a b) (and x y))` into `(and a b c y)`.
         Self::And(goals.into_iter().collect())
     }
 
+    /// Alias for [`Self::and`].
     pub fn new_and<G: IntoIterator<Item = ConstraintGoalDefinition>>(goals: G) -> Self {
         Self::and(goals)
     }
 
+    /// Creates a universal quantification `(forall (<variables>) <con-GD>)`.
     #[doc(alias = "new_forall")]
     pub fn r#forall(variables: TypedVariables, gd: ConstraintGoalDefinition) -> Self {
         Self::Forall(variables, Box::new(gd))
     }
 
+    /// Alias for [`Self::forall`].
     pub fn new_forall(variables: TypedVariables, gd: ConstraintGoalDefinition) -> Self {
         Self::r#forall(variables, gd)
     }
 
+    /// Creates an `(at end <GD>)` constraint.
     #[doc(alias = "new_at_end")]
     pub const fn at_end(gd: GoalDefinition) -> Self {
         Self::AtEnd(gd)
     }
 
+    /// Alias for [`Self::at_end`].
     pub fn new_at_end(gd: GoalDefinition) -> Self {
         Self::at_end(gd)
     }
 
+    /// Creates an `(always <con2-GD>)` constraint.
     #[doc(alias = "new_always")]
     pub const fn always(gd: ConstraintGoalDefinitionInner) -> Self {
         Self::Always(gd)
     }
 
+    /// Alias for [`Self::always`].
     pub fn new_always(gd: ConstraintGoalDefinitionInner) -> Self {
         Self::always(gd)
     }
 
+    /// Creates a `(sometime <con2-GD>)` constraint.
     #[doc(alias = "new_sometime")]
     pub const fn sometime(gd: ConstraintGoalDefinitionInner) -> Self {
         Self::Sometime(gd)
     }
 
+    /// Alias for [`Self::sometime`].
     pub fn new_sometime(gd: ConstraintGoalDefinitionInner) -> Self {
         Self::sometime(gd)
     }
 
+    /// Creates a `(within <number> <con2-GD>)` constraint.
     #[doc(alias = "new_within")]
     pub const fn within(number: Number, gd: ConstraintGoalDefinitionInner) -> Self {
         Self::Within(number, gd)
     }
 
+    /// Alias for [`Self::within`].
     pub fn new_within(number: Number, gd: ConstraintGoalDefinitionInner) -> Self {
         Self::within(number, gd)
     }
 
+    /// Creates an `(at-most-once <con2-GD>)` constraint.
     #[doc(alias = "new_at_most_once")]
     pub const fn at_most_once(gd: ConstraintGoalDefinitionInner) -> Self {
         Self::AtMostOnce(gd)
     }
 
+    /// Alias for [`Self::at_most_once`].
     pub fn new_at_most_once(gd: ConstraintGoalDefinitionInner) -> Self {
         Self::at_most_once(gd)
     }
 
+    /// Creates a `(sometime-after <first> <then>)` constraint: whenever `first`
+    /// holds, `then` must hold at that point or later.
     #[doc(alias = "new_sometime_after")]
     pub const fn sometime_after(
         first: ConstraintGoalDefinitionInner,
@@ -135,6 +169,7 @@ impl ConstraintGoalDefinition {
         Self::SometimeAfter(first, then)
     }
 
+    /// Alias for [`Self::sometime_after`].
     pub fn new_sometime_after(
         first: ConstraintGoalDefinitionInner,
         then: ConstraintGoalDefinitionInner,
@@ -142,6 +177,8 @@ impl ConstraintGoalDefinition {
         Self::sometime_after(first, then)
     }
 
+    /// Creates a `(sometime-before <later> <earlier>)` constraint: whenever `later`
+    /// holds, `earlier` must have held before.
     #[doc(alias = "new_sometime_before")]
     pub const fn sometime_before(
         later: ConstraintGoalDefinitionInner,
@@ -150,6 +187,7 @@ impl ConstraintGoalDefinition {
         Self::SometimeBefore(later, earlier)
     }
 
+    /// Alias for [`Self::sometime_before`].
     pub fn new_sometime_before(
         later: ConstraintGoalDefinitionInner,
         earlier: ConstraintGoalDefinitionInner,
@@ -157,6 +195,8 @@ impl ConstraintGoalDefinition {
         Self::sometime_before(later, earlier)
     }
 
+    /// Creates an `(always-within <number> <first> <second>)` constraint: whenever
+    /// `first` holds, `second` must hold within `number` time units.
     #[doc(alias = "new_always_within")]
     pub const fn always_within(
         number: Number,
@@ -166,6 +206,7 @@ impl ConstraintGoalDefinition {
         Self::AlwaysWithin(number, first, second)
     }
 
+    /// Alias for [`Self::always_within`].
     pub fn new_always_within(
         number: Number,
         first: ConstraintGoalDefinitionInner,
@@ -174,6 +215,7 @@ impl ConstraintGoalDefinition {
         Self::always_within(number, first, second)
     }
 
+    /// Creates a `(hold-during <begin> <end> <con2-GD>)` constraint.
     #[doc(alias = "new_hold_during")]
     pub const fn hold_during(
         begin: Number,
@@ -183,19 +225,23 @@ impl ConstraintGoalDefinition {
         Self::HoldDuring(begin, end, gd)
     }
 
+    /// Alias for [`Self::hold_during`].
     pub fn new_hold_during(begin: Number, end: Number, gd: ConstraintGoalDefinitionInner) -> Self {
         Self::hold_during(begin, end, gd)
     }
 
+    /// Creates a `(hold-after <number> <con2-GD>)` constraint.
     #[doc(alias = "new_hold_after")]
     pub const fn hold_after(number: Number, gd: ConstraintGoalDefinitionInner) -> Self {
         Self::HoldAfter(number, gd)
     }
 
+    /// Alias for [`Self::hold_after`].
     pub fn new_hold_after(number: Number, gd: ConstraintGoalDefinitionInner) -> Self {
         Self::hold_after(number, gd)
     }
 
+    /// Returns `true` if this constraint contains no goals, e.g. `(and)`.
     pub fn is_empty(&self) -> bool {
         match self {
             ConstraintGoalDefinition::And(x) => x.iter().all(|y| y.is_empty()),
@@ -215,24 +261,29 @@ impl ConstraintGoalDefinition {
 }
 
 impl ConstraintGoalDefinitionInner {
+    /// Creates a nested constraint goal definition.
     #[doc(alias = "new_nested")]
     pub fn nested(gd: ConstraintGoalDefinition) -> Self {
         Self::Nested(Box::new(gd))
     }
 
+    /// Alias for [`Self::nested`].
     pub fn new_nested(gd: ConstraintGoalDefinition) -> Self {
         Self::nested(gd)
     }
 
+    /// Creates a plain goal definition.
     #[doc(alias = "new_goal")]
     pub const fn goal(gd: GoalDefinition) -> Self {
         Self::Goal(gd)
     }
 
+    /// Alias for [`Self::goal`].
     pub fn new_goal(gd: GoalDefinition) -> Self {
         Self::goal(gd)
     }
 
+    /// Returns `true` if the contained goal definition is empty.
     pub fn is_empty(&self) -> bool {
         match self {
             Self::Goal(gd) => gd.is_empty(),

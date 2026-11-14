@@ -12,27 +12,32 @@ use std::ops::Deref;
 pub struct PreferenceName(Name);
 
 impl PreferenceName {
+    /// Creates a preference name from anything convertible into a [`Name`].
     #[inline(always)]
     pub fn new<N: Into<Name>>(name: N) -> Self {
         Self(name.into())
     }
 
+    /// Creates a preference name from a string slice.
     #[inline(always)]
     #[doc(alias = "new_string")]
     pub fn string(name: &str) -> Self {
         Self(Name::new(name))
     }
 
+    /// Creates a preference name from a string slice. Same as [`string`](Self::string).
     #[inline(always)]
     pub fn new_string(name: &str) -> Self {
         Self::string(name)
     }
 
+    /// Creates a preference name from a static string.
     #[inline(always)]
     pub const fn from_static(name: &'static str) -> Self {
         Self(Name::new_static(name))
     }
 
+    /// Creates a preference name from a [`Name`].
     #[inline(always)]
     pub const fn from_name(name: Name) -> Self {
         Self(name)

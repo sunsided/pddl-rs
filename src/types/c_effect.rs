@@ -91,6 +91,7 @@ impl ConditionalEffect {
         Self::Forall(ForallConditionalEffect::new(variables, effect))
     }
 
+    /// Creates a new universal effect that applies to all the specified variables.
     #[deprecated(since = "0.2.0", note = "Use `forall` instead")]
     pub const fn new_forall(variables: TypedVariables, effect: Effects) -> Self {
         Self::forall(variables, effect)
@@ -104,6 +105,7 @@ impl ConditionalEffect {
         Self::When(WhenConditionalEffect::new(condition, effect))
     }
 
+    /// Creates a new conditional `when` effect.
     #[deprecated(since = "0.2.0", note = "Use `when` instead")]
     pub const fn new_when(condition: GoalDefinition, effect: EffectCondition) -> Self {
         Self::when(condition, effect)

@@ -9,18 +9,29 @@ use std::fmt::{Display, Formatter};
 #[doc(alias("binary-comp"))]
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum BinaryComparison {
+    /// The `>` comparison.
     GreaterThan,
+    /// The `<` comparison.
     LessThan,
+    /// The `=` comparison.
     Equal,
+    /// The `>=` comparison.
     GreaterOrEqual,
+    /// The `<=` comparison.
     LessThanOrEqual,
 }
 
+/// The PDDL keywords for [`BinaryComparison`].
 pub mod names {
+    /// The `>` comparison.
     pub const GREATER_THAN: &str = ">";
+    /// The `<` comparison.
     pub const LESS_THAN: &str = "<";
+    /// The `=` comparison.
     pub const EQUAL: &str = "=";
+    /// The `>=` comparison.
     pub const GREATER_THAN_OR_EQUAL: &str = ">=";
+    /// The `<=` comparison.
     pub const LESS_THAN_OR_EQUAL: &str = "<=";
 }
 
@@ -51,9 +62,11 @@ impl TryFrom<&str> for BinaryComparison {
     }
 }
 
+/// An error when parsing a [`BinaryComparison`] from a string.
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum ParseError {
     #[error("Invalid operation")]
+    /// The string is not a valid comparison operator.
     InvalidOperation,
 }
 

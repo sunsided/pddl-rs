@@ -1,3 +1,5 @@
+//! Pretty-printing of the `:timeless` section.
+
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::Timeless;
 use crate::visitor::{Accept, Visitor};

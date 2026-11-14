@@ -13,20 +13,25 @@ use crate::types::{FunctionSymbol, Term};
 #[doc(alias("f-head"))]
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum FunctionHead {
+    /// A function without arguments, `<function-symbol>` or `(<function-symbol>)`.
     Simple(FunctionSymbol), // TODO: Unify with `WithTerms`?
+    /// A function applied to terms, `(<function-symbol> <term>*)`.
     WithTerms(FunctionSymbol, Vec<Term>),
 }
 
 impl FunctionHead {
+    /// Creates a function head without arguments.
     pub const fn new(symbol: FunctionSymbol) -> Self {
         Self::Simple(symbol)
     }
 
+    /// Creates a function head applied to the given terms.
     #[doc(alias = "new_with_terms")]
     pub fn with_terms<I: IntoIterator<Item = Term>>(symbol: FunctionSymbol, terms: I) -> Self {
         Self::WithTerms(symbol, terms.into_iter().collect())
     }
 
+    /// Creates a function head applied to the given terms.
     pub fn new_with_terms<I: IntoIterator<Item = Term>>(symbol: FunctionSymbol, terms: I) -> Self {
         Self::with_terms(symbol, terms)
     }

@@ -25,14 +25,21 @@ use crate::types::{
 /// Used by [`StructureDef`](crate::StructureDef).
 #[derive(Debug, Clone, PartialEq)]
 pub struct DurativeActionDefinition {
+    /// The durative action's name, from `(:durative-action <da-symbol> ...)`.
     symbol: DurativeActionSymbol,
+    /// The durative action's parameters, from `:parameters`.
     parameters: TypedVariables,
+    /// The duration constraint, from `:duration`; `None` if it is empty (`()`).
     duration: Option<DurationConstraint>,
+    /// The conditions, from `:condition`; `None` if empty (`()`).
     condition: Option<DurativeActionGoalDefinition>,
+    /// The effects, from `:effect`; `None` if empty (`()`).
     effect: Option<DurativeActionEffect>,
 }
 
 impl DurativeActionDefinition {
+    /// Creates a new durative action definition from its name, parameters,
+    /// duration constraint, conditions and effects.
     pub const fn new(
         symbol: DurativeActionSymbol,
         parameters: TypedVariables,
@@ -49,6 +56,7 @@ impl DurativeActionDefinition {
         }
     }
 
+    /// Gets the durative action's name.
     pub const fn symbol(&self) -> &DurativeActionSymbol {
         &self.symbol
     }

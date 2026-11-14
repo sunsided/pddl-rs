@@ -10,6 +10,7 @@ use std::collections::HashSet;
 #[cfg(feature = "interning")]
 use std::sync::{Arc, LazyLock, Mutex};
 
+/// The global interner used by [`Name::new`] when the `interning` feature is enabled.
 #[cfg(feature = "interning")]
 static STRING_INTERNING: LazyLock<Mutex<Interner>> = LazyLock::new(Mutex::default);
 
@@ -17,7 +18,9 @@ static STRING_INTERNING: LazyLock<Mutex<Interner>> = LazyLock::new(Mutex::defaul
 #[cfg(feature = "interning")]
 #[derive(Default)]
 struct Interner {
+    /// The interned spellings.
     names: HashSet<Arc<str>>,
+    /// The set size at which unused spellings are purged next.
     purge_at: usize,
 }
 
@@ -50,7 +53,7 @@ impl Interner {
 /// ## Usage
 /// Used by [`Domain`](crate::Domain), [`InitElement`](crate::InitElement),
 /// [`BasicFunctionTerm`](crate::BasicFunctionTerm), [`MetricFluentExpression`](crate::MetricFluentExpression),
-/// [`PrimitiveType`](PrimitiveType), [`Predicate`](crate::Predicate), [`Variable`](crate::Variable),
+/// [`PrimitiveType`], [`Predicate`](crate::Predicate), [`Variable`](crate::Variable),
 /// [`FunctionSymbol`](crate::FunctionSymbol), [`ActionSymbol`](crate::ActionSymbol),
 /// [`PreferenceName`](crate::PreferenceName), [`Term`](crate::Term),
 /// [`DurativeActionSymbol`](crate::DurativeActionSymbol) and [`Objects`](crate::Objects).
@@ -80,13 +83,17 @@ pub struct Name(NameVariant);
 /// Storage only: name identity (equality, hashing) is defined on [`Name`], which ignores case.
 #[derive(Clone)]
 enum NameVariant {
+    /// A dynamically created name; deduplicated when the `interning` feature is enabled.
     String(InternedString),
+    /// A `'static` name, e.g. a well-known name or one from [`Name::new_static`].
     Static(&'static str),
 }
 
+/// Shared, reference-counted storage of an interned spelling.
 #[cfg(feature = "interning")]
 type InternedString = Arc<str>;
 
+/// Owned storage of a spelling (the `interning` feature is disabled).
 #[cfg(not(feature = "interning"))]
 type InternedString = String;
 
@@ -169,7 +176,9 @@ impl Name {
 
 /// Provides well-known names for string interning.
 mod well_known {
+    /// The built-in `object` type name.
     pub static OBJECT: &str = "object";
+    /// The built-in `number` type name.
     pub static NUMBER: &str = "number";
 }
 

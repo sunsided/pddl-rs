@@ -1,3 +1,5 @@
+//! Pretty-printing of typed lists, such as `?x ?y - location`.
+
 use std::ops::Deref;
 
 use crate::pretty_print::{sealed, PrettyRenderer};

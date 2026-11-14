@@ -17,27 +17,32 @@ use std::ops::Deref;
 pub struct Variable(Name);
 
 impl Variable {
+    /// Creates a variable from a [`Name`] (without the leading `?`).
     #[inline(always)]
     pub const fn new(name: Name) -> Self {
         Self(name)
     }
 
+    /// Creates a variable from a string slice (without the leading `?`).
     #[inline(always)]
     #[doc(alias = "new_string")]
     pub fn string(name: &str) -> Self {
         Self(Name::new(name))
     }
 
+    /// Alias for [`Self::string`].
     #[inline(always)]
     pub fn new_string(name: &str) -> Self {
         Self::string(name)
     }
 
+    /// Creates a variable from a `'static` string; usable in `const` contexts.
     #[inline(always)]
     pub const fn from_static(name: &'static str) -> Self {
         Self(Name::new_static(name))
     }
 
+    /// Creates a variable from a [`Name`]; same as [`Self::new`].
     #[inline(always)]
     pub const fn from_name(name: Name) -> Self {
         Self(name)

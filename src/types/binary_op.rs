@@ -9,16 +9,25 @@ use std::fmt::{Display, Formatter};
 /// Used by [`FExp`](crate::FExp), [`FExpDa`](crate::FExpDa) and [`Optimization`](crate::Optimization).
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum BinaryOp {
+    /// The `*` operation.
     Multiplication,
+    /// The `+` operation.
     Addition,
+    /// The `-` operation.
     Subtraction,
+    /// The `/` operation.
     Division,
 }
 
+/// The PDDL keywords for [`BinaryOp`].
 pub mod names {
+    /// The `*` operation.
     pub const MULTIPLICATION: &str = "*";
+    /// The `+` operation.
     pub const ADDITION: &str = "+";
+    /// The `-` operation.
     pub const SUBTRACTION: &str = "-";
+    /// The `/` operation.
     pub const DIVISION: &str = "/";
 }
 
@@ -68,14 +77,18 @@ impl TryFrom<BinaryOp> for MultiOp {
     }
 }
 
+/// An error when parsing a [`BinaryOp`] from a string.
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum ParseError {
     #[error("Invalid operation")]
+    /// The string is not a valid binary operator.
     InvalidOperation,
 }
 
+/// An error when converting a [`BinaryOp`] into a [`MultiOp`].
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum TryFromError {
     #[error("Operation is not a MultiOp")]
+    /// The operation is `-` or `/`, which has no [`MultiOp`] equivalent.
     NotAMultiOp,
 }

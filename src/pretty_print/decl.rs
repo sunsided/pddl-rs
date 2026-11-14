@@ -1,3 +1,5 @@
+//! Pretty-printing of domain and problem sections such as `:types`, `:objects` and `:init`.
+
 use std::ops::Deref;
 
 use crate::pretty_print::{sealed, PrettyRenderer};

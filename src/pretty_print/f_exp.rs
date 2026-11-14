@@ -1,3 +1,5 @@
+//! Pretty-printing of fluent expressions, comparisons and assignments.
+
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{
     BinaryComparison, BinaryOp, DurativeActionFluentExpression, DurativeActionFunctionAssignment,

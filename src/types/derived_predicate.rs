@@ -10,14 +10,18 @@ use crate::types::{AtomicFormulaSkeleton, GoalDefinition};
 pub struct DerivedPredicate(AtomicFormulaSkeleton, GoalDefinition);
 
 impl DerivedPredicate {
+    /// Creates a new derived predicate, i.e. `(:derived <atomic formula skeleton> <GD>)`,
+    /// from the predicate and the goal definition that derives it.
     pub const fn new(formula: AtomicFormulaSkeleton, gd: GoalDefinition) -> Self {
         Self(formula, gd)
     }
 
+    /// Gets the derived predicate's atomic formula skeleton, i.e. its name and parameters.
     pub const fn predicate(&self) -> &AtomicFormulaSkeleton {
         &self.0
     }
 
+    /// Gets the goal definition under which the predicate holds.
     pub const fn expression(&self) -> &GoalDefinition {
         &self.1
     }

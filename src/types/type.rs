@@ -45,24 +45,29 @@ impl Type {
     /// The predefined type `number`.
     pub const NUMBER: Type = Type::Exactly(TYPE_NUMBER);
 
+    /// Creates a type that is exactly the given primitive type.
     #[doc(alias = "new_exactly")]
     pub fn exactly<S: Into<PrimitiveType>>(t: S) -> Self {
         Self::Exactly(t.into())
     }
 
+    /// Creates a type that is exactly the given primitive type; same as [`exactly`](Self::exactly).
     pub fn new_exactly<S: Into<PrimitiveType>>(t: S) -> Self {
         Self::exactly(t)
     }
 
+    /// Creates a type that is either of the given primitive types, i.e. `(either <primitive-type>+)`.
     #[doc(alias = "new_either")]
     pub fn either<T: IntoIterator<Item = P>, P: Into<PrimitiveType>>(iter: T) -> Self {
         Self::EitherOf(iter.into_iter().map(|x| x.into()).collect())
     }
 
+    /// Creates a type that is either of the given primitive types; same as [`either`](Self::either).
     pub fn new_either<T: IntoIterator<Item = P>, P: Into<PrimitiveType>>(iter: T) -> Self {
         Self::either(iter)
     }
 
+    /// Gets the number of primitive types; `1` for [`Type::Exactly`].
     pub fn len(&self) -> usize {
         match self {
             Type::Exactly(_) => 1,
@@ -70,12 +75,14 @@ impl Type {
         }
     }
 
+    /// Returns `true` if this is an [`Type::EitherOf`] without any types.
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 }
 
 impl PrimitiveType {
+    /// Creates a new primitive type from a [`Name`].
     pub fn new(name: Name) -> Self {
         Self(name)
     }

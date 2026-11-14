@@ -1,3 +1,5 @@
+//! Pretty-printing of domains and their `:constraints` section.
+
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{Domain, DomainConstraintsDef};
 use crate::visitor::{Accept, Visitor};

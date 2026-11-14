@@ -1,3 +1,5 @@
+//! Pretty-printing of numbers.
+
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::Number;
 use crate::visitor::Visitor;

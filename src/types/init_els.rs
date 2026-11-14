@@ -11,6 +11,7 @@ use std::ops::Deref;
 pub struct InitElements(Vec<InitElement>);
 
 impl InitElements {
+    /// Creates a new list of initial state elements, i.e. the content of `(:init <init-el>*)`.
     pub const fn new(iter: Vec<InitElement>) -> Self {
         Self(iter)
     }

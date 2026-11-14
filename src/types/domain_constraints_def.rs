@@ -14,6 +14,7 @@ use std::ops::Deref;
 pub struct DomainConstraintsDef(ConstraintGoalDefinition);
 
 impl DomainConstraintsDef {
+    /// Creates a new domain constraints definition, i.e. `(:constraints <con-GD>)`.
     pub const fn new(gd: ConstraintGoalDefinition) -> Self {
         Self(gd)
     }

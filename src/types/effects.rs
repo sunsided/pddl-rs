@@ -25,6 +25,7 @@ impl Effects {
         Self(effects)
     }
 
+    /// Constructs a new instance from the provided vector of values.
     pub fn new_and(effects: Vec<ConditionalEffect>) -> Self {
         Self::and(effects)
     }
