@@ -1,0 +1,89 @@
+{
+  "name": "pddl-lsp",
+  "displayName": "PDDL (pddl-lsp)",
+  "description": "PDDL language support through the pddl-lsp language server: diagnostics, navigation, completion, rename and formatting.",
+  "version": "0.1.0",
+  "publisher": "sunsided",
+  "license": "EUPL-1.2",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sunsided/pddl-rs"
+  },
+  "engines": {
+    "vscode": "^1.82.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Formatters"
+  ],
+  "keywords": [
+    "pddl",
+    "planning",
+    "lsp"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "pddl",
+        "aliases": [
+          "PDDL",
+          "pddl"
+        ],
+        "extensions": [
+          ".pddl"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "pddl",
+        "scopeName": "source.pddl",
+        "path": "./syntaxes/pddl.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "title": "PDDL",
+      "properties": {
+        "pddl.server.path": {
+          "type": "string",
+          "default": "pddl-lsp",
+          "markdownDescription": "Path to the `pddl-lsp` binary. The default looks it up on `PATH`; install it with `cargo install pddl-lsp`."
+        },
+        "pddl.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Logs the messages between VS Code and the language server to the output panel."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "pddl.restartServer",
+        "title": "PDDL: Restart Language Server"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p .",
+    "watch": "tsc -watch -p .",
+    "package": "vsce package",
+    "vscode:prepublish": "npm run compile"
+  },
+  "dependencies": {
+    "vscode-languageclient": "9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "20.17.6",
+    "@types/vscode": "1.82.0",
+    "@vscode/vsce": "3.2.1",
+    "typescript": "5.6.3"
+  }
+}
