@@ -71,7 +71,9 @@ mod tests {
 
     #[test]
     fn too_many_digits_is_an_error_not_a_panic() {
-        let error = Number::from_str(&"9".repeat(400)).unwrap_err();
+        // About 1e308 still fits an f64; one more digit overflows.
+        assert!(Number::from_str(&"9".repeat(308)).is_ok());
+        let error = Number::from_str(&"9".repeat(309)).unwrap_err();
         assert_eq!(error.reason(), Some("number out of range"));
         assert_eq!(
             (error.offset(), error.found().map(|f| &f[..3])),
