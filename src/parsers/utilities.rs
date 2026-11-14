@@ -377,6 +377,11 @@ mod tests {
             |n| format!("(p {})", nest("(f ", "x", n - 1)),
             GoalDefinition::from_str,
         );
+        check(
+            "function term in an equality",
+            |n| format!("(= x {})", nest("(f ", "x", n - 1)),
+            GoalDefinition::from_str,
+        );
         // `(?x)` closes before the next level opens, so it doesn't add depth.
         check(
             "forall",

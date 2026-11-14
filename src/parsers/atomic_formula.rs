@@ -1,13 +1,12 @@
 //! Provides parsers for atomic formulae.
 
+use crate::parsers::utilities::keyword;
 use crate::parsers::{parens, space_separated_list0, ws};
 use crate::parsers::{parse_predicate, NomError, Span};
 use crate::types::AtomicFormula;
 use nom::branch::alt;
-use nom::bytes::complete::tag_no_case;
-use nom::character::complete::char;
 use nom::combinator::map;
-use nom::sequence::delimited;
+use nom::sequence::preceded;
 use nom::Parser;
 
 /// Parses an atomic formula, i.e. `(<predicate> t*) | (= t t)`.
@@ -32,11 +31,10 @@ where
     F: Clone + Parser<Span<'a>, Output = O, Error = NomError<'a>>,
 {
     let equality = map(
-        delimited(
-            ws(tag_no_case("(=")),
+        parens(preceded(
+            keyword("="),
             (ws(inner.clone()), ws(inner.clone())),
-            ws(char(')')),
-        ),
+        )),
         |tuple| AtomicFormula::Equality(tuple.into()),
     );
 
