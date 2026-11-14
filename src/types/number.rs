@@ -102,29 +102,10 @@ impl<I: Into<Number> + Copy> PartialEq<I> for Number {
 
 impl Ord for Number {
     fn cmp(&self, other: &Self) -> Ordering {
-        let lhs = self.0;
-        let rhs = other.0;
-        debug_assert!(lhs.is_finite());
-        debug_assert!(rhs.is_finite());
-
-        // Ensure plus/minus 0 is equal.
-        if lhs == 0.0 && rhs == -0.0 || lhs == -0.0 && rhs == 0.0 {
-            return Ordering::Equal;
-        }
-
-        // Treat NaN as equal.
-        // Should never happen according to construction rules.
-        if lhs.is_nan() || rhs.is_nan() {
-            unreachable!("Proper construction of this type prevents NaN");
-        }
-
-        // Treat infinities as equal.
-        // Should never happen according to construction rules.
-        if lhs.is_infinite() || rhs.is_infinite() {
-            unreachable!("Proper construction of this type prevents NaN");
-        }
-
-        lhs.partial_cmp(&rhs).expect("Values cannot be ambiguous")
+        // `partial_cmp` treats `-0.0` and `0.0` as equal, and is only `None` for NaN.
+        self.0
+            .partial_cmp(&other.0)
+            .expect("Number is finite by construction")
     }
 }
 

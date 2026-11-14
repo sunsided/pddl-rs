@@ -157,15 +157,6 @@ impl Name {
         }
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
-
-    /// Gets the length of the name, in chars.
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-
     /// Maps the provided to a well-known `'static` string if possible.
     fn map_to_static(value: &str) -> Option<&'static str> {
         match value {
@@ -267,16 +258,6 @@ impl ToTyped<Name> for Name {
     }
 }
 
-impl NameVariant {
-    /// Gets the length of the name, in chars.
-    fn len(&self) -> usize {
-        match self {
-            NameVariant::String(s) => s.chars().count(),
-            NameVariant::Static(s) => s.chars().count(),
-        }
-    }
-}
-
 impl Default for NameVariant {
     fn default() -> Self {
         Self::Static("")
@@ -312,6 +293,15 @@ impl Display for NameVariant {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn len_is_in_bytes_like_str() {
+        // `&name[..name.len()]` must not panic on non-ASCII names.
+        let name = Name::new("é");
+        assert_eq!(name.len(), 2);
+        assert_eq!(&name[..name.len()], "é");
+        assert!(Name::default().is_empty());
+    }
 
     #[test]
     fn eq_and_hash_ignore_ascii_case() {
