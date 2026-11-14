@@ -207,6 +207,8 @@ pub type TypedVariables = TypedList<Variable>;
 pub type TypedNames = TypedList<Name>;
 
 // The names before PDDL's "goal description" (GD) was spelled out correctly.
+// When removing these aliases, add `#[doc(alias = "<old name>")]` to each renamed
+// type so that rustdoc search still finds it by its old name.
 /// Former name of [`GoalDescription`].
 #[deprecated(since = "0.4.0", note = "renamed to `GoalDescription`")]
 pub type GoalDefinition = GoalDescription;
