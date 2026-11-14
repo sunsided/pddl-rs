@@ -81,12 +81,15 @@ tasks:
       - code --install-extension {{.VSIX}} --force
 
   publish:
-    desc: Publish the extension, with the server, to the VS Code Marketplace
-    deps: [build, server]
-    prompt: Publish this version of the extension to the VS Code Marketplace?
+    desc: Publish the extension from main to the VS Code Marketplace, through GitHub Actions
+    preconditions:
+      - sh: command -v gh
+        msg: "gh not found — install the GitHub CLI from https://cli.github.com/"
+    prompt: Publish the extension on main to the VS Code Marketplace?
     cmds:
-      # Uses the token from `npx vsce login sunsided`, or the VSCE_PAT environment variable.
-      - "{{.YARN}} run publish:marketplace"
+      # The workflow publishes with Trusted Publishing, so no access token is needed here.
+      - gh workflow run vscode-publish.yml --ref main
+      - echo 'Started; follow it with "gh run watch" or in the Actions tab.'
 
   clean:
     desc: Remove the compiled extension, server, packages and dependencies

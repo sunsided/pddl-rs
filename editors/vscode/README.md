@@ -44,7 +44,7 @@ repository root, put `vscode:` in front of each name, as in `task vscode:package
 | `task test`    | Runs the extension and its server in a downloaded VS Code            |
 | `task package` | Packages the extension and the server as `pddl-lsp-<version>.vsix`   |
 | `task install` | Packages the extension and installs it into VS Code                  |
-| `task publish` | Publishes the extension and the server to the VS Code Marketplace    |
+| `task publish` | Publishes the extension on `main` to the Marketplace, via GitHub Actions |
 | `task clean`   | Removes `out/`, `server/`, `node_modules/`, `.vsix` files and the downloaded VS Code |
 
 `task test` opens the PDDL files in [`test/workspace`](test/workspace) in a
@@ -68,21 +68,29 @@ code --install-extension pddl-lsp-0.1.0.vsix
 The extension is published as `sunsided.pddl-lsp` and marked as a preview,
 because the WASI runtime packages it uses are previews too.
 
-1. Create a personal access token in Azure DevOps with the
-   **Marketplace (Manage)** scope, and log in with it once:
+The [`vscode-publish.yml`](../../.github/workflows/vscode-publish.yml) workflow
+publishes it with the Marketplace's Trusted Publishing, so no access token is
+stored anywhere.
 
-   ```shell
-   npx vsce login sunsided
-   ```
+1. Once, at [marketplace.visualstudio.com/manage](https://marketplace.visualstudio.com/manage),
+   open the `sunsided` publisher, go to **Trusted Publishing**, and create a
+   policy with:
 
-   In CI, set the `VSCE_PAT` environment variable to the token instead.
+   | Field            | Value                 |
+   |------------------|-----------------------|
+   | Repository owner | `sunsided`            |
+   | Repository       | `pddl-rs`             |
+   | Workflow         | `vscode-publish.yml`  |
+   | Environment      | (empty)               |
 
-2. Raise `version` in `package.json`; the Marketplace rejects a version it already has.
+2. Raise `version` in `package.json`; the Marketplace rejects a version it
+   already has. Merge that into `main`.
 
-3. Run `task publish`, which asks for confirmation first. It builds the
-   server and the extension and publishes them. Relative links in this README
-   are rewritten to GitHub URLs on the `main` branch, so push the README
-   before publishing.
+3. Run `task publish`, which asks for confirmation and then starts the
+   workflow on `main` with the GitHub CLI. You can also start it from the
+   repository's Actions tab. The workflow builds the server and the extension
+   and publishes them. Relative links in this README become GitHub URLs on
+   `main`.
 
 ## Settings
 
