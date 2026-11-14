@@ -89,8 +89,8 @@ impl Visitor<FluentComparison, RcDoc<'static>> for PrettyRenderer {
 impl Visitor<TimedFluentExpression, RcDoc<'static>> for PrettyRenderer {
     fn visit(&self, value: &TimedFluentExpression) -> RcDoc<'static> {
         match value {
-            TimedFluentExpression::Now => RcDoc::text("now"),
-            TimedFluentExpression::Scaled(e) => self.visit(e),
+            TimedFluentExpression::Now => RcDoc::text("#t"),
+            TimedFluentExpression::Scaled(e) => self.sexpr("*", [RcDoc::text("#t"), self.visit(e)]),
         }
     }
 }
@@ -98,7 +98,7 @@ impl Visitor<TimedFluentExpression, RcDoc<'static>> for PrettyRenderer {
 impl Visitor<DurativeActionFluentExpression, RcDoc<'static>> for PrettyRenderer {
     fn visit(&self, value: &DurativeActionFluentExpression) -> RcDoc<'static> {
         match value {
-            DurativeActionFluentExpression::Duration => RcDoc::text("#t"),
+            DurativeActionFluentExpression::Duration => RcDoc::text("?duration"),
             DurativeActionFluentExpression::FluentExpression(e) => self.visit(e),
             DurativeActionFluentExpression::Negative(e) => RcDoc::text("(")
                 .append("-")
@@ -263,20 +263,20 @@ mod tests {
     #[test]
     fn fexp_t_now_works() {
         let e = TimedFluentExpression::Now;
-        check!(prettify!(e, 10) == "now");
+        check!(prettify!(e, 10) == "#t");
     }
 
     #[test]
     fn fexp_t_scaled_works() {
         let inner = FluentExpression::number(Number::from(2));
         let e = TimedFluentExpression::Scaled(inner);
-        check!(prettify!(e, 10) == "2");
+        check!(prettify!(e, 10) == "(* #t 2)");
     }
 
     #[test]
     fn fexp_da_duration_works() {
         let e = DurativeActionFluentExpression::duration();
-        check!(prettify!(e, 10) == "#t");
+        check!(prettify!(e, 10) == "?duration");
     }
 
     #[test]

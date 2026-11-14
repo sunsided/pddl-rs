@@ -76,6 +76,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Pretty-printing durative actions now produces PDDL that parses back: continuous effects print
+  `#t` and `(* #t exp)` instead of `now` and a bare `exp`, the duration prints as `?duration`
+  instead of `#t`, and a missing duration, condition or effect prints as `()` instead of being
+  left out, since `:durative-action` requires all three keywords.
 - `(assign <function-term> undefined)` pretty-prints with `undefined` again. It printed as
   `(assign <function-term>)`, which doesn't parse.
 - A function term without terms pretty-prints as `(f)` instead of `f`, which parsed back as the
