@@ -562,15 +562,16 @@ mod tests {
         check!(error.code().unwrap().to_string() == "pddl::parse");
     }
 
-    /// Misspelled keywords from a fixed set get a suggestion; everything else doesn't.
     #[test]
     fn a_suggestion_survives_an_alternative_failing_at_the_same_place() {
-        // `(assign f undefined)` suggests `undefined`; `(assign f <term>)` then
-        // fails at the same atom without one.
+        // The `(assign <function-term> undefined)` alternative suggests `undefined`
+        // for `:undefined`; `(assign <function-term> <term>)` then fails at the
+        // same atom without a suggestion.
         let error = crate::PrimitiveEffect::from_str("(assign (f) :undefined)").unwrap_err();
         check!(error.help() == Some("did you mean `undefined`?".to_owned()).as_deref());
     }
 
+    /// Misspelled keywords from a fixed set get a suggestion; everything else doesn't.
     #[test]
     fn misspelled_keywords_get_a_suggestion() {
         use crate::{DurativeActionGoalDescription, Optimization};
