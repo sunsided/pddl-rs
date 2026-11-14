@@ -52,7 +52,8 @@ pub enum ConstraintGoalDescription {
     /// A goal that must hold between the two given times,
     /// `(hold-during <number> <number> <con2-GD>)`.
     HoldDuring(Number, Number, ConstraintGoalDescriptionInner),
-    /// A goal that must hold after the given time, `(hold-after <number> <con2-GD>)`.
+    /// A goal that must hold in at least one state after the given time,
+    /// `(hold-after <number> <con2-GD>)`.
     HoldAfter(Number, ConstraintGoalDescriptionInner),
 }
 
@@ -236,7 +237,8 @@ impl ConstraintGoalDescription {
         Self::hold_during(begin, end, gd)
     }
 
-    /// Creates a `(hold-after <number> <con2-GD>)` constraint.
+    /// Creates a `(hold-after <number> <con2-GD>)` constraint: the goal must hold in at
+    /// least one state after `number`.
     #[doc(alias = "new_hold_after")]
     pub const fn hold_after(number: Number, gd: ConstraintGoalDescriptionInner) -> Self {
         Self::HoldAfter(number, gd)

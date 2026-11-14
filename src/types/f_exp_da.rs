@@ -7,7 +7,8 @@ use crate::types::{AssignOp, BinaryOp, FluentExpression, FunctionHead, MultiOp};
 #[doc(alias("f-exp-da"))]
 #[derive(Debug, Clone, PartialEq)]
 pub enum DurativeActionFluentExpression {
-    /// An assignment, `(<assign-op> <f-head> <f-exp-da>)`.
+    /// An assignment, `(<assign-op> <f-head> <f-exp-da>)`. Not part of the PDDL 3.1
+    /// `<f-exp-da>` grammar; the parser never produces it.
     Assign(AssignOp, FunctionHead, Box<DurativeActionFluentExpression>),
     /// A binary operation, `(<binary-op> <f-exp-da> <f-exp-da>)`.
     BinaryOp(

@@ -2,7 +2,7 @@
 
 use crate::types::{GoalDescription, Preference};
 
-/// A preferred goal description.
+/// A goal description that may be a preference, `<pref-GD>`.
 ///
 /// ## Usage
 /// Used by [`PreconditionGoalDescription`](crate::PreconditionGoalDescription).

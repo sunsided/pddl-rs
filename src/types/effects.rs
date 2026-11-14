@@ -19,13 +19,13 @@ impl Effects {
         Self(vec![effect])
     }
 
-    /// Constructs a new instance from the provided vector of values.
+    /// Creates effects from the given conditional effects, `(and <c-effect>*)`.
     #[doc(alias = "new_and")]
     pub fn and(effects: Vec<ConditionalEffect>) -> Self {
         Self(effects)
     }
 
-    /// Constructs a new instance from the provided vector of values.
+    /// Creates effects from the given conditional effects, `(and <c-effect>*)`.
     pub fn new_and(effects: Vec<ConditionalEffect>) -> Self {
         Self::and(effects)
     }

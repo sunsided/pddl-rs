@@ -2,7 +2,7 @@
 
 use crate::types::{PreferenceName, TimedGoalDescription};
 
-/// A (preferred) timed goal description.
+/// A timed goal description that may be a preference, `<pref-timed-GD>`.
 ///
 /// ## Usage
 /// Used by [`DurativeActionGoalDescription`](crate::DurativeActionGoalDescription).

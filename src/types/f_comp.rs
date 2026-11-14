@@ -2,7 +2,7 @@
 
 use crate::types::{BinaryComparison, FluentExpression};
 
-/// An fluent comparison used as part of a [`GoalDescription`](crate::GoalDescription)
+/// A fluent comparison used as part of a [`GoalDescription`](crate::GoalDescription)
 /// when [`NumericFluents`](crate::Requirement::NumericFluents) is allowed.
 ///
 /// ## Usage

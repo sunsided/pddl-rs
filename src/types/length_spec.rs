@@ -6,9 +6,9 @@
 /// Used by [`Problem`](crate::Problem).
 #[derive(Debug, Default, Clone, Eq, PartialEq)]
 pub struct LengthSpec {
-    /// The maximum serial plan length, `(:serial <integer>)`.
+    /// The expected number of steps of a sequential plan, `(:serial <integer>)`; a hint to the planner.
     serial: Option<u64>,
-    /// The maximum parallel plan length, `(:parallel <integer>)`.
+    /// The expected number of parallel steps of a plan, `(:parallel <integer>)`; a hint to the planner.
     parallel: Option<u64>,
 }
 

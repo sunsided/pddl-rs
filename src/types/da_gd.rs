@@ -10,7 +10,7 @@ use crate::types::TypedVariables;
 /// [`DurativeActionEffect`](crate::DurativeActionEffect).
 #[derive(Debug, Clone, PartialEq)]
 pub enum DurativeActionGoalDescription {
-    /// A (preferred) timed goal, `<pref-timed-GD>`.
+    /// A timed goal that may be a preference, `<pref-timed-GD>`.
     Timed(PreferenceTimedGoalDescription),
     /// A conjunction, `(and <da-GD>*)`.
     And(Vec<DurativeActionGoalDescription>),
