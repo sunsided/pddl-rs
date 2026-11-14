@@ -12,7 +12,7 @@ use std::path::Path;
 /// compare equal; domains may come back with their actions, durative actions and
 /// derived predicates regrouped, which the schema doesn't distinguish.
 #[test]
-fn corpus_round_trips_through_json() {
+fn corpus_round_trips_through_json_yaml_and_toml() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/data");
     let mut checked = 0;
     for folder in ["vhpop", "potoroo"] {
@@ -33,6 +33,24 @@ fn corpus_round_trips_through_json() {
                 path.display()
             );
             check!(back.problems == file.problems, "{}", path.display());
+
+            let yaml = serde_yaml_ng::to_string(&file).unwrap();
+            let back: PddlFile = serde_yaml_ng::from_str(&yaml)
+                .unwrap_or_else(|e| panic!("{}: {e}\n{yaml}", path.display()));
+            check!(
+                serde_json::to_string(&back).unwrap() == json,
+                "{}: YAML",
+                path.display()
+            );
+
+            let toml = toml::to_string(&file).unwrap();
+            let back: PddlFile =
+                toml::from_str(&toml).unwrap_or_else(|e| panic!("{}: {e}\n{toml}", path.display()));
+            check!(
+                serde_json::to_string(&back).unwrap() == json,
+                "{}: TOML",
+                path.display()
+            );
             checked += 1;
         }
     }
