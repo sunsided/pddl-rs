@@ -149,7 +149,14 @@ pub(crate) fn parse_nodes<T>(
     rule: impl for<'n, 'a> FnOnce(&'n [Node<'a>], usize) -> R<(T, usize)>,
 ) -> Result<T, ParseError> {
     let run = || {
-        let forest = sexpr::read(input)?;
+        let mut forest = sexpr::read(input)?;
+        // A stray `)` before any node leaves the grammar nothing to read, so it,
+        // not an "unexpected end of input", is the mistake.
+        if forest.nodes.is_empty() {
+            if let Some(error) = forest.unbalanced.take() {
+                return Err(error);
+            }
+        }
         let (value, read) = rule(&forest.nodes, input.len())?;
         if let Some(extra) = forest.nodes.get(read) {
             return Err(extra.error());
@@ -267,6 +274,18 @@ mod tests {
     fn from_str_rejects_a_stray_closing_parenthesis() {
         let error = BasicFunctionTerm::from_str("abc)").unwrap_err();
         check!(error.span() == (3..4));
+    }
+
+    #[test]
+    fn a_leading_stray_closing_parenthesis_is_marked() {
+        for input in [")", "  ) (define (domain d))"] {
+            let error = Domain::from_str(input).unwrap_err();
+            check!(
+                error.found().is_some_and(|found| found.starts_with(')')),
+                "{input:?}"
+            );
+            check!(error.span() == (input.find(')').unwrap()..input.find(')').unwrap() + 1));
+        }
     }
 
     #[test]
