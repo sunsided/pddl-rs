@@ -26,6 +26,28 @@ pddl = { version = "*", default-features = false }
 
 Documentation comments are assembled from the PDDL papers and [nergmada/planning-wiki](https://github.com/nergmada/planning-wiki).
 
+## Editor Support
+
+[`pddl-lsp`](pddl-lsp) is a language server built on this crate. It works in
+VS Code, Neovim, Vim, Helix, Emacs, Sublime Text and other editors that speak
+the Language Server Protocol. It reports every syntax error in a file plus
+unknown names and wrong argument counts, and checks problems against their
+domain across files. It also provides hover, go to definition, references,
+rename, completion, signature help and formatting.
+
+```shell
+cargo install --git https://github.com/sunsided/pddl-rs pddl-lsp
+```
+
+Then set up your editor as described in the [`pddl-lsp` README](pddl-lsp/README.md#editor-setup).
+For VS Code, use the extension in [`editors/vscode`](editors/vscode).
+
+The parser exposes what the server builds on:
+[`pddl::syntax`](https://docs.rs/pddl/latest/pddl/syntax/index.html) gives the
+position of every atom, list and comment, and
+[`pddl::parsers::check`](https://docs.rs/pddl/latest/pddl/parsers/fn.check.html)
+reports every error in a file rather than only the first.
+
 ## Usage Example
 
 See [`tests/briefcase_world.rs`](tests/briefcase_world.rs) for the full example.
