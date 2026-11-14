@@ -9,6 +9,7 @@ use std::collections::HashSet;
 use std::ops::Range;
 
 use pddl::syntax::{self, Node};
+use pddl::Requirement;
 
 /// What a definition defines.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -63,6 +64,21 @@ pub struct Context {
     /// The domain whose names are visible: a domain's own name, or the name
     /// in a problem's `(:domain ...)`.
     pub domain: Option<String>,
+    /// The requirements its `(:requirements ...)` declares, as written.
+    pub requirements: Vec<Requirement>,
+    /// Where another requirement key can be added, or `None` if its
+    /// `(:requirements ...)` is not closed.
+    pub requirements_at: Option<RequirementsAt>,
+}
+
+/// Where a requirement key can be added to a domain or problem.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RequirementsAt {
+    /// Before the `)` of its `(:requirements ...)`, at this byte offset.
+    Section(usize),
+    /// In a new `(:requirements ...)` section at this byte offset: after the
+    /// header, or after a problem's `(:domain ...)`.
+    NewSection(usize),
 }
 
 /// A name being defined.
@@ -82,6 +98,13 @@ pub struct Definition {
     pub detail: String,
     /// The parameters of a predicate, function or action, as written, such as `?x - physob`.
     pub params: Vec<String>,
+    /// The parameters of a predicate, function or action, as indices into
+    /// [`Analysis::definitions`].
+    pub parameters: Vec<usize>,
+    /// The declared types of a constant, object or variable, or the parent
+    /// types of a type, in lowercase. Empty if none is declared; `(either a b)`
+    /// gives both.
+    pub of: Vec<String>,
     /// Where a variable can be used, such as its action or `forall`.
     pub scope: Option<Range<usize>>,
 }
@@ -151,6 +174,19 @@ pub struct VariableUse {
     pub binding: Option<usize>,
 }
 
+/// A construct that only some requirements allow, such as `forall` in a precondition.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Need {
+    /// The requirements that allow it; any one of them is enough.
+    pub any_of: &'static [Requirement],
+    /// The construct's keyword as written, such as `forall` or `-`.
+    pub word: String,
+    /// The keyword's byte range.
+    pub span: Range<usize>,
+    /// The index of the domain or problem it is in, in [`Analysis::contexts`].
+    pub context: usize,
+}
+
 /// The names of one file.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Analysis {
@@ -162,6 +198,8 @@ pub struct Analysis {
     pub references: Vec<Reference>,
     /// Every use of a variable.
     pub variables: Vec<VariableUse>,
+    /// Every construct that needs a requirement.
+    pub needs: Vec<Need>,
     /// The names this file refers to, in lowercase, by what they're expected to be.
     /// Lets the workspace find unused definitions without walking every reference.
     pub referenced: HashSet<(Expect, String)>,
@@ -187,6 +225,7 @@ impl Analysis {
             out: Self::default(),
             scope: Vec::new(),
             context: 0,
+            mode: Mode::Other,
         };
         for node in &tree.nodes {
             walker.top_level(node);
@@ -256,6 +295,38 @@ struct Walker<'t> {
     scope: Vec<usize>,
     /// The index of the current context.
     context: usize,
+    /// What the current formula is, which decides the requirements it needs.
+    mode: Mode,
+}
+
+/// What kind of formula the walker is in.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Mode {
+    /// A precondition, condition, goal or constraint.
+    Goal,
+    /// An effect.
+    Effect,
+    /// A problem's `:init` or a domain's `:timeless`.
+    Init,
+    /// Anything else, such as a duration or a metric.
+    Other,
+}
+
+/// Formulas that are not atomic: `(not <this>)` with one of these needs
+/// `:disjunctive-preconditions` rather than `:negative-preconditions`.
+const CONNECTIVES: [&str; 6] = ["and", "or", "not", "imply", "forall", "exists"];
+
+/// The type names in a type node: an atom, or the atoms of `(either a b ...)`, in lowercase.
+fn type_names(ty: &Node) -> Vec<String> {
+    match ty.children() {
+        None => ty.atom().map(str::to_ascii_lowercase).into_iter().collect(),
+        Some(children) => children
+            .iter()
+            .filter_map(Node::atom)
+            .filter(|a| !a.eq_ignore_ascii_case("either"))
+            .map(str::to_ascii_lowercase)
+            .collect(),
+    }
 }
 
 /// The items of a typed list such as `a b - t c`: each name with the type after its `-`.
@@ -302,6 +373,8 @@ impl Walker<'_> {
             context: self.context,
             detail,
             params: Vec::new(),
+            parameters: Vec::new(),
+            of: Vec::new(),
             scope: None,
         });
         self.out.definitions.len() - 1
@@ -321,11 +394,33 @@ impl Walker<'_> {
         }
     }
 
+    /// Records that the atom `word` needs one of `any_of`.
+    fn need(&mut self, any_of: &'static [Requirement], word: &Node) {
+        if let Some(atom) = word.atom() {
+            self.out.needs.push(Need {
+                any_of,
+                word: atom.to_string(),
+                span: word.start..word.end,
+                context: self.context,
+            });
+        }
+    }
+
+    /// Runs `walk` with the walker in `mode`.
+    fn in_mode(&mut self, mode: Mode, walk: impl FnOnce(&mut Self)) {
+        let outer = std::mem::replace(&mut self.mode, mode);
+        walk(self);
+        self.mode = outer;
+    }
+
     /// Records the types in a type node: an atom or `(either a b ...)`.
     fn type_ref(&mut self, ty: &Node) {
         match ty.children() {
             None => self.refer(Expect::Type, ty, None),
             Some(children) => {
+                if let Some(head) = children.first().filter(|h| h.is("either")) {
+                    self.need(&[Requirement::Typing], head);
+                }
                 let skip = usize::from(ty.is("either") || ty.head() == Some("either"));
                 for child in &children[skip..] {
                     self.type_ref(child);
@@ -358,7 +453,11 @@ impl Walker<'_> {
             };
             let index = self.define(kind, name, range.clone(), detail);
             self.out.definitions[index].scope = scope.cloned();
+            self.out.definitions[index].of = ty.map(type_names).unwrap_or_default();
             defined.push(index);
+        }
+        for dash in nodes.iter().filter(|n| n.is("-")) {
+            self.need(&[Requirement::Typing], dash);
         }
         self.type_refs(typed_list(nodes).into_iter().filter_map(|(_, ty)| ty));
         defined
@@ -376,17 +475,24 @@ impl Walker<'_> {
     }
 
     /// Declares the variables of a typed list for use within `scope`, and returns
-    /// their parameter texts.
-    fn bind(&mut self, vars: &Node, scope: &Range<usize>) -> Vec<String> {
+    /// their indices.
+    fn bind(&mut self, vars: &Node, scope: &Range<usize>) -> Vec<usize> {
         let Some(children) = vars.children() else {
             return Vec::new();
         };
         let defined = self.typed_defs(Kind::Variable, children, scope, Some(scope));
         self.scope.extend(&defined);
         defined
+    }
+
+    /// Sets the parameters of definition `index` to the variables `parameters`.
+    fn set_parameters(&mut self, index: usize, parameters: Vec<usize>) {
+        let definitions = &mut self.out.definitions;
+        definitions[index].params = parameters
             .iter()
-            .map(|&i| self.out.definitions[i].detail.clone())
-            .collect()
+            .map(|&i| definitions[i].detail.clone())
+            .collect();
+        definitions[index].parameters = parameters;
     }
 
     /// A top-level form: a domain or problem definition.
@@ -420,6 +526,8 @@ impl Walker<'_> {
                 .filter(|_| kind == Kind::Domain)
                 .and_then(Node::atom)
                 .map(str::to_string),
+            requirements: Vec::new(),
+            requirements_at: header.map(|h| RequirementsAt::NewSection(node_range(h).end)),
         });
         if let Some(name) = name {
             let detail = format!("{} {}", kind.label(), self.source(name));
@@ -440,6 +548,7 @@ impl Walker<'_> {
         };
         let range = node_range(section);
         match head.atom().map(str::to_ascii_lowercase).as_deref() {
+            Some(":requirements") => self.requirements(section, args),
             Some(":types") => {
                 self.typed_defs(Kind::Type, args, &range, None);
             }
@@ -452,6 +561,14 @@ impl Walker<'_> {
                 }
             }
             Some(":functions") => {
+                self.need(
+                    &[
+                        Requirement::NumericFluents,
+                        Requirement::ObjectFluents,
+                        Requirement::ActionCosts,
+                    ],
+                    head,
+                );
                 let items = typed_list(args);
                 for &(skeleton, ty) in &items {
                     self.skeleton(Kind::Function, skeleton, ty);
@@ -459,9 +576,18 @@ impl Walker<'_> {
                 let types = items.iter().filter_map(|(_, ty)| *ty);
                 self.type_refs(types.filter(|t| !t.is("number")));
             }
-            Some(":constraints" | ":timeless") => self.formulas(args),
-            Some(":action" | ":durative-action") => self.action(section, args),
+            Some(":constraints") => {
+                self.need(&[Requirement::Constraints], head);
+                self.in_mode(Mode::Goal, |w| w.formulas(args));
+            }
+            Some(":timeless") => self.in_mode(Mode::Init, |w| w.formulas(args)),
+            Some(":action") => self.action(section, args),
+            Some(":durative-action") => {
+                self.need(&[Requirement::DurativeActions], head);
+                self.action(section, args);
+            }
             Some(":derived") => {
+                self.need(&[Requirement::DerivedPredicates], head);
                 let scope_start = self.scope.len();
                 if let Some(skeleton) = args.first() {
                     if let Some([name, vars @ ..]) = skeleton.children() {
@@ -471,11 +597,26 @@ impl Walker<'_> {
                         self.scope.extend(defined);
                     }
                 }
-                self.formulas(args.get(1..).unwrap_or_default());
+                let body = args.get(1..).unwrap_or_default();
+                self.in_mode(Mode::Goal, |w| w.formulas(body));
                 self.scope.truncate(scope_start);
             }
             _ => {}
         }
+    }
+
+    /// A `(:requirements ...)` section with the requirement keys `keys`.
+    fn requirements(&mut self, section: &Node, keys: &[Node]) {
+        self.out.contexts[self.context].requirements_at = section
+            .closed
+            .then_some(RequirementsAt::Section(section.end));
+        let declared = keys
+            .iter()
+            .filter_map(Node::atom)
+            .filter_map(|key| Requirement::try_from(key.to_ascii_lowercase().as_str()).ok());
+        self.out.contexts[self.context]
+            .requirements
+            .extend(declared);
     }
 
     /// A predicate or function skeleton such as `(at ?x - t)`, with a function's type.
@@ -493,10 +634,7 @@ impl Walker<'_> {
         }
         let index = self.define(kind, name, range.clone(), detail);
         let params = self.typed_defs(Kind::Variable, vars, &range, Some(&range));
-        self.out.definitions[index].params = params
-            .iter()
-            .map(|&i| self.out.definitions[i].detail.clone())
-            .collect();
+        self.set_parameters(index, params);
     }
 
     /// An action or durative action, `(:action <name> :parameters (...) ...)`.
@@ -513,18 +651,30 @@ impl Walker<'_> {
             .map(|pair| &pair[1]);
         let params = parameters.map_or_else(Vec::new, |vars| self.bind(vars, &range));
         if let Some(index) = index {
+            self.set_parameters(index, params);
             let head = section.head().unwrap_or(":action");
-            let name = &self.out.definitions[index].name;
-            self.out.definitions[index].detail =
-                format!("({head} {name} :parameters ({}))", params.join(" "));
-            self.out.definitions[index].params = params;
+            let definition = &self.out.definitions[index];
+            let detail = format!(
+                "({head} {} :parameters ({}))",
+                definition.name,
+                definition.params.join(" ")
+            );
+            self.out.definitions[index].detail = detail;
         }
         let mut i = 1;
         while i < args.len() {
-            if args[i].atom().is_some_and(|a| a.starts_with(':')) {
+            if let Some(key) = args[i].atom().filter(|a| a.starts_with(':')) {
+                let mode = match key.to_ascii_lowercase().as_str() {
+                    ":precondition" | ":condition" => Mode::Goal,
+                    ":effect" => Mode::Effect,
+                    _ => Mode::Other,
+                };
                 if let Some(value) = args.get(i + 1) {
+                    if key.eq_ignore_ascii_case(":duration") {
+                        self.duration(value);
+                    }
                     if !args[i].is(":parameters") {
-                        self.formula(value);
+                        self.in_mode(mode, |w| w.formula(value));
                     }
                 }
                 i += 2;
@@ -534,6 +684,16 @@ impl Walker<'_> {
             }
         }
         self.scope.truncate(scope_start);
+    }
+
+    /// A durative action's `:duration`: anything but `(= ?duration ...)` needs
+    /// `:duration-inequalities`.
+    fn duration(&mut self, value: &Node) {
+        if let Some(head) = value.children().and_then(<[Node]>::first) {
+            if ["<=", ">=", "and"].iter().any(|w| head.is(w)) {
+                self.need(&[Requirement::DurationInequalities], head);
+            }
+        }
     }
 
     /// A section of a problem, such as `(:init ...)`.
@@ -548,12 +708,20 @@ impl Walker<'_> {
                     self.refer(Expect::Domain, name, None);
                     self.out.contexts[self.context].domain = name.atom().map(str::to_string);
                 }
+                let at = &mut self.out.contexts[self.context].requirements_at;
+                if let Some(RequirementsAt::NewSection(_)) = at {
+                    *at = Some(RequirementsAt::NewSection(range.end));
+                }
             }
+            Some(":requirements") => self.requirements(section, args),
             Some(":objects") => {
                 self.typed_defs(Kind::Object, args, &range, None);
             }
-            Some(":init" | ":goal" | ":constraints") => {
-                self.formulas(args);
+            Some(":init") => self.in_mode(Mode::Init, |w| w.formulas(args)),
+            Some(":goal") => self.in_mode(Mode::Goal, |w| w.formulas(args)),
+            Some(":constraints") => {
+                self.need(&[Requirement::Constraints], head);
+                self.in_mode(Mode::Goal, |w| w.formulas(args));
             }
             Some(":metric") => self.expressions(args.get(1..).unwrap_or_default()),
             _ => {}
@@ -590,13 +758,64 @@ impl Walker<'_> {
             args.first()
                 .is_some_and(|a| words.iter().any(|w| a.is(w)) || a.atom().is_some_and(is_number))
         };
+        let goal = self.mode == Mode::Goal;
+        let effect = self.mode == Mode::Effect;
         match word.to_ascii_lowercase().as_str() {
-            "and" | "or" | "not" | "imply" | "when" | "always" | "sometime" | "at-most-once"
-            | "sometime-after" | "sometime-before" | "within" | "always-within" | "hold-during"
-            | "hold-after" => self.formulas(args),
-            "at" if first_is(&["start", "end"]) => self.formulas(&args[1..]),
+            "or" | "imply" => {
+                if goal {
+                    self.need(&[Requirement::DisjunctivePreconditions], head);
+                }
+                self.formulas(args);
+            }
+            "not" => {
+                let negated = args.first().and_then(Node::head);
+                // `(not (= ?x ?y))` is how domains with only `:equality` say
+                // "different"; planners accept it, so only the `=` needs a requirement.
+                if goal && negated.is_none_or(|h| h != "=") {
+                    let atomic = negated
+                        .is_some_and(|h| !CONNECTIVES.iter().any(|c| h.eq_ignore_ascii_case(c)));
+                    // `:disjunctive-preconditions` allows `(not <GD>)` for any goal.
+                    let any_of: &'static [Requirement] = if atomic {
+                        &[
+                            Requirement::NegativePreconditions,
+                            Requirement::DisjunctivePreconditions,
+                        ]
+                    } else {
+                        &[Requirement::DisjunctivePreconditions]
+                    };
+                    self.need(any_of, head);
+                }
+                self.formulas(args);
+            }
+            "when" => {
+                if effect {
+                    self.need(&[Requirement::ConditionalEffects], head);
+                }
+                if let Some((condition, effects)) = args.split_first() {
+                    self.in_mode(Mode::Goal, |w| w.formula(condition));
+                    self.formulas(effects);
+                }
+            }
+            "and" | "always" | "sometime" | "at-most-once" | "sometime-after"
+            | "sometime-before" | "within" | "always-within" | "hold-during" | "hold-after" => {
+                self.formulas(args);
+            }
+            "at" if first_is(&["start", "end"]) => {
+                if self.mode == Mode::Init && args[0].atom().is_some_and(is_number) {
+                    self.need(&[Requirement::TimedInitialLiterals], head);
+                }
+                self.formulas(&args[1..]);
+            }
             "over" if first_is(&["all"]) => self.formulas(&args[1..]),
             "forall" | "exists" => {
+                let universal = word.eq_ignore_ascii_case("forall");
+                if goal && universal {
+                    self.need(&[Requirement::UniversalPreconditions], head);
+                } else if goal {
+                    self.need(&[Requirement::ExistentialPreconditions], head);
+                } else if effect && universal {
+                    self.need(&[Requirement::ConditionalEffects], head);
+                }
                 let scope_start = self.scope.len();
                 if let Some(vars) = args.first() {
                     self.bind(vars, &node_range(node));
@@ -606,14 +825,38 @@ impl Walker<'_> {
             }
             // `(preference <name> <goal>)`, where the name is optional.
             "preference" => {
+                self.need(&[Requirement::Preferences], head);
                 self.formulas(args.last().map(std::slice::from_ref).unwrap_or_default());
             }
             "is-violated" => {}
             "=" | "<" | ">" | "<=" | ">=" | "assign" | "increase" | "decrease" | "scale-up"
             | "scale-down" | "+" | "-" | "*" | "/" => {
+                if let Some(any_of) = self.numeric_need(word, args) {
+                    self.need(any_of, head);
+                }
                 self.expressions(args);
             }
             _ => self.application(head, args),
+        }
+    }
+
+    /// The requirements a comparison, assignment or arithmetic form `word` with
+    /// `args` needs where the walker is.
+    fn numeric_need(&self, word: &str, args: &[Node]) -> Option<&'static [Requirement]> {
+        use Requirement::{ActionCosts, Equality, NumericFluents, ObjectFluents};
+        let word = word.to_ascii_lowercase();
+        match (self.mode, word.as_str()) {
+            // `(= ?x ?y)` between objects, as opposed to a numeric comparison.
+            (Mode::Goal, "=") if args.iter().all(|a| a.atom().is_some_and(|a| !is_number(a))) => {
+                Some(&[Equality])
+            }
+            (Mode::Goal, "=") | (Mode::Effect, "assign") => Some(&[NumericFluents, ObjectFluents]),
+            (Mode::Goal, "<" | ">" | "<=" | ">=") | (Mode::Effect, "scale-up" | "scale-down") => {
+                Some(&[NumericFluents])
+            }
+            (Mode::Init, "=") => Some(&[NumericFluents, ObjectFluents, ActionCosts]),
+            (Mode::Effect, "increase" | "decrease") => Some(&[NumericFluents, ActionCosts]),
+            _ => None,
         }
     }
 
@@ -648,6 +891,9 @@ impl Walker<'_> {
         let Some(atom) = node.atom() else {
             return;
         };
+        if self.mode == Mode::Effect && atom == "#t" {
+            self.need(&[Requirement::ContinuousEffects], node);
+        }
         if atom.starts_with('?') {
             let binding = self
                 .scope
@@ -853,6 +1099,40 @@ atom
         check!(a.contexts[1].name.is_empty());
         check!(Kind::Function.label() == "function");
         check!(Expect::Domain.kinds() == [Kind::Domain]);
+    }
+
+    #[test]
+    fn records_what_needs_a_requirement() {
+        let a = analyze(
+            "(define (domain d)
+  (:constraints (always (not (and (p) (q)))))
+  (:durative-action a :parameters () :duration (<= ?duration 5)
+    :condition (at start (p))
+    :effect (and (increase (f) (* #t 2)) (when (p))))
+  (:durative-action b :parameters () :duration (= ?duration 5) :effect ()))
+(define (problem p) (:domain d) (:constraints (sometime (p))))",
+        );
+        let needs: Vec<_> = a
+            .needs
+            .iter()
+            .map(|n| (n.word.as_str(), n.any_of[0].as_str()))
+            .collect();
+        check!(
+            needs
+                == [
+                    (":constraints", ":constraints"),
+                    // Negating a compound goal needs disjunctive preconditions.
+                    ("not", ":disjunctive-preconditions"),
+                    (":durative-action", ":durative-actions"),
+                    ("<=", ":duration-inequalities"),
+                    ("increase", ":numeric-fluents"),
+                    ("#t", ":continuous-effects"),
+                    ("when", ":conditional-effects"),
+                    // `(= ?duration 5)` needs nothing beyond durative actions.
+                    (":durative-action", ":durative-actions"),
+                    (":constraints", ":constraints"),
+                ]
+        );
     }
 
     #[test]
