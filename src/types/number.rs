@@ -8,7 +8,7 @@ use std::num::ParseFloatError;
 use std::ops::Deref;
 use std::str::FromStr;
 
-type UnderlyingType = f32;
+type UnderlyingType = f64;
 
 /// A number.
 ///
@@ -21,7 +21,7 @@ type UnderlyingType = f32;
 /// assert_eq!(number, 42.0);
 ///
 /// // Only finite values are allowed.
-/// assert!(Number::try_new(f32::NAN).is_err());
+/// assert!(Number::try_new(f64::NAN).is_err());
 /// assert!(panic::catch_unwind(|| Number::from(f32::NAN)).is_err());
 /// ```
 ///
@@ -95,7 +95,7 @@ impl Eq for Number {}
 
 impl<I: Into<Number> + Copy> PartialEq<I> for Number {
     fn eq(&self, other: &I) -> bool {
-        // Plain `f32` equality: `-0.0 == 0.0`, as in `Ord` and `Hash`.
+        // Plain `f64` equality: `-0.0 == 0.0`, as in `Ord` and `Hash`.
         self.0 == (*other).into().0
     }
 }
@@ -120,9 +120,9 @@ impl Hash for Number {
     fn hash<H: Hasher>(&self, state: &mut H) {
         debug_assert!(self.0.is_finite());
         if self.0 == 0.0 || self.0 == -0.0 {
-            state.write_u32(0)
+            state.write_u64(0)
         } else {
-            state.write_u32(self.0.to_bits())
+            state.write_u64(self.0.to_bits())
         }
     }
 }
@@ -188,7 +188,7 @@ impl From<UnderlyingType> for Number {
     }
 }
 
-impl From<f64> for Number {
+impl From<f32> for Number {
     /// Constructs a new number from the provided value.
     ///
     /// ## Arguments
@@ -200,8 +200,8 @@ impl From<f64> for Number {
     /// ## Panics
     /// Panics if the provided `value` is not finite. Use [`Number::try_new`]
     /// if you need the function to not panic.
-    fn from(value: f64) -> Self {
-        Number::new(value as UnderlyingType)
+    fn from(value: f32) -> Self {
+        Number::new(value.into())
     }
 }
 
@@ -242,14 +242,14 @@ mod tests {
     fn try_new_finite_ok() {
         assert!(Number::try_new(0.0).is_ok());
         assert!(Number::try_new(-1.5).is_ok());
-        assert!(Number::try_new(f32::MAX).is_ok());
-        assert!(Number::try_new(f32::MIN).is_ok());
+        assert!(Number::try_new(f64::MAX).is_ok());
+        assert!(Number::try_new(f64::MIN).is_ok());
     }
 
     #[test]
     fn try_new_nan_err() {
         assert!(matches!(
-            Number::try_new(f32::NAN),
+            Number::try_new(f64::NAN),
             Err(NumberError::NotFinite)
         ));
     }
@@ -257,11 +257,11 @@ mod tests {
     #[test]
     fn try_new_inf_err() {
         assert!(matches!(
-            Number::try_new(f32::INFINITY),
+            Number::try_new(f64::INFINITY),
             Err(NumberError::NotFinite)
         ));
         assert!(matches!(
-            Number::try_new(f32::NEG_INFINITY),
+            Number::try_new(f64::NEG_INFINITY),
             Err(NumberError::NotFinite)
         ));
     }
@@ -286,7 +286,7 @@ mod tests {
 
     #[test]
     fn error_display_invalid_format() {
-        let err = NumberError::InvalidFormat("abc".parse::<f32>().unwrap_err());
+        let err = NumberError::InvalidFormat("abc".parse::<f64>().unwrap_err());
         let msg = format!("{err}");
         assert!(msg.contains("Invalid format"));
     }
@@ -390,18 +390,26 @@ mod tests {
     #[test]
     fn deref_works() {
         let n = Number::from(7i32);
-        let val: &f32 = &n;
+        let val: &f64 = &n;
         assert_eq!(*val, 7.0);
     }
 
     #[test]
     fn new_nan_panics() {
-        assert!(panic::catch_unwind(|| Number::new(f32::NAN)).is_err());
+        assert!(panic::catch_unwind(|| Number::new(f64::NAN)).is_err());
     }
 
     #[test]
     fn from_f32_nan_panics() {
         assert!(panic::catch_unwind(|| Number::from(f32::NAN)).is_err());
+    }
+
+    #[test]
+    fn from_f64_keeps_range_and_whole_number_precision() {
+        // As f32, 1e300 overflowed to infinity and panicked; 16777217 became 16777216.
+        assert_eq!(*Number::from(1e300), 1e300);
+        assert_eq!(*Number::from(16_777_217), 16_777_217.0);
+        assert_eq!(*"16777217".parse::<Number>().unwrap(), 16_777_217.0);
     }
 
     #[test]

@@ -3,7 +3,7 @@
 use nom::character::complete::{char, digit1};
 use nom::combinator::recognize;
 use nom::multi::many_m_n;
-use nom::number::complete::float;
+use nom::number::complete::double;
 use nom::Parser;
 
 use crate::parsers::{failure_at, ParseResult, Span};
@@ -26,7 +26,7 @@ use crate::types::Number;
 pub fn parse_number<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Number> {
     let input = input.into();
     let pattern = recognize((digit1, many_m_n(0, 1, parse_decimal)));
-    let (rest, value) = pattern.and_then(float).parse(input)?;
+    let (rest, value) = pattern.and_then(double).parse(input)?;
     // Too many digits overflow to infinity, which `Number` rejects. A `Failure`, not an
     // `Error`: no other token starts with a digit, and backtracking would lose the reason.
     match Number::try_new(value) {
@@ -71,7 +71,7 @@ mod tests {
 
     #[test]
     fn too_many_digits_is_an_error_not_a_panic() {
-        let error = Number::from_str(&"9".repeat(50)).unwrap_err();
+        let error = Number::from_str(&"9".repeat(400)).unwrap_err();
         assert_eq!(error.reason(), Some("number out of range"));
         assert_eq!(
             (error.offset(), error.found().map(|f| &f[..3])),
