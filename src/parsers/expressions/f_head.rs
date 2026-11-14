@@ -25,22 +25,23 @@ crate::parsers::impl_parser!(FunctionHead => parse_f_head);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(FunctionHead::from_str("fun-sym")
+        check!(FunctionHead::from_str("fun-sym")
             .is_value(FunctionHead::new(FunctionSymbol::string("fun-sym"))));
 
-        assert!(FunctionHead::from_str("(fun-sym)")
+        check!(FunctionHead::from_str("(fun-sym)")
             .is_value(FunctionHead::new(FunctionSymbol::string("fun-sym"))));
 
         // Whitespace before `)` gives the same head as `(fun-sym)` (#119).
-        assert!(FunctionHead::from_str("(fun-sym )")
+        check!(FunctionHead::from_str("(fun-sym )")
             .is_value(FunctionHead::new(FunctionSymbol::string("fun-sym"))));
 
-        assert!(
+        check!(
             FunctionHead::from_str("(fun-sym term)").is_value(FunctionHead::with_terms(
                 FunctionSymbol::string("fun-sym"),
                 [Term::Name("term".into())]
@@ -50,13 +51,13 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        assert!(FunctionHead::from_str("fun-sym")
+        check!(FunctionHead::from_str("fun-sym")
             .is_value(FunctionHead::new(FunctionSymbol::string("fun-sym"))));
 
-        assert!(FunctionHead::from_str("(fun-sym)")
+        check!(FunctionHead::from_str("(fun-sym)")
             .is_value(FunctionHead::new(FunctionSymbol::string("fun-sym"))));
 
-        assert!(
+        check!(
             FunctionHead::from_str("(fun-sym term)").is_value(FunctionHead::with_terms(
                 FunctionSymbol::string("fun-sym"),
                 [Term::Name("term".into())]

@@ -7,6 +7,8 @@
 //!
 //! Set `UPDATE_SNAPSHOTS=1` to rewrite the snapshots after an intended change.
 
+use assert2::check;
+
 use pddl::{Domain, Parser, PddlFile, Pretty, Problem};
 use std::fs;
 use std::path::Path;
@@ -20,14 +22,17 @@ fn print_and_round_trip(name: &str, file: &PddlFile) -> String {
         let printed = domain.pretty(WIDTH).to_string();
         let reparsed = Domain::from_str(&printed)
             .unwrap_or_else(|e| panic!("{name}: printed domain does not parse: {e}\n{printed}"));
-        assert_eq!(&reparsed, domain, "{name}: domain round trip\n{printed}");
+        check!(&reparsed == domain, "{name}: domain round trip\n{printed}");
         parts.push(printed);
     }
     for problem in &file.problems {
         let printed = problem.pretty(WIDTH).to_string();
         let reparsed = Problem::from_str(&printed)
             .unwrap_or_else(|e| panic!("{name}: printed problem does not parse: {e}\n{printed}"));
-        assert_eq!(&reparsed, problem, "{name}: problem round trip\n{printed}");
+        check!(
+            &reparsed == problem,
+            "{name}: problem round trip\n{printed}"
+        );
         parts.push(printed);
     }
     parts.join("\n\n") + "\n"
@@ -74,8 +79,8 @@ fn corpus_matches_snapshots() {
             checked += 1;
         }
     }
-    assert_eq!(checked, 89, "expected 86 VHPOP and 3 Potoroo files");
-    assert!(
+    check!(checked == 89, "expected 86 VHPOP and 3 Potoroo files");
+    check!(
         mismatches.is_empty(),
         "{}\nRun with UPDATE_SNAPSHOTS=1 to accept, then review the diff.",
         mismatches.join("\n")

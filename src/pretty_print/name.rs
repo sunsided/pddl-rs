@@ -32,22 +32,23 @@ mod tests {
     use super::*;
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
+    use assert2::check;
 
     #[test]
     fn name_works() {
         let x = Name::new("name");
-        assert_eq!(prettify!(x, 10), "name");
+        check!(prettify!(x, 10) == "name");
     }
 
     #[test]
     fn variable_works() {
         let x = Variable::from("var");
-        assert_eq!(prettify!(x, 10), "?var");
+        check!(prettify!(x, 10) == "?var");
     }
 
     #[test]
     fn function_symbol_works() {
         let x = FunctionSymbol::from("fun-sym");
-        assert_eq!(prettify!(x, 10), "fun-sym");
+        check!(prettify!(x, 10) == "fun-sym");
     }
 }

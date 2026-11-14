@@ -250,16 +250,17 @@ pub type PrefConGDs = PreferenceConstraintGoalDescriptions;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert2::check;
 
     #[test]
     fn pref_con_gd_is_empty() {
         let gds = PreferenceConstraintGoalDescriptions::default();
-        assert!(gds.is_empty());
+        check!(gds.is_empty());
 
         let inner = ConstraintGoalDescription::default();
         let goal = PreferenceConstraintGoalDescription::goal(inner);
         let list = PreferenceConstraintGoalDescriptions::new(vec![goal]);
-        assert!(!list.is_empty());
+        check!(!list.is_empty());
     }
 
     #[test]
@@ -267,64 +268,64 @@ mod tests {
         let inner = ConstraintGoalDescription::default();
         let goal = PreferenceConstraintGoalDescription::goal(inner);
         let list = PreferenceConstraintGoalDescriptions::new(vec![goal.clone()]);
-        assert_eq!(list.try_get_single(), Some(goal));
+        check!(list.try_get_single() == Some(goal));
 
         let empty = PreferenceConstraintGoalDescriptions::default();
-        assert!(empty.try_get_single().is_none());
+        check!(empty.try_get_single().is_none());
     }
 
     #[test]
     fn pref_con_gd_is_empty_variants() {
         let inner = ConstraintGoalDescription::default();
         let goal = PreferenceConstraintGoalDescription::goal(inner.clone());
-        assert!(goal.is_empty());
+        check!(goal.is_empty());
 
         let pref = PreferenceConstraintGoalDescription::preference(None, inner.clone());
-        assert!(pref.is_empty());
+        check!(pref.is_empty());
 
         let forall = PreferenceConstraintGoalDescription::r#forall(
             crate::types::TypedVariables::default(),
             PreferenceConstraintGoalDescriptions::default(),
         );
-        assert!(forall.is_empty());
+        check!(forall.is_empty());
     }
 
     #[test]
     fn pref_con_gd_from_variants() {
         let inner = ConstraintGoalDescription::default();
         let from_inner: PreferenceConstraintGoalDescriptions = inner.into();
-        assert_eq!(from_inner.len(), 1);
+        check!(from_inner.len() == 1);
 
         let single =
             PreferenceConstraintGoalDescription::Goal(ConstraintGoalDescription::default());
         let from_single: PreferenceConstraintGoalDescriptions = single.into();
-        assert_eq!(from_single.len(), 1);
+        check!(from_single.len() == 1);
 
         let vec = vec![PreferenceConstraintGoalDescription::goal(
             ConstraintGoalDescription::default(),
         )];
         let from_vec: PreferenceConstraintGoalDescriptions = vec.into();
-        assert_eq!(from_vec.len(), 1);
+        check!(from_vec.len() == 1);
 
         let from_some: PreferenceConstraintGoalDescriptions = Some(
             PreferenceConstraintGoalDescription::goal(ConstraintGoalDescription::default()),
         )
         .into();
-        assert_eq!(from_some.len(), 1);
+        check!(from_some.len() == 1);
 
         let from_none: PreferenceConstraintGoalDescriptions =
             Option::<PreferenceConstraintGoalDescription>::None.into();
-        assert!(from_none.is_empty());
+        check!(from_none.is_empty());
 
         let from_some_list: PreferenceConstraintGoalDescriptions = Some(
             PreferenceConstraintGoalDescriptions::goal(ConstraintGoalDescription::default()),
         )
         .into();
-        assert_eq!(from_some_list.len(), 1);
+        check!(from_some_list.len() == 1);
 
         let from_none_list: PreferenceConstraintGoalDescriptions =
             Option::<PreferenceConstraintGoalDescriptions>::None.into();
-        assert!(from_none_list.is_empty());
+        check!(from_none_list.is_empty());
     }
 
     #[test]
@@ -332,7 +333,7 @@ mod tests {
         let goal = PreferenceConstraintGoalDescription::goal(ConstraintGoalDescription::default());
         let list = PreferenceConstraintGoalDescriptions::new(vec![goal.clone()]);
         let result: Result<PreferenceConstraintGoalDescription, ()> = list.try_into();
-        assert!(result.is_ok());
+        check!(result.is_ok());
     }
 
     #[test]
@@ -368,8 +369,8 @@ mod tests {
         let goal = PreferenceConstraintGoalDescription::goal(inner);
         let list = PreferenceConstraintGoalDescriptions::new(vec![goal.clone()]);
         let slice: &[PreferenceConstraintGoalDescription] = &list;
-        assert_eq!(slice.len(), 1);
-        assert_eq!(&slice[0], &goal);
+        check!(slice.len() == 1);
+        check!(&slice[0] == &goal);
     }
 
     #[test]
@@ -378,7 +379,7 @@ mod tests {
         let goal = PreferenceConstraintGoalDescription::goal(inner);
         let list = PreferenceConstraintGoalDescriptions::new(vec![goal]);
         let slice: &[PreferenceConstraintGoalDescription] = list.as_ref();
-        assert_eq!(slice.len(), 1);
+        check!(slice.len() == 1);
     }
 
     #[test]
@@ -387,7 +388,7 @@ mod tests {
         let goal = PreferenceConstraintGoalDescription::goal(inner.clone());
         let list = PreferenceConstraintGoalDescriptions::new(vec![goal.clone()]);
         let collected: Vec<_> = list.into_iter().collect();
-        assert_eq!(collected, vec![goal]);
+        check!(collected == vec![goal]);
     }
 
     #[test]
@@ -396,7 +397,7 @@ mod tests {
         let goal = PreferenceConstraintGoalDescription::goal(inner.clone());
         let list = PreferenceConstraintGoalDescriptions::new(vec![goal.clone()]);
         let vec: Vec<PreferenceConstraintGoalDescription> = list.into();
-        assert_eq!(vec, vec![goal]);
+        check!(vec == vec![goal]);
     }
 
     #[test]
@@ -405,19 +406,19 @@ mod tests {
         let goal = PreferenceConstraintGoalDescription::goal(inner.clone());
         let from_iter: PreferenceConstraintGoalDescriptions =
             vec![goal.clone()].into_iter().collect();
-        assert_eq!(from_iter.len(), 1);
-        assert_eq!(from_iter.try_get_single(), Some(goal));
+        check!(from_iter.len() == 1);
+        check!(from_iter.try_get_single() == Some(goal));
     }
 
     #[test]
     fn pre_con_gds_len() {
         let list = PreferenceConstraintGoalDescriptions::default();
-        assert_eq!(list.len(), 0);
+        check!(list.len() == 0);
 
         let inner = ConstraintGoalDescription::default();
         let goal = PreferenceConstraintGoalDescription::goal(inner);
         let list = PreferenceConstraintGoalDescriptions::new(vec![goal]);
-        assert_eq!(list.len(), 1);
+        check!(list.len() == 1);
     }
 
     #[test]
@@ -428,6 +429,6 @@ mod tests {
         let goal2 = PreferenceConstraintGoalDescription::goal(inner2);
         let list = PreferenceConstraintGoalDescriptions::new(vec![goal1.clone(), goal2.clone()]);
         let collected: Vec<_> = list.iter().cloned().collect();
-        assert_eq!(collected, vec![goal1, goal2]);
+        check!(collected == vec![goal1, goal2]);
     }
 }

@@ -79,14 +79,15 @@ impl FromIterator<SimpleDurationConstraint> for DurationConstraint {
 mod tests {
     use super::*;
     use crate::Parser;
+    use assert2::check;
 
     #[test]
     fn flatten_with_single_element_works() {
         let dc_a = SimpleDurationConstraint::from_str("(>= ?duration 1.23)").unwrap();
 
         let mut iter = DurationConstraint::new(dc_a).into_iter();
-        assert!(iter.next().is_some());
-        assert!(iter.next().is_none());
+        check!(iter.next().is_some());
+        check!(iter.next().is_none());
     }
 
     #[test]
@@ -95,8 +96,8 @@ mod tests {
         let dc_b = SimpleDurationConstraint::from_str("(at end (<= ?duration 1.23))").unwrap();
 
         let mut iter = DurationConstraint::from_iter([dc_a, dc_b]).into_iter();
-        assert!(iter.next().is_some());
-        assert!(iter.next().is_some());
-        assert!(iter.next().is_none());
+        check!(iter.next().is_some());
+        check!(iter.next().is_some());
+        check!(iter.next().is_none());
     }
 }

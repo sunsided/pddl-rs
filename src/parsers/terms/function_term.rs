@@ -19,28 +19,29 @@ crate::parsers::impl_parser!(FunctionTerm => parse_function_term);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(FunctionTerm::from_str("(fun-sym)")
+        check!(FunctionTerm::from_str("(fun-sym)")
             .is_value(FunctionTerm::new("fun-sym".into(), vec![])));
 
         let x = Term::Name("x".into());
-        assert!(FunctionTerm::from_str("(fun-sym x)")
+        check!(FunctionTerm::from_str("(fun-sym x)")
             .is_value(FunctionTerm::new("fun-sym".into(), vec![x])));
 
         let x = Term::Name("x".into());
         let y = Term::Variable("y".into());
-        assert!(FunctionTerm::from_str("(fun-sym ?y x)")
+        check!(FunctionTerm::from_str("(fun-sym ?y x)")
             .is_value(FunctionTerm::new("fun-sym".into(), vec![y, x])));
 
         let x = Term::Name("x".into());
         let y = Term::Variable("y".into());
         let a = Term::Name("a".into());
         let ft = Term::Function(FunctionTerm::new(FunctionSymbol::from("fn"), vec![a]));
-        assert!(FunctionTerm::from_str("(fun-sym ?y x (fn a))")
+        check!(FunctionTerm::from_str("(fun-sym ?y x (fn a))")
             .is_value(FunctionTerm::new("fun-sym".into(), vec![y, x, ft])));
     }
 
@@ -48,30 +49,30 @@ mod tests {
     fn whitespace_before_closing_paren() {
         for input in ["(fun-sym x )", "(fun-sym x\n  )", "(fun-sym x ; c\n)"] {
             let x = Term::Name("x".into());
-            assert!(FunctionTerm::from_str(input)
+            check!(FunctionTerm::from_str(input)
                 .is_value(FunctionTerm::new("fun-sym".into(), vec![x])));
         }
     }
 
     #[test]
     fn doc_example_0() {
-        assert!(FunctionTerm::from_str("(fun-sym)")
+        check!(FunctionTerm::from_str("(fun-sym)")
             .is_value(FunctionTerm::new("fun-sym".into(), vec![])));
 
         let x = Term::Name("x".into());
-        assert!(FunctionTerm::from_str("(fun-sym x)")
+        check!(FunctionTerm::from_str("(fun-sym x)")
             .is_value(FunctionTerm::new("fun-sym".into(), vec![x])));
 
         let x = Term::Name("x".into());
         let y = Term::Variable("y".into());
-        assert!(FunctionTerm::from_str("(fun-sym ?y x)")
+        check!(FunctionTerm::from_str("(fun-sym ?y x)")
             .is_value(FunctionTerm::new("fun-sym".into(), vec![y, x])));
 
         let x = Term::Name("x".into());
         let y = Term::Variable("y".into());
         let a = Term::Name("a".into());
         let ft = Term::Function(FunctionTerm::new(FunctionSymbol::from("fn"), vec![a]));
-        assert!(FunctionTerm::from_str("(fun-sym ?y x (fn a))")
+        check!(FunctionTerm::from_str("(fun-sym ?y x (fn a))")
             .is_value(FunctionTerm::new("fun-sym".into(), vec![y, x, ft])));
     }
 }

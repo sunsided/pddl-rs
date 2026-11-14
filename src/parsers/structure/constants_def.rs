@@ -17,13 +17,14 @@ crate::parsers::impl_parser!(Constants => parse_constants_def);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
         let input = "(:constants B P D - physob)";
-        assert!(
+        check!(
             Constants::from_str(input).is_value(Constants::new(TypedList::from_iter([
                 Name::from("B").to_typed("physob"),
                 Name::from("P").to_typed("physob"),
@@ -35,7 +36,7 @@ mod tests {
     #[test]
     fn doc_example_0() {
         let input = "(:constants B P D - physob)";
-        assert!(
+        check!(
             Constants::from_str(input).is_value(Constants::new(TypedList::from_iter([
                 Name::from("B").to_typed("physob"),
                 Name::from("P").to_typed("physob"),

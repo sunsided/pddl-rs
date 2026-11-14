@@ -18,17 +18,18 @@ mod tests {
     use super::*;
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
+    use assert2::check;
 
     #[test]
     fn number_works() {
         let x = Number::from(42);
-        assert_eq!(prettify!(x, 10), "42");
+        check!(prettify!(x, 10) == "42");
     }
 
     #[test]
     fn float_number_works() {
         let x = Number::from(2.71);
-        assert_eq!(prettify!(x, 10), "2.71");
+        check!(prettify!(x, 10) == "2.71");
     }
 
     #[test]
@@ -36,8 +37,8 @@ mod tests {
         // PDDL numbers have no exponent syntax, so the long form is the only valid one.
         let x = Number::from(1e300);
         let text = prettify!(x, 10);
-        assert_eq!(text.len(), 301);
-        assert!(text.bytes().all(|b| b.is_ascii_digit()));
-        assert_eq!(text.parse::<Number>().unwrap(), x);
+        check!(text.len() == 301);
+        check!(text.bytes().all(|b| b.is_ascii_digit()));
+        check!((text.parse::<Number>().unwrap()) == x);
     }
 }

@@ -23,11 +23,12 @@ crate::parsers::impl_parser!(TimeSpecifier => parse_time_specifier);
 mod tests {
     use crate::parsers::UnwrapValue;
     use crate::{Parser, TimeSpecifier};
+    use assert2::check;
 
     #[test]
     fn test_parse() {
-        assert!(TimeSpecifier::from_str("END").is_value(TimeSpecifier::End));
-        assert!(TimeSpecifier::from_str("ending").is_err());
-        assert!(TimeSpecifier::from_str("(END)").is_err());
+        check!(TimeSpecifier::from_str("END").is_value(TimeSpecifier::End));
+        check!(TimeSpecifier::from_str("ending").is_err());
+        check!(TimeSpecifier::from_str("(END)").is_err());
     }
 }

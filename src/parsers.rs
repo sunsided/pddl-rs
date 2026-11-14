@@ -190,6 +190,7 @@ pub(crate) use impl_parser;
 #[cfg(test)]
 mod tests {
     use crate::{BasicFunctionTerm, Domain, Parser};
+    use assert2::check;
 
     const DOMAIN: &str = "(define (domain d) (:requirements :strips) (:predicates (p)))";
 
@@ -197,37 +198,37 @@ mod tests {
     /// variant as the type's `TryFrom<&str>`, and consume it completely.
     #[test]
     fn keyword_parsers_agree_with_try_from() {
-        macro_rules! check {
+        macro_rules! check_keywords {
             ($ty:ty, $names:path: $($name:ident),+ $(,)?) => {{
                 use $names as names;
                 $(
                     let expected = <$ty>::try_from(names::$name).unwrap();
                     for input in [names::$name.to_string(), names::$name.to_ascii_uppercase()] {
                         let parsed = <$ty as Parser>::from_str(&input);
-                        assert_eq!(parsed, Ok(expected.clone()), "{input}");
+                        check!(parsed == Ok(expected.clone()), "{input}");
                     }
                 )+
             }};
         }
         use crate::types::*;
-        check!(AssignOp, crate::types::expressions::assign_op::names:
+        check_keywords!(AssignOp, crate::types::expressions::assign_op::names:
             CHANGE, ASSIGN, SCALE_UP, SCALE_DOWN, INCREASE, DECREASE);
-        check!(TimedAssignOperator, crate::types::durative::assign_op_t::names:
+        check_keywords!(TimedAssignOperator, crate::types::durative::assign_op_t::names:
             INCREASE, DECREASE);
-        check!(BinaryOp, crate::types::expressions::binary_op::names:
+        check_keywords!(BinaryOp, crate::types::expressions::binary_op::names:
             MULTIPLICATION, ADDITION, SUBTRACTION, DIVISION);
-        check!(BinaryComparison, crate::types::expressions::binary_comp::names:
+        check_keywords!(BinaryComparison, crate::types::expressions::binary_comp::names:
             GREATER_THAN, LESS_THAN, EQUAL, GREATER_THAN_OR_EQUAL, LESS_THAN_OR_EQUAL);
-        check!(DurationOperator, crate::types::durative::d_op::names:
+        check_keywords!(DurationOperator, crate::types::durative::d_op::names:
             EQUAL, GREATER_OR_EQUAL, LESS_THAN_OR_EQUAL);
-        check!(Interval, crate::types::durative::interval::names: ALL);
-        check!(MultiOp, crate::types::expressions::multi_op::names:
+        check_keywords!(Interval, crate::types::durative::interval::names: ALL);
+        check_keywords!(MultiOp, crate::types::expressions::multi_op::names:
             MULTIPLICATION, ADDITION);
-        check!(Optimization, crate::types::expressions::optimization::names:
+        check_keywords!(Optimization, crate::types::expressions::optimization::names:
             MINIMIZE, MAXIMIZE);
-        check!(TimeSpecifier, crate::types::durative::time_specifier::names:
+        check_keywords!(TimeSpecifier, crate::types::durative::time_specifier::names:
             START, END);
-        check!(Requirement, crate::types::structure::requirement::names:
+        check_keywords!(Requirement, crate::types::structure::requirement::names:
             STRIPS, TYPING, NEGATIVE_PRECONDITIONS, DISJUNCTIVE_PRECONDITIONS, EQUALITY,
             EXISTENTIAL_PRECONDITIONS, UNIVERSAL_PRECONDITIONS, QUANTIFIED_PRECONDITIONS,
             CONDITIONAL_EFFECTS, FLUENTS, NUMERIC_FLUENTS, OBJECT_FLUENTS, ADL,
@@ -238,41 +239,41 @@ mod tests {
     #[test]
     fn test_from_str() {
         let value = BasicFunctionTerm::from_str("abcde").unwrap();
-        assert_eq!(value, BasicFunctionTerm::new("abcde".into(), []));
+        check!(value == BasicFunctionTerm::new("abcde".into(), []));
     }
 
     #[test]
     fn from_str_allows_trailing_whitespace_and_comments() {
         let input = format!("{DOMAIN}\n  ; trailing comment\n; another\n\n");
-        assert!(Domain::from_str(&input).is_ok());
+        check!(Domain::from_str(&input).is_ok());
     }
 
     #[test]
     fn from_str_rejects_trailing_input() {
         let input = format!("{DOMAIN}\n)))garbage");
         let error = Domain::from_str(&input).unwrap_err();
-        assert_eq!((error.line(), error.column()), (2, 1));
-        assert_eq!(error.found(), Some(")))garbage"));
+        check!((error.line(), error.column()) == (2, 1));
+        check!(error.found() == Some(")))garbage"));
     }
 
     #[test]
     fn from_str_rejects_empty_input() {
         let error = Domain::from_str("  ; nothing\n").unwrap_err();
-        assert_eq!(error.offset(), 12);
-        assert_eq!(error.found(), None);
+        check!(error.offset() == 12);
+        check!(error.found() == None);
     }
 
     #[test]
     fn from_str_rejects_a_stray_closing_parenthesis() {
         let error = BasicFunctionTerm::from_str("abc)").unwrap_err();
-        assert_eq!(error.span(), 3..4);
+        check!(error.span() == (3..4));
     }
 
     #[test]
     fn from_str_rejects_a_second_define_block() {
         let input = format!("{DOMAIN}\n(define (problem q) (:domain d))");
         let error = Domain::from_str(&input).unwrap_err();
-        assert_eq!(Some(error.offset()), input.find("(define (problem"));
-        assert!(error.found().unwrap().starts_with("(define (problem q)"));
+        check!(Some(error.offset()) == input.find("(define (problem"));
+        check!(error.found().unwrap().starts_with("(define (problem q)"));
     }
 }

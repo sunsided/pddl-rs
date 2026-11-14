@@ -172,13 +172,14 @@ impl PartialEq<&str> for AssignOp {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert2::check;
 
     #[test]
     fn str_equals_works() {
-        assert_eq!(AssignOp::Assign, "assign");
-        assert_eq!(AssignOp::ScaleUp, "scale-up");
-        assert_eq!(AssignOp::ScaleDown, "scale-down");
-        assert_eq!(AssignOp::Increase, "increase");
-        assert_eq!(AssignOp::Decrease, "decrease");
+        check!(AssignOp::Assign == "assign");
+        check!(AssignOp::ScaleUp == "scale-up");
+        check!(AssignOp::ScaleDown == "scale-down");
+        check!(AssignOp::Increase == "increase");
+        check!(AssignOp::Decrease == "decrease");
     }
 }

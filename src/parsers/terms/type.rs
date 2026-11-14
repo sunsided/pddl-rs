@@ -19,28 +19,29 @@ crate::parsers::impl_parser!(Type => parse_type);
 mod tests {
     use crate::parsers::UnwrapValue;
     use crate::{Parser, PrimitiveType, Type};
+    use assert2::check;
 
     #[test]
     fn explicit_works() {
-        assert!(Type::from_str("object").is_value(Type::Exactly("object".into())));
+        check!(Type::from_str("object").is_value(Type::Exactly("object".into())));
     }
 
     #[test]
     fn either_works() {
-        assert!(
+        check!(
             Type::from_str("(either object number)").is_value(Type::EitherOf(vec![
                 PrimitiveType::from("object"),
                 PrimitiveType::from("number")
             ]))
         );
-        assert!(Type::from_str("(EITHER object number)")
+        check!(Type::from_str("(EITHER object number)")
             .is_value(Type::from_iter(["object", "number"])));
     }
 
     #[test]
     fn test_invalid() {
-        assert!(Type::from_str("()").is_err());
-        assert!(Type::from_str("(either)").is_err());
-        assert!(Type::from_str("(object)").is_err());
+        check!(Type::from_str("()").is_err());
+        check!(Type::from_str("(either)").is_err());
+        check!(Type::from_str("(object)").is_err());
     }
 }

@@ -342,44 +342,30 @@ impl PartialEq<&str> for Requirement {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert2::check;
 
     #[test]
     fn str_equals_works() {
-        assert_eq!(Requirement::Strips, ":strips");
-        assert_eq!(Requirement::Typing, ":typing");
-        assert_eq!(
-            Requirement::NegativePreconditions,
-            ":negative-preconditions"
-        );
-        assert_eq!(
-            Requirement::DisjunctivePreconditions,
-            ":disjunctive-preconditions"
-        );
-        assert_eq!(Requirement::Equality, ":equality");
-        assert_eq!(
-            Requirement::ExistentialPreconditions,
-            ":existential-preconditions"
-        );
-        assert_eq!(
-            Requirement::UniversalPreconditions,
-            ":universal-preconditions"
-        );
-        assert_eq!(
-            Requirement::QuantifiedPreconditions,
-            ":quantified-preconditions"
-        );
-        assert_eq!(Requirement::ConditionalEffects, ":conditional-effects");
-        assert_eq!(Requirement::Fluents, ":fluents");
-        assert_eq!(Requirement::NumericFluents, ":numeric-fluents");
-        assert_eq!(Requirement::Adl, ":adl");
-        assert_eq!(Requirement::DurativeActions, ":durative-actions");
-        assert_eq!(Requirement::DurationInequalities, ":duration-inequalities");
-        assert_eq!(Requirement::ContinuousEffects, ":continuous-effects");
-        assert_eq!(Requirement::DerivedPredicates, ":derived-predicates");
-        assert_eq!(Requirement::TimedInitialLiterals, ":timed-initial-literals");
-        assert_eq!(Requirement::Preferences, ":preferences");
-        assert_eq!(Requirement::Constraints, ":constraints");
-        assert_eq!(Requirement::ActionCosts, ":action-costs");
+        check!(Requirement::Strips == ":strips");
+        check!(Requirement::Typing == ":typing");
+        check!(Requirement::NegativePreconditions == ":negative-preconditions");
+        check!(Requirement::DisjunctivePreconditions == ":disjunctive-preconditions");
+        check!(Requirement::Equality == ":equality");
+        check!(Requirement::ExistentialPreconditions == ":existential-preconditions");
+        check!(Requirement::UniversalPreconditions == ":universal-preconditions");
+        check!(Requirement::QuantifiedPreconditions == ":quantified-preconditions");
+        check!(Requirement::ConditionalEffects == ":conditional-effects");
+        check!(Requirement::Fluents == ":fluents");
+        check!(Requirement::NumericFluents == ":numeric-fluents");
+        check!(Requirement::Adl == ":adl");
+        check!(Requirement::DurativeActions == ":durative-actions");
+        check!(Requirement::DurationInequalities == ":duration-inequalities");
+        check!(Requirement::ContinuousEffects == ":continuous-effects");
+        check!(Requirement::DerivedPredicates == ":derived-predicates");
+        check!(Requirement::TimedInitialLiterals == ":timed-initial-literals");
+        check!(Requirement::Preferences == ":preferences");
+        check!(Requirement::Constraints == ":constraints");
+        check!(Requirement::ActionCosts == ":action-costs");
     }
 
     #[test]
@@ -395,17 +381,17 @@ mod tests {
             Requirement::UniversalPreconditions,
             Requirement::ConditionalEffects,
         ] {
-            assert!(Requirement::Adl.contains(req));
+            check!(Requirement::Adl.contains(req));
         }
-        assert!(!Requirement::Adl.contains(Requirement::ContinuousEffects));
+        check!(!Requirement::Adl.contains(Requirement::ContinuousEffects));
 
         // `contains` agrees with `expand`.
         for req in Requirement::Adl.expand() {
-            assert!(Requirement::Adl.contains(req), "{req:?}");
+            check!(Requirement::Adl.contains(req), "{req:?}");
         }
 
         // Check for self.
-        assert!(Requirement::Adl.contains(Requirement::Adl));
+        check!(Requirement::Adl.contains(Requirement::Adl));
     }
 
     #[test]
@@ -414,20 +400,20 @@ mod tests {
             Requirement::ExistentialPreconditions,
             Requirement::UniversalPreconditions,
         ] {
-            assert!(Requirement::QuantifiedPreconditions.contains(req));
+            check!(Requirement::QuantifiedPreconditions.contains(req));
         }
 
         // Check for self.
-        assert!(Requirement::QuantifiedPreconditions.contains(Requirement::QuantifiedPreconditions));
+        check!(Requirement::QuantifiedPreconditions.contains(Requirement::QuantifiedPreconditions));
     }
 
     #[test]
     fn contains_fluents_works() {
         for req in [Requirement::NumericFluents, Requirement::ObjectFluents] {
-            assert!(Requirement::Fluents.contains(req));
+            check!(Requirement::Fluents.contains(req));
         }
 
         // Check for self.
-        assert!(Requirement::Fluents.contains(Requirement::Fluents));
+        check!(Requirement::Fluents.contains(Requirement::Fluents));
     }
 }

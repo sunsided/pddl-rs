@@ -128,17 +128,18 @@ mod tests {
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
     use crate::{Name, ToTyped, Type, Variable};
+    use assert2::check;
 
     #[test]
     fn typed_object_default() {
         let x = Name::new("x").to_typed(Type::OBJECT);
-        assert_eq!(prettify!(x, 10), "x");
+        check!(prettify!(x, 10) == "x");
     }
 
     #[test]
     fn typed_explicit() {
         let x = Name::new("x").to_typed(Type::exactly("letter"));
-        assert_eq!(prettify!(x, 20), "x - letter");
+        check!(prettify!(x, 20) == "x - letter");
     }
 
     #[test]
@@ -148,7 +149,7 @@ mod tests {
             Name::new("y").to_typed(Type::OBJECT),
             Name::new("z").to_typed(Type::OBJECT),
         ]);
-        assert_eq!(prettify!(list, 20), "x y z");
+        check!(prettify!(list, 20) == "x y z");
     }
 
     #[test]
@@ -158,7 +159,7 @@ mod tests {
             Name::new("y").to_typed(Type::exactly("letter")),
             Name::new("z").to_typed(Type::exactly("letter")),
         ]);
-        assert_eq!(prettify!(list, 30), "x y z - letter");
+        check!(prettify!(list, 30) == "x y z - letter");
     }
 
     #[test]
@@ -168,7 +169,7 @@ mod tests {
             Name::new("y").to_typed(Type::exactly("car")),
             Name::new("z").to_typed(Type::exactly("letter")),
         ]);
-        assert_eq!(prettify!(list, 30), "x - letter y - car z - letter");
+        check!(prettify!(list, 30) == "x - letter y - car z - letter");
     }
 
     #[test]
@@ -178,7 +179,7 @@ mod tests {
             Name::new("y").to_typed(Type::OBJECT),
             Name::new("z").to_typed(Type::OBJECT),
         ]);
-        assert_eq!(prettify!(list, 30), "x - letter y z");
+        check!(prettify!(list, 30) == "x - letter y z");
     }
 
     #[test]
@@ -188,20 +189,20 @@ mod tests {
             Variable::string("y").to_typed(Type::OBJECT),
             Variable::string("z").to_typed(Type::exactly("letter")),
         ]);
-        assert_eq!(prettify!(list, 30), "?x ?y - object ?z - letter");
+        check!(prettify!(list, 30) == "?x ?y - object ?z - letter");
     }
 
     #[test]
     fn typed_list_empty_works() {
         let list = TypedList::<Name>::new(vec![]);
-        assert_eq!(prettify!(list, 20), "");
+        check!(prettify!(list, 20) == "");
     }
 
     #[test]
     fn function_typed_number_default() {
         use crate::{FunctionSymbol, FunctionTyped};
         let ft = FunctionTyped::new(FunctionSymbol::from("fuel"), crate::FunctionType::NUMBER);
-        assert_eq!(prettify!(ft, 10), "fuel");
+        check!(prettify!(ft, 10) == "fuel");
     }
 
     #[test]
@@ -211,13 +212,13 @@ mod tests {
             FunctionSymbol::from("loc"),
             crate::FunctionType::new(crate::Type::exactly("location")),
         );
-        assert_eq!(prettify!(ft, 20), "loc - location");
+        check!(prettify!(ft, 20) == "loc - location");
     }
 
     #[test]
     fn function_typed_list_empty_works() {
         let list = crate::FunctionTypedList::<crate::AtomicFunctionSkeleton>::new(vec![]);
-        assert_eq!(prettify!(list, 20), "");
+        check!(prettify!(list, 20) == "");
     }
 
     #[test]
@@ -234,7 +235,7 @@ mod tests {
             ),
         ]);
         // Both are number-typed, so type annotation is omitted
-        assert_eq!(prettify!(list, 20), "(x) (y)");
+        check!(prettify!(list, 20) == "(x) (y)");
     }
 
     #[test]
@@ -250,7 +251,7 @@ mod tests {
                 crate::FunctionType::new(crate::Type::exactly("location")),
             ),
         ]);
-        assert_eq!(prettify!(list, 30), "(x) - number (y) - location");
+        check!(prettify!(list, 30) == "(x) - number (y) - location");
     }
 
     #[test]
@@ -266,7 +267,7 @@ mod tests {
                 crate::FunctionType::NUMBER,
             ),
         ]);
-        assert_eq!(prettify!(list, 30), "(x) - location (y)");
+        check!(prettify!(list, 30) == "(x) - location (y)");
     }
 
     #[test]
@@ -282,6 +283,6 @@ mod tests {
                 crate::FunctionType::new(crate::Type::exactly("location")),
             ),
         ]);
-        assert_eq!(prettify!(list, 30), "(x) - number (y) - location");
+        check!(prettify!(list, 30) == "(x) - number (y) - location");
     }
 }

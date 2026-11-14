@@ -51,32 +51,33 @@ impl From<ProblemConstraintsDef> for PreferenceConstraintGoalDescriptions {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert2::check;
 
     #[test]
     fn default_is_empty() {
         let def = ProblemConstraintsDef::default();
-        assert!(def.is_empty());
+        check!(def.is_empty());
     }
 
     #[test]
     fn new_works() {
         let defs = PreferenceConstraintGoalDescriptions::default();
         let def = ProblemConstraintsDef::new(defs.clone());
-        assert_eq!(*def.value(), defs);
+        check!(*def.value() == defs);
     }
 
     #[test]
     fn from_works() {
         let defs = PreferenceConstraintGoalDescriptions::default();
         let def = ProblemConstraintsDef::from(defs.clone());
-        assert_eq!(def, ProblemConstraintsDef::new(defs));
+        check!(def == ProblemConstraintsDef::new(defs));
     }
 
     #[test]
     fn deref_works() {
         let def = ProblemConstraintsDef::default();
         let inner: &PreferenceConstraintGoalDescriptions = &def;
-        assert!(inner.is_empty());
+        check!(inner.is_empty());
     }
 
     #[test]
@@ -84,13 +85,13 @@ mod tests {
         let defs = PreferenceConstraintGoalDescriptions::default();
         let def = ProblemConstraintsDef::new(defs.clone());
         let result: PreferenceConstraintGoalDescriptions = def.into();
-        assert_eq!(result, defs);
+        check!(result == defs);
     }
 
     #[test]
     fn clone_works() {
         let def = ProblemConstraintsDef::default();
         let clone = def.clone();
-        assert_eq!(def, clone);
+        check!(def == clone);
     }
 }

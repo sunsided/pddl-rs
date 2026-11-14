@@ -131,11 +131,12 @@ where
 mod tests {
     use super::*;
     use crate::types::{Name, ToTyped, Type, Variable};
+    use assert2::check;
 
     #[test]
     fn object_is_default_works() {
         let name = TypedList::from_iter([Name::new("x").to_typed(Type::OBJECT)]);
-        assert_eq!(format!("{name}"), "x");
+        check!(format!("{name}") == "x");
     }
 
     #[test]
@@ -145,13 +146,13 @@ mod tests {
             Name::new("y").to_typed(Type::OBJECT),
             Name::new("z").to_typed(Type::OBJECT),
         ]);
-        assert_eq!(format!("{name}"), "x y z");
+        check!(format!("{name}") == "x y z");
     }
 
     #[test]
     fn simple_works() {
         let name = TypedList::from_iter([Name::new("x").to_typed(Type::exactly("letter"))]);
-        assert_eq!(format!("{name}"), "x - letter");
+        check!(format!("{name}") == "x - letter");
     }
 
     #[test]
@@ -161,7 +162,7 @@ mod tests {
             Name::new("y").to_typed(Type::exactly("letter")),
             Name::new("z").to_typed(Type::exactly("letter")),
         ]);
-        assert_eq!(format!("{name}"), "x y z - letter");
+        check!(format!("{name}") == "x y z - letter");
     }
 
     #[test]
@@ -171,7 +172,7 @@ mod tests {
             Name::new("y").to_typed(Type::exactly("letter")),
             Name::new("z").to_typed(Type::exactly("car")),
         ]);
-        assert_eq!(format!("{name}"), "x y - letter z - car");
+        check!(format!("{name}") == "x y - letter z - car");
     }
 
     #[test]
@@ -181,7 +182,7 @@ mod tests {
             Name::new("y").to_typed(Type::exactly("car")),
             Name::new("z").to_typed(Type::exactly("letter")),
         ]);
-        assert_eq!(format!("{name}"), "x - letter y - car z - letter");
+        check!(format!("{name}") == "x - letter y - car z - letter");
     }
 
     #[test]
@@ -191,7 +192,7 @@ mod tests {
             Name::new("y").to_typed(Type::OBJECT),
             Name::new("z").to_typed(Type::OBJECT),
         ]);
-        assert_eq!(format!("{name}"), "x - letter y z");
+        check!(format!("{name}") == "x - letter y z");
     }
 
     #[test]
@@ -201,6 +202,6 @@ mod tests {
             Variable::string("y").to_typed(Type::OBJECT),
             Variable::string("z").to_typed(Type::exactly("letter")),
         ]);
-        assert_eq!(format!("{name}"), "?x ?y - object ?z - letter");
+        check!(format!("{name}") == "?x ?y - object ?z - letter");
     }
 }

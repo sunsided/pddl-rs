@@ -20,30 +20,31 @@ crate::parsers::impl_parser!(Term => parse_term);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
         let value = Term::from_str("some-name").unwrap();
-        assert_eq!(value, Term::Name("some-name".into()));
+        check!(value == Term::Name("some-name".into()));
 
         let value = Term::from_str("?some-var").unwrap();
-        assert_eq!(value, Term::Variable("some-var".into()));
+        check!(value == Term::Variable("some-var".into()));
     }
 
     #[test]
     fn doc_example_0() {
-        assert!(Term::from_str("abcde").is_value(Term::Name("abcde".into())));
-        assert!(Term::from_str("?abcde").is_value(Term::Variable("abcde".into())));
+        check!(Term::from_str("abcde").is_value(Term::Name("abcde".into())));
+        check!(Term::from_str("?abcde").is_value(Term::Variable("abcde".into())));
     }
 
     #[test]
     fn doc_example_1() {
         let value = Term::from_str("some-name").unwrap();
-        assert_eq!(value, Term::Name("some-name".into()));
+        check!(value == Term::Name("some-name".into()));
 
         let value = Term::from_str("?some-var").unwrap();
-        assert_eq!(value, Term::Variable("some-var".into()));
+        check!(value == Term::Variable("some-var".into()));
     }
 }

@@ -64,6 +64,7 @@ mod tests {
     use crate::types::{
         AtomicFormula, GoalDescription, Predicate, Term, TimeSpecifier, TimedGoalDescription,
     };
+    use assert2::check;
 
     fn make_timed_gd() -> TimedGoalDescription {
         let af = AtomicFormula::predicate(Predicate::string("at"), Vec::<Term>::new());
@@ -75,7 +76,7 @@ mod tests {
     fn required_constructor() {
         let timed_gd = make_timed_gd();
         let pref = PreferenceTimedGoalDescription::required(timed_gd.clone());
-        assert_eq!(pref, PreferenceTimedGoalDescription::Required(timed_gd));
+        check!(pref == PreferenceTimedGoalDescription::Required(timed_gd));
     }
 
     #[test]
@@ -83,27 +84,21 @@ mod tests {
         let timed_gd = make_timed_gd();
         let name = PreferenceName::new("pref1");
         let pref = PreferenceTimedGoalDescription::preference(Some(name.clone()), timed_gd.clone());
-        assert_eq!(
-            pref,
-            PreferenceTimedGoalDescription::Preference(Some(name), timed_gd)
-        );
+        check!(pref == PreferenceTimedGoalDescription::Preference(Some(name), timed_gd));
     }
 
     #[test]
     fn preference_without_name() {
         let timed_gd = make_timed_gd();
         let pref = PreferenceTimedGoalDescription::preference(None, timed_gd.clone());
-        assert_eq!(
-            pref,
-            PreferenceTimedGoalDescription::Preference(None, timed_gd)
-        );
+        check!(pref == PreferenceTimedGoalDescription::Preference(None, timed_gd));
     }
 
     #[test]
     fn from_timed_gd() {
         let timed_gd = make_timed_gd();
         let from_gd: PreferenceTimedGoalDescription = timed_gd.clone().into();
-        assert_eq!(from_gd, PreferenceTimedGoalDescription::Required(timed_gd));
+        check!(from_gd == PreferenceTimedGoalDescription::Required(timed_gd));
     }
 
     #[test]
@@ -112,10 +107,7 @@ mod tests {
         let name = PreferenceName::new("pref1");
         let from_tuple: PreferenceTimedGoalDescription =
             (Some(name.clone()), timed_gd.clone()).into();
-        assert_eq!(
-            from_tuple,
-            PreferenceTimedGoalDescription::Preference(Some(name), timed_gd)
-        );
+        check!(from_tuple == PreferenceTimedGoalDescription::Preference(Some(name), timed_gd));
     }
 
     #[test]

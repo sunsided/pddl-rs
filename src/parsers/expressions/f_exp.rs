@@ -62,14 +62,15 @@ crate::parsers::impl_parser!(FluentExpression => parse_f_exp);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(FluentExpression::from_str("1.23").is_value(FluentExpression::new_number(1.23)));
+        check!(FluentExpression::from_str("1.23").is_value(FluentExpression::new_number(1.23)));
 
-        assert!(FluentExpression::from_str("(+ 1.23 2.34)").is_value(
+        check!(FluentExpression::from_str("(+ 1.23 2.34)").is_value(
             FluentExpression::new_binary_op(
                 BinaryOp::Addition,
                 FluentExpression::new_number(1.23),
@@ -77,7 +78,7 @@ mod tests {
             )
         ));
 
-        assert!(FluentExpression::from_str("(+ 1.23 2.34 3.45)").is_value(
+        check!(FluentExpression::from_str("(+ 1.23 2.34 3.45)").is_value(
             FluentExpression::new_multi_op(
                 MultiOp::Addition,
                 FluentExpression::new_number(1.23),
@@ -88,13 +89,13 @@ mod tests {
             )
         ));
 
-        assert!(
+        check!(
             FluentExpression::from_str("(- 1.23)").is_value(FluentExpression::new_negative(
                 FluentExpression::new_number(1.23)
             ))
         );
 
-        assert!(FluentExpression::from_str("(- 1.23 2.34)").is_value(
+        check!(FluentExpression::from_str("(- 1.23 2.34)").is_value(
             FluentExpression::new_binary_op(
                 BinaryOp::Subtraction,
                 FluentExpression::new_number(1.23),
@@ -103,11 +104,11 @@ mod tests {
         ));
 
         // Only `-` takes one argument, and only `+` and `*` take more than two.
-        assert!(FluentExpression::from_str("(+ 1)").is_err());
-        assert!(FluentExpression::from_str("(- 1 2 3)").is_err());
-        assert!(FluentExpression::from_str("(/ 1 2 3)").is_err());
+        check!(FluentExpression::from_str("(+ 1)").is_err());
+        check!(FluentExpression::from_str("(- 1 2 3)").is_err());
+        check!(FluentExpression::from_str("(/ 1 2 3)").is_err());
 
-        assert!(
+        check!(
             FluentExpression::from_str("fun-sym").is_value(FluentExpression::new_function(
                 FunctionHead::new(FunctionSymbol::new_string("fun-sym"))
             ))
@@ -120,15 +121,15 @@ mod tests {
         // form, about 3x work per level: depth 30 took hours.
         let input = format!("{}x{}", "(- ".repeat(30), ")".repeat(30));
         let start = std::time::Instant::now();
-        assert!(FluentExpression::from_str(&input).is_ok());
-        assert!(start.elapsed() < std::time::Duration::from_secs(1));
+        check!(FluentExpression::from_str(&input).is_ok());
+        check!(start.elapsed() < std::time::Duration::from_secs(1));
     }
 
     #[test]
     fn doc_example_0() {
-        assert!(FluentExpression::from_str("1.23").is_value(FluentExpression::new_number(1.23)));
+        check!(FluentExpression::from_str("1.23").is_value(FluentExpression::new_number(1.23)));
 
-        assert!(FluentExpression::from_str("(+ 1.23 2.34)").is_value(
+        check!(FluentExpression::from_str("(+ 1.23 2.34)").is_value(
             FluentExpression::new_binary_op(
                 BinaryOp::Addition,
                 FluentExpression::new_number(1.23),
@@ -136,7 +137,7 @@ mod tests {
             )
         ));
 
-        assert!(FluentExpression::from_str("(+ 1.23 2.34 3.45)").is_value(
+        check!(FluentExpression::from_str("(+ 1.23 2.34 3.45)").is_value(
             FluentExpression::new_multi_op(
                 MultiOp::Addition,
                 FluentExpression::new_number(1.23),
@@ -147,13 +148,13 @@ mod tests {
             )
         ));
 
-        assert!(
+        check!(
             FluentExpression::from_str("(- 1.23)").is_value(FluentExpression::new_negative(
                 FluentExpression::new_number(1.23)
             ))
         );
 
-        assert!(
+        check!(
             FluentExpression::from_str("fun-sym").is_value(FluentExpression::new_function(
                 FunctionHead::new(FunctionSymbol::new_string("fun-sym"))
             ))
@@ -164,17 +165,14 @@ mod tests {
     #[test]
     fn operators_need_no_space_after_them() {
         let x = || FluentExpression::new_function(FunctionHead::new(FunctionSymbol::from("x")));
-        assert_eq!(
-            FluentExpression::from_str("(+x 1)"),
-            Ok(FluentExpression::new_binary_op(
-                BinaryOp::Addition,
-                x(),
-                FluentExpression::new_number(1)
-            ))
+        check!(
+            FluentExpression::from_str("(+x 1)")
+                == Ok(FluentExpression::new_binary_op(
+                    BinaryOp::Addition,
+                    x(),
+                    FluentExpression::new_number(1)
+                ))
         );
-        assert_eq!(
-            FluentExpression::from_str("(-x)"),
-            Ok(FluentExpression::new_negative(x()))
-        );
+        check!(FluentExpression::from_str("(-x)") == Ok(FluentExpression::new_negative(x())));
     }
 }

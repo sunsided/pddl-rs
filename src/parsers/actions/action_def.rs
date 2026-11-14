@@ -30,6 +30,7 @@ crate::parsers::impl_parser!(ActionDefinition => parse_action_def);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
@@ -43,14 +44,14 @@ mod tests {
 
         let action = ActionDefinition::from_str(input).unwrap();
 
-        assert_eq!(
-            action,
-            ActionDefinition::new(
-                ActionSymbol::string("take-out"),
-                TypedList::from_iter([Variable::new_string("x").to_typed("physob")]),
-                PreconditionGoalDescriptions::from_str("(not (= ?x B))").unwrap(),
-                Some(Effects::from_str("(not (in ?x))").unwrap())
-            )
+        check!(
+            action
+                == ActionDefinition::new(
+                    ActionSymbol::string("take-out"),
+                    TypedList::from_iter([Variable::new_string("x").to_typed("physob")]),
+                    PreconditionGoalDescriptions::from_str("(not (= ?x B))").unwrap(),
+                    Some(Effects::from_str("(not (in ?x))").unwrap())
+                )
         );
     }
 
@@ -64,7 +65,7 @@ mod tests {
 
         let action = ActionDefinition::from_str(input);
 
-        assert!(action.is_value(ActionDefinition::new(
+        check!(action.is_value(ActionDefinition::new(
             ActionSymbol::string("take-out"),
             TypedList::from_iter([Variable::new_string("x").to_typed("physob")]),
             PreconditionGoalDescriptions::from(PreconditionGoalDescription::Preference(
@@ -94,14 +95,14 @@ mod tests {
 
         let action = ActionDefinition::from_str(input).unwrap();
 
-        assert_eq!(
-            action,
-            ActionDefinition::new(
-                ActionSymbol::string("take-out"),
-                TypedList::from_iter([Variable::new_string("x").to_typed("physob")]),
-                PreconditionGoalDescriptions::from_str("(not (= ?x B))").unwrap(),
-                Some(Effects::from_str("(not (in ?x))").unwrap())
-            )
+        check!(
+            action
+                == ActionDefinition::new(
+                    ActionSymbol::string("take-out"),
+                    TypedList::from_iter([Variable::new_string("x").to_typed("physob")]),
+                    PreconditionGoalDescriptions::from_str("(not (= ?x B))").unwrap(),
+                    Some(Effects::from_str("(not (in ?x))").unwrap())
+                )
         );
     }
 }

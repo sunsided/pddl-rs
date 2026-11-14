@@ -80,6 +80,7 @@ crate::parsers::impl_parser!(Problem => parse_problem);
 
 #[cfg(test)]
 mod tests {
+    use assert2::check;
 
     use crate::*;
 
@@ -95,22 +96,22 @@ mod tests {
              (:init (at a)) (:requirements :strips) (:domain d))",
         )
         .unwrap();
-        assert_eq!(ordered, shuffled);
+        check!(ordered == shuffled);
     }
 
     #[test]
     fn missing_required_section_is_reported_where_the_sections_end() {
         let input = "(define (problem p) (:domain d) (:init (at a))\n)";
         let error = Problem::from_str(input).unwrap_err();
-        assert_eq!((error.line(), error.column()), (2, 1));
-        assert_eq!(error.found(), Some(")"));
+        check!((error.line(), error.column()) == (2, 1));
+        check!(error.found() == Some(")"));
     }
 
     #[test]
     fn duplicate_section_is_reported_at_the_second_occurrence() {
         let input = "(define (problem p) (:domain d) (:init) (:goal (and)) (:init))";
         let error = Problem::from_str(input).unwrap_err();
-        assert_eq!(Some(error.offset()), input.rfind("(:init)"));
+        check!(Some(error.offset()) == input.rfind("(:init)"));
     }
 
     #[test]
@@ -124,11 +125,11 @@ mod tests {
              )"#;
 
         let problem = Problem::from_str(input).unwrap();
-        assert_eq!(problem.name(), &Name::new("get-paid"));
-        assert_eq!(problem.domain(), &Name::new("briefcase-world"));
-        assert!(problem.requirements().is_empty());
-        assert_eq!(problem.init().len(), 9);
-        assert_eq!(problem.goals().len(), 3);
+        check!(problem.name() == &Name::new("get-paid"));
+        check!(problem.domain() == &Name::new("briefcase-world"));
+        check!(problem.requirements().is_empty());
+        check!(problem.init().len() == 9);
+        check!(problem.goals().len() == 3);
     }
 
     #[test]
@@ -142,11 +143,11 @@ mod tests {
             )"#;
 
         let problem = Problem::from_str(input).unwrap();
-        assert_eq!(problem.name(), &Name::new("get-paid"));
-        assert_eq!(problem.domain(), &Name::new("briefcase-world"));
-        assert!(problem.requirements().is_empty());
-        assert_eq!(problem.init().len(), 9);
-        assert_eq!(problem.goals().len(), 3);
+        check!(problem.name() == &Name::new("get-paid"));
+        check!(problem.domain() == &Name::new("briefcase-world"));
+        check!(problem.requirements().is_empty());
+        check!(problem.init().len() == 9);
+        check!(problem.goals().len() == 3);
     }
 
     #[test]
@@ -161,10 +162,10 @@ mod tests {
 
         let problem = Problem::from_str(input).unwrap();
 
-        assert_eq!(problem.name(), &Name::new("get-paid"));
-        assert_eq!(problem.domain(), &Name::new("briefcase-world"));
-        assert!(problem.requirements().is_empty());
-        assert_eq!(problem.init().len(), 9);
-        assert_eq!(problem.goals().len(), 3);
+        check!(problem.name() == &Name::new("get-paid"));
+        check!(problem.domain() == &Name::new("briefcase-world"));
+        check!(problem.requirements().is_empty());
+        check!(problem.init().len() == 9);
+        check!(problem.goals().len() == 3);
     }
 }

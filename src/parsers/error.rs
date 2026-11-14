@@ -241,6 +241,7 @@ impl Error {
 mod tests {
     use super::*;
     use crate::{Domain, Parser, PddlFile, Problem};
+    use assert2::check;
 
     /// Typical mistakes are reported at the mistake itself, with the enclosing
     /// keyword and a reason where known.
@@ -327,7 +328,7 @@ mod tests {
         ];
         for (label, parse, input, expected) in cases {
             let message = parse(&input).to_string();
-            assert!(
+            check!(
                 message.starts_with(expected),
                 "{label}:\n  got {message}\n want {expected}"
             );
@@ -341,14 +342,14 @@ mod tests {
             "(define (domain d) (:predicates (p)) (:action a :parameters () :effect (p)",
         )
         .unwrap_err();
-        assert_eq!(error.keyword(), Some(":action"));
-        assert_eq!(error.reason(), Some("expected `)`"));
-        assert_eq!(error.found(), None);
+        check!(error.keyword() == Some(":action"));
+        check!(error.reason() == Some("expected `)`"));
+        check!(error.found() == None);
 
         let error = Domain::from_str("(define (domain d) (:predicates (p)) (:predicates (q)))")
             .unwrap_err();
-        assert_eq!(error.keyword(), None);
-        assert_eq!(error.reason(), Some("duplicate section"));
+        check!(error.keyword() == None);
+        check!(error.reason() == Some("duplicate section"));
     }
 
     /// Keywords and reasons are sanitized like the excerpt.
@@ -358,9 +359,9 @@ mod tests {
             .reason("bad\x1b[2J\nreason")
             .keyword(":act\x07ion");
         let parsed = ParseError::new("x", error);
-        assert_eq!(parsed.keyword(), Some(r":act\u{7}ion"));
-        assert_eq!(parsed.reason(), Some(r"bad\u{1b}[2J reason"));
-        assert!(
+        check!(parsed.keyword() == Some(r":act\u{7}ion"));
+        check!(parsed.reason() == Some(r"bad\u{1b}[2J reason"));
+        check!(
             !parsed.to_string().chars().any(char::is_control),
             "{parsed}"
         );
@@ -375,7 +376,7 @@ mod tests {
             .unbalanced
             .unwrap();
         let error = ParseError::new(input, unclosed);
-        assert_eq!(error.keyword(), Some(r":\u{202e}x"));
+        check!(error.keyword() == Some(r":\u{202e}x"));
     }
 
     /// Bidi overrides, isolates and zero-width characters show up as escapes instead of
@@ -385,8 +386,8 @@ mod tests {
         let input = "(define (domain d)\n(:\u{202E}evil\u{2066}\u{200B}\u{FEFF}))";
         let error = Domain::from_str(input).unwrap_err();
         let found = error.found().unwrap();
-        assert!(found.is_ascii(), "{found:?}");
-        assert_eq!(found, r"(:\u{202e}evil\u{2066}\u{200b}\u{feff}))");
+        check!(found.is_ascii(), "{found:?}");
+        check!(found == r"(:\u{202e}evil\u{2066}\u{200b}\u{feff}))");
     }
 
     /// Characters a hand-written list would miss are escaped too.
@@ -398,7 +399,7 @@ mod tests {
             .found()
             .unwrap()
             .to_string();
-        assert_eq!(found, r"(:\u{e0041}\u{fff9}\u{206a}\u{fe0f}\u{a0}x))");
+        check!(found == r"(:\u{e0041}\u{fff9}\u{206a}\u{fe0f}\u{a0}x))");
     }
 
     /// Keywords and reasons are bounded like the excerpt.
@@ -406,8 +407,8 @@ mod tests {
     fn keyword_and_reason_are_bounded() {
         let long: &'static str = "x".repeat(10_000).leak();
         let parsed = ParseError::new("x", Error::at(0, 1).reason(long).keyword(long));
-        assert_eq!(parsed.keyword().unwrap().chars().count(), EXCERPT_CHARS + 3);
-        assert_eq!(parsed.reason().unwrap().chars().count(), EXCERPT_CHARS + 3);
+        check!(parsed.keyword().unwrap().chars().count() == EXCERPT_CHARS + 3);
+        check!(parsed.reason().unwrap().chars().count() == EXCERPT_CHARS + 3);
     }
 
     /// When alternatives fail at the same position, the one with a reason wins.
@@ -415,9 +416,9 @@ mod tests {
     fn or_prefers_the_furthest_then_the_described_error() {
         let plain = Error::at(3, 1);
         let described = Error::at(3, 1).reason("why");
-        assert_eq!(plain.clone().or(described.clone()), described);
-        assert_eq!(described.clone().or(plain.clone()), described);
-        assert_eq!(described.or(Error::at(4, 1)), Error::at(4, 1));
+        check!(plain.clone().or(described.clone()) == described);
+        check!(described.clone().or(plain.clone()) == described);
+        check!(described.or(Error::at(4, 1)) == Error::at(4, 1));
     }
 
     #[test]
@@ -437,8 +438,8 @@ mod tests {
             ),
         ] {
             let error = Problem::from_str(input).unwrap_err();
-            assert_eq!(error.reason(), Some(reason), "{input}");
-            assert_eq!(error.found(), Some(")"), "{input}");
+            check!(error.reason() == Some(reason), "{input}");
+            check!(error.found() == Some(")"), "{input}");
         }
     }
 
@@ -447,42 +448,39 @@ mod tests {
         let tail = "x".repeat(10_000);
         let input = format!("(define (domain d)\n  (:bogus {tail}))");
         let error = Domain::from_str(&input).unwrap_err();
-        assert_eq!(error.line(), 2);
-        assert_eq!(error.column(), 3);
-        assert_eq!(error.offset(), 21);
-        assert_eq!(error.span(), 21..28);
+        check!(error.line() == 2);
+        check!(error.column() == 3);
+        check!(error.offset() == 21);
+        check!(error.span() == (21..28));
         let found = error.found().unwrap();
-        assert!(found.starts_with("(:bogus xxx"));
-        assert_eq!(found.chars().count(), EXCERPT_CHARS + 3);
-        assert!(error.to_string().len() < 100);
+        check!(found.starts_with("(:bogus xxx"));
+        check!(found.chars().count() == EXCERPT_CHARS + 3);
+        check!(error.to_string().len() < 100);
     }
 
     #[test]
     fn excerpt_flattens_newlines() {
         let error = Domain::from_str("(define (domain d)\n(:bogus\n))").unwrap_err();
-        assert_eq!(error.found(), Some("(:bogus ))"));
-        assert_eq!(
-            error.to_string(),
-            "line 2, column 1: unknown section: unexpected `(:bogus ))`"
-        );
+        check!(error.found() == Some("(:bogus ))"));
+        check!(error.to_string() == "line 2, column 1: unknown section: unexpected `(:bogus ))`");
     }
 
     #[test]
     fn excerpt_escapes_control_characters() {
         let error = Domain::from_str("(define (domain d)\n(:\x1b[2J\0\x07))").unwrap_err();
         let found = error.found().unwrap();
-        assert!(!found.chars().any(char::is_control), "{found:?}");
-        assert_eq!(found, r"(:\u{1b}[2J\u{0}\u{7}))");
+        check!(!found.chars().any(char::is_control), "{found:?}");
+        check!(found == r"(:\u{1b}[2J\u{0}\u{7}))");
     }
 
     #[test]
     fn end_of_input_has_no_excerpt() {
         let error = Domain::from_str("ab\n").unwrap_err();
-        assert_eq!(error.found(), Some("ab "));
+        check!(error.found() == Some("ab "));
         let error = ParseError::new("ab\ncd", Error::at(5, 0));
-        assert_eq!((error.line(), error.column(), error.offset()), (2, 3, 5));
-        assert_eq!(error.found(), None);
-        assert_eq!(error.span(), 5..5);
+        check!((error.line(), error.column(), error.offset()) == (2, 3, 5));
+        check!(error.found() == None);
+        check!(error.span() == (5..5));
     }
 
     #[cfg(feature = "miette")]
@@ -491,15 +489,15 @@ mod tests {
         use miette::Diagnostic;
         let error = Domain::from_str("(define (domain d) (:bogus))").unwrap_err();
         let labels: Vec<_> = error.labels().unwrap().collect();
-        assert_eq!(labels.len(), 1);
-        assert_eq!((labels[0].offset(), labels[0].len()), (19, 7));
-        assert_eq!(labels[0].label(), Some("unknown section"));
-        assert_eq!(error.code().unwrap().to_string(), "pddl::parse");
+        check!(labels.len() == 1);
+        check!((labels[0].offset(), labels[0].len()) == (19, 7));
+        check!(labels[0].label() == Some("unknown section"));
+        check!(error.code().unwrap().to_string() == "pddl::parse");
     }
 
     #[test]
     fn column_counts_characters() {
         let error = ParseError::new("ä(x", Error::at(3, 1));
-        assert_eq!(error.column(), 3);
+        check!(error.column() == 3);
     }
 }

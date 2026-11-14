@@ -25,11 +25,12 @@ crate::parsers::impl_parser!(BinaryOp => parse_binary_op);
 mod tests {
     use crate::parsers::UnwrapValue;
     use crate::{BinaryOp, Parser};
+    use assert2::check;
 
     #[test]
     fn test_parse() {
-        assert!(BinaryOp::from_str("/").is_value(BinaryOp::Division));
-        assert!(BinaryOp::from_str("%").is_err());
-        assert!(BinaryOp::from_str("(/)").is_err());
+        check!(BinaryOp::from_str("/").is_value(BinaryOp::Division));
+        check!(BinaryOp::from_str("%").is_err());
+        check!(BinaryOp::from_str("(/)").is_err());
     }
 }

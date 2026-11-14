@@ -70,6 +70,7 @@ crate::parsers::impl_parser!(Domain => parse_domain);
 
 #[cfg(test)]
 mod tests {
+    use assert2::check;
 
     use crate::*;
 
@@ -85,15 +86,15 @@ mod tests {
              (:predicates (p)) (:types t) (:action b :parameters () :effect (p)) (:requirements :strips))",
         )
         .unwrap();
-        assert_eq!(ordered, shuffled);
+        check!(ordered == shuffled);
     }
 
     #[test]
     fn duplicate_section_is_reported_at_the_second_occurrence() {
         let input = "(define (domain d)\n  (:predicates (p))\n  (:predicates (q)))";
         let error = Domain::from_str(input).unwrap_err();
-        assert_eq!((error.line(), error.column()), (3, 3));
-        assert_eq!(error.found(), Some("(:predicates (q)))"));
+        check!((error.line(), error.column()) == (3, 3));
+        check!(error.found() == Some("(:predicates (q)))"));
     }
 
     #[test]
@@ -134,13 +135,13 @@ mod tests {
 
         let domain = Domain::from_str(input).unwrap();
 
-        assert_eq!(domain.name(), &Name::new("briefcase-world"));
-        assert_eq!(domain.requirements().len(), 4);
-        assert_eq!(domain.types().len(), 2);
-        assert_eq!(domain.constants().len(), 3);
-        assert_eq!(domain.predicates().len(), 2);
-        assert!(domain.constraints().is_empty());
-        assert_eq!(domain.structure().len(), 3);
+        check!(domain.name() == &Name::new("briefcase-world"));
+        check!(domain.requirements().len() == 4);
+        check!(domain.types().len() == 2);
+        check!(domain.constants().len() == 3);
+        check!(domain.predicates().len() == 2);
+        check!(domain.constraints().is_empty());
+        check!(domain.structure().len() == 3);
     }
 
     #[test]
@@ -174,13 +175,13 @@ mod tests {
             )"#;
 
         let domain = Domain::from_str(input).unwrap();
-        assert_eq!(domain.name(), &Name::new("briefcase-world"));
-        assert_eq!(domain.requirements().len(), 4);
-        assert_eq!(domain.types().len(), 2);
-        assert_eq!(domain.constants().len(), 3);
-        assert_eq!(domain.predicates().len(), 2);
-        assert!(domain.constraints().is_empty());
-        assert_eq!(domain.structure().len(), 3);
+        check!(domain.name() == &Name::new("briefcase-world"));
+        check!(domain.requirements().len() == 4);
+        check!(domain.types().len() == 2);
+        check!(domain.constants().len() == 3);
+        check!(domain.predicates().len() == 2);
+        check!(domain.constraints().is_empty());
+        check!(domain.structure().len() == 3);
     }
 
     #[test]
@@ -221,12 +222,12 @@ mod tests {
 
         let domain = Domain::from_str(input).unwrap();
 
-        assert_eq!(domain.name(), &Name::new("briefcase-world"));
-        assert_eq!(domain.requirements().len(), 4);
-        assert_eq!(domain.types().len(), 2);
-        assert_eq!(domain.constants().len(), 3);
-        assert_eq!(domain.predicates().len(), 2);
-        assert!(domain.constraints().is_empty());
-        assert_eq!(domain.structure().len(), 3);
+        check!(domain.name() == &Name::new("briefcase-world"));
+        check!(domain.requirements().len() == 4);
+        check!(domain.types().len() == 2);
+        check!(domain.constants().len() == 3);
+        check!(domain.predicates().len() == 2);
+        check!(domain.constraints().is_empty());
+        check!(domain.structure().len() == 3);
     }
 }

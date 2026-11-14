@@ -27,11 +27,12 @@ crate::parsers::impl_parser!(AssignOp => parse_assign_op);
 mod tests {
     use crate::parsers::UnwrapValue;
     use crate::{AssignOp, Parser};
+    use assert2::check;
 
     #[test]
     fn test_parse() {
-        assert!(AssignOp::from_str("scale-up").is_value(AssignOp::ScaleUp));
-        assert!(AssignOp::from_str("scale").is_err());
-        assert!(AssignOp::from_str("(scale-up)").is_err());
+        check!(AssignOp::from_str("scale-up").is_value(AssignOp::ScaleUp));
+        check!(AssignOp::from_str("scale").is_err());
+        check!(AssignOp::from_str("(scale-up)").is_err());
     }
 }

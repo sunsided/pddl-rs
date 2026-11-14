@@ -119,6 +119,7 @@ mod tests {
         AtomicFormula, ConditionalEffect, EffectCondition, FunctionSymbol, GoalDescription, Name,
         Predicate, PrimitiveEffect, Term,
     };
+    use assert2::check;
 
     #[test]
     fn p_effect_atomic() {
@@ -130,7 +131,7 @@ mod tests {
             ],
         );
         let pe = PrimitiveEffect::new(af);
-        assert_eq!(prettify!(pe, 30), "(at B home)");
+        check!(prettify!(pe, 30) == "(at B home)");
     }
 
     #[test]
@@ -140,7 +141,7 @@ mod tests {
             vec![Term::new_name(Name::new("B"))],
         );
         let pe = PrimitiveEffect::not(af);
-        assert_eq!(prettify!(pe, 30), "(not (at B))");
+        check!(prettify!(pe, 30) == "(not (at B))");
     }
 
     #[test]
@@ -150,7 +151,7 @@ mod tests {
             crate::FunctionHead::new(FunctionSymbol::from("battery")),
             crate::FluentExpression::number(10),
         );
-        assert_eq!(prettify!(pe, 30), "(assign battery 10)");
+        check!(prettify!(pe, 30) == "(assign battery 10)");
     }
 
     #[test]
@@ -162,7 +163,7 @@ mod tests {
         let pe = PrimitiveEffect::new(af);
         let ce = ConditionalEffect::new_primitive_effect(pe);
         let effects = Effects::new(ce);
-        assert_eq!(prettify!(effects, 30), "(and (at B))");
+        check!(prettify!(effects, 30) == "(and (at B))");
     }
 
     #[test]
@@ -173,7 +174,7 @@ mod tests {
             vec![Term::new_name(Name::new("x"))],
         );
         let pe = PrimitiveEffect::object_fluent(ft, Some(Term::new_name(Name::new("y"))));
-        assert_eq!(prettify!(pe, 30), "(assign (loc x) y)");
+        check!(prettify!(pe, 30) == "(assign (loc x) y)");
     }
 
     #[test]
@@ -181,7 +182,7 @@ mod tests {
         use crate::{FunctionSymbol, FunctionTerm};
         let ft = FunctionTerm::new(FunctionSymbol::from("loc"), vec![]);
         let pe = PrimitiveEffect::object_fluent(ft, None);
-        assert_eq!(prettify!(pe, 30), "(assign (loc) undefined)");
+        check!(prettify!(pe, 30) == "(assign (loc) undefined)");
     }
 
     #[test]
@@ -195,7 +196,7 @@ mod tests {
         let pe = PrimitiveEffect::new(af);
         let effects = Effects::new(ConditionalEffect::new_primitive_effect(pe));
         let ce = ConditionalEffect::forall(vars, effects);
-        assert_eq!(prettify!(ce, 40), "(forall (?x) (and (p ?x)))");
+        check!(prettify!(ce, 40) == "(forall (?x) (and (p ?x)))");
     }
 
     #[test]
@@ -203,13 +204,13 @@ mod tests {
         let cond = GoalDescription::and(Vec::<GoalDescription>::new());
         let ce_inner = EffectCondition::all(Vec::new());
         let ce = ConditionalEffect::when(cond, ce_inner);
-        assert_eq!(prettify!(ce, 30), "(when (and) (and))");
+        check!(prettify!(ce, 30) == "(when (and) (and))");
     }
 
     #[test]
     fn conditional_effect_all_empty() {
         let ce = EffectCondition::all(Vec::new());
-        assert_eq!(prettify!(ce, 20), "(and)");
+        check!(prettify!(ce, 20) == "(and)");
     }
 
     #[test]
@@ -221,7 +222,7 @@ mod tests {
         let pe1 = PrimitiveEffect::new(af.clone());
         let pe2 = PrimitiveEffect::new(af);
         let ce = EffectCondition::all(vec![pe1, pe2]);
-        assert_eq!(prettify!(ce, 30), "(and (at x) (at x))");
+        check!(prettify!(ce, 30) == "(and (at x) (at x))");
     }
 
     #[test]
@@ -237,6 +238,6 @@ mod tests {
         let ce1 = ConditionalEffect::new_primitive_effect(PrimitiveEffect::new(af1));
         let ce2 = ConditionalEffect::new_primitive_effect(PrimitiveEffect::new(af2));
         let effects = Effects::and(vec![ce1, ce2]);
-        assert_eq!(prettify!(effects, 40), "(and (at x) (at y))");
+        check!(prettify!(effects, 40) == "(and (at x) (at y))");
     }
 }

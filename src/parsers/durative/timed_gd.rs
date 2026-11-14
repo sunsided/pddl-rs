@@ -31,6 +31,7 @@ crate::parsers::impl_parser!(TimedGoalDescription => parse_timed_gd);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
@@ -42,7 +43,7 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        assert!(
+        check!(
             TimedGoalDescription::from_str("(at start (= x y))").is_value(
                 TimedGoalDescription::at(
                     TimeSpecifier::Start,
@@ -54,7 +55,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             TimedGoalDescription::from_str("(over all (= x y))").is_value(
                 TimedGoalDescription::over(
                     Interval::All,
@@ -69,7 +70,7 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        assert!(
+        check!(
             TimedGoalDescription::from_str("(at start (= x y))").is_value(
                 TimedGoalDescription::at(
                     TimeSpecifier::Start,
@@ -81,7 +82,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             TimedGoalDescription::from_str("(over all (= x y))").is_value(
                 TimedGoalDescription::over(
                     Interval::All,

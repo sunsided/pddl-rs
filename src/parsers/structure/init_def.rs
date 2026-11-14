@@ -17,13 +17,14 @@ crate::parsers::impl_parser!(InitElements => parse_problem_init_def);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
         let input = "(:init (train-not-in-use train1) (at 10 (train-not-in-use train2)))";
-        assert!(
+        check!(
             InitElements::from_str(input).is_value(InitElements::from_iter([
                 InitElement::new_literal(NameLiteral::new(AtomicFormula::new_predicate(
                     "train-not-in-use".into(),
@@ -43,7 +44,7 @@ mod tests {
     #[test]
     fn doc_example_0() {
         let input = "(:init (train-not-in-use train1) (at 10 (train-not-in-use train2)))";
-        assert!(
+        check!(
             InitElements::from_str(input).is_value(InitElements::from_iter([
                 InitElement::new_literal(NameLiteral::new(AtomicFormula::new_predicate(
                     "train-not-in-use".into(),

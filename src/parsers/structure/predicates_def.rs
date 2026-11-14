@@ -18,6 +18,7 @@ crate::parsers::impl_parser!(PredicateDefinitions => parse_predicates_def);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
@@ -28,7 +29,7 @@ mod tests {
                              (in ?x ?y - physob)
                         )"#;
 
-        assert!(
+        check!(
             PredicateDefinitions::from_str(input).is_value(PredicateDefinitions::new(vec![
                 AtomicFormulaSkeleton::new(
                     Predicate::from("at"),
@@ -55,7 +56,7 @@ mod tests {
                             (in ?x ?y - physob)
                        )"#;
 
-        assert!(
+        check!(
             PredicateDefinitions::from_str(input).is_value(PredicateDefinitions::new(vec![
                 AtomicFormulaSkeleton::new(
                     Predicate::from("at"),

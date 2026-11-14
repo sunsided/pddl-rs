@@ -38,15 +38,16 @@ crate::parsers::impl_parser!(DurativeActionFluentExpression => parse_f_exp_da);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(DurativeActionFluentExpression::from_str("?duration")
+        check!(DurativeActionFluentExpression::from_str("?duration")
             .is_value(DurativeActionFluentExpression::Duration));
 
-        assert!(
+        check!(
             DurativeActionFluentExpression::from_str("(+ 1.23 2.34)").is_value(
                 DurativeActionFluentExpression::new_binary_op(
                     BinaryOp::Addition,
@@ -56,7 +57,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             DurativeActionFluentExpression::from_str("(+ 1.23 2.34 3.45)").is_value(
                 DurativeActionFluentExpression::new_multi_op(
                     MultiOp::Addition,
@@ -72,10 +73,10 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        assert!(DurativeActionFluentExpression::from_str("?duration")
+        check!(DurativeActionFluentExpression::from_str("?duration")
             .is_value(DurativeActionFluentExpression::Duration));
 
-        assert!(
+        check!(
             DurativeActionFluentExpression::from_str("(+ 1.23 2.34)").is_value(
                 DurativeActionFluentExpression::new_binary_op(
                     BinaryOp::Addition,
@@ -85,7 +86,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             DurativeActionFluentExpression::from_str("(+ 1.23 2.34 3.45)").is_value(
                 DurativeActionFluentExpression::new_multi_op(
                     MultiOp::Addition,

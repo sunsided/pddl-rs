@@ -29,11 +29,12 @@ crate::parsers::impl_parser!(BinaryComparison => parse_binary_comp);
 mod tests {
     use crate::parsers::UnwrapValue;
     use crate::{BinaryComparison, Parser};
+    use assert2::check;
 
     #[test]
     fn test_parse() {
-        assert!(BinaryComparison::from_str(">=").is_value(BinaryComparison::GreaterOrEqual));
-        assert!(BinaryComparison::from_str("=>").is_err());
-        assert!(BinaryComparison::from_str("(>=)").is_err());
+        check!(BinaryComparison::from_str(">=").is_value(BinaryComparison::GreaterOrEqual));
+        check!(BinaryComparison::from_str("=>").is_err());
+        check!(BinaryComparison::from_str("(>=)").is_err());
     }
 }

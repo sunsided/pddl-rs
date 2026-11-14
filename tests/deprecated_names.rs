@@ -2,10 +2,12 @@
 
 #![allow(deprecated)]
 
+use assert2::check;
+
 use pddl::{GoalDefinition, GoalDescription, Parser};
 
 #[test]
 fn old_goal_definition_names_still_work() {
     let gd: GoalDefinition = GoalDescription::from_str("(p)").unwrap();
-    assert!(matches!(gd, GoalDefinition::AtomicFormula(_)));
+    check!(let GoalDefinition::AtomicFormula(_) = gd);
 }

@@ -29,6 +29,7 @@ crate::parsers::impl_parser!(DurativeActionGoalDescription => parse_da_gd);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
@@ -46,7 +47,7 @@ mod tests {
 
     #[test]
     fn test_at_start() {
-        assert!(
+        check!(
             DurativeActionGoalDescription::from_str("(at start (= x y))").is_value(
                 DurativeActionGoalDescription::Timed(PreferenceTimedGoalDescription::Required(
                     TimedGoalDescription::at(
@@ -63,13 +64,13 @@ mod tests {
 
     #[test]
     fn test_and_empty() {
-        assert!(DurativeActionGoalDescription::from_str("(and )")
+        check!(DurativeActionGoalDescription::from_str("(and )")
             .is_value(DurativeActionGoalDescription::and([])));
     }
 
     #[test]
     fn test_and() {
-        assert!(DurativeActionGoalDescription::from_str(
+        check!(DurativeActionGoalDescription::from_str(
             "(and (at start (= x y)) (over all (= a b)))"
         )
         .is_value(DurativeActionGoalDescription::and([
@@ -96,7 +97,7 @@ mod tests {
 
     #[test]
     fn test_forall() {
-        assert!(
+        check!(
             DurativeActionGoalDescription::from_str("(forall (?a ?b) (at start (= a b)))")
                 .is_value(DurativeActionGoalDescription::forall(
                     TypedList::from_iter([
@@ -118,7 +119,7 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        assert!(
+        check!(
             DurativeActionGoalDescription::from_str("(at start (= x y))").is_value(
                 DurativeActionGoalDescription::Timed(PreferenceTimedGoalDescription::Required(
                     TimedGoalDescription::at(
@@ -132,10 +133,10 @@ mod tests {
             )
         );
 
-        assert!(DurativeActionGoalDescription::from_str("(and )")
+        check!(DurativeActionGoalDescription::from_str("(and )")
             .is_value(DurativeActionGoalDescription::and([])));
 
-        assert!(DurativeActionGoalDescription::from_str(
+        check!(DurativeActionGoalDescription::from_str(
             "(and (at start (= x y)) (over all (= a b)))"
         )
         .is_value(DurativeActionGoalDescription::and([
@@ -159,7 +160,7 @@ mod tests {
             ))
         ])));
 
-        assert!(
+        check!(
             DurativeActionGoalDescription::from_str("(forall (?a ?b) (at start (= a b)))")
                 .is_value(DurativeActionGoalDescription::forall(
                     TypedList::from_iter([

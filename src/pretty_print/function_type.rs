@@ -21,16 +21,17 @@ mod tests {
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
     use crate::FunctionType;
+    use assert2::check;
 
     #[test]
     fn function_type_number() {
         let x = FunctionType::NUMBER;
-        assert_eq!(prettify!(x, 10), "number");
+        check!(prettify!(x, 10) == "number");
     }
 
     #[test]
     fn function_type_custom() {
         let x = FunctionType::new("fuel");
-        assert_eq!(prettify!(x, 10), "fuel");
+        check!(prettify!(x, 10) == "fuel");
     }
 }

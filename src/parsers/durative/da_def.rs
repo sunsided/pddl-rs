@@ -28,6 +28,7 @@ crate::parsers::impl_parser!(DurativeActionDefinition => parse_da_def);
 
 #[cfg(test)]
 mod tests {
+    use assert2::check;
 
     use crate::*;
 
@@ -96,10 +97,10 @@ mod tests {
             )"#;
 
         let da_def = DurativeActionDefinition::from_str(input).unwrap();
-        assert_eq!(da_def.symbol(), &"move".into());
-        assert_eq!(da_def.parameters().len(), 3);
-        assert!(da_def.duration().is_some());
-        assert!(da_def.condition().is_some());
-        assert!(da_def.effect().is_some());
+        check!(da_def.symbol() == &"move".into());
+        check!(da_def.parameters().len() == 3);
+        check!(da_def.duration().is_some());
+        check!(da_def.condition().is_some());
+        check!(da_def.effect().is_some());
     }
 }

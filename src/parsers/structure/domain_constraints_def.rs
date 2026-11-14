@@ -17,13 +17,14 @@ crate::parsers::impl_parser!(DomainConstraintsDef => parse_domain_constraints_de
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
         let input = "(:constraints (and))";
-        assert!(
+        check!(
             DomainConstraintsDef::from_str(input).is_value(DomainConstraintsDef::new(
                 ConstraintGoalDescription::and([])
             ))
@@ -33,7 +34,7 @@ mod tests {
     #[test]
     fn doc_example_0() {
         let input = "(:constraints (and))";
-        assert!(
+        check!(
             DomainConstraintsDef::from_str(input).is_value(DomainConstraintsDef::new(
                 ConstraintGoalDescription::and([])
             ))

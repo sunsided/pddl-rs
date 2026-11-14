@@ -51,19 +51,20 @@ crate::parsers::impl_parser!(InitElement => parse_init_el);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(InitElement::from_str("(train-not-in-use train1)").is_value(
+        check!(InitElement::from_str("(train-not-in-use train1)").is_value(
             InitElement::new_literal(NameLiteral::new(AtomicFormula::new_predicate(
                 "train-not-in-use".into(),
                 ["train1".into()]
             )))
         ));
 
-        assert!(
+        check!(
             InitElement::from_str("(at 10 (train-not-in-use train2))").is_value(
                 InitElement::new_at(
                     Number::from(10),
@@ -75,14 +76,14 @@ mod tests {
             )
         );
 
-        assert!(InitElement::from_str("(= (battery rover) 100)").is_value(
+        check!(InitElement::from_str("(= (battery rover) 100)").is_value(
             InitElement::new_is_value(
                 BasicFunctionTerm::new("battery".into(), ["rover".into()]),
                 Number::from(100)
             )
         ));
 
-        assert!(InitElement::from_str("(= (location rover) base)").is_value(
+        check!(InitElement::from_str("(= (location rover) base)").is_value(
             InitElement::new_is_object(
                 BasicFunctionTerm::new("location".into(), ["rover".into()]),
                 Name::from("base")
@@ -92,14 +93,14 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        assert!(InitElement::from_str("(train-not-in-use train1)").is_value(
+        check!(InitElement::from_str("(train-not-in-use train1)").is_value(
             InitElement::new_literal(NameLiteral::new(AtomicFormula::new_predicate(
                 "train-not-in-use".into(),
                 ["train1".into()]
             )))
         ));
 
-        assert!(
+        check!(
             InitElement::from_str("(at 10 (train-not-in-use train2))").is_value(
                 InitElement::new_at(
                     Number::from(10),
@@ -111,14 +112,14 @@ mod tests {
             )
         );
 
-        assert!(InitElement::from_str("(= (battery rover) 100)").is_value(
+        check!(InitElement::from_str("(= (battery rover) 100)").is_value(
             InitElement::new_is_value(
                 BasicFunctionTerm::new("battery".into(), ["rover".into()]),
                 Number::from(100)
             )
         ));
 
-        assert!(InitElement::from_str("(= (location rover) base)").is_value(
+        check!(InitElement::from_str("(= (location rover) base)").is_value(
             InitElement::new_is_object(
                 BasicFunctionTerm::new("location".into(), ["rover".into()]),
                 Name::from("base")

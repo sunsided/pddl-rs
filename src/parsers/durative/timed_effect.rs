@@ -51,6 +51,7 @@ crate::parsers::impl_parser!(TimedEffect => parse_timed_effect);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
@@ -62,7 +63,7 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        assert!(
+        check!(
             TimedEffect::from_str("(at start (= x y))").is_value(TimedEffect::conditional(
                 TimeSpecifier::Start,
                 EffectCondition::new(PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
@@ -71,7 +72,7 @@ mod tests {
             ))
         );
 
-        assert!(
+        check!(
             TimedEffect::from_str("(at end (assign fun-sym ?duration))").is_value(
                 TimedEffect::fluent(
                     TimeSpecifier::End,
@@ -84,7 +85,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             TimedEffect::from_str("(increase fun-sym #t)").is_value(TimedEffect::continuous(
                 TimedAssignOperator::Increase,
                 FunctionHead::Simple("fun-sym".into()),
@@ -95,7 +96,7 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        assert!(
+        check!(
             TimedEffect::from_str("(at start (= x y))").is_value(TimedEffect::conditional(
                 TimeSpecifier::Start,
                 EffectCondition::new(PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
@@ -104,7 +105,7 @@ mod tests {
             ))
         );
 
-        assert!(
+        check!(
             TimedEffect::from_str("(at end (assign fun-sym ?duration))").is_value(
                 TimedEffect::fluent(
                     TimeSpecifier::End,
@@ -117,7 +118,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             TimedEffect::from_str("(increase fun-sym #t)").is_value(TimedEffect::continuous(
                 TimedAssignOperator::Increase,
                 FunctionHead::Simple("fun-sym".into()),

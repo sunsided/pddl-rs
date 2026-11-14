@@ -22,12 +22,13 @@ crate::parsers::impl_parser!(EffectCondition => parse_effect_condition);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(
+        check!(
             EffectCondition::from_str("(= x y)").is_value(EffectCondition::Single(
                 PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
                     EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
@@ -35,7 +36,7 @@ mod tests {
             ))
         );
 
-        assert!(
+        check!(
             EffectCondition::from_str("(and (= x y) (not (= ?a B)))").is_value(
                 EffectCondition::All(vec![
                     PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
@@ -54,12 +55,12 @@ mod tests {
 
     #[test]
     fn test_parse_empty_and() {
-        assert!(EffectCondition::from_str("(and)").is_value(EffectCondition::All(vec![])));
+        check!(EffectCondition::from_str("(and)").is_value(EffectCondition::All(vec![])));
     }
 
     #[test]
     fn doc_example_0() {
-        assert!(
+        check!(
             EffectCondition::from_str("(= x y)").is_value(EffectCondition::Single(
                 PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
                     EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
@@ -67,7 +68,7 @@ mod tests {
             ))
         );
 
-        assert!(
+        check!(
             EffectCondition::from_str("(and (= x y) (not (= ?a B)))").is_value(
                 EffectCondition::All(vec![
                     PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(

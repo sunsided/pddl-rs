@@ -30,6 +30,7 @@ mod tests {
     use crate::parsers::UnwrapValue;
     use crate::parsers::{atomic_formula, parse_name, parse_one, parse_term};
     use crate::*;
+    use assert2::check;
 
     #[test]
     fn it_works() {
@@ -39,12 +40,12 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        assert!(
+        check!(
             parse_one("(= x y)", |n| atomic_formula(n, parse_name)).is_value(
                 AtomicFormula::Equality(EqualityAtomicFormula::new("x".into(), "y".into()))
             )
         );
-        assert!(
+        check!(
             parse_one("(move a b)", |n| atomic_formula(n, parse_name)).is_value(
                 AtomicFormula::Predicate(PredicateAtomicFormula::new(
                     Predicate::from("move"),
@@ -56,12 +57,12 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        assert!(
+        check!(
             parse_one("(= x y)", |n| atomic_formula(n, parse_name)).is_value(
                 AtomicFormula::Equality(EqualityAtomicFormula::new("x".into(), "y".into()))
             )
         );
-        assert!(
+        check!(
             parse_one("(move a b)", |n| atomic_formula(n, parse_name)).is_value(
                 AtomicFormula::Predicate(PredicateAtomicFormula::new(
                     Predicate::from("move"),

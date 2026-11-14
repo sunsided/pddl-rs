@@ -109,6 +109,7 @@ impl Visitor<Domain, RcDoc<'static>> for PrettyRenderer {
 mod tests {
     use crate::parsers::Parser;
     use crate::pretty_print::Pretty;
+    use assert2::check;
 
     #[test]
     fn domain_basic() {
@@ -119,8 +120,8 @@ mod tests {
 )"#;
         let domain = crate::Domain::from_str(input).unwrap();
         let output = domain.pretty(80).to_string();
-        assert!(output.contains("(define"));
-        assert!(output.contains("(domain test)"));
+        check!(output.contains("(define"));
+        check!(output.contains("(domain test)"));
     }
 
     #[test]
@@ -131,7 +132,7 @@ mod tests {
 )"#;
         let domain = crate::Domain::from_str(input).unwrap();
         let output = domain.pretty(80).to_string();
-        assert!(output.contains("(:extends parent)"));
+        check!(output.contains("(:extends parent)"));
     }
 
     #[test]
@@ -142,7 +143,7 @@ mod tests {
 )"#;
         let domain = crate::Domain::from_str(input).unwrap();
         let output = domain.pretty(80).to_string();
-        assert!(output.contains("(:constants c1 c2)"));
+        check!(output.contains("(:constants c1 c2)"));
     }
 
     #[test]
@@ -160,7 +161,7 @@ mod tests {
 )"#;
         let domain = crate::Domain::from_str(input).unwrap();
         let output = domain.pretty(80).to_string();
-        assert!(output.contains("(:action a"));
+        check!(output.contains("(:action a"));
     }
 
     #[test]
@@ -177,7 +178,7 @@ mod tests {
 )"#;
         let domain = crate::Domain::from_str(input).unwrap();
         let output = domain.pretty(80).to_string();
-        assert!(output.contains("(:action a"));
+        check!(output.contains("(:action a"));
     }
 
     #[test]
@@ -189,7 +190,7 @@ mod tests {
 )"#;
         let domain = crate::Domain::from_str(input).unwrap();
         let output = domain.pretty(80).to_string();
-        assert!(output.contains("(:timeless"));
+        check!(output.contains("(:timeless"));
     }
 
     #[test]
@@ -205,7 +206,7 @@ mod tests {
 )"#;
         let domain = crate::Domain::from_str(input).unwrap();
         let output = domain.pretty(80).to_string();
-        assert!(output.contains("(:action"));
+        check!(output.contains("(:action"));
     }
 }
 
@@ -213,11 +214,12 @@ mod tests {
 mod tests_without_parser {
     use crate::pretty_print::Pretty;
     use crate::types::{ConstraintGoalDescription, DomainConstraintsDef};
+    use assert2::check;
 
     #[test]
     fn domain_constraints_def_empty_nil() {
         let dc = DomainConstraintsDef::new(ConstraintGoalDescription::default());
         let out = dc.pretty(80).to_string();
-        assert_eq!(out, "");
+        check!(out == "");
     }
 }

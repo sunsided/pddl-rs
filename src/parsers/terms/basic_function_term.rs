@@ -22,33 +22,33 @@ crate::parsers::impl_parser!(BasicFunctionTerm => parse_basic_function_term);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
         let value = BasicFunctionTerm::from_str("abcde").unwrap();
-        assert_eq!(value, BasicFunctionTerm::new("abcde".into(), []));
+        check!(value == BasicFunctionTerm::new("abcde".into(), []));
 
         let value = BasicFunctionTerm::from_str("(abcde)").unwrap();
-        assert_eq!(value, BasicFunctionTerm::new("abcde".into(), []));
+        check!(value == BasicFunctionTerm::new("abcde".into(), []));
 
         let value = BasicFunctionTerm::from_str("(abcde x y z)").unwrap();
-        assert_eq!(
-            value,
-            BasicFunctionTerm::new("abcde".into(), ["x".into(), "y".into(), "z".into()])
+        check!(
+            value == BasicFunctionTerm::new("abcde".into(), ["x".into(), "y".into(), "z".into()])
         );
     }
 
     #[test]
     fn doc_example_0() {
-        assert!(BasicFunctionTerm::from_str("abcde")
+        check!(BasicFunctionTerm::from_str("abcde")
             .is_value(BasicFunctionTerm::new("abcde".into(), [])));
 
-        assert!(BasicFunctionTerm::from_str("(abcde)")
+        check!(BasicFunctionTerm::from_str("(abcde)")
             .is_value(BasicFunctionTerm::new("abcde".into(), [])));
 
-        assert!(
+        check!(
             BasicFunctionTerm::from_str("(abcde x y z)").is_value(BasicFunctionTerm::new(
                 "abcde".into(),
                 ["x".into(), "y".into(), "z".into()]
@@ -59,15 +59,14 @@ mod tests {
     #[test]
     fn doc_example_1() {
         let value = BasicFunctionTerm::from_str("abcde").unwrap();
-        assert_eq!(value, BasicFunctionTerm::new("abcde".into(), []));
+        check!(value == BasicFunctionTerm::new("abcde".into(), []));
 
         let value = BasicFunctionTerm::from_str("(abcde)").unwrap();
-        assert_eq!(value, BasicFunctionTerm::new("abcde".into(), []));
+        check!(value == BasicFunctionTerm::new("abcde".into(), []));
 
         let value = BasicFunctionTerm::from_str("(abcde x y z)").unwrap();
-        assert_eq!(
-            value,
-            BasicFunctionTerm::new("abcde".into(), ["x".into(), "y".into(), "z".into()])
+        check!(
+            value == BasicFunctionTerm::new("abcde".into(), ["x".into(), "y".into(), "z".into()])
         );
     }
 }

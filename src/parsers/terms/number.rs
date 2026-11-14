@@ -31,33 +31,31 @@ crate::parsers::impl_parser!(Number => parse_number);
 mod tests {
     use crate::parsers::UnwrapValue;
     use crate::{Number, Parser};
+    use assert2::check;
 
     #[test]
     fn test_parse() {
-        assert!(Number::from_str("0").is_value(0.0.into()));
-        assert!(Number::from_str("1000").is_value(1000.0.into()));
-        assert!(Number::from_str("012").is_value(12.0.into()));
-        assert!(Number::from_str("1.234").is_value(1.234.into()));
-        assert!(Number::from_str("1.20").is_value(1.2.into()));
+        check!(Number::from_str("0").is_value(0.0.into()));
+        check!(Number::from_str("1000").is_value(1000.0.into()));
+        check!(Number::from_str("012").is_value(12.0.into()));
+        check!(Number::from_str("1.234").is_value(1.234.into()));
+        check!(Number::from_str("1.20").is_value(1.2.into()));
 
-        assert!(Number::from_str("1000a").is_err());
-        assert!(Number::from_str(".0").is_err());
-        assert!(Number::from_str(".").is_err());
-        assert!(Number::from_str("1.").is_err());
-        assert!(Number::from_str("1.2.3").is_err());
-        assert!(Number::from_str("-1").is_err());
-        assert!(Number::from_str("1e5").is_err());
+        check!(Number::from_str("1000a").is_err());
+        check!(Number::from_str(".0").is_err());
+        check!(Number::from_str(".").is_err());
+        check!(Number::from_str("1.").is_err());
+        check!(Number::from_str("1.2.3").is_err());
+        check!(Number::from_str("-1").is_err());
+        check!(Number::from_str("1e5").is_err());
     }
 
     #[test]
     fn too_many_digits_is_an_error_not_a_panic() {
         // About 1e308 still fits an f64; one more digit overflows.
-        assert!(Number::from_str(&"9".repeat(308)).is_ok());
+        check!(Number::from_str(&"9".repeat(308)).is_ok());
         let error = Number::from_str(&"9".repeat(309)).unwrap_err();
-        assert_eq!(error.reason(), Some("number out of range"));
-        assert_eq!(
-            (error.offset(), error.found().map(|f| &f[..3])),
-            (0, Some("999"))
-        );
+        check!(error.reason() == Some("number out of range"));
+        check!((error.offset(), error.found().map(|f| &f[..3])) == (0, Some("999")));
     }
 }

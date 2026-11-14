@@ -69,45 +69,43 @@ impl Deref for FunctionType {
 mod tests {
     use super::*;
     use crate::{Name, PrimitiveType};
+    use assert2::check;
 
     #[test]
     fn default_is_number() {
         let ft = FunctionType::default();
-        assert_eq!(ft, FunctionType::NUMBER);
+        check!(ft == FunctionType::NUMBER);
     }
 
     #[test]
     fn number_constant() {
-        assert_eq!(FunctionType::NUMBER.deref(), &Type::NUMBER);
+        check!(FunctionType::NUMBER.deref() == &Type::NUMBER);
     }
 
     #[test]
     fn new_from_type() {
         let ft = FunctionType::new(Type::OBJECT);
-        assert_eq!(*ft, Type::OBJECT);
+        check!(*ft == Type::OBJECT);
     }
 
     #[test]
     fn new_from_str() {
         let ft = FunctionType::new("location");
-        assert_eq!(
-            *ft,
-            Type::exactly(PrimitiveType::new(Name::new("location")))
-        );
+        check!(*ft == Type::exactly(PrimitiveType::new(Name::new("location"))));
     }
 
     #[test]
     fn from_str() {
         let ft: FunctionType = "number".into();
-        assert_eq!(*ft, Type::NUMBER);
+        check!(*ft == Type::NUMBER);
     }
 
     #[test]
     fn from_vec_str() {
         let ft: FunctionType = vec!["location", "room"].into();
-        assert!(matches!(*ft, Type::EitherOf(_)));
+        check!(let Type::EitherOf(_) = *ft);
         if let Type::EitherOf(types) = &*ft {
-            assert_eq!(types.len(), 2);
+            check!(types.len() == 2);
         }
     }
 
@@ -115,27 +113,27 @@ mod tests {
     fn from_type() {
         let t = Type::OBJECT;
         let ft = FunctionType::from(t);
-        assert_eq!(*ft, Type::OBJECT);
+        check!(*ft == Type::OBJECT);
     }
 
     #[test]
     fn from_const() {
         let ft = FunctionType::from(Type::NUMBER);
-        assert_eq!(ft, FunctionType::NUMBER);
+        check!(ft == FunctionType::NUMBER);
     }
 
     #[test]
     fn deref_works() {
         let ft = FunctionType::new(Type::OBJECT);
         let t: &Type = &ft;
-        assert_eq!(t, &Type::OBJECT);
+        check!(t == &Type::OBJECT);
     }
 
     #[test]
     fn clone_works() {
         let ft = FunctionType::new(Type::OBJECT);
         let clone = ft.clone();
-        assert_eq!(ft, clone);
+        check!(ft == clone);
     }
 
     #[test]
@@ -143,14 +141,14 @@ mod tests {
         let a = FunctionType::new(Type::OBJECT);
         let b = FunctionType::new(Type::OBJECT);
         let c = FunctionType::NUMBER;
-        assert_eq!(a, b);
-        assert_ne!(a, c);
+        check!(a == b);
+        check!(a != c);
     }
 
     #[test]
     fn debug_impl() {
         let ft = FunctionType::NUMBER;
         let dbg = format!("{ft:?}");
-        assert!(dbg.contains("FunctionType"));
+        check!(dbg.contains("FunctionType"));
     }
 }

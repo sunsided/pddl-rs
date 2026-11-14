@@ -24,6 +24,7 @@ crate::parsers::impl_parser!(StructureDef => parse_structure_def);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
@@ -37,7 +38,7 @@ mod tests {
 
         let action = StructureDef::from_str(input);
 
-        assert!(action.is_value(StructureDef::action(ActionDefinition::new(
+        check!(action.is_value(StructureDef::action(ActionDefinition::new(
             ActionSymbol::from("take-out"),
             TypedList::from_iter([Variable::from("x").to_typed("physob")]),
             PreconditionGoalDescriptions::preference(PreferenceGoalDescription::from_gd(
@@ -65,7 +66,7 @@ mod tests {
 
         let action = StructureDef::from_str(input);
 
-        assert!(action.is_value(StructureDef::action(ActionDefinition::new(
+        check!(action.is_value(StructureDef::action(ActionDefinition::new(
             ActionSymbol::from("take-out"),
             TypedList::from_iter([Variable::from("x").to_typed("physob")]),
             PreconditionGoalDescriptions::preference(PreferenceGoalDescription::from_gd(

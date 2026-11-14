@@ -81,6 +81,7 @@ impl Visitor<Problem, RcDoc<'static>> for PrettyRenderer {
 mod tests {
     use crate::parsers::Parser;
     use crate::pretty_print::Pretty;
+    use assert2::check;
 
     #[test]
     fn problem_basic() {
@@ -91,9 +92,9 @@ mod tests {
 )"#;
         let problem = crate::Problem::from_str(input).unwrap();
         let output = problem.pretty(80).to_string();
-        assert!(output.contains("(define"));
-        assert!(output.contains("(problem test-prob)"));
-        assert!(output.contains("(:domain test)"));
+        check!(output.contains("(define"));
+        check!(output.contains("(problem test-prob)"));
+        check!(output.contains("(:domain test)"));
     }
 
     #[test]
@@ -106,7 +107,7 @@ mod tests {
 )"#;
         let problem = crate::Problem::from_str(input).unwrap();
         let output = problem.pretty(80).to_string();
-        assert!(output.contains("(:requirements :strips)"));
+        check!(output.contains("(:requirements :strips)"));
     }
 
     #[test]
@@ -119,7 +120,7 @@ mod tests {
 )"#;
         let problem = crate::Problem::from_str(input).unwrap();
         let output = problem.pretty(80).to_string();
-        assert!(output.contains("(:objects a b)"));
+        check!(output.contains("(:objects a b)"));
     }
 
     #[test]
@@ -133,7 +134,7 @@ mod tests {
 )"#;
         let problem = crate::Problem::from_str(input).unwrap();
         let output = problem.pretty(80).to_string();
-        assert!(output.contains("(:constraints"), "{output}");
+        check!(output.contains("(:constraints"), "{output}");
     }
 
     #[test]
@@ -146,7 +147,7 @@ mod tests {
 )"#;
         let problem = crate::Problem::from_str(input).unwrap();
         let output = problem.pretty(80).to_string();
-        assert!(output.contains("(:metric minimize total-time)"));
+        check!(output.contains("(:metric minimize total-time)"));
     }
 
     #[test]
@@ -159,7 +160,7 @@ mod tests {
 )"#;
         let problem = crate::Problem::from_str(input).unwrap();
         let output = problem.pretty(80).to_string();
-        assert!(output.contains("(:length (:serial 10))"));
+        check!(output.contains("(:length (:serial 10))"));
     }
 }
 
@@ -167,11 +168,12 @@ mod tests {
 mod tests_without_parser {
     use crate::pretty_print::Pretty;
     use crate::types::{PreferenceConstraintGoalDescriptions, ProblemConstraintsDef};
+    use assert2::check;
 
     #[test]
     fn problem_constraints_def_empty_nil() {
         let dc = ProblemConstraintsDef::new(PreferenceConstraintGoalDescriptions::new(Vec::new()));
         let out = dc.pretty(80).to_string();
-        assert_eq!(out, "");
+        check!(out == "");
     }
 }

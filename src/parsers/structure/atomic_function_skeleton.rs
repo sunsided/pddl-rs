@@ -19,24 +19,25 @@ crate::parsers::impl_parser!(AtomicFunctionSkeleton => parse_atomic_function_ske
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
         let value = AtomicFunctionSkeleton::from_str("(battery-amount ?r - rover)").unwrap();
-        assert_eq!(
-            value,
-            AtomicFunctionSkeleton::new(
-                FunctionSymbol::from("battery-amount"),
-                TypedList::from_iter([Variable::from("r").to_typed("rover")])
-            )
+        check!(
+            value
+                == AtomicFunctionSkeleton::new(
+                    FunctionSymbol::from("battery-amount"),
+                    TypedList::from_iter([Variable::from("r").to_typed("rover")])
+                )
         );
     }
 
     #[test]
     fn doc_example_0() {
-        assert!(
+        check!(
             AtomicFunctionSkeleton::from_str("(battery-amount ?r - rover)").is_value(
                 AtomicFunctionSkeleton::new(
                     FunctionSymbol::from("battery-amount"),
@@ -50,12 +51,12 @@ mod tests {
     fn doc_example_1() {
         let value = AtomicFunctionSkeleton::from_str("(battery-amount ?r - rover)").unwrap();
 
-        assert_eq!(
-            value,
-            AtomicFunctionSkeleton::new(
-                FunctionSymbol::from("battery-amount"),
-                TypedList::from_iter([Variable::from("r").to_typed("rover")])
-            )
+        check!(
+            value
+                == AtomicFunctionSkeleton::new(
+                    FunctionSymbol::from("battery-amount"),
+                    TypedList::from_iter([Variable::from("r").to_typed("rover")])
+                )
         );
     }
 }

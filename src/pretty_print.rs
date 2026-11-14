@@ -181,12 +181,13 @@ pub(crate) use prettify;
 mod tests {
     use super::*;
     use crate::Name;
+    use assert2::check;
 
     #[test]
     fn to_pretty_works() {
         let renderer = PrettyRenderer;
         let doc = RcDoc::text("hello");
-        assert_eq!(renderer.to_pretty(doc, 80), "hello");
+        check!(renderer.to_pretty(doc, 80) == "hello");
     }
 
     #[test]
@@ -194,27 +195,27 @@ mod tests {
         let renderer = PrettyRenderer;
         let doc = renderer.sexpr_nested("head", [RcDoc::text("a"), RcDoc::text("b")]);
         let out = renderer.to_pretty(doc, 80);
-        assert!(out.starts_with("(head"));
-        assert!(out.contains('\n'));
+        check!(out.starts_with("(head"));
+        check!(out.contains('\n'));
     }
 
     #[test]
     fn list_works() {
         let renderer = PrettyRenderer;
         let doc = renderer.list([RcDoc::text("a"), RcDoc::text("b")], RcDoc::text(", "));
-        assert_eq!(renderer.to_pretty(doc, 80), "a, b");
+        check!(renderer.to_pretty(doc, 80) == "a, b");
     }
 
     #[test]
     fn pretty_display_works() {
         let out = Name::new("x").pretty(10).to_string();
-        assert_eq!(out, "x");
+        check!(out == "x");
     }
 
     #[test]
     fn keyword_line_works() {
         let renderer = PrettyRenderer;
         let doc = renderer.keyword_line("foo");
-        assert_eq!(renderer.to_pretty(doc, 80), ":foo");
+        check!(renderer.to_pretty(doc, 80) == ":foo");
     }
 }

@@ -46,6 +46,7 @@ crate::parsers::impl_parser!(PreferenceConstraintGoalDescriptions => parse_pref_
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
@@ -63,10 +64,10 @@ mod tests {
             Term::Name("z".into()),
         )));
 
-        assert!(PreferenceConstraintGoalDescriptions::from_str("(and)")
+        check!(PreferenceConstraintGoalDescriptions::from_str("(and)")
             .is_value(PreferenceConstraintGoalDescriptions::default()));
 
-        assert!(PreferenceConstraintGoalDescriptions::from_str(
+        check!(PreferenceConstraintGoalDescriptions::from_str(
             "(and (at end (= x y)) (at end (not (= x z))))"
         )
         .is_value(PreferenceConstraintGoalDescriptions::from_iter([
@@ -78,7 +79,7 @@ mod tests {
             )),
         ])));
 
-        assert!(PreferenceConstraintGoalDescriptions::from_str(
+        check!(PreferenceConstraintGoalDescriptions::from_str(
             "(forall (?x ?z) (sometime (= ?x ?z)))"
         )
         .is_value(PreferenceConstraintGoalDescriptions::forall(
@@ -93,7 +94,7 @@ mod tests {
             ))
         )));
 
-        assert!(
+        check!(
             PreferenceConstraintGoalDescriptions::from_str("(at end (= x y))").is_value(
                 PreferenceConstraintGoalDescriptions::goal(ConstraintGoalDescription::AtEnd(
                     gd_a.clone()
@@ -101,7 +102,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             PreferenceConstraintGoalDescriptions::from_str("(preference (at end (= x y)))")
                 .is_value(PreferenceConstraintGoalDescriptions::preference(
                     None,
@@ -109,7 +110,7 @@ mod tests {
                 ))
         );
 
-        assert!(PreferenceConstraintGoalDescriptions::from_str(
+        check!(PreferenceConstraintGoalDescriptions::from_str(
             "(preference name (at end (= x y)))"
         )
         .is_value(PreferenceConstraintGoalDescriptions::preference(
@@ -132,10 +133,10 @@ mod tests {
             Term::Name("z".into()),
         )));
 
-        assert!(PreferenceConstraintGoalDescriptions::from_str("(and)")
+        check!(PreferenceConstraintGoalDescriptions::from_str("(and)")
             .is_value(PreferenceConstraintGoalDescriptions::default()));
 
-        assert!(PreferenceConstraintGoalDescriptions::from_str(
+        check!(PreferenceConstraintGoalDescriptions::from_str(
             "(and (at end (= x y)) (at end (not (= x z))))"
         )
         .is_value(PreferenceConstraintGoalDescriptions::from_iter([
@@ -147,7 +148,7 @@ mod tests {
             )),
         ])));
 
-        assert!(PreferenceConstraintGoalDescriptions::from_str(
+        check!(PreferenceConstraintGoalDescriptions::from_str(
             "(forall (?x ?z) (sometime (= ?x ?z)))"
         )
         .is_value(PreferenceConstraintGoalDescriptions::forall(
@@ -163,7 +164,7 @@ mod tests {
             ))
         )));
 
-        assert!(
+        check!(
             PreferenceConstraintGoalDescriptions::from_str("(at end (= x y))").is_value(
                 PreferenceConstraintGoalDescriptions::goal(ConstraintGoalDescription::AtEnd(
                     gd_a.clone()
@@ -171,7 +172,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             PreferenceConstraintGoalDescriptions::from_str("(preference (at end (= x y)))")
                 .is_value(PreferenceConstraintGoalDescriptions::preference(
                     None,
@@ -179,7 +180,7 @@ mod tests {
                 ))
         );
 
-        assert!(PreferenceConstraintGoalDescriptions::from_str(
+        check!(PreferenceConstraintGoalDescriptions::from_str(
             "(preference name (at end (= x y)))"
         )
         .is_value(PreferenceConstraintGoalDescriptions::preference(

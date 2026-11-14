@@ -302,14 +302,15 @@ impl Display for NameVariant {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert2::check;
 
     #[test]
     fn len_is_in_bytes_like_str() {
         // `&name[..name.len()]` must not panic on non-ASCII names.
         let name = Name::new("é");
-        assert_eq!(name.len(), 2);
-        assert_eq!(&name[..name.len()], "é");
-        assert!(Name::default().is_empty());
+        check!(name.len() == 2);
+        check!(&name[..name.len()] == "é");
+        check!(Name::default().is_empty());
     }
 
     #[test]
@@ -319,15 +320,15 @@ mod tests {
             .into_iter()
             .map(Name::from)
             .collect();
-        assert_eq!(names.len(), 2);
-        assert!(names.contains(&Name::from("aT")));
-        assert_ne!(Name::from("ab"), Name::from("abc"));
+        check!(names.len() == 2);
+        check!(names.contains(&Name::from("aT")));
+        check!(Name::from("ab") != Name::from("abc"));
     }
 
     #[test]
     fn keeps_original_spelling() {
-        assert_eq!(&*Name::from("NeXt"), "NeXt");
-        assert_eq!(Name::from("NeXt").to_string(), "NeXt");
+        check!(&*Name::from("NeXt") == "NeXt");
+        check!(Name::from("NeXt").to_string() == "NeXt");
     }
 
     #[cfg(feature = "interning")]
@@ -339,29 +340,29 @@ mod tests {
         for i in 0..10_000 {
             drop(interner.intern(&format!("unused-{i}")));
         }
-        assert!(interner.names.len() <= 1024, "{}", interner.names.len());
-        assert!(!interner.names.contains("unused-0"));
-        assert!(Arc::ptr_eq(&kept, &interner.intern("kept")));
+        check!(interner.names.len() <= 1024, "{}", interner.names.len());
+        check!(!interner.names.contains("unused-0"));
+        check!(Arc::ptr_eq(&kept, &interner.intern("kept")));
     }
 
     #[cfg(feature = "interning")]
     #[test]
     fn same_spelling_shares_storage() {
         let (a, b) = (Name::new("shared-spelling"), Name::new("shared-spelling"));
-        assert!(std::ptr::eq(a.as_ptr(), b.as_ptr()));
+        check!(std::ptr::eq(a.as_ptr(), b.as_ptr()));
     }
 
     #[test]
     fn test_display() {
         let name = Name::new("x");
-        assert_eq!(format!("{name}"), "x");
+        check!(format!("{name}") == "x");
     }
 
     #[test]
     fn map_to_static_works() {
         let object = Name::map_to_static("object").expect("mapping works");
         let number = Name::map_to_static("number").expect("mapping works");
-        assert_eq!(object, well_known::OBJECT);
-        assert_eq!(number, well_known::NUMBER);
+        check!(object == well_known::OBJECT);
+        check!(number == well_known::NUMBER);
     }
 }

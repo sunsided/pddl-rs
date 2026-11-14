@@ -19,6 +19,7 @@ crate::parsers::impl_parser!(AtomicFormulaSkeleton => parse_atomic_formula_skele
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
@@ -26,21 +27,21 @@ mod tests {
     fn test_parse() {
         let value = AtomicFormulaSkeleton::from_str("(at ?x - physob ?y - location)").unwrap();
 
-        assert_eq!(
-            value,
-            AtomicFormulaSkeleton::new(
-                Predicate::from("at"),
-                TypedList::from_iter([
-                    Variable::from("x").to_typed("physob"),
-                    Variable::from("y").to_typed("location")
-                ])
-            )
+        check!(
+            value
+                == AtomicFormulaSkeleton::new(
+                    Predicate::from("at"),
+                    TypedList::from_iter([
+                        Variable::from("x").to_typed("physob"),
+                        Variable::from("y").to_typed("location")
+                    ])
+                )
         );
     }
 
     #[test]
     fn doc_example_0() {
-        assert!(
+        check!(
             AtomicFormulaSkeleton::from_str("(at ?x - physob ?y - location)").is_value(
                 AtomicFormulaSkeleton::new(
                     Predicate::from("at"),
@@ -57,15 +58,15 @@ mod tests {
     fn doc_example_1() {
         let value = AtomicFormulaSkeleton::from_str("(at ?x - physob ?y - location)").unwrap();
 
-        assert_eq!(
-            value,
-            AtomicFormulaSkeleton::new(
-                Predicate::from("at"),
-                TypedList::from_iter([
-                    Variable::from("x").to_typed("physob"),
-                    Variable::from("y").to_typed("location")
-                ])
-            )
+        check!(
+            value
+                == AtomicFormulaSkeleton::new(
+                    Predicate::from("at"),
+                    TypedList::from_iter([
+                        Variable::from("x").to_typed("physob"),
+                        Variable::from("y").to_typed("location")
+                    ])
+                )
         );
     }
 }

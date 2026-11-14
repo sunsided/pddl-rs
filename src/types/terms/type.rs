@@ -185,11 +185,12 @@ impl Display for Type {
 mod tests {
     use super::*;
     use crate::Parser;
+    use assert2::check;
 
     #[test]
     fn simple_works() {
         let t = Type::exactly("location");
-        assert_eq!(format!("{t}"), "location");
+        check!(format!("{t}") == "location");
     }
 
     #[test]
@@ -197,8 +198,8 @@ mod tests {
         let t = Type::from_str("object").unwrap();
 
         let mut iter = t.into_iter();
-        assert!(iter.next().is_some());
-        assert!(iter.next().is_none());
+        check!(iter.next().is_some());
+        check!(iter.next().is_none());
     }
 
     #[test]
@@ -206,14 +207,14 @@ mod tests {
         let t = Type::from_str("(either object number)").unwrap();
 
         let mut iter = t.into_iter();
-        assert!(iter.next().is_some());
-        assert!(iter.next().is_some());
-        assert!(iter.next().is_none());
+        check!(iter.next().is_some());
+        check!(iter.next().is_some());
+        check!(iter.next().is_none());
     }
 
     #[test]
     fn either_works() {
         let t = Type::either(["location", "memory"]);
-        assert_eq!(format!("{t}"), "(either location memory)");
+        check!(format!("{t}") == "(either location memory)");
     }
 }

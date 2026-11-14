@@ -16,12 +16,13 @@ crate::parsers::impl_parser!(FunctionType => parse_function_type);
 mod tests {
     use crate::parsers::UnwrapValue;
     use crate::{FunctionType, Parser, Type};
+    use assert2::check;
 
     #[test]
     fn test_parse() {
-        assert!(FunctionType::from_str("number")
+        check!(FunctionType::from_str("number")
             .is_value(FunctionType::new(Type::Exactly("number".into()))));
-        assert!(FunctionType::from_str("(either object number)")
+        check!(FunctionType::from_str("(either object number)")
             .is_value(FunctionType::new(Type::from_iter(["object", "number"]))));
     }
 }

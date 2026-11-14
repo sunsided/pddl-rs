@@ -1,5 +1,7 @@
 //! Parses the briefcase world domain and problem and checks the resulting AST.
 
+use assert2::check;
+
 use pddl::{
     AtomicFormula, Domain, GoalDescription, Parser, PreconditionGoalDescription,
     PreferenceGoalDescription, Problem, TermLiteral,
@@ -65,12 +67,12 @@ fn parse_domain_works() {
     // The input was parsed completely, nothing followed the domain definition.
 
     // All elements were parsed.
-    assert_eq!(domain.name(), "briefcase-world");
-    assert_eq!(domain.requirements().len(), 4);
-    assert_eq!(domain.types().len(), 2);
-    assert_eq!(domain.constants().len(), 3);
-    assert_eq!(domain.predicates().len(), 2);
-    assert_eq!(domain.structure().len(), 3);
+    check!(domain.name() == "briefcase-world");
+    check!(domain.requirements().len() == 4);
+    check!(domain.types().len() == 2);
+    check!(domain.constants().len() == 3);
+    check!(domain.predicates().len() == 2);
+    check!(domain.structure().len() == 3);
 }
 
 #[test]
@@ -80,11 +82,11 @@ fn parse_problem_works() {
     // The input was parsed completely, nothing followed the problem definition.
 
     // All elements were parsed.
-    assert_eq!(problem.name(), "get-paid");
-    assert_eq!(problem.domain(), "briefcase-world");
-    assert!(problem.requirements().is_empty());
-    assert_eq!(problem.init().len(), 9);
-    assert_eq!(problem.goals().len(), 3);
+    check!(problem.name() == "get-paid");
+    check!(problem.domain() == "briefcase-world");
+    check!(problem.requirements().is_empty());
+    check!(problem.init().len() == 9);
+    check!(problem.goals().len() == 3);
 
     let mut atomic_formulas = 0;
     for goal in problem.goals().iter() {
@@ -116,5 +118,5 @@ fn parse_problem_works() {
             PreconditionGoalDescription::Forall(_, _) => {}
         }
     }
-    assert_eq!(atomic_formulas, 3);
+    check!(atomic_formulas == 3);
 }

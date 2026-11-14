@@ -222,6 +222,7 @@ mod tests {
         AtomicFormula, BinaryComparison, FluentComparison, FluentExpression, Number, Predicate,
         Term,
     };
+    use assert2::check;
 
     #[test]
     #[allow(deprecated)]
@@ -276,30 +277,30 @@ mod tests {
             Vec::<Term>::new(),
         ));
         let negated = !gd;
-        assert!(matches!(negated, GoalDescription::Not(_)));
+        check!(let GoalDescription::Not(_) = negated);
     }
 
     #[test]
     fn is_empty_non_empty_variants() {
         let af = AtomicFormula::predicate(Predicate::string("at"), Vec::<Term>::new());
-        assert!(!GoalDescription::AtomicFormula(af).is_empty());
+        check!(!GoalDescription::AtomicFormula(af).is_empty());
 
         let literal = TermLiteral::new(AtomicFormula::predicate(
             Predicate::string("x"),
             Vec::<Term>::new(),
         ));
-        assert!(!GoalDescription::Literal(literal).is_empty());
+        check!(!GoalDescription::Literal(literal).is_empty());
 
         let gd = GoalDescription::AtomicFormula(AtomicFormula::predicate(
             Predicate::string("on"),
             Vec::<Term>::new(),
         ));
-        assert!(!GoalDescription::Not(Box::new(gd.clone())).is_empty());
-        assert!(!GoalDescription::Imply(Box::new(gd.clone()), Box::new(gd.clone())).is_empty());
-        assert!(
+        check!(!GoalDescription::Not(Box::new(gd.clone())).is_empty());
+        check!(!GoalDescription::Imply(Box::new(gd.clone()), Box::new(gd.clone())).is_empty());
+        check!(
             !GoalDescription::Exists(TypedVariables::default(), Box::new(gd.clone())).is_empty()
         );
-        assert!(
+        check!(
             !GoalDescription::ForAll(TypedVariables::default(), Box::new(gd.clone())).is_empty()
         );
 
@@ -308,23 +309,23 @@ mod tests {
             FluentExpression::number(Number::from(1)),
             FluentExpression::number(Number::from(0)),
         );
-        assert!(!GoalDescription::FluentComparison(f_comp).is_empty());
+        check!(!GoalDescription::FluentComparison(f_comp).is_empty());
     }
 
     #[test]
     fn is_empty_recursive() {
         let empty_and = GoalDescription::and(Vec::new());
-        assert!(empty_and.is_empty());
+        check!(empty_and.is_empty());
 
         let empty_or = GoalDescription::or(Vec::new());
-        assert!(empty_or.is_empty());
+        check!(empty_or.is_empty());
 
         let nested_empty = GoalDescription::Not(Box::new(GoalDescription::and(Vec::new())));
-        assert!(nested_empty.is_empty());
+        check!(nested_empty.is_empty());
 
         let non_empty_and = GoalDescription::and(vec![GoalDescription::AtomicFormula(
             AtomicFormula::predicate(Predicate::string("at"), Vec::<Term>::new()),
         )]);
-        assert!(!non_empty_and.is_empty());
+        check!(!non_empty_and.is_empty());
     }
 }

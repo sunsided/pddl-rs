@@ -84,84 +84,78 @@ mod tests {
     use super::*;
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
+    use assert2::check;
 
     #[test]
     fn assign_op_works() {
-        assert_eq!(prettify!(AssignOp::Assign, 10), "assign");
-        assert_eq!(prettify!(AssignOp::ScaleUp, 10), "scale-up");
-        assert_eq!(prettify!(AssignOp::Increase, 10), "increase");
+        check!(prettify!(AssignOp::Assign, 10) == "assign");
+        check!(prettify!(AssignOp::ScaleUp, 10) == "scale-up");
+        check!(prettify!(AssignOp::Increase, 10) == "increase");
     }
 
     #[test]
     fn binary_op_works() {
-        assert_eq!(prettify!(BinaryOp::Addition, 10), "+");
-        assert_eq!(prettify!(BinaryOp::Multiplication, 10), "*");
+        check!(prettify!(BinaryOp::Addition, 10) == "+");
+        check!(prettify!(BinaryOp::Multiplication, 10) == "*");
     }
 
     #[test]
     fn requirement_works() {
-        assert_eq!(prettify!(Requirement::Strips, 10), ":strips");
-        assert_eq!(prettify!(Requirement::Typing, 10), ":typing");
+        check!(prettify!(Requirement::Strips, 10) == ":strips");
+        check!(prettify!(Requirement::Typing, 10) == ":typing");
     }
 
     #[test]
     fn time_specifier_works() {
-        assert_eq!(prettify!(TimeSpecifier::Start, 10), "start");
-        assert_eq!(prettify!(TimeSpecifier::End, 10), "end");
+        check!(prettify!(TimeSpecifier::Start, 10) == "start");
+        check!(prettify!(TimeSpecifier::End, 10) == "end");
     }
 
     #[test]
     fn assign_op_t_works() {
-        assert_eq!(prettify!(TimedAssignOperator::Increase, 10), "increase");
-        assert_eq!(prettify!(TimedAssignOperator::Decrease, 10), "decrease");
+        check!(prettify!(TimedAssignOperator::Increase, 10) == "increase");
+        check!(prettify!(TimedAssignOperator::Decrease, 10) == "decrease");
     }
 
     #[test]
     fn binary_comp_all_variants() {
-        assert_eq!(prettify!(BinaryComparison::GreaterThan, 10), ">");
-        assert_eq!(prettify!(BinaryComparison::LessThan, 10), "<");
-        assert_eq!(prettify!(BinaryComparison::Equal, 10), "=");
-        assert_eq!(prettify!(BinaryComparison::GreaterOrEqual, 10), ">=");
-        assert_eq!(prettify!(BinaryComparison::LessThanOrEqual, 10), "<=");
+        check!(prettify!(BinaryComparison::GreaterThan, 10) == ">");
+        check!(prettify!(BinaryComparison::LessThan, 10) == "<");
+        check!(prettify!(BinaryComparison::Equal, 10) == "=");
+        check!(prettify!(BinaryComparison::GreaterOrEqual, 10) == ">=");
+        check!(prettify!(BinaryComparison::LessThanOrEqual, 10) == "<=");
     }
 
     #[test]
     fn d_op_all_variants() {
-        assert_eq!(prettify!(DurationOperator::Equal, 10), "=");
-        assert_eq!(prettify!(DurationOperator::GreaterOrEqual, 10), ">=");
-        assert_eq!(prettify!(DurationOperator::LessThanOrEqual, 10), "<=");
+        check!(prettify!(DurationOperator::Equal, 10) == "=");
+        check!(prettify!(DurationOperator::GreaterOrEqual, 10) == ">=");
+        check!(prettify!(DurationOperator::LessThanOrEqual, 10) == "<=");
     }
 
     #[test]
     fn multi_op_works() {
-        assert_eq!(prettify!(MultiOp::Addition, 10), "+");
-        assert_eq!(prettify!(MultiOp::Multiplication, 10), "*");
+        check!(prettify!(MultiOp::Addition, 10) == "+");
+        check!(prettify!(MultiOp::Multiplication, 10) == "*");
     }
 
     #[test]
     fn optimization_works() {
-        assert_eq!(prettify!(Optimization::Minimize, 10), "minimize");
-        assert_eq!(prettify!(Optimization::Maximize, 10), "maximize");
+        check!(prettify!(Optimization::Minimize, 10) == "minimize");
+        check!(prettify!(Optimization::Maximize, 10) == "maximize");
     }
 
     #[test]
     fn interval_works() {
-        assert_eq!(prettify!(Interval::All, 10), "all");
+        check!(prettify!(Interval::All, 10) == "all");
     }
 
     #[test]
     fn requirement_more_variants() {
-        assert_eq!(
-            prettify!(Requirement::NegativePreconditions, 10),
-            ":negative-preconditions"
+        check!(prettify!(Requirement::NegativePreconditions, 10) == ":negative-preconditions");
+        check!(
+            prettify!(Requirement::DisjunctivePreconditions, 10) == ":disjunctive-preconditions"
         );
-        assert_eq!(
-            prettify!(Requirement::DisjunctivePreconditions, 10),
-            ":disjunctive-preconditions"
-        );
-        assert_eq!(
-            prettify!(Requirement::DurativeActions, 10),
-            ":durative-actions"
-        );
+        check!(prettify!(Requirement::DurativeActions, 10) == ":durative-actions");
     }
 }

@@ -17,13 +17,14 @@ crate::parsers::impl_parser!(Types => parse_types_def);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
         let input = "(:types location physob)";
-        assert!(
+        check!(
             Types::from_str(input).is_value(Types::new(TypedList::from_iter([
                 Typed::new(Name::from("location"), Type::OBJECT),
                 Typed::new(Name::from("physob"), Type::OBJECT),
@@ -34,7 +35,7 @@ mod tests {
     #[test]
     fn doc_example_0() {
         let input = "(:types location physob)";
-        assert!(
+        check!(
             Types::from_str(input).is_value(Types::new(TypedList::from_iter([
                 Typed::new(Name::from("location"), Type::OBJECT),
                 Typed::new(Name::from("physob"), Type::OBJECT),

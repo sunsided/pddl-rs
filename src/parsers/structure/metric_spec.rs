@@ -20,12 +20,13 @@ crate::parsers::impl_parser!(MetricSpec => parse_problem_metric_spec);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(
+        check!(
             MetricSpec::from_str("(:metric minimize total-time)").is_value(MetricSpec::new(
                 Optimization::Minimize,
                 MetricFluentExpression::TotalTime
@@ -35,7 +36,7 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        assert!(
+        check!(
             MetricSpec::from_str("(:metric minimize total-time)").is_value(MetricSpec::new(
                 Optimization::Minimize,
                 MetricFluentExpression::TotalTime

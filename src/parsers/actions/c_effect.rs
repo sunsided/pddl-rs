@@ -57,63 +57,68 @@ crate::parsers::impl_parser!(
 #[allow(deprecated)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
         let value = ConditionalEffect::from_str("(= x y)").unwrap();
-        assert_eq!(
-            value,
-            ConditionalEffect::new_primitive_effect(PrimitiveEffect::from_str("(= x y)").unwrap())
+        check!(
+            value
+                == ConditionalEffect::new_primitive_effect(
+                    PrimitiveEffect::from_str("(= x y)").unwrap()
+                )
         );
 
         let value = ConditionalEffect::from_str("(not (= ?a B))").unwrap();
-        assert_eq!(
-            value,
-            ConditionalEffect::new_primitive_effect(
-                PrimitiveEffect::from_str("(not (= ?a B))").unwrap()
-            )
+        check!(
+            value
+                == ConditionalEffect::new_primitive_effect(
+                    PrimitiveEffect::from_str("(not (= ?a B))").unwrap()
+                )
         );
 
         let value = ConditionalEffect::from_str("(forall (?a ?b) (= ?a ?b))").unwrap();
-        assert_eq!(
-            value,
-            ConditionalEffect::new_forall(
-                TypedList::from_iter([
-                    Typed::new_object(Variable::new_string("a")),
-                    Typed::new_object(Variable::new_string("b")),
-                ]),
-                Effects::from_str("(= ?a ?b)").unwrap()
-            )
+        check!(
+            value
+                == ConditionalEffect::new_forall(
+                    TypedList::from_iter([
+                        Typed::new_object(Variable::new_string("a")),
+                        Typed::new_object(Variable::new_string("b")),
+                    ]),
+                    Effects::from_str("(= ?a ?b)").unwrap()
+                )
         );
 
         let input = r#"(when
             (and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))
             (and (person-is-happy ?p)))"#;
         let value = ConditionalEffect::from_str(input).unwrap();
-        assert_eq!(
-            value,
-            ConditionalEffect::new_when(
-                GoalDescription::from_str("(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))")
+        check!(
+            value
+                == ConditionalEffect::new_when(
+                    GoalDescription::from_str(
+                        "(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))"
+                    )
                     .unwrap(),
-                EffectCondition::from_str("(and (person-is-happy ?p))").unwrap()
-            )
+                    EffectCondition::from_str("(and (person-is-happy ?p))").unwrap()
+                )
         );
     }
 
     #[test]
     fn test_parse_forall() {
         let value = ForallConditionalEffect::from_str("(forall (?a ?b) (= ?a ?b))").unwrap();
-        assert_eq!(
-            value,
-            ForallConditionalEffect::new(
-                TypedList::from_iter([
-                    Typed::new_object(Variable::new_string("a")),
-                    Typed::new_object(Variable::new_string("b")),
-                ]),
-                Effects::from_str("(= ?a ?b)").unwrap()
-            )
+        check!(
+            value
+                == ForallConditionalEffect::new(
+                    TypedList::from_iter([
+                        Typed::new_object(Variable::new_string("a")),
+                        Typed::new_object(Variable::new_string("b")),
+                    ]),
+                    Effects::from_str("(= ?a ?b)").unwrap()
+                )
         );
     }
 
@@ -124,26 +129,28 @@ mod tests {
             (and (person-is-happy ?p)))"#;
 
         let value = WhenConditionalEffect::from_str(input).unwrap();
-        assert_eq!(
-            value,
-            WhenConditionalEffect::new(
-                GoalDescription::from_str("(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))")
+        check!(
+            value
+                == WhenConditionalEffect::new(
+                    GoalDescription::from_str(
+                        "(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))"
+                    )
                     .unwrap(),
-                EffectCondition::from_str("(and (person-is-happy ?p))").unwrap()
-            )
+                    EffectCondition::from_str("(and (person-is-happy ?p))").unwrap()
+                )
         );
     }
 
     #[test]
     fn doc_example_0() {
-        assert!(
+        check!(
             ConditionalEffect::from_str("(= x y)").is_value(ConditionalEffect::Effect(
                 PrimitiveEffect::AtomicFormula(AtomicFormula::Equality(
                     EqualityAtomicFormula::new(Term::Name("x".into()), Term::Name("y".into()))
                 ))
             ))
         );
-        assert!(
+        check!(
             ConditionalEffect::from_str("(not (= ?a B))").is_value(ConditionalEffect::Effect(
                 PrimitiveEffect::NotAtomicFormula(AtomicFormula::Equality(
                     EqualityAtomicFormula::new(Term::Variable("a".into()), Term::Name("B".into()))
@@ -151,7 +158,7 @@ mod tests {
             ))
         );
 
-        assert!(
+        check!(
             ConditionalEffect::from_str("(forall (?a ?b) (= ?a ?b))").is_value(
                 ConditionalEffect::forall(
                     TypedList::from_iter([
@@ -171,7 +178,7 @@ mod tests {
         let input = r#"(when
             (and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))
             (and (person-is-happy ?p)))"#;
-        assert!(
+        check!(
             ConditionalEffect::from_str(input).is_value(ConditionalEffect::when(
                 GoalDescription::new_and([
                     GoalDescription::new_atomic_formula(AtomicFormula::new_predicate(
@@ -193,7 +200,7 @@ mod tests {
 
     #[test]
     fn doc_example_1() {
-        assert!(
+        check!(
             ForallConditionalEffect::from_str("(forall (?a ?b) (= ?a ?b))").is_value(
                 ForallConditionalEffect::new(
                     TypedList::from_iter([
@@ -217,7 +224,7 @@ mod tests {
             (and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))
             (and (person-is-happy ?p)))"#;
 
-        assert!(
+        check!(
             WhenConditionalEffect::from_str(input).is_value(WhenConditionalEffect::new(
                 GoalDescription::new_and([
                     GoalDescription::new_atomic_formula(AtomicFormula::new_predicate(
@@ -240,57 +247,61 @@ mod tests {
     #[test]
     fn doc_example_3() {
         let value = ConditionalEffect::from_str("(= x y)").unwrap();
-        assert_eq!(
-            value,
-            ConditionalEffect::new_primitive_effect(PrimitiveEffect::from_str("(= x y)").unwrap())
+        check!(
+            value
+                == ConditionalEffect::new_primitive_effect(
+                    PrimitiveEffect::from_str("(= x y)").unwrap()
+                )
         );
 
         let value = ConditionalEffect::from_str("(not (= ?a B))").unwrap();
-        assert_eq!(
-            value,
-            ConditionalEffect::new_primitive_effect(
-                PrimitiveEffect::from_str("(not (= ?a B))").unwrap()
-            )
+        check!(
+            value
+                == ConditionalEffect::new_primitive_effect(
+                    PrimitiveEffect::from_str("(not (= ?a B))").unwrap()
+                )
         );
 
         let value = ConditionalEffect::from_str("(forall (?a ?b) (= ?a ?b))").unwrap();
-        assert_eq!(
-            value,
-            ConditionalEffect::forall(
-                TypedList::from_iter([
-                    Typed::object(Variable::new_string("a")),
-                    Typed::object(Variable::new_string("b")),
-                ]),
-                Effects::from_str("(= ?a ?b)").unwrap()
-            )
+        check!(
+            value
+                == ConditionalEffect::forall(
+                    TypedList::from_iter([
+                        Typed::object(Variable::new_string("a")),
+                        Typed::object(Variable::new_string("b")),
+                    ]),
+                    Effects::from_str("(= ?a ?b)").unwrap()
+                )
         );
 
         let input = r#"(when
             (and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))
             (and (person-is-happy ?p)))"#;
         let value = ConditionalEffect::from_str(input).unwrap();
-        assert_eq!(
-            value,
-            ConditionalEffect::when(
-                GoalDescription::from_str("(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))")
+        check!(
+            value
+                == ConditionalEffect::when(
+                    GoalDescription::from_str(
+                        "(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))"
+                    )
                     .unwrap(),
-                EffectCondition::from_str("(and (person-is-happy ?p))").unwrap()
-            )
+                    EffectCondition::from_str("(and (person-is-happy ?p))").unwrap()
+                )
         );
     }
 
     #[test]
     fn doc_example_4() {
         let value = ForallConditionalEffect::from_str("(forall (?a ?b) (= ?a ?b))").unwrap();
-        assert_eq!(
-            value,
-            ForallConditionalEffect::new(
-                TypedList::from_iter([
-                    Typed::object(Variable::new_string("a")),
-                    Typed::object(Variable::new_string("b")),
-                ]),
-                Effects::from_str("(= ?a ?b)").unwrap()
-            )
+        check!(
+            value
+                == ForallConditionalEffect::new(
+                    TypedList::from_iter([
+                        Typed::object(Variable::new_string("a")),
+                        Typed::object(Variable::new_string("b")),
+                    ]),
+                    Effects::from_str("(= ?a ?b)").unwrap()
+                )
         );
     }
 
@@ -301,13 +312,15 @@ mod tests {
             (and (person-is-happy ?p)))"#;
 
         let value = WhenConditionalEffect::from_str(input).unwrap();
-        assert_eq!(
-            value,
-            WhenConditionalEffect::new(
-                GoalDescription::from_str("(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))")
+        check!(
+            value
+                == WhenConditionalEffect::new(
+                    GoalDescription::from_str(
+                        "(and (has-hot-chocolate ?p ?c) (has-marshmallows ?c))"
+                    )
                     .unwrap(),
-                EffectCondition::from_str("(and (person-is-happy ?p))").unwrap()
-            )
+                    EffectCondition::from_str("(and (person-is-happy ?p))").unwrap()
+                )
         );
     }
 }

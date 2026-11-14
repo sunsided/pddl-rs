@@ -72,14 +72,15 @@ impl FromIterator<PrimitiveEffect> for EffectCondition {
 mod tests {
     use super::*;
     use crate::Parser;
+    use assert2::check;
 
     #[test]
     fn flatten_with_single_element_works() {
         let effect_a = PrimitiveEffect::from_str("(= x y)").unwrap();
 
         let mut iter = EffectCondition::new(effect_a).into_iter();
-        assert!(iter.next().is_some());
-        assert!(iter.next().is_none());
+        check!(iter.next().is_some());
+        check!(iter.next().is_none());
     }
 
     #[test]
@@ -88,8 +89,8 @@ mod tests {
         let effect_b = PrimitiveEffect::from_str("(assign fun-sym 1.23)").unwrap();
 
         let mut iter = EffectCondition::from_iter([effect_a, effect_b]).into_iter();
-        assert!(iter.next().is_some());
-        assert!(iter.next().is_some());
-        assert!(iter.next().is_none());
+        check!(iter.next().is_some());
+        check!(iter.next().is_some());
+        check!(iter.next().is_none());
     }
 }

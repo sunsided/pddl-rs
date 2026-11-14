@@ -23,11 +23,12 @@ crate::parsers::impl_parser!(MultiOp => parse_multi_op);
 mod tests {
     use crate::parsers::UnwrapValue;
     use crate::{MultiOp, Parser};
+    use assert2::check;
 
     #[test]
     fn test_parse() {
-        assert!(MultiOp::from_str("+").is_value(MultiOp::Addition));
-        assert!(MultiOp::from_str("-").is_err());
-        assert!(MultiOp::from_str("(+)").is_err());
+        check!(MultiOp::from_str("+").is_value(MultiOp::Addition));
+        check!(MultiOp::from_str("-").is_err());
+        check!(MultiOp::from_str("(+)").is_err());
     }
 }

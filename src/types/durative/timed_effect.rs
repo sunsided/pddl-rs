@@ -106,6 +106,7 @@ mod tests {
         AssignOp, AtomicFormula, DurativeActionFluentExpression, DurativeActionFunctionAssignment,
         EffectCondition, FluentExpression, FunctionSymbol, Name, Predicate, PrimitiveEffect, Term,
     };
+    use assert2::check;
 
     fn make_effect_condition() -> EffectCondition {
         let af = AtomicFormula::<Term>::predicate(
@@ -119,20 +120,14 @@ mod tests {
     fn conditional_at_start() {
         let ec = make_effect_condition();
         let te = TimedEffect::conditional(TimeSpecifier::Start, ec);
-        assert!(matches!(
-            te,
-            TimedEffect::Conditional(TimeSpecifier::Start, _)
-        ));
+        check!(let TimedEffect::Conditional(TimeSpecifier::Start, _) = te);
     }
 
     #[test]
     fn conditional_at_end() {
         let ec = make_effect_condition();
         let te = TimedEffect::conditional(TimeSpecifier::End, ec);
-        assert!(matches!(
-            te,
-            TimedEffect::Conditional(TimeSpecifier::End, _)
-        ));
+        check!(let TimedEffect::Conditional(TimeSpecifier::End, _) = te);
     }
 
     #[test]
@@ -143,10 +138,7 @@ mod tests {
             DurativeActionFluentExpression::FluentExpression(FluentExpression::number(10)),
         );
         let te = TimedEffect::fluent(TimeSpecifier::End, fa);
-        assert!(matches!(
-            te,
-            TimedEffect::NumericFluent(TimeSpecifier::End, _)
-        ));
+        check!(let TimedEffect::NumericFluent(TimeSpecifier::End, _) = te);
     }
 
     #[test]
@@ -155,17 +147,14 @@ mod tests {
         let head = FunctionHead::Simple(FunctionSymbol::string("battery"));
         let exp = TimedFluentExpression::scaled(FluentExpression::number(1));
         let te = TimedEffect::continuous(op, head, exp);
-        assert!(matches!(te, TimedEffect::ContinuousEffect(_, _, _)));
+        check!(let TimedEffect::ContinuousEffect(_, _, _) = te);
     }
 
     #[test]
     fn from_conditional_tuple() {
         let ec = make_effect_condition();
         let te = TimedEffect::from((TimeSpecifier::Start, ec));
-        assert!(matches!(
-            te,
-            TimedEffect::Conditional(TimeSpecifier::Start, _)
-        ));
+        check!(let TimedEffect::Conditional(TimeSpecifier::Start, _) = te);
     }
 
     #[test]
@@ -176,10 +165,7 @@ mod tests {
             DurativeActionFluentExpression::FluentExpression(FluentExpression::number(10)),
         );
         let te = TimedEffect::from((TimeSpecifier::End, fa));
-        assert!(matches!(
-            te,
-            TimedEffect::NumericFluent(TimeSpecifier::End, _)
-        ));
+        check!(let TimedEffect::NumericFluent(TimeSpecifier::End, _) = te);
     }
 
     #[test]
@@ -188,7 +174,7 @@ mod tests {
         let head = FunctionHead::Simple(FunctionSymbol::string("battery"));
         let exp = TimedFluentExpression::scaled(FluentExpression::number(1));
         let te = TimedEffect::from((op, head, exp));
-        assert!(matches!(te, TimedEffect::ContinuousEffect(_, _, _)));
+        check!(let TimedEffect::ContinuousEffect(_, _, _) = te);
     }
 
     #[test]
@@ -196,10 +182,7 @@ mod tests {
     fn deprecated_conditional() {
         let ec = make_effect_condition();
         let te = TimedEffect::new_conditional(TimeSpecifier::Start, ec);
-        assert!(matches!(
-            te,
-            TimedEffect::Conditional(TimeSpecifier::Start, _)
-        ));
+        check!(let TimedEffect::Conditional(TimeSpecifier::Start, _) = te);
     }
 
     #[test]
@@ -207,7 +190,7 @@ mod tests {
         let ec = make_effect_condition();
         let te = TimedEffect::conditional(TimeSpecifier::Start, ec);
         let clone = te.clone();
-        assert_eq!(te, clone);
+        check!(te == clone);
     }
 
     #[test]
@@ -215,6 +198,6 @@ mod tests {
         let ec = make_effect_condition();
         let te = TimedEffect::conditional(TimeSpecifier::Start, ec);
         let dbg = format!("{te:?}");
-        assert!(dbg.contains("Conditional"));
+        check!(dbg.contains("Conditional"));
     }
 }

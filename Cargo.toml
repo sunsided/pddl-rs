@@ -71,6 +71,7 @@ name = "pretty_print"
 required-features = ["pretty", "parser"]
 
 [dev-dependencies]
+assert2 = "0.4.1"
 criterion = { version = "0.8", default-features = false, features = ["cargo_bench_support"] }
 
 [package.metadata.docs.rs]

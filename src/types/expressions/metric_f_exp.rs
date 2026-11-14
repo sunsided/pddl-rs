@@ -122,6 +122,7 @@ pub type MetricFExp = MetricFluentExpression;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert2::check;
 
     #[test]
     #[allow(deprecated)]
@@ -148,7 +149,7 @@ mod tests {
         let lhs = MetricFluentExpression::number(1);
         let rhs = MetricFluentExpression::number(2);
         let expr = MetricFluentExpression::binary_op(BinaryOp::Addition, lhs, rhs);
-        assert!(matches!(expr, MetricFluentExpression::BinaryOp(_, _, _)));
+        check!(let MetricFluentExpression::BinaryOp(_, _, _) = expr);
     }
 
     #[test]
@@ -159,39 +160,39 @@ mod tests {
             MetricFluentExpression::number(3),
         ];
         let expr = MetricFluentExpression::multi_op(MultiOp::Addition, lhs, rhs);
-        assert!(matches!(expr, MetricFluentExpression::MultiOp(_, _, _)));
+        check!(let MetricFluentExpression::MultiOp(_, _, _) = expr);
     }
 
     #[test]
     fn negative_constructor() {
         let inner = MetricFluentExpression::number(5);
         let expr = MetricFluentExpression::negative(inner);
-        assert!(matches!(expr, MetricFluentExpression::Negative(_)));
+        check!(let MetricFluentExpression::Negative(_) = expr);
     }
 
     #[test]
     fn number_constructor() {
         let expr = MetricFluentExpression::number(42);
-        assert!(matches!(expr, MetricFluentExpression::Number(_)));
+        check!(let MetricFluentExpression::Number(_) = expr);
     }
 
     #[test]
     fn function_constructor() {
         let sym = FunctionSymbol::new(Name::new("cost"));
         let expr = MetricFluentExpression::function(sym, vec![Name::new("x")]);
-        assert!(matches!(expr, MetricFluentExpression::Function(_, _)));
+        check!(let MetricFluentExpression::Function(_, _) = expr);
     }
 
     #[test]
     fn total_time_constructor() {
         let expr = MetricFluentExpression::total_time();
-        assert!(matches!(expr, MetricFluentExpression::TotalTime));
+        check!(let MetricFluentExpression::TotalTime = expr);
     }
 
     #[test]
     fn is_violated_constructor() {
         let pref = PreferenceName::new("p");
         let expr = MetricFluentExpression::is_violated(pref);
-        assert!(matches!(expr, MetricFluentExpression::IsViolated(_)));
+        check!(let MetricFluentExpression::IsViolated(_) = expr);
     }
 }

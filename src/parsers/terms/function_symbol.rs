@@ -16,17 +16,18 @@ crate::parsers::impl_parser!(FunctionSymbol => parse_function_symbol);
 mod tests {
     use crate::parsers::UnwrapValue;
     use crate::{FunctionSymbol, Parser};
+    use assert2::check;
 
     #[test]
     fn test_parse() {
-        assert!(FunctionSymbol::from_str("abcde").is_value("abcde".into()));
-        assert!(FunctionSymbol::from_str("a-1_2").is_value("a-1_2".into()));
-        assert!(FunctionSymbol::from_str("Z01").is_value("Z01".into()));
-        assert!(FunctionSymbol::from_str("x-_-_").is_value("x-_-_".into()));
-        assert!(FunctionSymbol::from_str("").is_err());
-        assert!(FunctionSymbol::from_str(".").is_err());
-        assert!(FunctionSymbol::from_str("-abc").is_err());
-        assert!(FunctionSymbol::from_str("0124").is_err());
-        assert!(FunctionSymbol::from_str("-1").is_err());
+        check!(FunctionSymbol::from_str("abcde").is_value("abcde".into()));
+        check!(FunctionSymbol::from_str("a-1_2").is_value("a-1_2".into()));
+        check!(FunctionSymbol::from_str("Z01").is_value("Z01".into()));
+        check!(FunctionSymbol::from_str("x-_-_").is_value("x-_-_".into()));
+        check!(FunctionSymbol::from_str("").is_err());
+        check!(FunctionSymbol::from_str(".").is_err());
+        check!(FunctionSymbol::from_str("-abc").is_err());
+        check!(FunctionSymbol::from_str("0124").is_err());
+        check!(FunctionSymbol::from_str("-1").is_err());
     }
 }

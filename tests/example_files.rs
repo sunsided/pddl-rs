@@ -1,5 +1,7 @@
 //! Parses third-party example domains and problems from `tests/data/`.
 
+use assert2::check;
+
 use pddl::{Parser, PddlFile};
 use std::collections::HashSet;
 use std::fs;
@@ -69,6 +71,6 @@ fn example_files_parse() {
             ));
         }
     }
-    assert_eq!(checked, 89, "expected 86 VHPOP and 3 Potoroo files");
-    assert!(failures.is_empty(), "{}", failures.join("\n"));
+    check!(checked == 89, "expected 86 VHPOP and 3 Potoroo files");
+    check!(failures.is_empty(), "{}", failures.join("\n"));
 }

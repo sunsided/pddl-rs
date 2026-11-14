@@ -99,6 +99,7 @@ mod tests {
         PreferenceTimedGoalDescription, PrimitiveEffect, Term, TimeSpecifier, TimedGoalDescription,
         TypedVariables,
     };
+    use assert2::check;
 
     fn make_timed_effect() -> TimedEffect {
         let af = AtomicFormula::<Term>::predicate(
@@ -142,7 +143,7 @@ mod tests {
     fn from_timed_effect() {
         let effect = make_timed_effect();
         let from_effect: DurativeActionEffect = effect.clone().into();
-        assert_eq!(from_effect, DurativeActionEffect::timed(effect));
+        check!(from_effect == DurativeActionEffect::timed(effect));
     }
 
     #[test]
@@ -150,10 +151,7 @@ mod tests {
         let effect = make_da_effect();
         let from_iter: DurativeActionEffect =
             vec![effect.clone(), effect.clone()].into_iter().collect();
-        assert_eq!(
-            from_iter,
-            DurativeActionEffect::and(vec![effect, make_da_effect()])
-        );
+        check!(from_iter == DurativeActionEffect::and(vec![effect, make_da_effect()]));
     }
 
     #[test]
@@ -161,7 +159,7 @@ mod tests {
         let effect = make_da_effect();
         let vars = TypedVariables::default();
         let from_tuple: DurativeActionEffect = (vars.clone(), effect.clone()).into();
-        assert_eq!(from_tuple, DurativeActionEffect::r#forall(vars, effect));
+        check!(from_tuple == DurativeActionEffect::r#forall(vars, effect));
     }
 
     #[test]
@@ -169,6 +167,6 @@ mod tests {
         let effect = make_timed_effect();
         let da_gd = make_da_gd();
         let from_tuple: DurativeActionEffect = (da_gd.clone(), effect.clone()).into();
-        assert_eq!(from_tuple, DurativeActionEffect::when(da_gd, effect));
+        check!(from_tuple == DurativeActionEffect::when(da_gd, effect));
     }
 }

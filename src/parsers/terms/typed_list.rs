@@ -49,6 +49,7 @@ mod tests {
     use super::*;
     use crate::parsers::{parse_name, parse_one};
     use crate::{Name, ToTyped};
+    use assert2::check;
 
     fn parse(input: &str) -> Result<TypedList<Name>, crate::ParseError> {
         parse_one(input, |node| {
@@ -59,50 +60,50 @@ mod tests {
     #[test]
     fn test_parse() {
         // Single implicitly typed element.
-        assert_eq!(
-            parse("(abc)").unwrap(),
-            TypedList::from_iter([Name::new("abc").to_typed(Type::OBJECT)])
+        check!(
+            parse("(abc)").unwrap()
+                == TypedList::from_iter([Name::new("abc").to_typed(Type::OBJECT)])
         );
 
         // Multiple implicitly typed elements.
-        assert_eq!(
-            parse("(abc def\nghi)").unwrap(),
-            TypedList::from_iter([
-                Name::new("abc").to_typed(Type::OBJECT),
-                Name::new("def").to_typed(Type::OBJECT),
-                Name::new("ghi").to_typed(Type::OBJECT)
-            ])
+        check!(
+            parse("(abc def\nghi)").unwrap()
+                == TypedList::from_iter([
+                    Name::new("abc").to_typed(Type::OBJECT),
+                    Name::new("def").to_typed(Type::OBJECT),
+                    Name::new("ghi").to_typed(Type::OBJECT)
+                ])
         );
 
         // Multiple explicitly typed elements.
-        assert_eq!(
-            parse("(abc def - word kitchen - room)").unwrap(),
-            TypedList::from_iter([
-                Name::new("abc").to_typed("word"),
-                Name::new("def").to_typed("word"),
-                Name::new("kitchen").to_typed("room"),
-            ])
+        check!(
+            parse("(abc def - word kitchen - room)").unwrap()
+                == TypedList::from_iter([
+                    Name::new("abc").to_typed("word"),
+                    Name::new("def").to_typed("word"),
+                    Name::new("kitchen").to_typed("room"),
+                ])
         );
 
         // Mixed
-        assert_eq!(
-            parse("(abc def - word\ngeorgia - (either state country)\nuvw xyz)").unwrap(),
-            TypedList::from_iter([
-                Name::new("abc").to_typed("word"),
-                Name::new("def").to_typed("word"),
-                Name::new("georgia").to_typed_either(["state", "country"]),
-                Name::new("uvw").to_typed(Type::OBJECT),
-                Name::new("xyz").to_typed(Type::OBJECT)
-            ])
+        check!(
+            parse("(abc def - word\ngeorgia - (either state country)\nuvw xyz)").unwrap()
+                == TypedList::from_iter([
+                    Name::new("abc").to_typed("word"),
+                    Name::new("def").to_typed("word"),
+                    Name::new("georgia").to_typed_either(["state", "country"]),
+                    Name::new("uvw").to_typed(Type::OBJECT),
+                    Name::new("xyz").to_typed(Type::OBJECT)
+                ])
         );
 
-        assert_eq!(parse("()").unwrap(), TypedList::default());
+        check!(parse("()").unwrap() == TypedList::default());
     }
 
     #[test]
     fn errors_point_at_the_mistake() {
-        assert_eq!(parse("(- t)").unwrap_err().offset(), 1);
-        assert_eq!(parse("(a -)").unwrap_err().offset(), 4);
-        assert_eq!(parse("(a - b 1)").unwrap_err().offset(), 7);
+        check!(parse("(- t)").unwrap_err().offset() == 1);
+        check!(parse("(a -)").unwrap_err().offset() == 4);
+        check!(parse("(a - b 1)").unwrap_err().offset() == 7);
     }
 }

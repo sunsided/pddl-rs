@@ -25,20 +25,21 @@ impl<V: PartialEq> UnwrapValue<V> for Result<V, ParseError> {
 mod test {
     use super::*;
     use crate::{Name, Parser};
+    use assert2::check;
 
     #[test]
     fn test_is_value() {
-        assert!(Name::from_str("abcde").is_value("abcde".into()));
+        check!(Name::from_str("abcde").is_value("abcde".into()));
     }
 
     #[test]
     fn test_is_value_fails() {
-        assert!(!Name::from_str("abcde").is_value("xyz".into()));
-        assert!(!Name::from_str("-").is_value("abcde".into()));
+        check!(!Name::from_str("abcde").is_value("xyz".into()));
+        check!(!Name::from_str("-").is_value("abcde".into()));
     }
 
     #[test]
     fn test_unwrap_value() {
-        assert_eq!(Name::from_str("abcde").unwrap_value(), "abcde");
+        check!(Name::from_str("abcde").unwrap_value() == "abcde");
     }
 }

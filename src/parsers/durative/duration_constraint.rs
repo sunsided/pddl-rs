@@ -35,16 +35,17 @@ impl crate::parsers::Parser for DurationConstraint {
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
         let input = "()";
-        assert!(DurationConstraint::from_str(input).is_value(None));
+        check!(DurationConstraint::from_str(input).is_value(None));
 
         let input = "(= ?duration 5)";
-        assert!(
+        check!(
             DurationConstraint::from_str(input).is_value(Some(DurationConstraint::new(
                 SimpleDurationConstraint::Op(
                     DurationOperator::Equal,
@@ -54,7 +55,7 @@ mod tests {
         );
 
         let input = "(at end (<= ?duration 1.23))";
-        assert!(
+        check!(
             DurationConstraint::from_str(input).is_value(Some(DurationConstraint::new(
                 SimpleDurationConstraint::new_at(
                     TimeSpecifier::End,
@@ -67,7 +68,7 @@ mod tests {
         );
 
         let input = "(and (at end (<= ?duration 1.23)) (>= ?duration 1.0))";
-        assert!(
+        check!(
             DurationConstraint::from_str(input).is_value(Some(DurationConstraint::new_all([
                 SimpleDurationConstraint::new_at(
                     TimeSpecifier::End,
@@ -87,10 +88,10 @@ mod tests {
     #[test]
     fn doc_example_0() {
         let input = "()";
-        assert!(DurationConstraint::from_str(input).is_value(None));
+        check!(DurationConstraint::from_str(input).is_value(None));
 
         let input = "(= ?duration 5)";
-        assert!(
+        check!(
             DurationConstraint::from_str(input).is_value(Some(DurationConstraint::new(
                 SimpleDurationConstraint::Op(
                     DurationOperator::Equal,
@@ -100,7 +101,7 @@ mod tests {
         );
 
         let input = "(at end (<= ?duration 1.23))";
-        assert!(
+        check!(
             DurationConstraint::from_str(input).is_value(Some(DurationConstraint::new(
                 SimpleDurationConstraint::new_at(
                     TimeSpecifier::End,
@@ -113,7 +114,7 @@ mod tests {
         );
 
         let input = "(and (at end (<= ?duration 1.23)) (>= ?duration 1.0))";
-        assert!(
+        check!(
             DurationConstraint::from_str(input).is_value(Some(DurationConstraint::new_all([
                 SimpleDurationConstraint::new_at(
                     TimeSpecifier::End,

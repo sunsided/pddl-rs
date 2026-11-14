@@ -50,6 +50,7 @@ impl Parser for PddlFile {
 
 #[cfg(test)]
 mod tests {
+    use assert2::check;
 
     use crate::*;
 
@@ -59,16 +60,16 @@ mod tests {
     #[test]
     fn define_is_matched_case_insensitively() {
         let file = PddlFile::from_str(&format!("{}\n{}", DOMAIN.to_uppercase(), PROBLEM)).unwrap();
-        assert_eq!((file.domain_count(), file.problem_count()), (1, 1));
+        check!((file.domain_count(), file.problem_count()) == (1, 1));
     }
 
     #[test]
     fn definition_kind_comes_from_the_header_not_comments() {
         for comment in ["", "; Uses (domain d)\n", "; Example (problem q)\n"] {
             let domain = Definition::from_str(&format!("{comment}{DOMAIN} ; end\n"));
-            assert!(matches!(domain, Ok(Definition::Domain(_))), "{domain:?}");
+            check!(let Ok(Definition::Domain(_)) = domain, "{domain:?}");
             let problem = Definition::from_str(&format!("{comment}{PROBLEM}"));
-            assert!(matches!(problem, Ok(Definition::Problem(_))), "{problem:?}");
+            check!(let Ok(Definition::Problem(_)) = problem, "{problem:?}");
         }
     }
 
@@ -84,7 +85,7 @@ mod tests {
             "(define (foo x))".into(),
             "(define (domain".into(),
         ] {
-            assert!(Definition::from_str(&input).is_err(), "accepted {input:?}");
+            check!(Definition::from_str(&input).is_err(), "accepted {input:?}");
         }
     }
 
@@ -111,7 +112,7 @@ mod tests {
         ];
         for (label, input, at) in cases {
             let error = PddlFile::from_str(input).unwrap_err();
-            assert_eq!(Some(error.offset()), input.rfind(at), "{label}: {error}");
+            check!(Some(error.offset()) == input.rfind(at), "{label}: {error}");
         }
     }
 
@@ -130,10 +131,10 @@ mod tests {
         "#;
 
         let pddl_file = PddlFile::from_str(input).unwrap();
-        assert_eq!(pddl_file.domain_count(), 1);
-        assert_eq!(pddl_file.problem_count(), 1);
-        assert_eq!(pddl_file.domains[0].name(), &Name::new("briefcase-world"));
-        assert_eq!(pddl_file.problems[0].name(), &Name::new("get-paid"));
+        check!(pddl_file.domain_count() == 1);
+        check!(pddl_file.problem_count() == 1);
+        check!(pddl_file.domains[0].name() == &Name::new("briefcase-world"));
+        check!(pddl_file.problems[0].name() == &Name::new("get-paid"));
     }
 
     #[test]
@@ -155,10 +156,10 @@ mod tests {
         "#;
 
         let pddl_file = PddlFile::from_str(input).unwrap();
-        assert_eq!(pddl_file.domain_count(), 2);
-        assert_eq!(pddl_file.problem_count(), 1);
-        assert_eq!(pddl_file.domains[0].name(), &Name::new("d1"));
-        assert_eq!(pddl_file.domains[1].name(), &Name::new("d2"));
+        check!(pddl_file.domain_count() == 2);
+        check!(pddl_file.problem_count() == 1);
+        check!(pddl_file.domains[0].name() == &Name::new("d1"));
+        check!(pddl_file.domains[1].name() == &Name::new("d2"));
     }
 
     #[test]
@@ -181,8 +182,8 @@ mod tests {
         "#;
 
         let pddl_file = PddlFile::from_str(input).unwrap();
-        assert_eq!(pddl_file.domain_count(), 1);
-        assert_eq!(pddl_file.problem_count(), 2);
+        check!(pddl_file.domain_count() == 1);
+        check!(pddl_file.problem_count() == 2);
     }
 
     #[test]
@@ -200,11 +201,11 @@ mod tests {
         "#;
 
         let pddl_file = PddlFile::from_str(input).unwrap();
-        assert_eq!(pddl_file.domain_count(), 1);
-        assert_eq!(pddl_file.problem_count(), 1);
+        check!(pddl_file.domain_count() == 1);
+        check!(pddl_file.problem_count() == 1);
         // Problem comes first in the file
-        assert_eq!(pddl_file.problems[0].name(), &Name::new("p1"));
-        assert_eq!(pddl_file.domains[0].name(), &Name::new("d1"));
+        check!(pddl_file.problems[0].name() == &Name::new("p1"));
+        check!(pddl_file.domains[0].name() == &Name::new("d1"));
     }
 
     #[test]
@@ -219,8 +220,8 @@ mod tests {
         "#;
 
         let pddl_file = PddlFile::from_str(input).unwrap();
-        assert_eq!(pddl_file.domain_count(), 1);
-        assert_eq!(pddl_file.domains[0].name(), &Name::new("test"));
+        check!(pddl_file.domain_count() == 1);
+        check!(pddl_file.domains[0].name() == &Name::new("test"));
     }
 
     #[test]
@@ -228,9 +229,9 @@ mod tests {
         let input = "";
 
         let pddl_file = PddlFile::from_str(input).unwrap();
-        assert!(pddl_file.is_empty());
-        assert_eq!(pddl_file.domain_count(), 0);
-        assert_eq!(pddl_file.problem_count(), 0);
+        check!(pddl_file.is_empty());
+        check!(pddl_file.domain_count() == 0);
+        check!(pddl_file.problem_count() == 0);
     }
 
     #[test]
@@ -241,7 +242,7 @@ mod tests {
 "#;
 
         let pddl_file = PddlFile::from_str(input).unwrap();
-        assert!(pddl_file.is_empty());
+        check!(pddl_file.is_empty());
     }
 
     #[test]
@@ -259,8 +260,8 @@ mod tests {
         "#;
 
         let pddl_file = PddlFile::from_str(input).unwrap();
-        assert_eq!(pddl_file.domain_count(), 1);
-        assert_eq!(pddl_file.problem_count(), 1);
+        check!(pddl_file.domain_count() == 1);
+        check!(pddl_file.problem_count() == 1);
     }
 
     #[test]
@@ -277,9 +278,9 @@ mod tests {
         "#;
 
         let domains = PddlFile::from_str(input).unwrap().domains;
-        assert_eq!(domains.len(), 2);
-        assert_eq!(domains[0].name(), &Name::new("d1"));
-        assert_eq!(domains[1].name(), &Name::new("d2"));
+        check!(domains.len() == 2);
+        check!(domains[0].name() == &Name::new("d1"));
+        check!(domains[1].name() == &Name::new("d2"));
     }
 
     #[test]
@@ -298,7 +299,7 @@ mod tests {
         "#;
 
         let problems = PddlFile::from_str(input).unwrap().problems;
-        assert_eq!(problems.len(), 2);
+        check!(problems.len() == 2);
     }
 
     #[test]
@@ -314,7 +315,7 @@ mod tests {
         "#;
 
         let result = PddlFile::from_str(input);
-        assert!(
+        check!(
             result.is_err(),
             "Should reject file with malformed define block after valid ones"
         );
@@ -335,8 +336,8 @@ mod tests {
         "#;
 
         let pddl_file = PddlFile::from_str(input).unwrap();
-        assert_eq!(pddl_file.domain_count(), 1);
-        assert_eq!(pddl_file.problem_count(), 1);
+        check!(pddl_file.domain_count() == 1);
+        check!(pddl_file.problem_count() == 1);
     }
 
     #[test]
@@ -347,7 +348,7 @@ mod tests {
         "#;
 
         let domains = PddlFile::from_str(input).unwrap().domains;
-        assert_eq!(domains.len(), 2);
+        check!(domains.len() == 2);
     }
 
     #[test]
@@ -358,20 +359,17 @@ mod tests {
         "#;
 
         let problems = PddlFile::from_str(input).unwrap().problems;
-        assert_eq!(problems.len(), 2);
+        check!(problems.len() == 2);
     }
 
     #[test]
     fn doc_example_3() {
         let input = "; Uses (domain d)\n(define (problem q) (:domain d) (:init) (:goal (p)))";
-        assert!(matches!(
-            Definition::from_str(input),
-            Ok(Definition::Problem(_))
-        ));
+        check!(let Ok(Definition::Problem(_)) = Definition::from_str(input));
 
         // A second definition is trailing input, not part of this one.
         let two = "(define (domain d) (:predicates (p)))\n(define (domain e) (:predicates (q)))";
-        assert!(Definition::from_str(two).is_err());
+        check!(Definition::from_str(two).is_err());
     }
 
     #[test]
@@ -389,7 +387,7 @@ mod tests {
         "#;
 
         let pddl_file = PddlFile::from_str(input).unwrap();
-        assert_eq!(pddl_file.domain_count(), 1);
-        assert_eq!(pddl_file.problem_count(), 1);
+        check!(pddl_file.domain_count() == 1);
+        check!(pddl_file.problem_count() == 1);
     }
 }

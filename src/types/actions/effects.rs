@@ -112,6 +112,7 @@ impl TryInto<ConditionalEffect> for Effects {
 mod tests {
     use super::*;
     use crate::types::{AtomicFormula, PrimitiveEffect, Term};
+    use assert2::check;
 
     #[test]
     fn effects_try_get_single_with_one() {
@@ -120,13 +121,13 @@ mod tests {
             Term::Name("y".into()),
         ));
         let effects = Effects::new(ConditionalEffect::new_primitive_effect(pe));
-        assert!(effects.try_get_single().is_some());
+        check!(effects.try_get_single().is_some());
     }
 
     #[test]
     fn effects_try_get_single_with_zero() {
         let effects = Effects::default();
-        assert!(effects.try_get_single().is_none());
+        check!(effects.try_get_single().is_none());
     }
 
     #[test]
@@ -143,7 +144,7 @@ mod tests {
             ConditionalEffect::new_primitive_effect(pe1),
             ConditionalEffect::new_primitive_effect(pe2),
         ]);
-        assert!(effects.try_get_single().is_none());
+        check!(effects.try_get_single().is_none());
     }
 
     #[test]
@@ -154,7 +155,7 @@ mod tests {
         ));
         let effects = Effects::new(ConditionalEffect::new_primitive_effect(pe));
         let result: Result<ConditionalEffect, ()> = effects.try_into();
-        assert!(result.is_ok());
+        check!(result.is_ok());
     }
 
     #[test]

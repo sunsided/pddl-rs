@@ -17,13 +17,14 @@ crate::parsers::impl_parser!(ProblemGoalDescription => parse_problem_goal_def);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
         let input = "(:goal (= x y))";
-        assert!(
+        check!(
             ProblemGoalDescription::from_str(input).is_value(ProblemGoalDescription::from(
                 PreconditionGoalDescription::Preference(PreferenceGoalDescription::Goal(
                     GoalDescription::AtomicFormula(AtomicFormula::new_equality(
@@ -38,7 +39,7 @@ mod tests {
     #[test]
     fn doc_example_0() {
         let input = "(:goal (= x y))";
-        assert!(
+        check!(
             ProblemGoalDescription::from_str(input).is_value(ProblemGoalDescription::from(
                 PreconditionGoalDescription::Preference(PreferenceGoalDescription::Goal(
                     GoalDescription::AtomicFormula(AtomicFormula::new_equality(

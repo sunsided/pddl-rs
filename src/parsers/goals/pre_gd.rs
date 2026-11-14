@@ -41,12 +41,13 @@ crate::parsers::impl_parser!(PreconditionGoalDescriptions => parse_pre_gd);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(PreconditionGoalDescriptions::from_str("(= x y)").is_value(
+        check!(PreconditionGoalDescriptions::from_str("(= x y)").is_value(
             PreconditionGoalDescriptions::new_preference(PreferenceGoalDescription::Goal(
                 GoalDescription::AtomicFormula(AtomicFormula::new_equality(
                     Term::Name("x".into()),
@@ -55,7 +56,7 @@ mod tests {
             ))
         ));
 
-        assert!(
+        check!(
             PreconditionGoalDescriptions::from_str("(and (= x y) (= a b))").is_value(
                 PreconditionGoalDescriptions::from_iter([
                     PreconditionGoalDescription::Preference(PreferenceGoalDescription::Goal(
@@ -74,7 +75,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             PreconditionGoalDescriptions::from_str("(forall (?a ?b) (= a b))").is_value(
                 PreconditionGoalDescription::new_forall(
                     TypedList::from_iter([
@@ -96,7 +97,7 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        assert!(PreconditionGoalDescriptions::from_str("(= x y)").is_value(
+        check!(PreconditionGoalDescriptions::from_str("(= x y)").is_value(
             PreconditionGoalDescriptions::new_preference(PreferenceGoalDescription::Goal(
                 GoalDescription::AtomicFormula(AtomicFormula::new_equality(
                     Term::Name("x".into()),
@@ -105,7 +106,7 @@ mod tests {
             ))
         ));
 
-        assert!(
+        check!(
             PreconditionGoalDescriptions::from_str("(and (= x y) (= a b))").is_value(
                 PreconditionGoalDescriptions::from_iter([
                     PreconditionGoalDescription::Preference(PreferenceGoalDescription::Goal(
@@ -124,7 +125,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             PreconditionGoalDescriptions::from_str("(forall (?a ?b) (= a b))").is_value(
                 PreconditionGoalDescription::new_forall(
                     TypedList::from_iter([

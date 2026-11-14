@@ -47,33 +47,34 @@ pub type PreferenceGD = PreferenceGoalDescription;
 mod tests {
     use super::*;
     use crate::GoalDescription;
+    use assert2::check;
 
     #[test]
     fn from_gd() {
         let gd = GoalDescription::and(Vec::new());
         let pref_gd = PreferenceGoalDescription::from_gd(gd.clone());
-        assert!(matches!(pref_gd, PreferenceGoalDescription::Goal(_)));
+        check!(let PreferenceGoalDescription::Goal(_) = pref_gd);
     }
 
     #[test]
     fn from_preference() {
         let pref = crate::Preference::from(GoalDescription::and(Vec::new()));
         let pref_gd = PreferenceGoalDescription::from_preference(pref.clone());
-        assert!(matches!(pref_gd, PreferenceGoalDescription::Preference(_)));
+        check!(let PreferenceGoalDescription::Preference(_) = pref_gd);
     }
 
     #[test]
     fn from_gd_trait() {
         let gd = GoalDescription::and(Vec::new());
         let pref_gd = PreferenceGoalDescription::from(gd);
-        assert!(matches!(pref_gd, PreferenceGoalDescription::Goal(_)));
+        check!(let PreferenceGoalDescription::Goal(_) = pref_gd);
     }
 
     #[test]
     fn from_preference_trait() {
         let pref = crate::Preference::from(GoalDescription::and(Vec::new()));
         let pref_gd = PreferenceGoalDescription::from(pref);
-        assert!(matches!(pref_gd, PreferenceGoalDescription::Preference(_)));
+        check!(let PreferenceGoalDescription::Preference(_) = pref_gd);
     }
 
     #[test]
@@ -81,7 +82,7 @@ mod tests {
         let gd = GoalDescription::and(Vec::new());
         let pref_gd = PreferenceGoalDescription::from_gd(gd);
         let clone = pref_gd.clone();
-        assert_eq!(pref_gd, clone);
+        check!(pref_gd == clone);
     }
 
     #[test]
@@ -89,7 +90,7 @@ mod tests {
         let gd = GoalDescription::and(Vec::new());
         let pref_gd = PreferenceGoalDescription::from_gd(gd);
         let dbg = format!("{pref_gd:?}");
-        assert!(dbg.contains("Goal"));
+        check!(dbg.contains("Goal"));
     }
 
     #[test]

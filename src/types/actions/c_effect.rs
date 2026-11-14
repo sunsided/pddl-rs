@@ -194,6 +194,7 @@ pub type WhenCEffect = WhenConditionalEffect;
 mod tests {
     use super::*;
     use crate::types::{AtomicFormula, Term};
+    use assert2::check;
 
     #[test]
     fn conditional_effect_try_into_primitive_effect() {
@@ -203,7 +204,7 @@ mod tests {
         ));
         let ce: ConditionalEffect = pe.clone().into();
         let result: Result<PrimitiveEffect, ()> = ce.try_into();
-        assert!(result.is_ok());
+        check!(result.is_ok());
     }
 
     #[test]
@@ -211,7 +212,7 @@ mod tests {
         let vars = TypedVariables::default();
         let ce = ConditionalEffect::forall(vars, Effects::default());
         let result: Result<PrimitiveEffect, ()> = ce.try_into();
-        assert!(result.is_err());
+        check!(result.is_err());
     }
 
     #[test]
@@ -220,7 +221,7 @@ mod tests {
         let effect = EffectCondition::all(Vec::new());
         let ce = ConditionalEffect::when(cond, effect);
         let result: Result<WhenConditionalEffect, ()> = ce.try_into();
-        assert!(result.is_ok());
+        check!(result.is_ok());
     }
 
     #[test]
@@ -229,7 +230,7 @@ mod tests {
             AtomicFormula::equality(Term::Name("x".into()), Term::Name("y".into())),
         ));
         let result: Result<WhenConditionalEffect, ()> = ce.try_into();
-        assert!(result.is_err());
+        check!(result.is_err());
     }
 
     #[test]
@@ -238,19 +239,19 @@ mod tests {
         let effects = Effects::default();
         let ce = ConditionalEffect::forall(vars, effects);
         let result: Result<ForallConditionalEffect, ()> = ce.try_into();
-        assert!(result.is_ok());
+        check!(result.is_ok());
     }
 
     #[test]
     fn conditional_effect_from_tuples() {
         let effects = Effects::default();
         let forall: ForallConditionalEffect = (TypedVariables::default(), effects).into();
-        assert!(forall.effects.is_empty());
+        check!(forall.effects.is_empty());
 
         let cond = GoalDescription::and(Vec::new());
         let effect = EffectCondition::all(Vec::new());
         let when: WhenConditionalEffect = (cond, effect).into();
-        assert!(matches!(when.condition, GoalDescription::And(_)));
+        check!(let GoalDescription::And(_) = when.condition);
     }
 
     #[test]

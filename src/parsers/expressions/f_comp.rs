@@ -20,12 +20,13 @@ crate::parsers::impl_parser!(FluentComparison => parse_f_comp);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(
+        check!(
             FluentComparison::from_str("(= (+ 1.23 2.34) (+ 1.23 2.34))").is_value(
                 FluentComparison::new(
                     BinaryComparison::Equal,
@@ -46,7 +47,7 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        assert!(
+        check!(
             FluentComparison::from_str("(= (+ 1.23 2.34) (+ 1.23 2.34))").is_value(
                 FluentComparison::new(
                     BinaryComparison::Equal,

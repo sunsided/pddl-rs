@@ -176,24 +176,25 @@ mod tests {
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
     use crate::{DurationOperator, PreferenceTimedGoalDescription};
+    use assert2::check;
 
     #[test]
     fn duration_value_number() {
         let dv = DurationValue::number(10);
-        assert_eq!(prettify!(dv, 20), "10");
+        check!(prettify!(dv, 20) == "10");
     }
 
     #[test]
     fn simple_duration_constraint_op() {
         let sdc = SimpleDurationConstraint::op(DurationOperator::Equal, DurationValue::number(10));
-        assert_eq!(prettify!(sdc, 30), "(= ?duration 10)");
+        check!(prettify!(sdc, 30) == "(= ?duration 10)");
     }
 
     #[test]
     fn duration_value_fexp() {
         let exp = crate::FluentExpression::number(crate::Number::from(5));
         let dv = DurationValue::fluent_expression(exp);
-        assert_eq!(prettify!(dv, 20), "5");
+        check!(prettify!(dv, 20) == "5");
     }
 
     #[test]
@@ -201,14 +202,14 @@ mod tests {
         let inner =
             SimpleDurationConstraint::op(DurationOperator::Equal, DurationValue::number(10));
         let sdc = SimpleDurationConstraint::at(crate::TimeSpecifier::Start, inner);
-        assert_eq!(prettify!(sdc, 30), "(at start (= ?duration 10))");
+        check!(prettify!(sdc, 30) == "(at start (= ?duration 10))");
     }
 
     #[test]
     fn duration_constraint_single() {
         let sdc = SimpleDurationConstraint::op(DurationOperator::Equal, DurationValue::number(10));
         let dc = DurationConstraint::new(sdc);
-        assert_eq!(prettify!(dc, 30), "(= ?duration 10)");
+        check!(prettify!(dc, 30) == "(= ?duration 10)");
     }
 
     #[test]
@@ -220,16 +221,16 @@ mod tests {
         );
         let dc = DurationConstraint::all([sdc1, sdc2]);
         let out = prettify!(dc, 30);
-        assert!(out.starts_with("(and"));
-        assert!(out.contains("(= ?duration 10)"));
-        assert!(out.contains("(>= ?duration 5)"));
+        check!(out.starts_with("(and"));
+        check!(out.contains("(= ?duration 10)"));
+        check!(out.contains("(>= ?duration 5)"));
     }
 
     #[test]
     fn timed_gd_at() {
         let gd = crate::GoalDescription::and(Vec::<crate::GoalDescription>::new());
         let tgd = TimedGoalDescription::at(crate::TimeSpecifier::Start, gd);
-        assert_eq!(prettify!(tgd, 30), "(at start (and))");
+        check!(prettify!(tgd, 30) == "(at start (and))");
     }
 
     #[test]
@@ -237,7 +238,7 @@ mod tests {
         use crate::Interval;
         let gd = crate::GoalDescription::and(Vec::<crate::GoalDescription>::new());
         let tgd = TimedGoalDescription::over(Interval::All, gd);
-        assert_eq!(prettify!(tgd, 30), "(over all (and))");
+        check!(prettify!(tgd, 30) == "(over all (and))");
     }
 
     #[test]
@@ -245,7 +246,7 @@ mod tests {
         let gd = crate::GoalDescription::and(Vec::<crate::GoalDescription>::new());
         let tgd = TimedGoalDescription::at(crate::TimeSpecifier::Start, gd);
         let ptgd = PreferenceTimedGoalDescription::required(tgd);
-        assert_eq!(prettify!(ptgd, 30), "(at start (and))");
+        check!(prettify!(ptgd, 30) == "(at start (and))");
     }
 
     #[test]
@@ -255,7 +256,7 @@ mod tests {
         let tgd = TimedGoalDescription::at(crate::TimeSpecifier::Start, gd);
         let ptgd =
             PreferenceTimedGoalDescription::preference(Some(PreferenceName::string("p1")), tgd);
-        assert_eq!(prettify!(ptgd, 40), "(preference p1 (at start (and)))");
+        check!(prettify!(ptgd, 40) == "(preference p1 (at start (and)))");
     }
 
     #[test]
@@ -263,7 +264,7 @@ mod tests {
         let gd = crate::GoalDescription::and(Vec::<crate::GoalDescription>::new());
         let tgd = TimedGoalDescription::at(crate::TimeSpecifier::Start, gd);
         let ptgd = PreferenceTimedGoalDescription::preference(None, tgd);
-        assert_eq!(prettify!(ptgd, 40), "(preference (at start (and)))");
+        check!(prettify!(ptgd, 40) == "(preference (at start (and)))");
     }
 
     #[test]
@@ -271,7 +272,7 @@ mod tests {
         use crate::EffectCondition;
         let ce = EffectCondition::all(Vec::new());
         let te = TimedEffect::conditional(crate::TimeSpecifier::Start, ce);
-        assert_eq!(prettify!(te, 30), "(at start (and))");
+        check!(prettify!(te, 30) == "(at start (and))");
     }
 
     #[test]
@@ -286,7 +287,7 @@ mod tests {
         ));
         let fassign = DurativeActionFunctionAssignment::new(AssignOp::Increase, head, expr);
         let te = TimedEffect::fluent(crate::TimeSpecifier::End, fassign);
-        assert_eq!(prettify!(te, 30), "(at end (increase x 5))");
+        check!(prettify!(te, 30) == "(at end (increase x 5))");
     }
 
     #[test]
@@ -302,7 +303,7 @@ mod tests {
             head,
             TimedFluentExpression::Scaled(exp),
         );
-        assert_eq!(prettify!(te, 30), "(increase x 1)");
+        check!(prettify!(te, 30) == "(increase x 1)");
     }
 
     #[test]
@@ -311,13 +312,13 @@ mod tests {
         let tgd = TimedGoalDescription::at(crate::TimeSpecifier::Start, gd);
         let ptgd = PreferenceTimedGoalDescription::required(tgd);
         let dagd = DurativeActionGoalDescription::timed(ptgd);
-        assert_eq!(prettify!(dagd, 30), "(at start (and))");
+        check!(prettify!(dagd, 30) == "(at start (and))");
     }
 
     #[test]
     fn durative_action_goal_and_empty() {
         let dagd = DurativeActionGoalDescription::and(Vec::new());
-        assert_eq!(prettify!(dagd, 30), "(and)");
+        check!(prettify!(dagd, 30) == "(and)");
     }
 
     #[test]
@@ -326,7 +327,7 @@ mod tests {
         let tgd = TimedGoalDescription::at(crate::TimeSpecifier::Start, gd);
         let ptgd = PreferenceTimedGoalDescription::required(tgd);
         let dagd = DurativeActionGoalDescription::and([DurativeActionGoalDescription::timed(ptgd)]);
-        assert_eq!(prettify!(dagd, 40), "(and (at start (and)))");
+        check!(prettify!(dagd, 40) == "(and (at start (and)))");
     }
 
     #[test]
@@ -335,7 +336,7 @@ mod tests {
         let vars: TypedVariables = vec![Variable::string("x").to_typed(Type::OBJECT)].into();
         let inner = DurativeActionGoalDescription::and(Vec::new());
         let dagd = DurativeActionGoalDescription::forall(vars, inner);
-        assert_eq!(prettify!(dagd, 40), "(forall (?x) (and))");
+        check!(prettify!(dagd, 40) == "(forall (?x) (and))");
     }
 
     #[test]
@@ -344,7 +345,7 @@ mod tests {
         let ce = EffectCondition::all(Vec::new());
         let te = TimedEffect::conditional(crate::TimeSpecifier::Start, ce);
         let dae = DurativeActionEffect::timed(te);
-        assert_eq!(prettify!(dae, 30), "(at start (and))");
+        check!(prettify!(dae, 30) == "(at start (and))");
     }
 
     #[test]
@@ -353,7 +354,7 @@ mod tests {
         let ce = EffectCondition::all(Vec::new());
         let te = TimedEffect::conditional(crate::TimeSpecifier::Start, ce);
         let dae = DurativeActionEffect::and([DurativeActionEffect::timed(te)]);
-        assert_eq!(prettify!(dae, 40), "(and (at start (and)))");
+        check!(prettify!(dae, 40) == "(and (at start (and)))");
     }
 
     #[test]
@@ -364,7 +365,7 @@ mod tests {
         let inner =
             DurativeActionEffect::timed(TimedEffect::conditional(crate::TimeSpecifier::Start, ce));
         let dae = DurativeActionEffect::forall(vars, inner);
-        assert_eq!(prettify!(dae, 40), "(forall (?x) (at start (and)))");
+        check!(prettify!(dae, 40) == "(forall (?x) (at start (and)))");
     }
 
     #[test]
@@ -379,6 +380,6 @@ mod tests {
             )),
             te,
         );
-        assert_eq!(prettify!(dae, 40), "(at (at start (and)) (at start (and)))");
+        check!(prettify!(dae, 40) == "(at (at start (and)) (at start (and)))");
     }
 }

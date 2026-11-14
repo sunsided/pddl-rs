@@ -56,6 +56,7 @@ crate::parsers::impl_parser!(PrimitiveEffect => parse_p_effect);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
@@ -68,15 +69,12 @@ mod tests {
     #[test]
     fn not_works() {
         let input = "(not (at B ?m))";
-        assert!(matches!(
-            PrimitiveEffect::from_str(input),
-            Ok(PrimitiveEffect::NotAtomicFormula(_))
-        ));
+        check!(let Ok(PrimitiveEffect::NotAtomicFormula(_)) = PrimitiveEffect::from_str(input));
     }
 
     #[test]
     fn test_parse() {
-        assert!(
+        check!(
             PrimitiveEffect::from_str("(= x y)").is_value(PrimitiveEffect::AtomicFormula(
                 AtomicFormula::Equality(EqualityAtomicFormula::new(
                     Term::Name("x".into()),
@@ -85,14 +83,14 @@ mod tests {
             ))
         );
 
-        assert!(PrimitiveEffect::from_str("(not (= ?a B))").is_value(
+        check!(PrimitiveEffect::from_str("(not (= ?a B))").is_value(
             PrimitiveEffect::NotAtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new(
                 Term::Variable("a".into()),
                 Term::Name("B".into())
             )))
         ));
 
-        assert!(PrimitiveEffect::from_str("(assign fun-sym 1.23)").is_value(
+        check!(PrimitiveEffect::from_str("(assign fun-sym 1.23)").is_value(
             PrimitiveEffect::numeric_fluent(
                 AssignOp::Assign,
                 FunctionHead::new(FunctionSymbol::string("fun-sym")),
@@ -100,7 +98,7 @@ mod tests {
             )
         ));
 
-        assert!(PrimitiveEffect::from_str("(assign fun-sym 1.23)").is_value(
+        check!(PrimitiveEffect::from_str("(assign fun-sym 1.23)").is_value(
             PrimitiveEffect::numeric_fluent(
                 AssignOp::Assign,
                 FunctionHead::new(FunctionSymbol::string("fun-sym")),
@@ -108,7 +106,7 @@ mod tests {
             )
         ));
 
-        assert!(
+        check!(
             PrimitiveEffect::from_str("(assign (fun-sym) undefined)").is_value(
                 PrimitiveEffect::object_fluent(
                     FunctionTerm::new(FunctionSymbol::string("fun-sym"), []),
@@ -117,7 +115,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             PrimitiveEffect::from_str("(assign (fun-sym) something)").is_value(
                 PrimitiveEffect::object_fluent(
                     FunctionTerm::new(FunctionSymbol::string("fun-sym"), []),
@@ -129,7 +127,7 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        assert!(
+        check!(
             PrimitiveEffect::from_str("(= x y)").is_value(PrimitiveEffect::AtomicFormula(
                 AtomicFormula::Equality(EqualityAtomicFormula::new(
                     Term::Name("x".into()),
@@ -138,14 +136,14 @@ mod tests {
             ))
         );
 
-        assert!(PrimitiveEffect::from_str("(not (= ?a B))").is_value(
+        check!(PrimitiveEffect::from_str("(not (= ?a B))").is_value(
             PrimitiveEffect::NotAtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new(
                 Term::Variable("a".into()),
                 Term::Name("B".into())
             )))
         ));
 
-        assert!(PrimitiveEffect::from_str("(assign fun-sym 1.23)").is_value(
+        check!(PrimitiveEffect::from_str("(assign fun-sym 1.23)").is_value(
             PrimitiveEffect::numeric_fluent(
                 AssignOp::Assign,
                 FunctionHead::new(FunctionSymbol::string("fun-sym")),
@@ -153,7 +151,7 @@ mod tests {
             )
         ));
 
-        assert!(PrimitiveEffect::from_str("(assign fun-sym 1.23)").is_value(
+        check!(PrimitiveEffect::from_str("(assign fun-sym 1.23)").is_value(
             PrimitiveEffect::numeric_fluent(
                 AssignOp::Assign,
                 FunctionHead::new(FunctionSymbol::string("fun-sym")),
@@ -161,7 +159,7 @@ mod tests {
             )
         ));
 
-        assert!(
+        check!(
             PrimitiveEffect::from_str("(assign (fun-sym) undefined)").is_value(
                 PrimitiveEffect::object_fluent(
                     FunctionTerm::new(FunctionSymbol::string("fun-sym"), []),
@@ -170,7 +168,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             PrimitiveEffect::from_str("(assign (fun-sym) something)").is_value(
                 PrimitiveEffect::object_fluent(
                     FunctionTerm::new(FunctionSymbol::string("fun-sym"), []),

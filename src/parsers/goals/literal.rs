@@ -26,15 +26,16 @@ mod tests {
     use crate::parsers::UnwrapValue;
     use crate::parsers::{literal, parse_name, parse_one};
     use crate::*;
+    use assert2::check;
 
     #[test]
     fn test_parse() {
-        assert!(
+        check!(
             parse_one("(= x y)", |n| literal(n, parse_name)).is_value(Literal::AtomicFormula(
                 AtomicFormula::Equality(EqualityAtomicFormula::new("x".into(), "y".into()))
             ))
         );
-        assert!(
+        check!(
             parse_one("(not (= x y))", |n| literal(n, parse_name)).is_value(
                 Literal::NotAtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new(
                     "x".into(),
@@ -46,12 +47,12 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        assert!(
+        check!(
             parse_one("(= x y)", |n| literal(n, parse_name)).is_value(Literal::AtomicFormula(
                 AtomicFormula::Equality(EqualityAtomicFormula::new("x".into(), "y".into()))
             ))
         );
-        assert!(
+        check!(
             parse_one("(not (= x y))", |n| literal(n, parse_name)).is_value(
                 Literal::NotAtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new(
                     "x".into(),

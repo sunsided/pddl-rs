@@ -101,6 +101,7 @@ crate::parsers::impl_parser!(
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
@@ -112,7 +113,7 @@ mod tests {
         ));
 
         let input = "(within 10 (at-most-once (= x y)))";
-        assert!(ConstraintGoalDescription::from_str(input).is_value(
+        check!(ConstraintGoalDescription::from_str(input).is_value(
             ConstraintGoalDescription::within(
                 Number::from(10),
                 ConstraintGoalDescriptionInner::nested(ConstraintGoalDescription::at_most_once(
@@ -122,7 +123,7 @@ mod tests {
         ));
 
         let input = "(within 10 (at-most-once (= x y)))";
-        assert!(ConstraintGoalDescriptionInner::from_str(input).is_value(
+        check!(ConstraintGoalDescriptionInner::from_str(input).is_value(
             ConstraintGoalDescriptionInner::Nested(Box::new(ConstraintGoalDescription::within(
                 Number::from(10),
                 ConstraintGoalDescriptionInner::nested(ConstraintGoalDescription::at_most_once(
@@ -134,7 +135,7 @@ mod tests {
 
     #[test]
     fn test_parse_sometime() {
-        assert!(
+        check!(
             ConstraintGoalDescription::from_str("(sometime (= x y))").is_value(
                 ConstraintGoalDescription::sometime(ConstraintGoalDescriptionInner::goal(
                     GoalDescription::atomic_formula(AtomicFormula::equality(
@@ -148,7 +149,7 @@ mod tests {
 
     #[test]
     fn test_parse_sometime_after() {
-        assert!(
+        check!(
             ConstraintGoalDescription::from_str("(sometime-after (= x y) (= a b))").is_value(
                 ConstraintGoalDescription::sometime_after(
                     ConstraintGoalDescriptionInner::goal(GoalDescription::atomic_formula(
@@ -164,7 +165,7 @@ mod tests {
 
     #[test]
     fn test_parse_hold_during() {
-        assert!(
+        check!(
             ConstraintGoalDescription::from_str("(hold-during 5 10 (= x y))").is_value(
                 ConstraintGoalDescription::hold_during(
                     Number::from(5),
@@ -179,7 +180,7 @@ mod tests {
 
     #[test]
     fn test_parse_hold_after() {
-        assert!(
+        check!(
             ConstraintGoalDescription::from_str("(hold-after 5 (= x y))").is_value(
                 ConstraintGoalDescription::hold_after(
                     Number::from(5),
@@ -205,10 +206,10 @@ mod tests {
             Term::Name("z".into()),
         )));
 
-        assert!(ConstraintGoalDescription::from_str("(and)")
+        check!(ConstraintGoalDescription::from_str("(and)")
             .is_value(ConstraintGoalDescription::and([])));
 
-        assert!(ConstraintGoalDescription::from_str(
+        check!(ConstraintGoalDescription::from_str(
             "(and (at end (= x y)) (at end (not (= x z))))"
         )
         .is_value(ConstraintGoalDescription::and([
@@ -216,7 +217,7 @@ mod tests {
             ConstraintGoalDescription::at_end(gd_b.clone()),
         ])));
 
-        assert!(
+        check!(
             ConstraintGoalDescription::from_str("(forall (?x ?z) (sometime (= ?x ?z)))").is_value(
                 ConstraintGoalDescription::forall(
                     TypedList::from_iter([
@@ -234,10 +235,10 @@ mod tests {
             )
         );
 
-        assert!(ConstraintGoalDescription::from_str("(at end (= x y))")
+        check!(ConstraintGoalDescription::from_str("(at end (= x y))")
             .is_value(ConstraintGoalDescription::AtEnd(gd_a.clone())));
 
-        assert!(
+        check!(
             ConstraintGoalDescription::from_str("(always (= x y))").is_value(
                 ConstraintGoalDescription::Always(ConstraintGoalDescriptionInner::goal(
                     gd_a.clone()
@@ -245,7 +246,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             ConstraintGoalDescription::from_str("(sometime (= x y))").is_value(
                 ConstraintGoalDescription::Sometime(ConstraintGoalDescriptionInner::goal(
                     gd_a.clone()
@@ -253,7 +254,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             ConstraintGoalDescription::from_str("(within 10 (= x y))").is_value(
                 ConstraintGoalDescription::Within(
                     Number::from(10),
@@ -262,7 +263,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             ConstraintGoalDescription::from_str("(at-most-once (= x y))").is_value(
                 ConstraintGoalDescription::AtMostOnce(ConstraintGoalDescriptionInner::goal(
                     gd_a.clone()
@@ -270,7 +271,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             ConstraintGoalDescription::from_str("(sometime-after (= x y) (not (= x z)))").is_value(
                 ConstraintGoalDescription::SometimeAfter(
                     ConstraintGoalDescriptionInner::goal(gd_a.clone()),
@@ -279,7 +280,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             ConstraintGoalDescription::from_str("(sometime-before (= x y) (not (= x z)))")
                 .is_value(ConstraintGoalDescription::SometimeBefore(
                     ConstraintGoalDescriptionInner::goal(gd_a.clone()),
@@ -287,7 +288,7 @@ mod tests {
                 ))
         );
 
-        assert!(
+        check!(
             ConstraintGoalDescription::from_str("(always-within 10 (= x y) (not (= x z)))")
                 .is_value(ConstraintGoalDescription::AlwaysWithin(
                     Number::from(10),
@@ -296,7 +297,7 @@ mod tests {
                 ))
         );
 
-        assert!(
+        check!(
             ConstraintGoalDescription::from_str("(hold-during 10 20 (= x y))").is_value(
                 ConstraintGoalDescription::HoldDuring(
                     Number::from(10),
@@ -306,7 +307,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             ConstraintGoalDescription::from_str("(hold-after 10 (= x y))").is_value(
                 ConstraintGoalDescription::HoldAfter(
                     Number::from(10),
@@ -325,7 +326,7 @@ mod tests {
         ));
 
         let input = "(within 10 (at-most-once (= x y)))";
-        assert!(ConstraintGoalDescription::from_str(input).is_value(
+        check!(ConstraintGoalDescription::from_str(input).is_value(
             ConstraintGoalDescription::within(
                 Number::from(10),
                 ConstraintGoalDescriptionInner::nested(ConstraintGoalDescription::at_most_once(
@@ -343,9 +344,8 @@ mod tests {
     fn at_end_allows_any_whitespace_and_comments() {
         let expected = ConstraintGoalDescription::from_str("(at end (p))").unwrap();
         for input in ["(at\n  end (p))", "(AT ; comment\nEND (p))"] {
-            assert_eq!(
-                ConstraintGoalDescription::from_str(input),
-                Ok(expected.clone()),
+            check!(
+                ConstraintGoalDescription::from_str(input) == Ok(expected.clone()),
                 "{input}"
             );
         }

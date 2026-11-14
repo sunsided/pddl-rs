@@ -92,45 +92,34 @@ pub type TimedGD = TimedGoalDescription;
 mod tests {
     use super::*;
     use crate::GoalDescription;
+    use assert2::check;
 
     #[test]
     fn at_start() {
         let gd = GoalDescription::and(Vec::new());
         let timed = TimedGoalDescription::at(TimeSpecifier::Start, gd.clone());
-        assert!(matches!(
-            timed,
-            TimedGoalDescription::At(TimeSpecifier::Start, _)
-        ));
+        check!(let TimedGoalDescription::At(TimeSpecifier::Start, _) = timed);
     }
 
     #[test]
     fn at_end() {
         let gd = GoalDescription::and(Vec::new());
         let timed = TimedGoalDescription::at(TimeSpecifier::End, gd.clone());
-        assert!(matches!(
-            timed,
-            TimedGoalDescription::At(TimeSpecifier::End, _)
-        ));
+        check!(let TimedGoalDescription::At(TimeSpecifier::End, _) = timed);
     }
 
     #[test]
     fn over_all() {
         let gd = GoalDescription::and(Vec::new());
         let timed = TimedGoalDescription::over(Interval::All, gd.clone());
-        assert!(matches!(
-            timed,
-            TimedGoalDescription::Over(Interval::All, _)
-        ));
+        check!(let TimedGoalDescription::Over(Interval::All, _) = timed);
     }
 
     #[test]
     fn from_over_tuple() {
         let gd = GoalDescription::and(Vec::new());
         let timed = TimedGoalDescription::from((Interval::All, gd));
-        assert!(matches!(
-            timed,
-            TimedGoalDescription::Over(Interval::All, _)
-        ));
+        check!(let TimedGoalDescription::Over(Interval::All, _) = timed);
     }
 
     #[test]
@@ -138,20 +127,14 @@ mod tests {
     fn deprecated_over() {
         let gd = GoalDescription::and(Vec::new());
         let timed = TimedGoalDescription::new_over(Interval::All, gd);
-        assert!(matches!(
-            timed,
-            TimedGoalDescription::Over(Interval::All, _)
-        ));
+        check!(let TimedGoalDescription::Over(Interval::All, _) = timed);
     }
 
     #[test]
     fn from_at_tuple() {
         let gd = GoalDescription::and(Vec::new());
         let timed = TimedGoalDescription::from((TimeSpecifier::Start, gd));
-        assert!(matches!(
-            timed,
-            TimedGoalDescription::At(TimeSpecifier::Start, _)
-        ));
+        check!(let TimedGoalDescription::At(TimeSpecifier::Start, _) = timed);
     }
 
     #[test]
@@ -159,7 +142,7 @@ mod tests {
         let gd = GoalDescription::and(Vec::new());
         let timed = TimedGoalDescription::at(TimeSpecifier::Start, gd);
         let clone = timed.clone();
-        assert_eq!(timed, clone);
+        check!(timed == clone);
     }
 
     #[test]
@@ -167,7 +150,7 @@ mod tests {
         let gd = GoalDescription::and(Vec::new());
         let timed = TimedGoalDescription::at(TimeSpecifier::Start, gd);
         let dbg = format!("{timed:?}");
-        assert!(dbg.contains("At"));
+        check!(dbg.contains("At"));
     }
 
     #[test]

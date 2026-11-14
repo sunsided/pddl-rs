@@ -42,6 +42,7 @@ mod tests {
     use super::*;
     use crate::parsers::{atomic_formula, parse_one, parse_term};
     use crate::Term;
+    use assert2::check;
 
     #[test]
     fn from_works() {
@@ -49,12 +50,12 @@ mod tests {
         let effect = parse_one(input, |n| atomic_formula(n, parse_term)).unwrap();
 
         let literal: Literal<Term> = effect.into();
-        assert_eq!(
-            literal,
-            Literal::AtomicFormula(AtomicFormula::equality(
-                Term::new_name("x".into()),
-                Term::new_name("y".into()),
-            ))
-        )
+        check!(
+            literal
+                == Literal::AtomicFormula(AtomicFormula::equality(
+                    Term::new_name("x".into()),
+                    Term::new_name("y".into()),
+                ))
+        );
     }
 }

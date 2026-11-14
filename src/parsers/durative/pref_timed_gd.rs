@@ -31,12 +31,13 @@ crate::parsers::impl_parser!(PreferenceTimedGoalDescription => parse_pref_timed_
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(
+        check!(
             PreferenceTimedGoalDescription::from_str("(at start (= x y))").is_value(
                 PreferenceTimedGoalDescription::Required(TimedGoalDescription::at(
                     TimeSpecifier::Start,
@@ -48,7 +49,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             PreferenceTimedGoalDescription::from_str("(preference (over all (= x y)))").is_value(
                 PreferenceTimedGoalDescription::Preference(
                     None,
@@ -63,7 +64,7 @@ mod tests {
             )
         );
 
-        assert!(PreferenceTimedGoalDescription::from_str(
+        check!(PreferenceTimedGoalDescription::from_str(
             "(preference pref-name (over all (= x y)))"
         )
         .is_value(PreferenceTimedGoalDescription::Preference(
@@ -80,7 +81,7 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        assert!(
+        check!(
             PreferenceTimedGoalDescription::from_str("(at start (= x y))").is_value(
                 PreferenceTimedGoalDescription::Required(TimedGoalDescription::at(
                     TimeSpecifier::Start,
@@ -92,7 +93,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             PreferenceTimedGoalDescription::from_str("(preference (over all (= x y)))").is_value(
                 PreferenceTimedGoalDescription::Preference(
                     None,
@@ -107,7 +108,7 @@ mod tests {
             )
         );
 
-        assert!(PreferenceTimedGoalDescription::from_str(
+        check!(PreferenceTimedGoalDescription::from_str(
             "(preference pref-name (over all (= x y)))"
         )
         .is_value(PreferenceTimedGoalDescription::Preference(

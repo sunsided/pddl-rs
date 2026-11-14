@@ -29,11 +29,12 @@ mod tests {
     use super::*;
     use crate::pretty_print::prettify;
     use crate::visitor::Accept;
+    use assert2::check;
 
     #[test]
     fn timeless_empty_works() {
         let t = Timeless::default();
-        assert_eq!(prettify!(t, 20), "");
+        check!(prettify!(t, 20) == "");
     }
 
     #[test]
@@ -42,6 +43,6 @@ mod tests {
         let af =
             AtomicFormula::new_predicate(crate::Predicate::new_string("p"), vec![Name::new("x")]);
         let t = Timeless::new(vec![Literal::new(af)]);
-        assert_eq!(prettify!(t, 20), "(:timeless (p x))");
+        check!(prettify!(t, 20) == "(:timeless (p x))");
     }
 }

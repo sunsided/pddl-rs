@@ -19,6 +19,7 @@ crate::parsers::impl_parser!(DerivedPredicate => parse_derived_predicate);
 
 #[cfg(test)]
 mod tests {
+    use assert2::check;
 
     use crate::*;
 
@@ -32,8 +33,8 @@ mod tests {
                         )"#;
 
         let predicate = DerivedPredicate::from_str(input).unwrap();
-        assert_eq!(predicate.predicate().name(), "train-usable");
-        assert!(matches!(predicate.expression(), &GoalDescription::And(..)));
+        check!(predicate.predicate().name() == "train-usable");
+        check!(let &GoalDescription::And(..) = predicate.expression());
     }
 
     #[test]
@@ -46,7 +47,7 @@ mod tests {
                         )"#;
 
         let predicate = DerivedPredicate::from_str(input).unwrap();
-        assert_eq!(predicate.predicate().name(), "train-usable");
-        assert!(matches!(predicate.expression(), &GoalDescription::And(..)));
+        check!(predicate.predicate().name() == "train-usable");
+        check!(let &GoalDescription::And(..) = predicate.expression());
     }
 }

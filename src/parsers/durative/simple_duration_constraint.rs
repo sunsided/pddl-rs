@@ -37,13 +37,14 @@ crate::parsers::impl_parser!(SimpleDurationConstraint => parse_simple_duration_c
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
         let input = "(>= ?duration 1.23)";
-        assert!(
+        check!(
             SimpleDurationConstraint::from_str(input).is_value(SimpleDurationConstraint::op(
                 DurationOperator::GreaterOrEqual,
                 DurationValue::number(1.23)
@@ -51,7 +52,7 @@ mod tests {
         );
 
         let input = "(at end (<= ?duration 1.23))";
-        assert!(
+        check!(
             SimpleDurationConstraint::from_str(input).is_value(SimpleDurationConstraint::at(
                 TimeSpecifier::End,
                 SimpleDurationConstraint::Op(
@@ -65,7 +66,7 @@ mod tests {
     #[test]
     fn doc_example_0() {
         let input = "(>= ?duration 1.23)";
-        assert!(
+        check!(
             SimpleDurationConstraint::from_str(input).is_value(SimpleDurationConstraint::op(
                 DurationOperator::GreaterOrEqual,
                 DurationValue::number(1.23)
@@ -73,7 +74,7 @@ mod tests {
         );
 
         let input = "(at end (<= ?duration 1.23))";
-        assert!(
+        check!(
             SimpleDurationConstraint::from_str(input).is_value(SimpleDurationConstraint::at(
                 TimeSpecifier::End,
                 SimpleDurationConstraint::Op(

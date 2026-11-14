@@ -17,13 +17,14 @@ crate::parsers::impl_parser!(ProblemConstraintsDef => parse_problem_constraints_
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
         let input = "(:constraints (preference test (and)))";
-        assert!(
+        check!(
             ProblemConstraintsDef::from_str(input).is_value(ProblemConstraintsDef::new(
                 PreferenceConstraintGoalDescriptions::preference(
                     Some("test".into()),
@@ -36,7 +37,7 @@ mod tests {
     #[test]
     fn doc_example_0() {
         let input = "(:constraints (preference test (and)))";
-        assert!(
+        check!(
             ProblemConstraintsDef::from_str(input).is_value(ProblemConstraintsDef::new(
                 PreferenceConstraintGoalDescriptions::preference(
                     Some("test".into()),

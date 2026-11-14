@@ -30,6 +30,7 @@ crate::parsers::impl_parser!(PreferenceGoalDescription => parse_pref_gd);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
@@ -42,7 +43,7 @@ mod tests {
             else {
                 panic!("{input}: expected an atomic formula, got {value:?}");
             };
-            assert!(
+            check!(
                 format!("{formula:?}").contains("preferences"),
                 "{input}: {formula:?}"
             );
@@ -55,23 +56,20 @@ mod tests {
         let PreferenceGoalDescription::Preference(pref) = &value else {
             panic!("expected a preference, got {value:?}");
         };
-        assert_eq!(
-            pref,
-            &Preference::new(None, GoalDescription::from_str("(p)").unwrap())
-        );
+        check!(pref == &Preference::new(None, GoalDescription::from_str("(p)").unwrap()));
     }
 
     #[test]
     fn test_parse() {
         // Simple goal description.
-        assert!(PreferenceGoalDescription::from_str("(= x y)").is_value(
+        check!(PreferenceGoalDescription::from_str("(= x y)").is_value(
             PreferenceGoalDescription::Goal(GoalDescription::AtomicFormula(
                 AtomicFormula::new_equality(Term::Name("x".into()), Term::Name("y".into()))
             ))
         ));
 
         // Named preference.
-        assert!(
+        check!(
             PreferenceGoalDescription::from_str("(preference p (= x y))").is_value(
                 PreferenceGoalDescription::Preference(Preference::new(
                     Some(PreferenceName::from("p")),
@@ -84,7 +82,7 @@ mod tests {
         );
 
         // Unnamed preference.
-        assert!(
+        check!(
             PreferenceGoalDescription::from_str("(preference (= x y))").is_value(
                 PreferenceGoalDescription::Preference(Preference::new(
                     None,
@@ -100,14 +98,14 @@ mod tests {
     #[test]
     fn doc_example_0() {
         // Simple goal description.
-        assert!(PreferenceGoalDescription::from_str("(= x y)").is_value(
+        check!(PreferenceGoalDescription::from_str("(= x y)").is_value(
             PreferenceGoalDescription::Goal(GoalDescription::AtomicFormula(
                 AtomicFormula::new_equality(Term::Name("x".into()), Term::Name("y".into()))
             ))
         ));
 
         // Named preference.
-        assert!(
+        check!(
             PreferenceGoalDescription::from_str("(preference p (= x y))").is_value(
                 PreferenceGoalDescription::Preference(Preference::new(
                     Some(PreferenceName::from("p")),
@@ -120,7 +118,7 @@ mod tests {
         );
 
         // Unnamed preference.
-        assert!(
+        check!(
             PreferenceGoalDescription::from_str("(preference (= x y))").is_value(
                 PreferenceGoalDescription::Preference(Preference::new(
                     None,

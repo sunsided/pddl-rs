@@ -191,19 +191,20 @@ pub(crate) fn word<T: Clone>(node: &Node, words: &[(&str, T)]) -> R<T> {
 mod tests {
     use super::*;
     use crate::parsers::sexpr::read;
+    use assert2::check;
 
     #[test]
     fn prefix_commits_on_keywords_only() {
         let forest = read("(:k a b) (k a b)").unwrap();
         let one = |args: &mut Args| args.next().map(|_| ());
         let error = prefix(&forest.nodes[0], ":k", one).unwrap_err();
-        assert!(error.fatal);
-        assert_eq!(error.keyword.as_deref(), Some(":k"));
-        assert_eq!(error.reason, Some("expected `)`"));
-        assert_eq!(error.offset, 6);
+        check!(error.fatal);
+        check!(error.keyword.as_deref() == Some(":k"));
+        check!(error.reason == Some("expected `)`"));
+        check!(error.offset == 6);
         let error = prefix(&forest.nodes[1], "k", one).unwrap_err();
-        assert!(!error.fatal);
-        assert_eq!(error.keyword, None);
+        check!(!error.fatal);
+        check!(error.keyword == None);
     }
 
     #[test]
@@ -212,17 +213,17 @@ mod tests {
         let node = &forest.nodes[0];
         let near = |_: &Node| -> R<()> { Err(Error::at(1, 1)) };
         let far = |_: &Node| -> R<()> { Err(Error::at(5, 1)) };
-        assert_eq!(alt(node, &[&far, &near]).unwrap_err().offset, 5);
-        assert_eq!(alt(node, &[&near, &far]).unwrap_err().offset, 5);
+        check!(alt(node, &[&far, &near]).unwrap_err().offset == 5);
+        check!(alt(node, &[&near, &far]).unwrap_err().offset == 5);
         let fatal = |_: &Node| -> R<()> { Err(Error::at(0, 1).fatal()) };
         let ok = |_: &Node| -> R<()> { Ok(()) };
-        assert!(alt(node, &[&fatal, &ok]).is_err());
+        check!(alt(node, &[&fatal, &ok]).is_err());
     }
 
     #[test]
     fn missing_arguments_are_reported_at_the_close() {
         let forest = read("(k)").unwrap();
         let error = prefix(&forest.nodes[0], "k", |args| args.next().map(|_| ())).unwrap_err();
-        assert_eq!((error.offset, error.len), (2, 1));
+        check!((error.offset, error.len) == (2, 1));
     }
 }

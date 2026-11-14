@@ -315,31 +315,32 @@ impl From<GoalDescription> for ConstraintGoalDescriptionInner {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert2::check;
 
     #[test]
     fn constraint_goal_description_is_empty() {
         let empty = ConstraintGoalDescription::default();
-        assert!(empty.is_empty());
+        check!(empty.is_empty());
 
         let gd = GoalDescription::and(Vec::new());
         let non_empty = ConstraintGoalDescription::at_end(gd);
-        assert!(non_empty.is_empty());
+        check!(non_empty.is_empty());
     }
 
     #[test]
     fn constraint_goal_description_is_empty_nested() {
         let inner = ConstraintGoalDescriptionInner::goal(GoalDescription::and(Vec::new()));
         let always = ConstraintGoalDescription::always(inner);
-        assert!(always.is_empty());
+        check!(always.is_empty());
     }
 
     #[test]
     fn constraint_goal_description_inner_is_empty() {
         let goal_inner = ConstraintGoalDescriptionInner::goal(GoalDescription::and(Vec::new()));
-        assert!(goal_inner.is_empty());
+        check!(goal_inner.is_empty());
 
         let nested = ConstraintGoalDescriptionInner::nested(ConstraintGoalDescription::default());
-        assert!(nested.is_empty());
+        check!(nested.is_empty());
     }
 
     #[test]
@@ -364,14 +365,11 @@ mod tests {
     fn constraint_goal_description_inner_from() {
         let gd = GoalDescription::and(Vec::new());
         let from_gd: ConstraintGoalDescriptionInner = gd.clone().into();
-        assert!(matches!(from_gd, ConstraintGoalDescriptionInner::Goal(_)));
+        check!(let ConstraintGoalDescriptionInner::Goal(_) = from_gd);
 
         let con_gd = ConstraintGoalDescription::default();
         let from_con_gd: ConstraintGoalDescriptionInner = con_gd.into();
-        assert!(matches!(
-            from_con_gd,
-            ConstraintGoalDescriptionInner::Nested(_)
-        ));
+        check!(let ConstraintGoalDescriptionInner::Nested(_) = from_con_gd);
     }
 
     #[test]
@@ -415,41 +413,41 @@ mod tests {
         let inner = ConstraintGoalDescriptionInner::goal(gd.clone());
 
         let always = ConstraintGoalDescription::always(inner.clone());
-        assert!(!always.is_empty());
+        check!(!always.is_empty());
 
         let sometime = ConstraintGoalDescription::sometime(inner.clone());
-        assert!(!sometime.is_empty());
+        check!(!sometime.is_empty());
 
         let within = ConstraintGoalDescription::within(Number::from(5), inner.clone());
-        assert!(!within.is_empty());
+        check!(!within.is_empty());
 
         let at_most_once = ConstraintGoalDescription::at_most_once(inner.clone());
-        assert!(!at_most_once.is_empty());
+        check!(!at_most_once.is_empty());
 
         let sometime_after =
             ConstraintGoalDescription::sometime_after(inner.clone(), inner.clone());
-        assert!(!sometime_after.is_empty());
+        check!(!sometime_after.is_empty());
 
         let sometime_before =
             ConstraintGoalDescription::sometime_before(inner.clone(), inner.clone());
-        assert!(!sometime_before.is_empty());
+        check!(!sometime_before.is_empty());
 
         let always_within =
             ConstraintGoalDescription::always_within(Number::from(5), inner.clone(), inner.clone());
-        assert!(!always_within.is_empty());
+        check!(!always_within.is_empty());
 
         let hold_during = ConstraintGoalDescription::hold_during(
             Number::from(0),
             Number::from(10),
             inner.clone(),
         );
-        assert!(!hold_during.is_empty());
+        check!(!hold_during.is_empty());
 
         let hold_after = ConstraintGoalDescription::hold_after(Number::from(5), inner);
-        assert!(!hold_after.is_empty());
+        check!(!hold_after.is_empty());
 
         let at_end = ConstraintGoalDescription::at_end(gd);
-        assert!(!at_end.is_empty());
+        check!(!at_end.is_empty());
 
         let nested_inner = ConstraintGoalDescriptionInner::nested(
             ConstraintGoalDescription::at_end(GoalDescription::and(vec![
@@ -462,6 +460,6 @@ mod tests {
                 )),
             ])),
         );
-        assert!(!nested_inner.is_empty());
+        check!(!nested_inner.is_empty());
     }
 }

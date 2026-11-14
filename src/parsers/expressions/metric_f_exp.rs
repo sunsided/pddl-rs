@@ -55,20 +55,21 @@ crate::parsers::impl_parser!(MetricFluentExpression => parse_metric_f_exp);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(
+        check!(
             MetricFluentExpression::from_str("1.23").is_value(MetricFluentExpression::number(1.23))
         );
 
-        assert!(MetricFluentExpression::from_str("(- total-time)").is_value(
+        check!(MetricFluentExpression::from_str("(- total-time)").is_value(
             MetricFluentExpression::negative(MetricFluentExpression::TotalTime)
         ));
 
-        assert!(MetricFluentExpression::from_str("(+ 1.23 2.34)").is_value(
+        check!(MetricFluentExpression::from_str("(+ 1.23 2.34)").is_value(
             MetricFluentExpression::binary_op(
                 BinaryOp::Addition,
                 MetricFluentExpression::number(1.23),
@@ -76,7 +77,7 @@ mod tests {
             )
         ));
 
-        assert!(
+        check!(
             MetricFluentExpression::from_str("(+ 1.23 2.34 3.45)").is_value(
                 MetricFluentExpression::multi_op(
                     MultiOp::Addition,
@@ -89,21 +90,21 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             MetricFluentExpression::from_str("(is-violated preference)").is_value(
                 MetricFluentExpression::is_violated(PreferenceName::from("preference"))
             )
         );
 
-        assert!(MetricFluentExpression::from_str("fun-sym").is_value(
+        check!(MetricFluentExpression::from_str("fun-sym").is_value(
             MetricFluentExpression::function(FunctionSymbol::string("fun-sym"), [])
         ));
 
-        assert!(MetricFluentExpression::from_str("(fun-sym)").is_value(
+        check!(MetricFluentExpression::from_str("(fun-sym)").is_value(
             MetricFluentExpression::function(FunctionSymbol::string("fun-sym"), [])
         ));
 
-        assert!(
+        check!(
             MetricFluentExpression::from_str("(fun-sym a b c)").is_value(
                 MetricFluentExpression::function(
                     FunctionSymbol::string("fun-sym"),
@@ -115,15 +116,15 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        assert!(
+        check!(
             MetricFluentExpression::from_str("1.23").is_value(MetricFluentExpression::number(1.23))
         );
 
-        assert!(MetricFluentExpression::from_str("(- total-time)").is_value(
+        check!(MetricFluentExpression::from_str("(- total-time)").is_value(
             MetricFluentExpression::negative(MetricFluentExpression::TotalTime)
         ));
 
-        assert!(MetricFluentExpression::from_str("(+ 1.23 2.34)").is_value(
+        check!(MetricFluentExpression::from_str("(+ 1.23 2.34)").is_value(
             MetricFluentExpression::binary_op(
                 BinaryOp::Addition,
                 MetricFluentExpression::number(1.23),
@@ -131,7 +132,7 @@ mod tests {
             )
         ));
 
-        assert!(
+        check!(
             MetricFluentExpression::from_str("(+ 1.23 2.34 3.45)").is_value(
                 MetricFluentExpression::multi_op(
                     MultiOp::Addition,
@@ -144,21 +145,21 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             MetricFluentExpression::from_str("(is-violated preference)").is_value(
                 MetricFluentExpression::is_violated(PreferenceName::from("preference"))
             )
         );
 
-        assert!(MetricFluentExpression::from_str("fun-sym").is_value(
+        check!(MetricFluentExpression::from_str("fun-sym").is_value(
             MetricFluentExpression::function(FunctionSymbol::string("fun-sym"), [])
         ));
 
-        assert!(MetricFluentExpression::from_str("(fun-sym)").is_value(
+        check!(MetricFluentExpression::from_str("(fun-sym)").is_value(
             MetricFluentExpression::function(FunctionSymbol::string("fun-sym"), [])
         ));
 
-        assert!(
+        check!(
             MetricFluentExpression::from_str("(fun-sym a b c)").is_value(
                 MetricFluentExpression::function(
                     FunctionSymbol::string("fun-sym"),

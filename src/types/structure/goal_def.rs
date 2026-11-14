@@ -73,12 +73,13 @@ pub type GoalDef = ProblemGoalDescription;
 mod tests {
     use super::*;
     use crate::GoalDescription;
+    use assert2::check;
 
     #[test]
     fn problem_goal_description_from_precondition_goal_descriptions() {
         let defs = PreconditionGoalDescriptions::new(Vec::new());
         let pgd: ProblemGoalDescription = defs.clone().into();
-        assert_eq!(*pgd.value(), defs);
+        check!(*pgd.value() == defs);
     }
 
     #[test]
@@ -86,7 +87,7 @@ mod tests {
         let pref_gd = crate::PreferenceGoalDescription::from_gd(GoalDescription::and(Vec::new()));
         let pre_gd = PreconditionGoalDescription::preference(pref_gd);
         let pgd: ProblemGoalDescription = pre_gd.into();
-        assert_eq!(pgd.len(), 1);
+        check!(pgd.len() == 1);
     }
 
     #[test]

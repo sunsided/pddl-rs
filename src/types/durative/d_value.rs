@@ -55,18 +55,19 @@ impl From<FluentExpression> for DurationValue {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert2::check;
 
     #[test]
     fn duration_value_from_number() {
         let n = Number::from(5);
         let dv: DurationValue = n.into();
-        assert_eq!(dv, DurationValue::number(n));
+        check!(dv == DurationValue::number(n));
     }
 
     #[test]
     fn duration_value_from_f_exp() {
         let exp = FluentExpression::number(Number::from(10));
         let dv: DurationValue = exp.clone().into();
-        assert_eq!(dv, DurationValue::fluent_expression(exp));
+        check!(dv == DurationValue::fluent_expression(exp));
     }
 }

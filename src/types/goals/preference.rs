@@ -56,30 +56,31 @@ impl From<GoalDescription> for Preference {
 mod tests {
     use super::*;
     use crate::{GoalDescription, Name, Term};
+    use assert2::check;
 
     #[test]
     fn new_with_name() {
         let name = PreferenceName::string("pref1");
         let gd = GoalDescription::and(Vec::new());
         let pref = Preference::new(Some(name.clone()), gd.clone());
-        assert_eq!(pref.name(), &Some(name));
-        assert_eq!(pref.goal(), &gd);
+        check!(pref.name() == &Some(name));
+        check!(pref.goal() == &gd);
     }
 
     #[test]
     fn new_without_name() {
         let gd = GoalDescription::and(Vec::new());
         let pref = Preference::new(None, gd.clone());
-        assert_eq!(pref.name(), &None);
-        assert_eq!(pref.goal(), &gd);
+        check!(pref.name() == &None);
+        check!(pref.goal() == &gd);
     }
 
     #[test]
     fn from_tuple_with_option() {
         let gd = GoalDescription::and(Vec::new());
         let pref = Preference::from((None::<PreferenceName>, gd.clone()));
-        assert_eq!(pref.name(), &None);
-        assert_eq!(pref.goal(), &gd);
+        check!(pref.name() == &None);
+        check!(pref.goal() == &gd);
     }
 
     #[test]
@@ -87,23 +88,23 @@ mod tests {
         let name = PreferenceName::string("my_pref");
         let gd = GoalDescription::and(Vec::new());
         let pref = Preference::from((name.clone(), gd.clone()));
-        assert_eq!(pref.name(), &Some(name));
-        assert_eq!(pref.goal(), &gd);
+        check!(pref.name() == &Some(name));
+        check!(pref.goal() == &gd);
     }
 
     #[test]
     fn from_gd_only() {
         let gd = GoalDescription::and(Vec::new());
         let pref = Preference::from(gd.clone());
-        assert_eq!(pref.name(), &None);
-        assert_eq!(pref.goal(), &gd);
+        check!(pref.name() == &None);
+        check!(pref.goal() == &gd);
     }
 
     #[test]
     fn is_empty_true() {
         let gd = GoalDescription::and(Vec::new());
         let pref = Preference::new(None, gd);
-        assert!(pref.is_empty());
+        check!(pref.is_empty());
     }
 
     #[test]
@@ -118,7 +119,7 @@ mod tests {
         );
         let gd = GoalDescription::AtomicFormula(af);
         let pref = Preference::new(None, gd);
-        assert!(!pref.is_empty());
+        check!(!pref.is_empty());
     }
 
     #[test]
@@ -126,7 +127,7 @@ mod tests {
         let gd = GoalDescription::and(Vec::new());
         let pref = Preference::new(None, gd);
         let clone = pref.clone();
-        assert_eq!(pref, clone);
+        check!(pref == clone);
     }
 
     #[test]
@@ -134,6 +135,6 @@ mod tests {
         let gd = GoalDescription::and(Vec::new());
         let pref = Preference::new(None, gd);
         let dbg = format!("{pref:?}");
-        assert!(dbg.contains("Preference"));
+        check!(dbg.contains("Preference"));
     }
 }

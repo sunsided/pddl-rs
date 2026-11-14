@@ -103,10 +103,11 @@ impl Display for Variable {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert2::check;
 
     #[test]
     fn it_works() {
         let var = Variable::string("x");
-        assert_eq!(format!("{var}"), "?x");
+        check!(format!("{var}") == "?x");
     }
 }

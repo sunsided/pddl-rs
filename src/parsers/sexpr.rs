@@ -219,6 +219,7 @@ impl<'a> Node<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert2::check;
 
     fn shape(nodes: &[Node]) -> String {
         nodes
@@ -234,63 +235,57 @@ mod tests {
     #[test]
     fn reads_atoms_lists_and_comments() {
         let forest = read("(a ?b(c) ; (not this)\n :d-e 1.5)x").unwrap();
-        assert_eq!(shape(&forest.nodes), "[a ?b [c] :d-e 1.5] x");
-        assert!(forest.unbalanced.is_none());
+        check!(shape(&forest.nodes) == "[a ?b [c] :d-e 1.5] x");
+        check!(forest.unbalanced.is_none());
     }
 
     #[test]
     fn operators_need_no_space_after_them() {
         let forest = read("(+x 1) (-x) (>=(f) 1) (=a b) (?a -t) (a-b ?c-d)").unwrap();
-        assert_eq!(
-            shape(&forest.nodes),
-            "[+ x 1] [- x] [>= [f] 1] [= a b] [?a - t] [a-b ?c-d]"
-        );
+        check!(shape(&forest.nodes) == "[+ x 1] [- x] [>= [f] 1] [= a b] [?a - t] [a-b ?c-d]");
     }
 
     #[test]
     fn a_question_mark_or_colon_starts_a_new_atom() {
         let forest = read("(on?x ?y?z ?duration :requirements:strips)").unwrap();
-        assert_eq!(
-            shape(&forest.nodes),
-            "[on ?x ?y ?z ?duration :requirements :strips]"
-        );
+        check!(shape(&forest.nodes) == "[on ?x ?y ?z ?duration :requirements :strips]");
     }
 
     #[test]
     fn positions_cover_atoms_and_parentheses() {
         let forest = read(" (ab (c))").unwrap();
         let outer = &forest.nodes[0];
-        assert_eq!((outer.start, outer.end), (1, 8));
+        check!((outer.start, outer.end) == (1, 8));
         let inner = &outer.children().unwrap()[1];
-        assert_eq!((inner.start, inner.end), (5, 7));
+        check!((inner.start, inner.end) == (5, 7));
         let atom = &outer.children().unwrap()[0];
-        assert_eq!((atom.start, atom.end), (2, 4));
+        check!((atom.start, atom.end) == (2, 4));
     }
 
     #[test]
     fn unclosed_lists_end_at_the_end_of_input() {
         let forest = read("(:action a (p)").unwrap();
-        assert_eq!(shape(&forest.nodes), "[:action a [p]]");
+        check!(shape(&forest.nodes) == "[:action a [p]]");
         let error = forest.unbalanced.unwrap();
-        assert_eq!(error.offset, 14);
-        assert_eq!(error.keyword.as_deref(), Some(":action"));
-        assert_eq!(error.reason, Some("expected `)`"));
+        check!(error.offset == 14);
+        check!(error.keyword.as_deref() == Some(":action"));
+        check!(error.reason == Some("expected `)`"));
     }
 
     #[test]
     fn reading_stops_at_a_stray_close() {
         let forest = read("(a)) (b)").unwrap();
-        assert_eq!(shape(&forest.nodes), "[a]");
-        assert_eq!(forest.unbalanced.unwrap().offset, 3);
+        check!(shape(&forest.nodes) == "[a]");
+        check!(forest.unbalanced.unwrap().offset == 3);
     }
 
     #[test]
     fn nesting_is_limited() {
         let ok = "(".repeat(MAX_NESTING_DEPTH) + &")".repeat(MAX_NESTING_DEPTH);
-        assert!(read(&ok).is_ok());
+        check!(read(&ok).is_ok());
         let deep = "(".repeat(MAX_NESTING_DEPTH + 1);
         let error = read(&deep).unwrap_err();
-        assert_eq!(error.offset, MAX_NESTING_DEPTH);
-        assert_eq!(error.reason, Some("nesting too deep"));
+        check!(error.offset == MAX_NESTING_DEPTH);
+        check!(error.reason == Some("nesting too deep"));
     }
 }

@@ -31,14 +31,15 @@ crate::parsers::impl_parser!(TimedFluentExpression => parse_f_exp_t);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(TimedFluentExpression::from_str("#t").is_value(TimedFluentExpression::Now));
+        check!(TimedFluentExpression::from_str("#t").is_value(TimedFluentExpression::Now));
 
-        assert!(
+        check!(
             TimedFluentExpression::from_str("(* (fuel ?tank) #t)").is_value(
                 TimedFluentExpression::scaled(FluentExpression::function(
                     FunctionHead::with_terms(
@@ -49,7 +50,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             TimedFluentExpression::from_str("(* #t (fuel ?tank))").is_value(
                 TimedFluentExpression::scaled(FluentExpression::function(
                     FunctionHead::with_terms(
@@ -63,9 +64,9 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        assert!(TimedFluentExpression::from_str("#t").is_value(TimedFluentExpression::Now));
+        check!(TimedFluentExpression::from_str("#t").is_value(TimedFluentExpression::Now));
 
-        assert!(
+        check!(
             TimedFluentExpression::from_str("(* (fuel ?tank) #t)").is_value(
                 TimedFluentExpression::scaled(FluentExpression::function(
                     FunctionHead::with_terms(
@@ -76,7 +77,7 @@ mod tests {
             )
         );
 
-        assert!(
+        check!(
             TimedFluentExpression::from_str("(* #t (fuel ?tank))").is_value(
                 TimedFluentExpression::scaled(FluentExpression::function(
                     FunctionHead::with_terms(

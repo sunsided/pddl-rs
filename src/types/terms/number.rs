@@ -214,14 +214,12 @@ impl From<f32> for Number {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert2::check;
     use std::panic;
 
     #[test]
     fn from_str_rejects_infinity() {
-        assert!(matches!(
-            "inf".parse::<Number>(),
-            Err(NumberError::NotFinite)
-        ));
+        check!(let Err(NumberError::NotFinite) = "inf".parse::<Number>());
     }
 
     #[test]
@@ -233,146 +231,137 @@ mod tests {
             n.hash(&mut h);
             h.finish()
         };
-        assert_eq!(neg, pos);
-        assert_eq!(neg.cmp(&pos), Ordering::Equal);
-        assert_eq!(hash(neg), hash(pos));
+        check!(neg == pos);
+        check!(neg.cmp(&pos) == Ordering::Equal);
+        check!(hash(neg) == hash(pos));
     }
 
     #[test]
     fn new_works() {
         let n = Number::new(42.0);
-        assert_eq!(*n, 42.0);
+        check!(*n == 42.0);
     }
 
     #[test]
     fn try_new_finite_ok() {
-        assert!(Number::try_new(0.0).is_ok());
-        assert!(Number::try_new(-1.5).is_ok());
-        assert!(Number::try_new(f64::MAX).is_ok());
-        assert!(Number::try_new(f64::MIN).is_ok());
+        check!(Number::try_new(0.0).is_ok());
+        check!(Number::try_new(-1.5).is_ok());
+        check!(Number::try_new(f64::MAX).is_ok());
+        check!(Number::try_new(f64::MIN).is_ok());
     }
 
     #[test]
     fn try_new_nan_err() {
-        assert!(matches!(
-            Number::try_new(f64::NAN),
-            Err(NumberError::NotFinite)
-        ));
+        check!(let Err(NumberError::NotFinite) = Number::try_new(f64::NAN));
     }
 
     #[test]
     fn try_new_inf_err() {
-        assert!(matches!(
-            Number::try_new(f64::INFINITY),
-            Err(NumberError::NotFinite)
-        ));
-        assert!(matches!(
-            Number::try_new(f64::NEG_INFINITY),
-            Err(NumberError::NotFinite)
-        ));
+        check!(let Err(NumberError::NotFinite) = Number::try_new(f64::INFINITY));
+        check!(let Err(NumberError::NotFinite) = Number::try_new(f64::NEG_INFINITY));
     }
 
     #[test]
     fn from_str_valid() {
         let n: Number = "2.5".parse().unwrap();
-        assert_eq!(*n, 2.5);
+        check!(*n == 2.5);
     }
 
     #[test]
     fn from_str_invalid() {
         let err = "not_a_number".parse::<Number>().unwrap_err();
-        assert!(matches!(err, NumberError::InvalidFormat(_)));
+        check!(let NumberError::InvalidFormat(_) = err);
     }
 
     #[test]
     fn error_display_not_finite() {
         let err = NumberError::NotFinite;
-        assert_eq!(format!("{err}"), "The input was not a finite number");
+        check!(format!("{err}") == "The input was not a finite number");
     }
 
     #[test]
     fn error_display_invalid_format() {
         let err = NumberError::InvalidFormat("abc".parse::<f64>().unwrap_err());
         let msg = format!("{err}");
-        assert!(msg.contains("Invalid format"));
+        check!(msg.contains("Invalid format"));
     }
 
     #[test]
     fn eq_int() {
         let n = Number::from(42i32);
-        assert_eq!(n, 42);
-        assert_eq!(n, 42.0);
+        check!(n == 42);
+        check!(n == 42.0);
     }
 
     #[test]
     fn eq_from_i8() {
         let n = Number::from(5i8);
-        assert_eq!(*n, 5.0);
+        check!(*n == 5.0);
     }
 
     #[test]
     fn eq_from_u8() {
         let n = Number::from(5u8);
-        assert_eq!(*n, 5.0);
+        check!(*n == 5.0);
     }
 
     #[test]
     fn eq_from_i16() {
         let n = Number::from(5i16);
-        assert_eq!(*n, 5.0);
+        check!(*n == 5.0);
     }
 
     #[test]
     fn eq_from_u16() {
         let n = Number::from(5u16);
-        assert_eq!(*n, 5.0);
+        check!(*n == 5.0);
     }
 
     #[test]
     fn eq_from_i32() {
         let n = Number::from(5i32);
-        assert_eq!(*n, 5.0);
+        check!(*n == 5.0);
     }
 
     #[test]
     fn eq_from_u32() {
         let n = Number::from(5u32);
-        assert_eq!(*n, 5.0);
+        check!(*n == 5.0);
     }
 
     #[test]
     fn eq_from_f32() {
         let n = Number::from(2.5f32);
-        assert_eq!(*n, 2.5);
+        check!(*n == 2.5);
     }
 
     #[test]
     fn eq_from_f64() {
         let n = Number::from(2.5f64);
-        assert_eq!(*n, 2.5);
+        check!(*n == 2.5);
     }
 
     #[test]
     fn ord_works() {
         let a = Number::from(1i32);
         let b = Number::from(2i32);
-        assert!(a < b);
-        assert!(b > a);
+        check!(a < b);
+        check!(b > a);
     }
 
     #[test]
     fn ord_equal() {
         let a = Number::from(5i32);
         let b = Number::from(5i32);
-        assert!(a <= b);
-        assert!(a >= b);
+        check!(a <= b);
+        check!(a >= b);
     }
 
     #[test]
     fn ord_plus_minus_zero_equal() {
         let a = Number::new(0.0);
         let b = Number::new(-0.0);
-        assert_eq!(a.cmp(&b), Ordering::Equal);
+        check!(a.cmp(&b) == Ordering::Equal);
     }
 
     #[test]
@@ -384,64 +373,64 @@ mod tests {
         let mut hb = DefaultHasher::new();
         a.hash(&mut ha);
         b.hash(&mut hb);
-        assert_eq!(ha.finish(), hb.finish());
+        check!(ha.finish() == hb.finish());
     }
 
     #[test]
     fn default_is_zero() {
         let n = Number::default();
-        assert_eq!(*n, 0.0);
+        check!(*n == 0.0);
     }
 
     #[test]
     fn deref_works() {
         let n = Number::from(7i32);
         let val: &f64 = &n;
-        assert_eq!(*val, 7.0);
+        check!(*val == 7.0);
     }
 
     #[test]
     fn new_nan_panics() {
-        assert!(panic::catch_unwind(|| Number::new(f64::NAN)).is_err());
+        check!(panic::catch_unwind(|| Number::new(f64::NAN)).is_err());
     }
 
     #[test]
     fn from_f32_nan_panics() {
-        assert!(panic::catch_unwind(|| Number::from(f32::NAN)).is_err());
+        check!(panic::catch_unwind(|| Number::from(f32::NAN)).is_err());
     }
 
     #[test]
     fn from_f64_keeps_range_and_whole_number_precision() {
         // As f32, 1e300 overflowed to infinity and panicked; 16777217 became 16777216.
-        assert_eq!(*Number::from(1e300), 1e300);
-        assert_eq!(*Number::from(16_777_217), 16_777_217.0);
-        assert_eq!(*"16777217".parse::<Number>().unwrap(), 16_777_217.0);
+        check!(*Number::from(1e300) == 1e300);
+        check!(*Number::from(16_777_217) == 16_777_217.0);
+        check!((*"16777217".parse::<Number>().unwrap()) == 16_777_217.0);
     }
 
     #[test]
     fn from_f32_keeps_the_decimal_written() {
         // Widening the bits would give 1.100000023841858.
-        assert_eq!(*Number::from(1.1f32), 1.1);
-        assert_eq!(Number::from(1.1f64), 1.1f32);
-        assert_eq!(*Number::from(f32::MAX), 3.4028235e38);
+        check!(*Number::from(1.1f32) == 1.1);
+        check!(Number::from(1.1f64) == 1.1f32);
+        check!(*Number::from(f32::MAX) == 3.4028235e38);
     }
 
     #[test]
     fn from_f64_nan_panics() {
-        assert!(panic::catch_unwind(|| Number::from(f64::NAN)).is_err());
+        check!(panic::catch_unwind(|| Number::from(f64::NAN)).is_err());
     }
 
     #[test]
     fn copy_clone() {
         let a = Number::from(10i32);
         let b = a;
-        assert_eq!(a, b);
+        check!(a == b);
     }
 
     #[test]
     fn debug_impl() {
         let n = Number::from(42i32);
         let dbg = format!("{n:?}");
-        assert!(dbg.contains("42"));
+        check!(dbg.contains("42"));
     }
 }

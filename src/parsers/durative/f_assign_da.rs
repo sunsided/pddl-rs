@@ -21,6 +21,7 @@ crate::parsers::impl_parser!(DurativeActionFunctionAssignment => parse_f_assign_
 
 #[cfg(test)]
 mod tests {
+    use assert2::check;
 
     use crate::*;
 
@@ -32,6 +33,6 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        assert!(DurativeActionFunctionAssignment::from_str("(assign fun-sym ?duration)").is_ok());
+        check!(DurativeActionFunctionAssignment::from_str("(assign fun-sym ?duration)").is_ok());
     }
 }

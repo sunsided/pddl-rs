@@ -17,13 +17,14 @@ crate::parsers::impl_parser!(Objects => parse_problem_objects_declaration);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
         let input = "(:objects train1 train2)";
-        assert!(Objects::from_str(input).is_value(Objects::new([
+        check!(Objects::from_str(input).is_value(Objects::new([
             Name::new("train1").to_typed(Type::OBJECT),
             Name::new("train2").to_typed(Type::OBJECT),
         ])));
@@ -32,7 +33,7 @@ mod tests {
     #[test]
     fn doc_example_0() {
         let input = "(:objects train1 train2)";
-        assert!(Objects::from_str(input).is_value(Objects::new([
+        check!(Objects::from_str(input).is_value(Objects::new([
             Name::new("train1").to_typed(Type::OBJECT),
             Name::new("train2").to_typed(Type::OBJECT),
         ])));

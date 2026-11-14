@@ -88,6 +88,7 @@ mod tests {
     use super::*;
     use crate::types::{FunctionSymbol, Name};
     use crate::Predicate;
+    use assert2::check;
 
     fn make_atomic_formula() -> AtomicFormula<Term> {
         AtomicFormula::predicate(
@@ -103,14 +104,14 @@ mod tests {
     fn atomic_formula_new() {
         let af = make_atomic_formula();
         let pe = PrimitiveEffect::new(af.clone());
-        assert_eq!(pe, PrimitiveEffect::AtomicFormula(af));
+        check!(pe == PrimitiveEffect::AtomicFormula(af));
     }
 
     #[test]
     fn atomic_formula_constructor() {
         let af = make_atomic_formula();
         let pe = PrimitiveEffect::atomic_formula(af.clone());
-        assert_eq!(pe, PrimitiveEffect::AtomicFormula(af));
+        check!(pe == PrimitiveEffect::AtomicFormula(af));
     }
 
     #[test]
@@ -118,14 +119,14 @@ mod tests {
     fn atomic_formula_deprecated_new() {
         let af = make_atomic_formula();
         let pe = PrimitiveEffect::new_atomic_formula(af.clone());
-        assert_eq!(pe, PrimitiveEffect::AtomicFormula(af));
+        check!(pe == PrimitiveEffect::AtomicFormula(af));
     }
 
     #[test]
     fn not_constructor() {
         let af = make_atomic_formula();
         let pe = PrimitiveEffect::not(af.clone());
-        assert_eq!(pe, PrimitiveEffect::NotAtomicFormula(af));
+        check!(pe == PrimitiveEffect::NotAtomicFormula(af));
     }
 
     #[test]
@@ -133,7 +134,7 @@ mod tests {
     fn not_deprecated_new() {
         let af = make_atomic_formula();
         let pe = PrimitiveEffect::new_not(af.clone());
-        assert_eq!(pe, PrimitiveEffect::NotAtomicFormula(af));
+        check!(pe == PrimitiveEffect::NotAtomicFormula(af));
     }
 
     #[test]
@@ -141,7 +142,7 @@ mod tests {
         let head = FunctionHead::Simple(FunctionSymbol::string("total-cost"));
         let exp = FluentExpression::number(10);
         let pe = PrimitiveEffect::numeric_fluent(AssignOp::Assign, head, exp);
-        assert!(matches!(pe, PrimitiveEffect::AssignNumericFluent(_, _, _)));
+        check!(let PrimitiveEffect::AssignNumericFluent(_, _, _) = pe);
     }
 
     #[test]
@@ -150,7 +151,7 @@ mod tests {
         let head = FunctionHead::Simple(FunctionSymbol::string("total-cost"));
         let exp = FluentExpression::number(10);
         let pe = PrimitiveEffect::new_numeric_fluent(AssignOp::Assign, head, exp);
-        assert!(matches!(pe, PrimitiveEffect::AssignNumericFluent(_, _, _)));
+        check!(let PrimitiveEffect::AssignNumericFluent(_, _, _) = pe);
     }
 
     #[test]
@@ -158,14 +159,14 @@ mod tests {
         let f_term = FunctionTerm::new(FunctionSymbol::string("loc"), vec![]);
         let term = Term::new_name(Name::new("home"));
         let pe = PrimitiveEffect::object_fluent(f_term.clone(), Some(term.clone()));
-        assert_eq!(pe, PrimitiveEffect::AssignObjectFluent(f_term, Some(term)));
+        check!(pe == PrimitiveEffect::AssignObjectFluent(f_term, Some(term)));
     }
 
     #[test]
     fn object_fluent_without_value() {
         let f_term = FunctionTerm::new(FunctionSymbol::string("loc"), vec![]);
         let pe = PrimitiveEffect::object_fluent(f_term.clone(), None);
-        assert_eq!(pe, PrimitiveEffect::AssignObjectFluent(f_term, None));
+        check!(pe == PrimitiveEffect::AssignObjectFluent(f_term, None));
     }
 
     #[test]
@@ -173,7 +174,7 @@ mod tests {
     fn object_fluent_deprecated_new() {
         let f_term = FunctionTerm::new(FunctionSymbol::string("loc"), vec![]);
         let pe = PrimitiveEffect::new_object_fluent(f_term.clone(), None);
-        assert_eq!(pe, PrimitiveEffect::AssignObjectFluent(f_term, None));
+        check!(pe == PrimitiveEffect::AssignObjectFluent(f_term, None));
     }
 
     #[test]
@@ -181,7 +182,7 @@ mod tests {
         let af = make_atomic_formula();
         let pe = PrimitiveEffect::atomic_formula(af);
         let clone = pe.clone();
-        assert_eq!(pe, clone);
+        check!(pe == clone);
     }
 
     #[test]
@@ -189,7 +190,7 @@ mod tests {
         let af = make_atomic_formula();
         let pe = PrimitiveEffect::atomic_formula(af);
         let dbg = format!("{pe:?}");
-        assert!(dbg.contains("AtomicFormula"));
+        check!(dbg.contains("AtomicFormula"));
     }
 
     #[test]
@@ -204,7 +205,7 @@ mod tests {
             AssignOp::Decrease,
         ] {
             let pe = PrimitiveEffect::numeric_fluent(op, head.clone(), exp.clone());
-            assert!(matches!(pe, PrimitiveEffect::AssignNumericFluent(_, _, _)));
+            check!(let PrimitiveEffect::AssignNumericFluent(_, _, _) = pe);
         }
     }
 

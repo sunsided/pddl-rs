@@ -40,19 +40,20 @@ crate::parsers::impl_parser!(LengthSpec => parse_problem_length_spec);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
-        assert!(LengthSpec::from_str("(:length)").is_value(LengthSpec::default()));
-        assert!(
+        check!(LengthSpec::from_str("(:length)").is_value(LengthSpec::default()));
+        check!(
             LengthSpec::from_str("(:length (:serial 123))").is_value(LengthSpec::new_serial(123))
         );
-        assert!(
+        check!(
             LengthSpec::from_str("(:length (:parallel 42))").is_value(LengthSpec::new_parallel(42))
         );
-        assert!(
+        check!(
             LengthSpec::from_str("(:length (:serial 123) (:parallel 42))")
                 .is_value(LengthSpec::new(Some(123), Some(42)))
         );
@@ -60,14 +61,14 @@ mod tests {
 
     #[test]
     fn doc_example_0() {
-        assert!(LengthSpec::from_str("(:length)").is_value(LengthSpec::default()));
-        assert!(
+        check!(LengthSpec::from_str("(:length)").is_value(LengthSpec::default()));
+        check!(
             LengthSpec::from_str("(:length (:serial 123))").is_value(LengthSpec::new_serial(123))
         );
-        assert!(
+        check!(
             LengthSpec::from_str("(:length (:parallel 42))").is_value(LengthSpec::new_parallel(42))
         );
-        assert!(
+        check!(
             LengthSpec::from_str("(:length (:serial 123) (:parallel 42))")
                 .is_value(LengthSpec::new(Some(123), Some(42)))
         );

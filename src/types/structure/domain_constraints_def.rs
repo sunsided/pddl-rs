@@ -54,12 +54,13 @@ impl From<DomainConstraintsDef> for ConstraintGoalDescription {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert2::check;
 
     #[test]
     fn domain_constraints_def_from_con_gd() {
         let gd = ConstraintGoalDescription::default();
         let dcd: DomainConstraintsDef = gd.clone().into();
-        assert_eq!(*dcd, gd);
+        check!(*dcd == gd);
     }
 
     #[test]
@@ -67,6 +68,6 @@ mod tests {
         let gd = ConstraintGoalDescription::default();
         let dcd = DomainConstraintsDef::new(gd.clone());
         let back: ConstraintGoalDescription = dcd.into();
-        assert_eq!(back, gd);
+        check!(back == gd);
     }
 }

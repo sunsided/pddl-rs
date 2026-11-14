@@ -23,11 +23,12 @@ crate::parsers::impl_parser!(TimedAssignOperator => parse_assign_op_t);
 mod tests {
     use crate::parsers::UnwrapValue;
     use crate::{Parser, TimedAssignOperator};
+    use assert2::check;
 
     #[test]
     fn test_parse() {
-        assert!(TimedAssignOperator::from_str("increase").is_value(TimedAssignOperator::Increase));
-        assert!(TimedAssignOperator::from_str("assign").is_err());
-        assert!(TimedAssignOperator::from_str("(increase)").is_err());
+        check!(TimedAssignOperator::from_str("increase").is_value(TimedAssignOperator::Increase));
+        check!(TimedAssignOperator::from_str("assign").is_err());
+        check!(TimedAssignOperator::from_str("(increase)").is_err());
     }
 }

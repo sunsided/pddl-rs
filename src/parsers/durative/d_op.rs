@@ -24,11 +24,12 @@ crate::parsers::impl_parser!(DurationOperator => parse_d_op);
 mod tests {
     use crate::parsers::UnwrapValue;
     use crate::{DurationOperator, Parser};
+    use assert2::check;
 
     #[test]
     fn test_parse() {
-        assert!(DurationOperator::from_str("<=").is_value(DurationOperator::LessThanOrEqual));
-        assert!(DurationOperator::from_str("<").is_err());
-        assert!(DurationOperator::from_str("(<=)").is_err());
+        check!(DurationOperator::from_str("<=").is_value(DurationOperator::LessThanOrEqual));
+        check!(DurationOperator::from_str("<").is_err());
+        check!(DurationOperator::from_str("(<=)").is_err());
     }
 }

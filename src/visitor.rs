@@ -53,6 +53,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert2::check;
 
     struct Visi(isize);
     struct Item(i32);
@@ -72,6 +73,6 @@ mod tests {
         a.accept_mut(&mut v);
         b.accept_mut(&mut v);
 
-        assert_eq!(v.0, 37);
+        check!(v.0 == 37);
     }
 }

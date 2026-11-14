@@ -207,6 +207,7 @@ mod tests {
         AtomicFormula, BinaryComparison, FluentComparison, FluentExpression, Literal, Name, Number,
         Predicate, Term, Variable,
     };
+    use assert2::check;
 
     fn make_simple_gd() -> GoalDescription {
         let af: AtomicFormula<Term> = AtomicFormula::predicate(
@@ -222,7 +223,7 @@ mod tests {
     #[test]
     fn goal_atomic_formula_works() {
         let gd = make_simple_gd();
-        assert_eq!(prettify!(gd, 40), "(at ?r loc1)");
+        check!(prettify!(gd, 40) == "(at ?r loc1)");
     }
 
     #[test]
@@ -238,13 +239,13 @@ mod tests {
             GoalDescription::atomic_formula(af.clone()),
             GoalDescription::atomic_formula(af),
         ]);
-        assert_eq!(prettify!(gd, 40), "(and (at ?r loc1) (at ?r loc1))");
+        check!(prettify!(gd, 40) == "(and (at ?r loc1) (at ?r loc1))");
     }
 
     #[test]
     fn goal_and_empty_works() {
         let gd = GoalDescription::and(Vec::<GoalDescription>::new());
-        assert_eq!(prettify!(gd, 40), "(and)");
+        check!(prettify!(gd, 40) == "(and)");
     }
 
     #[test]
@@ -260,7 +261,7 @@ mod tests {
             GoalDescription::atomic_formula(af.clone()),
             GoalDescription::atomic_formula(af),
         ]);
-        assert_eq!(prettify!(gd, 40), "(or (at ?r loc1) (at ?r loc1))");
+        check!(prettify!(gd, 40) == "(or (at ?r loc1) (at ?r loc1))");
     }
 
     #[test]
@@ -273,7 +274,7 @@ mod tests {
             ],
         );
         let gd = GoalDescription::not(GoalDescription::atomic_formula(af));
-        assert_eq!(prettify!(gd, 40), "(not (at ?r loc1))");
+        check!(prettify!(gd, 40) == "(not (at ?r loc1))");
     }
 
     #[test]
@@ -289,7 +290,7 @@ mod tests {
             GoalDescription::atomic_formula(af.clone()),
             GoalDescription::atomic_formula(af),
         );
-        assert_eq!(prettify!(gd, 40), "(imply (at ?r loc1) (at ?r loc1))");
+        check!(prettify!(gd, 40) == "(imply (at ?r loc1) (at ?r loc1))");
     }
 
     #[test]
@@ -298,14 +299,14 @@ mod tests {
         let b = FluentExpression::number(crate::Number::from(4));
         let fc = FluentComparison::new(BinaryComparison::GreaterThan, a, b);
         let gd = GoalDescription::fluent_comparison(fc);
-        assert_eq!(prettify!(gd, 10), "(> 3 4)");
+        check!(prettify!(gd, 10) == "(> 3 4)");
     }
 
     #[test]
     fn preference_gd_goal_works() {
         let gd = make_simple_gd();
         let pgd = PreferenceGoalDescription::from_gd(gd);
-        assert_eq!(prettify!(pgd, 40), "(at ?r loc1)");
+        check!(prettify!(pgd, 40) == "(at ?r loc1)");
     }
 
     #[test]
@@ -314,28 +315,28 @@ mod tests {
         let gd = make_simple_gd();
         let pref = Preference::new(Some(PreferenceName::string("p1")), gd);
         let pgd = PreferenceGoalDescription::from_preference(pref);
-        assert_eq!(prettify!(pgd, 40), "(preference p1 (at ?r loc1))");
+        check!(prettify!(pgd, 40) == "(preference p1 (at ?r loc1))");
     }
 
     #[test]
     fn preference_no_name_works() {
         let gd = make_simple_gd();
         let pref = Preference::new(None, gd);
-        assert_eq!(prettify!(pref, 40), "(preference (at ?r loc1))");
+        check!(prettify!(pref, 40) == "(preference (at ?r loc1))");
     }
 
     #[test]
     fn con_gd_and_works() {
         let gd = make_simple_gd();
         let con = ConstraintGoalDescription::and([ConstraintGoalDescription::at_end(gd)]);
-        assert_eq!(prettify!(con, 40), "(and (at end (at ?r loc1)))");
+        check!(prettify!(con, 40) == "(and (at end (at ?r loc1)))");
     }
 
     #[test]
     fn con_gd_at_end_works() {
         let gd = make_simple_gd();
         let con = ConstraintGoalDescription::at_end(gd);
-        assert_eq!(prettify!(con, 40), "(at end (at ?r loc1))");
+        check!(prettify!(con, 40) == "(at end (at ?r loc1))");
     }
 
     #[test]
@@ -343,7 +344,7 @@ mod tests {
         let gd = make_simple_gd();
         let con2 = ConstraintGoalDescriptionInner::goal(gd);
         let con = ConstraintGoalDescription::always(con2);
-        assert_eq!(prettify!(con, 40), "(always (at ?r loc1))");
+        check!(prettify!(con, 40) == "(always (at ?r loc1))");
     }
 
     #[test]
@@ -351,7 +352,7 @@ mod tests {
         let gd = make_simple_gd();
         let con2 = ConstraintGoalDescriptionInner::goal(gd);
         let con = ConstraintGoalDescription::within(Number::from(10), con2);
-        assert_eq!(prettify!(con, 40), "(within 10 (at ?r loc1))");
+        check!(prettify!(con, 40) == "(within 10 (at ?r loc1))");
     }
 
     #[test]
@@ -362,10 +363,7 @@ mod tests {
             ConstraintGoalDescriptionInner::goal(gd1),
             ConstraintGoalDescriptionInner::goal(gd2),
         );
-        assert_eq!(
-            prettify!(con, 40),
-            "(sometime-after (at ?r loc1) (at ?r\n        loc1))"
-        );
+        check!(prettify!(con, 40) == "(sometime-after (at ?r loc1) (at ?r\n        loc1))");
     }
 
     #[test]
@@ -373,7 +371,7 @@ mod tests {
         let gd = make_simple_gd();
         let con2 = ConstraintGoalDescriptionInner::goal(gd);
         let con = ConstraintGoalDescription::hold_during(Number::from(5), Number::from(15), con2);
-        assert_eq!(prettify!(con, 40), "(hold-during 5 15 (at ?r loc1))");
+        check!(prettify!(con, 40) == "(hold-during 5 15 (at ?r loc1))");
     }
 
     #[test]
@@ -384,13 +382,13 @@ mod tests {
         );
         let lit = Literal::new(af);
         let gd = GoalDescription::literal(lit);
-        assert_eq!(prettify!(gd, 20), "(at x)");
+        check!(prettify!(gd, 20) == "(at x)");
     }
 
     #[test]
     fn goal_or_empty_works() {
         let gd = GoalDescription::or(Vec::<GoalDescription>::new());
-        assert_eq!(prettify!(gd, 20), "(or)");
+        check!(prettify!(gd, 20) == "(or)");
     }
 
     #[test]
@@ -399,7 +397,7 @@ mod tests {
         let vars: TypedVariables = vec![Variable::string("x").to_typed(Type::OBJECT)].into();
         let inner = make_simple_gd();
         let gd = GoalDescription::exists(vars, inner);
-        assert_eq!(prettify!(gd, 40), "(exists (?x) (at ?r loc1))");
+        check!(prettify!(gd, 40) == "(exists (?x) (at ?r loc1))");
     }
 
     #[test]
@@ -408,7 +406,7 @@ mod tests {
         let vars: TypedVariables = vec![Variable::string("x").to_typed(Type::OBJECT)].into();
         let inner = make_simple_gd();
         let gd = GoalDescription::forall(vars, inner);
-        assert_eq!(prettify!(gd, 40), "(forall (?x) (at ?r loc1))");
+        check!(prettify!(gd, 40) == "(forall (?x) (at ?r loc1))");
     }
 
     #[test]
@@ -417,7 +415,7 @@ mod tests {
         let gd = make_simple_gd();
         let pref_gd = PreferenceGoalDescription::from_gd(gd);
         let pre_gd = PreconditionGoalDescription::preference(pref_gd);
-        assert_eq!(prettify!(pre_gd, 40), "(at ?r loc1)");
+        check!(prettify!(pre_gd, 40) == "(at ?r loc1)");
     }
 
     #[test]
@@ -428,14 +426,14 @@ mod tests {
         let pre_gd = PreconditionGoalDescription::forall(vars, inner);
         // The visitor renders as "forall (?x)" with the body being empty PreconditionGoalDescriptions rendering as (and)
         let out = prettify!(pre_gd, 40);
-        assert!(out.contains("forall"));
-        assert!(out.contains("?x"));
+        check!(out.contains("forall"));
+        check!(out.contains("?x"));
     }
 
     #[test]
     fn precondition_goal_descriptions_empty_works() {
         let pgds = PreconditionGoalDescriptions::default();
-        assert_eq!(prettify!(pgds, 20), "(and)");
+        check!(prettify!(pgds, 20) == "(and)");
     }
 
     #[test]
@@ -444,7 +442,7 @@ mod tests {
         let pre_gd =
             PreconditionGoalDescription::preference(PreferenceGoalDescription::from_gd(gd));
         let pgds = PreconditionGoalDescriptions::new(vec![pre_gd]);
-        assert_eq!(prettify!(pgds, 40), "(at ?r loc1)");
+        check!(prettify!(pgds, 40) == "(at ?r loc1)");
     }
 
     #[test]
@@ -455,7 +453,7 @@ mod tests {
             PreconditionGoalDescription::preference(PreferenceGoalDescription::from_gd(gd1)),
             PreconditionGoalDescription::preference(PreferenceGoalDescription::from_gd(gd2)),
         ]);
-        assert_eq!(prettify!(pgds, 40), "(and (at ?r loc1) (at ?r loc1))");
+        check!(prettify!(pgds, 40) == "(and (at ?r loc1) (at ?r loc1))");
     }
 
     #[test]
@@ -469,7 +467,7 @@ mod tests {
             )),
         ]);
         let pgd = PreferenceConstraintGoalDescription::forall(vars, pgds);
-        assert_eq!(prettify!(pgd, 40), "(forall (?x) (always (at ?r loc1)))");
+        check!(prettify!(pgd, 40) == "(forall (?x) (always (at ?r loc1)))");
     }
 
     #[test]
@@ -481,7 +479,7 @@ mod tests {
             Some(PreferenceName::string("p1")),
             con,
         );
-        assert_eq!(prettify!(pcgd, 40), "(preference p1 (at end (at ?r loc1)))");
+        check!(prettify!(pcgd, 40) == "(preference p1 (at end (at ?r loc1)))");
     }
 
     #[test]
@@ -489,7 +487,7 @@ mod tests {
         let gd = make_simple_gd();
         let con = ConstraintGoalDescription::at_end(gd);
         let pcgd = PreferenceConstraintGoalDescription::preference(None, con);
-        assert_eq!(prettify!(pcgd, 40), "(preference (at end (at ?r loc1)))");
+        check!(prettify!(pcgd, 40) == "(preference (at end (at ?r loc1)))");
     }
 
     #[test]
@@ -501,7 +499,7 @@ mod tests {
             PreferenceConstraintGoalDescription::goal(ConstraintGoalDescription::at_end(gd2)),
         ]);
         let out = prettify!(pgds, 40);
-        assert!(out.contains("(at end"));
+        check!(out.contains("(at end"));
     }
 
     #[test]
@@ -509,7 +507,7 @@ mod tests {
         let gd = make_simple_gd();
         let con2 = ConstraintGoalDescriptionInner::goal(gd);
         let con = ConstraintGoalDescription::sometime(con2);
-        assert_eq!(prettify!(con, 40), "(sometime (at ?r loc1))");
+        check!(prettify!(con, 40) == "(sometime (at ?r loc1))");
     }
 
     #[test]
@@ -517,7 +515,7 @@ mod tests {
         let gd = make_simple_gd();
         let con2 = ConstraintGoalDescriptionInner::goal(gd);
         let con = ConstraintGoalDescription::at_most_once(con2);
-        assert_eq!(prettify!(con, 40), "(at-most-once (at ?r loc1))");
+        check!(prettify!(con, 40) == "(at-most-once (at ?r loc1))");
     }
 
     #[test]
@@ -528,10 +526,7 @@ mod tests {
             ConstraintGoalDescriptionInner::goal(gd1),
             ConstraintGoalDescriptionInner::goal(gd2),
         );
-        assert_eq!(
-            prettify!(con, 40),
-            "(sometime-before (at ?r loc1) (at ?r\n        loc1))"
-        );
+        check!(prettify!(con, 40) == "(sometime-before (at ?r loc1) (at ?r\n        loc1))");
     }
 
     #[test]
@@ -543,10 +538,7 @@ mod tests {
             ConstraintGoalDescriptionInner::goal(gd1),
             ConstraintGoalDescriptionInner::goal(gd2),
         );
-        assert_eq!(
-            prettify!(con, 40),
-            "(always-within 10 (at ?r loc1) (at ?r\n        loc1))"
-        );
+        check!(prettify!(con, 40) == "(always-within 10 (at ?r loc1) (at ?r\n        loc1))");
     }
 
     #[test]
@@ -554,7 +546,7 @@ mod tests {
         let gd = make_simple_gd();
         let con2 = ConstraintGoalDescriptionInner::goal(gd);
         let con = ConstraintGoalDescription::hold_after(Number::from(15), con2);
-        assert_eq!(prettify!(con, 40), "(hold-after 15 (at ?r loc1))");
+        check!(prettify!(con, 40) == "(hold-after 15 (at ?r loc1))");
     }
 
     #[test]
@@ -563,7 +555,7 @@ mod tests {
         let vars: TypedVariables = vec![Variable::string("x").to_typed(Type::OBJECT)].into();
         let inner = ConstraintGoalDescription::at_end(make_simple_gd());
         let con = ConstraintGoalDescription::forall(vars, inner);
-        assert_eq!(prettify!(con, 40), "(forall (?x) (at end (at ?r loc1)))");
+        check!(prettify!(con, 40) == "(forall (?x) (at end (at ?r loc1)))");
     }
 
     #[test]
@@ -571,6 +563,6 @@ mod tests {
         let gd = make_simple_gd();
         let con = ConstraintGoalDescription::at_end(gd);
         let con2 = ConstraintGoalDescriptionInner::nested(con);
-        assert_eq!(prettify!(con2, 40), "(at end (at ?r loc1))");
+        check!(prettify!(con2, 40) == "(at end (at ?r loc1))");
     }
 }

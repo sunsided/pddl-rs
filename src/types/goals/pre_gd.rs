@@ -204,6 +204,7 @@ impl From<Preference> for PreconditionGoalDescription {
 mod tests {
     use super::*;
     use crate::types::{GoalDescription, PreferenceGoalDescription};
+    use assert2::check;
 
     fn make_preference_goal() -> PreferenceGoalDescription {
         let gd = GoalDescription::and(Vec::new());
@@ -225,7 +226,7 @@ mod tests {
     fn pre_gd_from_preference_goal() {
         let pref = make_preference_goal();
         let from_pref: PreconditionGoalDescription = pref.clone().into();
-        assert_eq!(from_pref, PreconditionGoalDescription::preference(pref));
+        check!(from_pref == PreconditionGoalDescription::preference(pref));
     }
 
     #[test]
@@ -233,10 +234,7 @@ mod tests {
         let gd = GoalDescription::and(Vec::new());
         let pref = crate::Preference::new(None, gd);
         let from_pref: PreconditionGoalDescription = pref.into();
-        assert!(matches!(
-            from_pref,
-            PreconditionGoalDescription::Preference(_)
-        ));
+        check!(let PreconditionGoalDescription::Preference(_) = from_pref);
     }
 
     #[test]
@@ -244,29 +242,29 @@ mod tests {
         let pref = make_preference_goal();
         let single = PreconditionGoalDescription::preference(pref);
         let from_some: PreconditionGoalDescriptions = Some(single.clone()).into();
-        assert_eq!(from_some.len(), 1);
-        assert_eq!(from_some.try_get_single(), Some(single));
+        check!(from_some.len() == 1);
+        check!(from_some.try_get_single() == Some(single));
     }
 
     #[test]
     fn pre_gds_from_option_none() {
         let from_none: PreconditionGoalDescriptions =
             Option::<PreconditionGoalDescription>::None.into();
-        assert!(from_none.is_empty());
+        check!(from_none.is_empty());
     }
 
     #[test]
     fn pre_gds_from_option_list_some() {
         let list = PreconditionGoalDescriptions::default();
         let from_some: PreconditionGoalDescriptions = Some(list).into();
-        assert!(from_some.is_empty());
+        check!(from_some.is_empty());
     }
 
     #[test]
     fn pre_gds_from_option_list_none() {
         let from_none: PreconditionGoalDescriptions =
             Option::<PreconditionGoalDescriptions>::None.into();
-        assert!(from_none.is_empty());
+        check!(from_none.is_empty());
     }
 
     #[test]
@@ -275,8 +273,8 @@ mod tests {
         let single = PreconditionGoalDescription::preference(pref);
         let list = PreconditionGoalDescriptions::new(vec![single.clone()]);
         let slice: &[PreconditionGoalDescription] = &list;
-        assert_eq!(slice.len(), 1);
-        assert_eq!(&slice[0], &single);
+        check!(slice.len() == 1);
+        check!(&slice[0] == &single);
     }
 
     #[test]
@@ -285,7 +283,7 @@ mod tests {
         let single = PreconditionGoalDescription::preference(pref);
         let list = PreconditionGoalDescriptions::new(vec![single]);
         let slice: &[PreconditionGoalDescription] = list.as_ref();
-        assert_eq!(slice.len(), 1);
+        check!(slice.len() == 1);
     }
 
     #[test]
@@ -294,7 +292,7 @@ mod tests {
         let single = PreconditionGoalDescription::preference(pref.clone());
         let list = PreconditionGoalDescriptions::new(vec![single.clone()]);
         let collected: Vec<_> = list.into_iter().collect();
-        assert_eq!(collected, vec![single]);
+        check!(collected == vec![single]);
     }
 
     #[test]
@@ -303,7 +301,7 @@ mod tests {
         let single = PreconditionGoalDescription::preference(pref.clone());
         let list = PreconditionGoalDescriptions::new(vec![single.clone()]);
         let vec: Vec<PreconditionGoalDescription> = list.into();
-        assert_eq!(vec, vec![single]);
+        check!(vec == vec![single]);
     }
 
     #[test]
@@ -311,13 +309,13 @@ mod tests {
         let pref = make_preference_goal();
         let single = PreconditionGoalDescription::preference(pref.clone());
         let list = PreconditionGoalDescriptions::new(vec![single.clone()]);
-        assert_eq!(list.try_get_single(), Some(single.clone()));
+        check!(list.try_get_single() == Some(single.clone()));
 
         let empty = PreconditionGoalDescriptions::default();
-        assert!(empty.try_get_single().is_none());
+        check!(empty.try_get_single().is_none());
 
         let multi = PreconditionGoalDescriptions::new(vec![single.clone(), single]);
-        assert!(multi.try_get_single().is_none());
+        check!(multi.try_get_single().is_none());
     }
 
     #[test]
@@ -326,8 +324,8 @@ mod tests {
         let single = PreconditionGoalDescription::preference(pref.clone());
         let list = PreconditionGoalDescriptions::new(vec![single.clone()]);
         let result: Result<PreconditionGoalDescription, ()> = list.try_into();
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap(), single);
+        check!(result.is_ok());
+        check!(result.unwrap() == single);
     }
 
     #[test]
@@ -338,7 +336,7 @@ mod tests {
             PreconditionGoalDescription::preference(pref),
         ];
         let result: PreconditionGoalDescriptions = PreconditionGoalDescription::and(items);
-        assert_eq!(result.len(), 2);
+        check!(result.len() == 2);
     }
 
     #[test]
@@ -356,6 +354,6 @@ mod tests {
         let vars = TypedVariables::default();
         let gds = PreconditionGoalDescriptions::default();
         let forall = PreconditionGoalDescription::r#forall(vars.clone(), gds.clone());
-        assert!(matches!(forall, PreconditionGoalDescription::Forall(_, _)));
+        check!(let PreconditionGoalDescription::Forall(_, _) = forall);
     }
 }

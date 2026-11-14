@@ -23,11 +23,12 @@ crate::parsers::impl_parser!(Optimization => parse_optimization);
 mod tests {
     use crate::parsers::UnwrapValue;
     use crate::{Optimization, Parser};
+    use assert2::check;
 
     #[test]
     fn test_parse() {
-        assert!(Optimization::from_str("MAXIMIZE").is_value(Optimization::Maximize));
-        assert!(Optimization::from_str("minimise").is_err());
-        assert!(Optimization::from_str("(MAXIMIZE)").is_err());
+        check!(Optimization::from_str("MAXIMIZE").is_value(Optimization::Maximize));
+        check!(Optimization::from_str("minimise").is_err());
+        check!(Optimization::from_str("(MAXIMIZE)").is_err());
     }
 }

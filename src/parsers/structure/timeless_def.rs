@@ -18,13 +18,14 @@ crate::parsers::impl_parser!(Timeless => parse_timeless_def);
 #[cfg(test)]
 mod tests {
     use crate::parsers::UnwrapValue;
+    use assert2::check;
 
     use crate::*;
 
     #[test]
     fn test_parse() {
         let input = "(:timeless (= x y) (= a b))";
-        assert!(Timeless::from_str(input).is_value(Timeless::from_iter([
+        check!(Timeless::from_str(input).is_value(Timeless::from_iter([
             Literal::AtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new(
                 "x".into(),
                 "y".into()
@@ -39,7 +40,7 @@ mod tests {
     #[test]
     fn doc_example_0() {
         let input = "(:timeless (= x y) (= a b))";
-        assert!(Timeless::from_str(input).is_value(Timeless::from_iter([
+        check!(Timeless::from_str(input).is_value(Timeless::from_iter([
             Literal::AtomicFormula(AtomicFormula::Equality(EqualityAtomicFormula::new(
                 "x".into(),
                 "y".into()
