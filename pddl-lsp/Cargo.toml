@@ -7,6 +7,8 @@ categories = ["development-tools", "science"]
 keywords = ["pddl", "planning", "lsp", "language-server"]
 repository = "https://github.com/sunsided/pddl-rs"
 readme = "README.md"
+# Reads the pddl crate's test corpus, which is not part of this crate.
+exclude = ["tests/corpus.rs", "release.toml"]
 authors = ["Markus Mayer <widemeadows@gmail.com>"]
 edition = "2021"
 rust-version = "1.86.0"

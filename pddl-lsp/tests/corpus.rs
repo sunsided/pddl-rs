@@ -1,9 +1,14 @@
 //! Checks every example file of the parser's corpus with the language server.
+//!
+//! The corpus lives in the `pddl` crate's `tests/data`, so this file is not
+//! part of the published crate.
 
 use std::path::Path;
 
 use assert2::check;
 use lsp_types::Url;
+use pddl::syntax::{self, Node};
+use pddl_lsp::format::format;
 use pddl_lsp::line_index::Encoding;
 use pddl_lsp::workspace::{Document, Workspace};
 
@@ -65,4 +70,57 @@ fn the_corpus_has_no_unexpected_problems() {
             .flat_map(|d| &d.analysis.references);
         check!(references.count() > 500);
     }
+}
+
+/// The atoms and comments of `text`, which formatting must keep.
+fn content(text: &str) -> Vec<String> {
+    fn atoms(node: &Node, out: &mut Vec<String>) {
+        match node.children() {
+            None => out.push(node.atom().unwrap().to_string()),
+            Some(children) => {
+                out.push("(".into());
+                for child in children {
+                    atoms(child, out);
+                }
+                out.push(")".into());
+            }
+        }
+    }
+    let tree = syntax::read(text).unwrap();
+    let mut out = Vec::new();
+    for node in &tree.nodes {
+        atoms(node, &mut out);
+    }
+    out.extend(
+        tree.comments
+            .iter()
+            .map(|c| text[c.clone()].trim_end().to_string()),
+    );
+    out
+}
+
+#[test]
+fn keeps_content_and_is_idempotent_on_the_corpus() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/data");
+    let mut checked = 0;
+    for folder in ["vhpop", "potoroo"] {
+        for entry in std::fs::read_dir(root.join(folder)).unwrap() {
+            let path = entry.unwrap().path();
+            if path.extension() != Some("pddl".as_ref()) {
+                continue;
+            }
+            let input = std::fs::read_to_string(&path).unwrap();
+            let Some(once) = format(&input) else {
+                continue;
+            };
+            check!(content(&once) == content(&input), "{}", path.display());
+            check!(
+                format(&once).as_deref() == Some(once.as_str()),
+                "{}",
+                path.display()
+            );
+            checked += 1;
+        }
+    }
+    check!(checked > 80);
 }

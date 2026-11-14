@@ -217,3 +217,26 @@ Otherwise it uses the one whose file path sorts first.
   each section reports at most one syntax error.
 - The formatter always uses two-space indents and an 80-column limit. It
   doesn't format a file whose parentheses are unbalanced.
+
+## Releasing
+
+`pddl-lsp` is versioned separately from `pddl`, with tags named
+`pddl-lsp-vX.Y.Z` and its own [CHANGELOG](CHANGELOG.md).
+
+1. If the server uses parser changes that aren't on crates.io yet, release
+   `pddl` first (`cargo release <level> -p pddl --execute`). That also raises
+   the `pddl` version `pddl-lsp` requires.
+2. On `main`, run `cargo release <level> -p pddl-lsp --execute`. It turns the
+   "Unreleased" section of the changelog into the release's section, commits,
+   tags `pddl-lsp-vX.Y.Z` and pushes.
+3. The tag starts [`release-pddl-lsp.yml`](../.github/workflows/release-pddl-lsp.yml).
+   It runs the tests, publishes the crate to crates.io, creates a GitHub
+   Release with the changelog section, and attaches binaries for Linux
+   (x86-64 and ARM64), macOS (Apple silicon) and Windows (x86-64), each with
+   a SHA-256 checksum.
+
+The workflow publishes with crates.io's trusted publishing, which can only be
+set up for a crate that already exists. Before the first release, publish
+once by hand (`cargo publish -p pddl-lsp`). Then, in the crate's settings on
+crates.io, add a trusted publisher for the repository `sunsided/pddl-rs`,
+workflow `release-pddl-lsp.yml` and environment `release`.
