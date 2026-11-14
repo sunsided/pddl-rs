@@ -490,6 +490,50 @@ mod tests {
     }
 
     #[test]
+    fn keeps_several_domains_and_problems_in_one_file_apart() {
+        let file = "(define (domain trucks)
+  (:predicates (at ?t ?p)))
+(define (domain boats)
+  (:predicates (docked ?b ?p)))
+(define (problem p1) (:domain trucks) (:objects t home)
+  (:init (at t home)) (:goal (at t home)))
+(define (problem p2) (:domain boats) (:objects b home)
+  (:init (docked b home)) (:goal (at b home)))";
+        let ws = workspace(&[("all.pddl", file)]);
+        let analysis = &ws.documents[&uri("all.pddl")].analysis;
+        let contexts: Vec<_> = analysis
+            .contexts
+            .iter()
+            .map(|c| (c.name.as_str(), c.domain.as_deref()))
+            .collect();
+        check!(
+            contexts
+                == [
+                    ("trucks", Some("trucks")),
+                    ("boats", Some("boats")),
+                    ("p1", Some("trucks")),
+                    ("p2", Some("boats")),
+                ]
+        );
+        // `at` exists in `trucks` only, so p2, which uses `boats`, can't use it.
+        check!(messages(&ws, "all.pddl") == ["unknown predicate or function `at`"]);
+        let unknown = ws.problems(&uri("all.pddl"))[0].span.start;
+        check!(unknown == file.rfind("(at b").unwrap() + 1);
+
+        // Each problem's `home` is its own object.
+        let home_p1 = ws.target_at(&uri("all.pddl"), file.find("t home)").unwrap() + 2);
+        let home_p2 = ws.target_at(&uri("all.pddl"), file.find("b home)").unwrap() + 2);
+        check!(home_p1.is_some() && home_p2.is_some() && home_p1 != home_p2);
+
+        // `at` in p1 leads to the `trucks` domain in the same file.
+        let at = ws
+            .target_at(&uri("all.pddl"), file.find("(at t").unwrap() + 1)
+            .unwrap();
+        let definition = ws.definition(&at).unwrap();
+        check!(analysis.contexts[definition.context].name == "trucks");
+    }
+
+    #[test]
     fn checks_problems_only_against_a_known_domain() {
         let problem = "(define (problem p) (:domain elsewhere) (:init (at a)) (:goal (at a)))";
         let ws = workspace(&[("p.pddl", problem)]);

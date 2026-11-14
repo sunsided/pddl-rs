@@ -56,6 +56,10 @@ Syntax highlighting for keywords, variables, numbers and comments. Semantic
 highlighting then colors types, predicates, functions, actions, objects and
 variables differently, depending on what each name refers to.
 
+PDDL in Markdown code blocks marked ` ```pddl ` is highlighted too, in the
+Markdown editor. The Markdown preview and the checks above don't cover these
+blocks.
+
 ## Settings
 
 | Setting             | Default | Description |

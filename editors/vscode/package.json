@@ -46,6 +46,16 @@
         "language": "pddl",
         "scopeName": "source.pddl",
         "path": "./syntaxes/pddl.tmLanguage.json"
+      },
+      {
+        "scopeName": "markdown.pddl.codeblock",
+        "path": "./syntaxes/pddl.markdown.tmLanguage.json",
+        "injectTo": [
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.pddl": "pddl"
+        }
       }
     ],
     "configuration": {
