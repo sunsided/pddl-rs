@@ -84,6 +84,10 @@ the other features above don't cover embedded PDDL.
 
 The **PDDL: Restart Language Server** command restarts the server.
 
+In [Restricted Mode](https://code.visualstudio.com/docs/editing/workspaces/workspace-trust),
+only syntax highlighting is available. The server starts once you trust the
+folder, and a workspace can only set `pddl.server.path` after that.
+
 ### Using a native server
 
 The extension runs the server as WebAssembly, in Microsoft's

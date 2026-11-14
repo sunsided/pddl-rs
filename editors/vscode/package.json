@@ -6,6 +6,7 @@
   "publisher": "sunsided",
   "preview": true,
   "license": "EUPL-1.2",
+  "icon": "images/icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/sunsided/pddl-rs"
@@ -26,6 +27,15 @@
   "extensionDependencies": [
     "ms-vscode.wasm-wasi-core"
   ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "In Restricted Mode, only syntax highlighting is available. The language server starts once you trust the folder, so an untrusted folder can't choose a program through `pddl.server.path`.",
+      "restrictedConfigurations": [
+        "pddl.server.path"
+      ]
+    }
+  },
   "main": "./out/extension.js",
   "contributes": {
     "languages": [
@@ -110,7 +120,8 @@
         "pddl.server.path": {
           "type": "string",
           "default": "",
-          "markdownDescription": "Path to a native `pddl-lsp` binary, such as `pddl-lsp` to look it up on `PATH`. If empty, the extension runs the WebAssembly build of the server it bundles."
+          "markdownDescription": "Path to a native `pddl-lsp` binary, such as `pddl-lsp` to look it up on `PATH`. If empty, the extension runs the WebAssembly build of the server it bundles. A workspace can only set this once you trust it.",
+          "scope": "machine-overridable"
         },
         "pddl.trace.server": {
           "type": "string",

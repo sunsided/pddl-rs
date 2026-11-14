@@ -29,6 +29,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         await start(context, output);
       }
     }),
+    vscode.workspace.onDidGrantWorkspaceTrust(() => start(context, output)),
   );
   await start(context, output);
 }
@@ -41,6 +42,13 @@ async function start(
   context: vscode.ExtensionContext,
   output: vscode.LogOutputChannel,
 ): Promise<void> {
+  // In Restricted Mode, VS Code disables the WASI runtime the bundled server
+  // needs, and a native server is a program the folder may have chosen. Only
+  // highlighting works until the folder is trusted.
+  if (!vscode.workspace.isTrusted) {
+    output.info("Restricted Mode: the language server starts once you trust this folder.");
+    return;
+  }
   const path = vscode.workspace.getConfiguration("pddl").get<string>("server.path", "").trim();
   const native = path !== "";
   const clientOptions: LanguageClientOptions = {

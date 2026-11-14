@@ -28,12 +28,34 @@ async function main() {
     if (install.status !== 0) {
       throw new Error("could not install ms-vscode.wasm-wasi-core");
     }
+    // The features, in a trusted workspace.
     await runTests({
       vscodeExecutablePath: vscode,
       extensionDevelopmentPath: extension,
       extensionTestsPath: path.join(__dirname, "suite.js"),
       launchArgs: [path.join(__dirname, "workspace"), ...dirs, "--disable-workspace-trust", "--disable-gpu"],
     });
+    // Restricted Mode: without a startup prompt, an untrusted folder opens in it.
+    const settings = path.join(profile, "user", "User", "settings.json");
+    fs.mkdirSync(path.dirname(settings), { recursive: true });
+    fs.writeFileSync(settings, JSON.stringify({ "security.workspace.trust.startupPrompt": "never" }));
+    // A copy outside the extension's folder, which VS Code trusts during development.
+    const untrusted = path.join(profile, "untrusted");
+    fs.cpSync(path.join(__dirname, "untrusted"), untrusted, { recursive: true });
+    // runTests always disables Workspace Trust, so start this run directly.
+    const run = cp.spawnSync(
+      vscode,
+      [
+        untrusted, ...dirs, "--disable-gpu", "--no-sandbox", "--disable-gpu-sandbox",
+        "--disable-updates", "--skip-welcome", "--skip-release-notes",
+        `--extensionDevelopmentPath=${extension}`,
+        `--extensionTestsPath=${path.join(__dirname, "untrusted.js")}`,
+      ],
+      { stdio: "inherit" },
+    );
+    if (run.status !== 0) {
+      throw new Error(`the Restricted Mode test failed with exit code ${run.status}`);
+    }
   } finally {
     fs.rmSync(profile, { recursive: true, force: true });
   }
