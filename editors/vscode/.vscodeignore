@@ -2,3 +2,4 @@ src/**
 tsconfig.json
 **/*.map
 node_modules/.bin/**
+Taskfile.dist.yaml

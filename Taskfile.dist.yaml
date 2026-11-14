@@ -4,6 +4,11 @@ vars:
   CARGO: cargo
   FUZZ_CARGO: cargo +nightly
 
+includes:
+  vscode:
+    taskfile: editors/vscode/Taskfile.dist.yaml
+    dir: editors/vscode
+
 tasks:
   default:
     desc: List available tasks

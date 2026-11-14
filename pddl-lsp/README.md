@@ -72,6 +72,9 @@ npx vsce package
 code --install-extension pddl-lsp-0.1.0.vsix
 ```
 
+With [Task](https://taskfile.dev), run `task vscode:install` from the
+repository root instead.
+
 To use a binary that isn't on `PATH`, set `pddl.server.path` in your settings.
 
 ### Neovim 0.11+

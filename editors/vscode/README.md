@@ -21,6 +21,9 @@ signature help, formatting and quick fixes.
    code --install-extension pddl-lsp-0.1.0.vsix
    ```
 
+   With [Task](https://taskfile.dev), `task install` in this folder does the
+   same, or `task vscode:install` from the repository root.
+
 3. Open a `.pddl` file.
 
 If the extension can't find the server, it shows an error with a button that

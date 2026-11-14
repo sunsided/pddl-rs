@@ -1,0 +1,59 @@
+version: "3"
+
+vars:
+  NPM: npm
+  VSIX:
+    sh: node -p "require('./package.json').name + '-' + require('./package.json').version + '.vsix'"
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list-all
+
+  deps:
+    desc: Install the extension's npm dependencies
+    preconditions:
+      - sh: command -v {{.NPM}}
+        msg: "npm not found — install Node.js from https://nodejs.org/"
+    sources:
+      - package.json
+      - package-lock.json
+    generates:
+      - node_modules/.package-lock.json
+    cmds:
+      - "{{.NPM}} ci --ignore-scripts"
+
+  build:
+    desc: Compile the extension to out/
+    deps: [deps]
+    cmds:
+      - "{{.NPM}} run compile"
+
+  watch:
+    desc: Recompile the extension on every change
+    aliases:
+      - dev
+    deps: [deps]
+    cmds:
+      - "{{.NPM}} run watch"
+
+  package:
+    desc: Package the extension as a .vsix file
+    deps: [build]
+    cmds:
+      - npx vsce package --allow-missing-repository
+
+  install:
+    desc: Package the extension and install it into VS Code
+    deps: [package]
+    preconditions:
+      - sh: command -v code
+        msg: "code not found — in VS Code, run \"Shell Command: Install 'code' command in PATH\""
+    cmds:
+      - code --install-extension {{.VSIX}} --force
+
+  clean:
+    desc: Remove the compiled extension, packages and npm dependencies
+    cmds:
+      - rm -rf out node_modules *.vsix
