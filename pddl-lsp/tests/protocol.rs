@@ -428,7 +428,7 @@ fn follows_workspace_files_on_disk() {
 
     // Closing the edited domain goes back to what's on disk.
     let d = dir.uri("domain.pddl");
-    client.open(&d, "(define (domain logistics))");
+    client.open(&d, "(define (domain logistics) (:requirements :typing))");
     // Without its types and predicates: `truck`, `place` and both `at`s are unknown.
     check!(client.diagnostics(&p).len() == 4);
     client.notify(

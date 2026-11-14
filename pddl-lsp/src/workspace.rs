@@ -9,9 +9,9 @@ use std::fmt::Write as _;
 use std::ops::Range;
 
 use lsp_types::Url;
-use pddl::syntax;
+use pddl::{syntax, Requirement};
 
-use crate::analysis::{Analysis, Definition, Expect, Kind, Occurrence};
+use crate::analysis::{Analysis, Definition, Expect, Kind, Occurrence, VariableUse};
 use crate::line_index::{Encoding, LineIndex};
 
 /// A PDDL file and its names.
@@ -277,6 +277,9 @@ impl Workspace {
             .map(parse_problem)
             .collect();
         let analysis = &document.analysis;
+        let targets: Vec<Option<Target>> = (0..analysis.references.len())
+            .map(|index| self.resolve(uri, index))
+            .collect();
         for (index, reference) in analysis.references.iter().enumerate() {
             let error = |message: String| Problem {
                 span: reference.span.clone(),
@@ -284,7 +287,7 @@ impl Workspace {
                 message,
                 fix: None,
             };
-            match self.resolve(uri, index) {
+            match &targets[index] {
                 None if reference.expect == Expect::Domain => problems.push(Problem {
                     severity: Severity::Warning,
                     ..error(format!(
@@ -307,7 +310,7 @@ impl Workspace {
                 }
                 None => {}
                 Some(target) => {
-                    let Some(definition) = self.definition(&target) else {
+                    let Some(definition) = self.definition(target) else {
                         continue;
                     };
                     let (Some(expected), Some(given)) = (definition.arity(), reference.args) else {
@@ -335,6 +338,8 @@ impl Workspace {
                 });
             }
         }
+        problems.extend(self.argument_types(uri, &targets));
+        problems.extend(self.missing_requirements(uri));
         problems.extend(duplicates(analysis));
         problems.extend(self.unused(uri));
         problems.sort_by_key(|p| p.span.start);
@@ -343,6 +348,158 @@ impl Workspace {
 }
 
 impl Workspace {
+    /// Arguments whose declared type doesn't fit the parameter they are passed to.
+    ///
+    /// `targets` holds what each reference in `uri` resolves to. An argument is
+    /// only reported when its type, the parameter's type and the type hierarchy
+    /// are all known: untyped names, nested function terms and types of a
+    /// domain outside the workspace are not checked.
+    fn argument_types(&self, uri: &Url, targets: &[Option<Target>]) -> Vec<Problem> {
+        let analysis = &self.documents[uri].analysis;
+        let variables: HashMap<usize, &VariableUse> = analysis
+            .variables
+            .iter()
+            .map(|v| (v.span.start, v))
+            .collect();
+        let terms: HashMap<usize, usize> = analysis
+            .references
+            .iter()
+            .enumerate()
+            .filter(|(_, r)| r.expect == Expect::Term)
+            .map(|(index, r)| (r.span.start, index))
+            .collect();
+        let mut hierarchies = HashMap::new();
+        let mut problems = Vec::new();
+        for (index, reference) in analysis.references.iter().enumerate() {
+            let Some(target) = &targets[index] else {
+                continue;
+            };
+            let Some(callee) = self.definition(target) else {
+                continue;
+            };
+            if callee.parameters.len() != reference.argument_starts.len() {
+                continue;
+            }
+            let parents = hierarchies
+                .entry(reference.context)
+                .or_insert_with(|| self.type_parents(uri, reference.context));
+            let Some(parents) = parents else {
+                continue;
+            };
+            let callee_definitions = &self.documents[&target.uri].analysis.definitions;
+            for (start, &parameter) in reference.argument_starts.iter().zip(&callee.parameters) {
+                let argument = if let Some(variable) = variables.get(start) {
+                    variable
+                        .binding
+                        .map(|b| (&variable.name, &variable.span, &analysis.definitions[b]))
+                } else if let Some(&term) = terms.get(start) {
+                    targets[term]
+                        .as_ref()
+                        .and_then(|t| self.definition(t))
+                        .filter(|d| matches!(d.kind, Kind::Constant | Kind::Object))
+                        .map(|d| {
+                            let term = &analysis.references[term];
+                            (&term.name, &term.span, d)
+                        })
+                } else {
+                    None
+                };
+                let Some((name, span, given)) = argument else {
+                    continue;
+                };
+                let parameter = &callee_definitions[parameter];
+                if fits(&given.of, &parameter.of, parents) == Some(false) {
+                    problems.push(Problem {
+                        span: span.clone(),
+                        severity: Severity::Error,
+                        message: format!(
+                            "`{name}` has type {}, but parameter `{}` of {} `{}` takes {}",
+                            or_list(&given.of),
+                            parameter.name,
+                            callee.kind.label(),
+                            callee.name,
+                            or_list(&parameter.of),
+                        ),
+                        fix: None,
+                    });
+                }
+            }
+        }
+        problems
+    }
+
+    /// The parent types of each type in the domain that `context` of `uri`
+    /// sees, by lowercase name, or `None` if that domain is not known.
+    fn type_parents(&self, uri: &Url, context: usize) -> Option<HashMap<String, Vec<String>>> {
+        let domain = self.documents[uri].analysis.contexts[context]
+            .domain
+            .as_deref()?;
+        let (_, document, context) = self.domains(uri, domain).next()?;
+        let types = document
+            .analysis
+            .definitions
+            .iter()
+            .filter(|d| d.context == context && d.kind == Kind::Type);
+        Some(
+            types
+                .map(|d| (d.name.to_ascii_lowercase(), d.of.clone()))
+                .collect(),
+        )
+    }
+
+    /// Constructs in `uri` that need a requirement its domain or problem
+    /// doesn't declare. A problem also has its domain's requirements, so its
+    /// constructs aren't checked if that domain is not known.
+    fn missing_requirements(&self, uri: &Url) -> Vec<Problem> {
+        let analysis = &self.documents[uri].analysis;
+        let mut declared = HashMap::new();
+        let mut problems = Vec::new();
+        for need in &analysis.needs {
+            let declared = declared
+                .entry(need.context)
+                .or_insert_with(|| self.declared_requirements(uri, need.context));
+            let Some(declared) = declared else {
+                continue;
+            };
+            if need.any_of.iter().any(|r| declared.contains(r)) {
+                continue;
+            }
+            let names: Vec<_> = need.any_of.iter().map(Requirement::as_str).collect();
+            problems.push(Problem {
+                span: need.span.clone(),
+                severity: Severity::Warning,
+                message: format!(
+                    "`{}` needs `{}` in `:requirements`",
+                    need.word,
+                    names.join("` or `")
+                ),
+                fix: None,
+            });
+        }
+        problems
+    }
+
+    /// The requirements in effect in `context` of `uri`, with shorthands such as
+    /// `:adl` expanded, or `None` for a problem whose domain is not known.
+    fn declared_requirements(&self, uri: &Url, context: usize) -> Option<HashSet<Requirement>> {
+        let own = &self.documents[uri].analysis.contexts[context];
+        let mut declared = own.requirements.clone();
+        if own.kind == Kind::Problem {
+            let (_, document, domain) = self.domains(uri, own.domain.as_deref()?).next()?;
+            declared.extend(&document.analysis.contexts[domain].requirements);
+        }
+        let mut expanded: HashSet<Requirement> = declared
+            .iter()
+            .flat_map(Requirement::expand)
+            .copied()
+            .collect();
+        // Timed initial literals only exist with durative actions.
+        if expanded.contains(&Requirement::TimedInitialLiterals) {
+            expanded.insert(Requirement::DurativeActions);
+        }
+        Some(expanded)
+    }
+
     /// The definitions in `uri` that nothing refers to.
     ///
     /// Predicates, functions, types and constants count as used if any file
@@ -411,6 +568,37 @@ impl Workspace {
     }
 }
 
+/// Whether a name of one of the types `given` fits a parameter of one of the
+/// types `wanted`, by the type hierarchy `parents`. Untyped names and parameters
+/// fit anything; `None` if a type is not in the hierarchy.
+fn fits(
+    given: &[String],
+    wanted: &[String],
+    parents: &HashMap<String, Vec<String>>,
+) -> Option<bool> {
+    if given.is_empty() || wanted.is_empty() || wanted.iter().any(|w| w == "object") {
+        return Some(true);
+    }
+    let known = |t: &String| t == "object" || parents.contains_key(t);
+    if !given.iter().chain(wanted).all(known) {
+        return None;
+    }
+    // Every supertype of the given types, including themselves.
+    let mut seen: HashSet<&String> = HashSet::new();
+    let mut pending: Vec<&String> = given.iter().collect();
+    while let Some(ty) = pending.pop() {
+        if seen.insert(ty) {
+            pending.extend(parents.get(ty).into_iter().flatten());
+        }
+    }
+    Some(wanted.iter().any(|w| seen.contains(w)))
+}
+
+/// Types as `` `a` `` or `` `a` or `b` ``.
+fn or_list(types: &[String]) -> String {
+    format!("`{}`", types.join("` or `"))
+}
+
 /// Definitions repeated within the same domain, problem or parameter list.
 fn duplicates(analysis: &Analysis) -> Vec<Problem> {
     let mut problems = Vec::new();
@@ -476,6 +664,7 @@ mod tests {
     use assert2::check;
 
     const DOMAIN: &str = "(define (domain d)
+  (:requirements :typing)
   (:types truck place)
   (:constants depot - place)
   (:predicates (at ?t - truck ?p - place) (ready))
@@ -540,6 +729,7 @@ mod tests {
     #[test]
     fn reports_unknown_names_arity_and_duplicates() {
         let domain = "(define (domain d)
+  (:requirements :typing)
   (:types truck)
   (:predicates (at ?t - truk) (at ?x) (ready))
   (:action a :parameters (?t - truck ?t)
@@ -560,6 +750,75 @@ mod tests {
                     "unknown predicate or function `gone`",
                     "unknown constant `c`",
                 ]
+        );
+    }
+
+    #[test]
+    fn reports_arguments_of_the_wrong_type() {
+        let domain = "(define (domain d)
+  (:requirements :typing)
+  (:types truck van - vehicle vehicle place - object area)
+  (:constants depot - place)
+  (:predicates (at ?v - vehicle ?p - place) (in ?p - (either place area)))
+  (:action drive :parameters (?t - truck ?to - place ?any)
+    :effect (and (at ?t ?to) (at ?to ?t) (at ?any ?any) (at ?t depot))))";
+        let problem = "(define (problem p) (:domain d)
+  (:objects t1 - truck v1 - van home - place a - area x - ghost)
+  (:init (at t1 home) (at v1 t1) (in a) (in t1) (at x home))
+  (:goal (at home home)))";
+        let ws = workspace(&[("d.pddl", domain), ("p.pddl", problem)]);
+        check!(
+            messages(&ws, "d.pddl")
+                == [
+                    "`?to` has type `place`, but parameter `?v` of predicate `at` takes `vehicle`",
+                    "`?t` has type `truck`, but parameter `?p` of predicate `at` takes `place`",
+                ]
+        );
+        // Subtypes and `either` fit; the unknown type `ghost` isn't checked.
+        let problems = messages(&ws, "p.pddl");
+        check!(problems.contains(&"unknown type `ghost`".to_string()));
+        let types: Vec<_> = problems.iter().filter(|m| m.contains("has type")).collect();
+        check!(
+            types
+                == [
+                    "`t1` has type `truck`, but parameter `?p` of predicate `at` takes `place`",
+                    "`t1` has type `truck`, but parameter `?p` of predicate `in` takes `place` or `area`",
+                    "`home` has type `place`, but parameter `?v` of predicate `at` takes `vehicle`",
+                ]
+        );
+    }
+
+    #[test]
+    fn reports_constructs_the_requirements_do_not_allow() {
+        let domain = "(define (domain d)
+  (:requirements :strips :equality)
+  (:types box - object)
+  (:predicates (p ?x) (q ?x))
+  (:action a :parameters (?x ?y)
+    :precondition (and (not (= ?x ?y)) (not (p ?x)) (forall (?z) (p ?z)) (or (p ?x) (q ?x)))
+    :effect (and (forall (?z) (when (p ?z) (q ?z))) (not (p ?y)))))";
+        let ws = workspace(&[("d.pddl", domain)]);
+        check!(
+            messages(&ws, "d.pddl")
+                == [
+                    "type `box` is never used",
+                    "`-` needs `:typing` in `:requirements`",
+                    "`not` needs `:negative-preconditions` or `:disjunctive-preconditions` in `:requirements`",
+                    "`forall` needs `:universal-preconditions` in `:requirements`",
+                    "`or` needs `:disjunctive-preconditions` in `:requirements`",
+                    "`forall` needs `:conditional-effects` in `:requirements`",
+                    "`when` needs `:conditional-effects` in `:requirements`",
+                ]
+        );
+        // `:adl` covers all of them, and a problem gets its domain's requirements.
+        let adl = domain.replace(":strips :equality", ":adl");
+        let problem = "(define (problem p) (:domain d) (:objects o)
+  (:init (at 5 (p o)))
+  (:goal (exists (?x) (p ?x))))";
+        let ws = workspace(&[("d.pddl", &adl), ("p.pddl", problem)]);
+        check!(messages(&ws, "d.pddl") == ["type `box` is never used"]);
+        check!(
+            messages(&ws, "p.pddl") == ["`at` needs `:timed-initial-literals` in `:requirements`"]
         );
     }
 
