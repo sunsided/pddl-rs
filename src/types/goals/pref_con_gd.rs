@@ -240,16 +240,12 @@ impl PreferenceConstraintGoalDescription {
     }
 
     /// Returns `true` if the contained constraint goal description is empty.
-    #[allow(
-        clippy::match_same_arms,
-        reason = "the `x` bindings have different types"
-    )]
     #[must_use]
     pub fn is_empty(&self) -> bool {
         match self {
             PreferenceConstraintGoalDescription::Forall(_, x) => x.is_empty(),
-            PreferenceConstraintGoalDescription::Preference(_, x) => x.is_empty(),
-            PreferenceConstraintGoalDescription::Goal(x) => x.is_empty(),
+            PreferenceConstraintGoalDescription::Preference(_, x)
+            | PreferenceConstraintGoalDescription::Goal(x) => x.is_empty(),
         }
     }
 }
