@@ -5,6 +5,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [0.4.0] - 2026-11-14
+
+[0.4.0]: https://github.com/sunsided/pddl-rs/releases/tag/v0.4.0
+
 ### Added
 
 - `pddl::syntax` exposes the tree of atoms and lists the parser reads first, with the byte range
