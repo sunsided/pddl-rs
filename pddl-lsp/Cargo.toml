@@ -1,0 +1,25 @@
+[package]
+name = "pddl-lsp"
+version = "0.1.0"
+description = "A language server for PDDL: diagnostics, navigation, completion and formatting"
+license = "EUPL-1.2"
+categories = ["development-tools", "science"]
+keywords = ["pddl", "planning", "lsp", "language-server"]
+repository = "https://github.com/sunsided/pddl-rs"
+readme = "README.md"
+authors = ["Markus Mayer <widemeadows@gmail.com>"]
+edition = "2021"
+rust-version = "1.86.0"
+
+[lints]
+workspace = true
+
+[dependencies]
+pddl = { version = "0.3.1", path = "..", default-features = false, features = ["parser"] }
+lsp-server = "0.7.9"
+lsp-types = "0.95.1"
+serde = "1"
+serde_json = "1"
+
+[dev-dependencies]
+assert2 = "0.4.1"
