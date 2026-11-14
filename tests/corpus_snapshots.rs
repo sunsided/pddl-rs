@@ -41,7 +41,7 @@ fn print_and_round_trip(name: &str, file: &PddlFile) -> String {
 #[test]
 fn corpus_matches_snapshots() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/data");
-    let update = std::env::var_os("UPDATE_SNAPSHOTS").is_some();
+    let update = std::env::var("UPDATE_SNAPSHOTS").is_ok_and(|value| value == "1");
     let mut checked = 0;
     let mut mismatches = Vec::new();
     for folder in ["vhpop", "potoroo"] {
@@ -64,10 +64,18 @@ fn corpus_matches_snapshots() {
                 .join(folder)
                 .join(file_name.as_ref())
                 .with_extension(extension);
+            // A file that flips between accepted and rejected changes its extension.
+            let other = snapshot.with_extension(if extension == "pddl" { "err" } else { "pddl" });
             if update {
                 fs::create_dir_all(snapshot.parent().unwrap()).unwrap();
                 fs::write(&snapshot, &actual).unwrap();
+                if other.exists() {
+                    fs::remove_file(&other).unwrap();
+                }
             } else {
+                if other.exists() {
+                    mismatches.push(format!("{name}: stale snapshot {}", other.display()));
+                }
                 match fs::read_to_string(&snapshot) {
                     Ok(expected) if expected == actual => {}
                     Ok(_) => {
