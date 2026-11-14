@@ -1,4 +1,4 @@
-//! Provides parsers for time specifiers.
+//! Provides parsers for time specifiers (`<time-specifier>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
@@ -6,7 +6,7 @@ use crate::parsers::word;
 use crate::types::time_specifier::names;
 use crate::types::TimeSpecifier;
 
-/// Parses a time specifier, ignoring case.
+/// Parses a time specifier (`<time-specifier>`), ignoring case.
 pub(crate) fn parse_time_specifier(node: &Node) -> R<TimeSpecifier> {
     word(
         node,

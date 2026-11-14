@@ -1,11 +1,11 @@
-//! Provides parsers for function types.
+//! Provides parsers for function types (`<function-type>`).
 
 use crate::parsers::error::R;
 use crate::parsers::parse_type;
 use crate::parsers::sexpr::Node;
 use crate::types::FunctionType;
 
-/// Parses a function type, i.e. `<type>`.
+/// Parses a function type (`<function-type>`), i.e. `<type>`.
 pub(crate) fn parse_function_type(node: &Node) -> R<FunctionType> {
     parse_type(node).map(FunctionType::from)
 }

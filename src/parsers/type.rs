@@ -1,11 +1,11 @@
-//! Provides parsers for types.
+//! Provides parsers for types (`<type>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{parse_primitive_type, prefix};
 use crate::types::Type;
 
-/// Parses a type, i.e. `<primitive-type> | (either <primitive-type>⁺)`.
+/// Parses a type (`<type>`), i.e. `<primitive-type> | (either <primitive-type>⁺)`.
 pub(crate) fn parse_type(node: &Node) -> R<Type> {
     if node.atom().is_some() {
         return parse_primitive_type(node).map(Type::Exactly);

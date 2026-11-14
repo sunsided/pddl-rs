@@ -5,7 +5,7 @@ use crate::parsers::sexpr::Node;
 use crate::parsers::{alt, atomic_formula, prefix};
 use crate::types::Literal;
 
-/// Parses a literal, i.e. `<atomic formula(t)> | (not <atomic formula(t)>)`, with `inner` for each `t`.
+/// Parses a literal (`<literal(t)>`), i.e. `<atomic formula(t)> | (not <atomic formula(t)>)`, with `inner` for each `t`.
 pub(crate) fn literal<'n, 'a, O>(
     node: &'n Node<'a>,
     inner: impl Fn(&'n Node<'a>) -> R<O>,

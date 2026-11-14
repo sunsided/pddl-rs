@@ -1,10 +1,10 @@
-//! Provides parsers for names.
+//! Provides parsers for names (`<name>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::types::Name;
 
-/// Parses a name, i.e. `<letter><any char>*`, where `<any char>` is a letter, digit, `-` or `_`.
+/// Parses a name (`<name>`), i.e. `<letter><any char>*`, where `<any char>` is a letter, digit, `-` or `_`.
 pub(crate) fn parse_name(node: &Node) -> R<Name> {
     match node.atom() {
         Some(text) if is_name(text) => Ok(Name::from(text)),

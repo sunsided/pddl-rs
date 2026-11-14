@@ -1,11 +1,11 @@
-//! Provides parsers for problem goal definitions.
+//! Provides parsers for problem goal definitions (`<goal>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{parse_pre_gd, prefix};
 use crate::types::ProblemGoalDefinition;
 
-/// Parses a problem goal definition, i.e. `(:goal <pre-GD>)`.
+/// Parses a problem goal definition (`<goal>`), i.e. `(:goal <pre-GD>)`.
 pub(crate) fn parse_problem_goal_def(node: &Node) -> R<ProblemGoalDefinition> {
     prefix(node, ":goal", |args| {
         parse_pre_gd(args.next()?).map(ProblemGoalDefinition::new)

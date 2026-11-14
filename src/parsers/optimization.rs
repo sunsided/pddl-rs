@@ -1,4 +1,4 @@
-//! Provides parsers for optimization goals.
+//! Provides parsers for optimization goals (`<optimization>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
@@ -6,7 +6,7 @@ use crate::parsers::word;
 use crate::types::optimization::names;
 use crate::types::Optimization;
 
-/// Parses an optimization goal, ignoring case.
+/// Parses an optimization goal (`<optimization>`), ignoring case.
 pub(crate) fn parse_optimization(node: &Node) -> R<Optimization> {
     word(
         node,

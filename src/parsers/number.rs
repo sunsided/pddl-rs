@@ -1,10 +1,10 @@
-//! Provides parsers for numbers.
+//! Provides parsers for numbers (`<number>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::types::Number;
 
-/// Parses a number, i.e. `<digit>⁺[.<digit>⁺]`.
+/// Parses a number (`<number>`), i.e. `<digit>⁺[.<digit>⁺]`.
 pub(crate) fn parse_number(node: &Node) -> R<Number> {
     let text = node
         .atom()

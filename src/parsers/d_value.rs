@@ -1,11 +1,11 @@
-//! Provides parsers for duration values.
+//! Provides parsers for duration values (`<d-value>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{alt, parse_f_exp, parse_number};
 use crate::types::DurationValue;
 
-/// Parses a duration value, i.e. `<number> | <f-exp>`.
+/// Parses a duration value (`<d-value>`), i.e. `<number> | <f-exp>`.
 pub(crate) fn parse_d_value(node: &Node) -> R<DurationValue> {
     alt(
         node,

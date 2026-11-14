@@ -1,11 +1,11 @@
-//! Provides parsers for preference timed goal definitions.
+//! Provides parsers for preference timed goal definitions (`<pref-timed-GD>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{alt, parse_pref_name, parse_timed_gd, prefix};
 use crate::types::PreferenceTimedGoalDefinition;
 
-/// Parses a preference timed goal definition, i.e. `<timed-GD>
+/// Parses a preference timed goal definition (`<pref-timed-GD>`), i.e. `<timed-GD>
 /// | (preference [<pref-name>] <timed-GD>)`.
 pub(crate) fn parse_pref_timed_gd(node: &Node) -> R<PreferenceTimedGoalDefinition> {
     alt(

@@ -1,11 +1,11 @@
-//! Provides parsers for initial state elements.
+//! Provides parsers for initial state elements (`<init-el>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{alt, literal, parse_basic_function_term, parse_name, parse_number, prefix};
 use crate::types::InitElement;
 
-/// Parses an initial state element, i.e. `<literal (name)> | (at <number> <literal (name)>)
+/// Parses an initial state element (`<init-el>`), i.e. `<literal (name)> | (at <number> <literal (name)>)
 /// | (= <basic-function-term> <number>) | (= <basic-function-term> <name>)`.
 pub(crate) fn parse_init_el(node: &Node) -> R<InitElement> {
     alt(

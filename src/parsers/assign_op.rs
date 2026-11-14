@@ -1,4 +1,4 @@
-//! Provides parsers for assignment operators.
+//! Provides parsers for assignment operators (`<assign-op>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
@@ -6,7 +6,7 @@ use crate::parsers::word;
 use crate::types::assign_op::names;
 use crate::types::AssignOp;
 
-/// Parses an assignment operator, ignoring case.
+/// Parses an assignment operator (`<assign-op>`), ignoring case.
 pub(crate) fn parse_assign_op(node: &Node) -> R<AssignOp> {
     word(
         node,

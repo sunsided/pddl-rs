@@ -1,4 +1,4 @@
-//! Provides parsers for duration operators.
+//! Provides parsers for duration operators (`<d-op>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
@@ -6,7 +6,7 @@ use crate::parsers::word;
 use crate::types::d_op::names;
 use crate::types::DurationOperator;
 
-/// Parses a duration operator, ignoring case.
+/// Parses a duration operator (`<d-op>`), ignoring case.
 pub(crate) fn parse_d_op(node: &Node) -> R<DurationOperator> {
     word(
         node,

@@ -1,11 +1,11 @@
-//! Provides parsers for durative action effects.
+//! Provides parsers for durative action effects (`<da-effect>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{alt, parse_da_gd, parse_timed_effect, prefix, typed_variables};
 use crate::types::DurativeActionEffect;
 
-/// Parses a durative action effect, i.e. `<timed-effect> | (and <da-effect>*)
+/// Parses a durative action effect (`<da-effect>`), i.e. `<timed-effect> | (and <da-effect>*)
 /// | (forall (<typed list (variable)>) <da-effect>) | (when <da-GD> <timed-effect>)`.
 pub(crate) fn parse_da_effect(node: &Node) -> R<DurativeActionEffect> {
     alt(

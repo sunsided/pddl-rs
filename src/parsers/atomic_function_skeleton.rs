@@ -1,11 +1,11 @@
-//! Provides parsers for atomic function skeletons.
+//! Provides parsers for atomic function skeletons (`<atomic function skeleton>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{parens, parse_function_symbol, parse_variable, typed_list};
 use crate::types::AtomicFunctionSkeleton;
 
-/// Parses an atomic function skeleton, i.e. `(<function-symbol> <typed list (variable)>)`.
+/// Parses an atomic function skeleton (`<atomic function skeleton>`), i.e. `(<function-symbol> <typed list (variable)>)`.
 pub(crate) fn parse_atomic_function_skeleton(node: &Node) -> R<AtomicFunctionSkeleton> {
     parens(node, |args| {
         let symbol = parse_function_symbol(args.next()?)?;

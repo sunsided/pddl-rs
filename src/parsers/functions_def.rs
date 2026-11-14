@@ -1,11 +1,11 @@
-//! Provides parsers for functions definitions.
+//! Provides parsers for function definitions (`<functions-def>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{function_typed_list, parse_atomic_function_skeleton, prefix};
 use crate::types::Functions;
 
-/// Parses a functions definition, i.e. `(:functions <function typed list (atomic function skeleton)>)`.
+/// Parses a function definition (`<functions-def>`), i.e. `(:functions <function typed list (atomic function skeleton)>)`.
 pub(crate) fn parse_functions_def(node: &Node) -> R<Functions> {
     prefix(node, ":functions", |args| {
         function_typed_list(args, parse_atomic_function_skeleton).map(Functions::new)

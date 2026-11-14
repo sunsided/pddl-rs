@@ -1,4 +1,4 @@
-//! Provides parsers for multi-operand operators.
+//! Provides parsers for multi-operand operators (`<multi-op>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
@@ -6,7 +6,7 @@ use crate::parsers::word;
 use crate::types::multi_op::names;
 use crate::types::MultiOp;
 
-/// Parses a multi-operand operator, ignoring case.
+/// Parses a multi-operand operator (`<multi-op>`), ignoring case.
 pub(crate) fn parse_multi_op(node: &Node) -> R<MultiOp> {
     word(
         node,

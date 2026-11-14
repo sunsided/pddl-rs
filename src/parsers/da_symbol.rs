@@ -1,11 +1,11 @@
-//! Provides parsers for durative action symbols.
+//! Provides parsers for durative action symbols (`<da-symbol>`).
 
 use crate::parsers::error::R;
 use crate::parsers::parse_name;
 use crate::parsers::sexpr::Node;
 use crate::types::DurativeActionSymbol;
 
-/// Parses a durative action symbol, i.e. `<name>`.
+/// Parses a durative action symbol (`<da-symbol>`), i.e. `<name>`.
 pub(crate) fn parse_da_symbol(node: &Node) -> R<DurativeActionSymbol> {
     parse_name(node).map(DurativeActionSymbol::from)
 }

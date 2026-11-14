@@ -1,11 +1,11 @@
-//! Provides parsers for metric specifications.
+//! Provides parsers for metric specifications (`<metric-spec>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{parse_metric_f_exp, parse_optimization, prefix};
 use crate::types::MetricSpec;
 
-/// Parses a metric specification, i.e. `(:metric <optimization> <metric-f-exp>)`.
+/// Parses a metric specification (`<metric-spec>`), i.e. `(:metric <optimization> <metric-f-exp>)`.
 pub(crate) fn parse_problem_metric_spec(node: &Node) -> R<MetricSpec> {
     prefix(node, ":metric", |args| {
         Ok(MetricSpec::new(

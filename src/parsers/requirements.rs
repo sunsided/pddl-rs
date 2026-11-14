@@ -1,4 +1,4 @@
-//! Provides parsers for requirements.
+//! Provides parsers for requirements (`<require-def>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
@@ -52,7 +52,7 @@ const KEYS: &[(&str, Requirement)] = &[
     (names::ACTION_COSTS, Requirement::ActionCosts),
 ];
 
-/// Parses a requirements definition, i.e. `(:requirements <require-key>⁺)`.
+/// Parses a requirement definition (`<require-def>`), i.e. `(:requirements <require-key>⁺)`.
 ///
 /// Unknown keys such as `:foo-bar` are kept apart in [`Requirements::unknown`],
 /// so a newer or planner-specific requirement doesn't fail the whole file.
@@ -80,7 +80,7 @@ fn parse_key(node: &Node) -> R<Result<Requirement, Name>> {
     }
 }
 
-/// Parses a known requirement key, e.g. `:strips`, ignoring case.
+/// Parses a known requirement key (`<require-key>`), e.g. `:strips`, ignoring case.
 pub(crate) fn parse_require_key(node: &Node) -> R<Requirement> {
     word(node, KEYS)
 }

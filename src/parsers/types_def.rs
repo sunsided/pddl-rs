@@ -1,11 +1,11 @@
-//! Provides parsers for types definitions.
+//! Provides parsers for type definitions (`<types-def>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{parse_name, prefix, typed_list};
 use crate::types::Types;
 
-/// Parses a types definition, i.e. `(:types <typed list (name)>)`.
+/// Parses a type definition (`<types-def>`), i.e. `(:types <typed list (name)>)`.
 pub(crate) fn parse_types_def(node: &Node) -> R<Types> {
     prefix(node, ":types", |args| {
         typed_list(args, parse_name).map(Types::new)

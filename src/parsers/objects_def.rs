@@ -1,11 +1,11 @@
-//! Provides parsers for objects declarations.
+//! Provides parsers for object declarations (`<object declaration>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{parse_name, prefix, typed_list};
 use crate::types::Objects;
 
-/// Parses an objects declaration, i.e. `(:objects <typed list (name)>)`.
+/// Parses an object declaration (`<object declaration>`), i.e. `(:objects <typed list (name)>)`.
 pub(crate) fn parse_problem_objects_declaration(node: &Node) -> R<Objects> {
     prefix(node, ":objects", |args| {
         typed_list(args, parse_name).map(Objects::new)

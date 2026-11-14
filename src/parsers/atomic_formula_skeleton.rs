@@ -1,11 +1,11 @@
-//! Provides parsers for atomic formula skeletons.
+//! Provides parsers for atomic formula skeletons (`<atomic formula skeleton>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{parens, parse_predicate, parse_variable, typed_list};
 use crate::types::AtomicFormulaSkeleton;
 
-/// Parses an atomic formula skeleton, i.e. `(<predicate> <typed list (variable)>)`.
+/// Parses an atomic formula skeleton (`<atomic formula skeleton>`), i.e. `(<predicate> <typed list (variable)>)`.
 pub(crate) fn parse_atomic_formula_skeleton(node: &Node) -> R<AtomicFormulaSkeleton> {
     parens(node, |args| {
         let predicate = parse_predicate(args.next()?)?;

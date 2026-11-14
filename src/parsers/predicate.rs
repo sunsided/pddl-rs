@@ -1,11 +1,11 @@
-//! Provides parsers for predicates.
+//! Provides parsers for predicates (`<predicate>`).
 
 use crate::parsers::error::R;
 use crate::parsers::parse_name;
 use crate::parsers::sexpr::Node;
 use crate::types::Predicate;
 
-/// Parses a predicate, i.e. `<name>`.
+/// Parses a predicate (`<predicate>`), i.e. `<name>`.
 pub(crate) fn parse_predicate(node: &Node) -> R<Predicate> {
     parse_name(node).map(Predicate::from)
 }

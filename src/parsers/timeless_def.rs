@@ -1,11 +1,11 @@
-//! Provides parsers for timeless definitions.
+//! Provides parsers for timeless definitions (`<timeless>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{literal, parse_name, prefix};
 use crate::types::Timeless;
 
-/// Parses a timeless definition, i.e. `(:timeless <literal (name)>⁺)`.
+/// Parses a timeless definition (`<timeless>`), i.e. `(:timeless <literal (name)>⁺)`.
 pub(crate) fn parse_timeless_def(node: &Node) -> R<Timeless> {
     prefix(node, ":timeless", |args| {
         args.list1(|n| literal(n, parse_name))

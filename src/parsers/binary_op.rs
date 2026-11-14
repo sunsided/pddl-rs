@@ -1,4 +1,4 @@
-//! Provides parsers for binary operators.
+//! Provides parsers for binary operators (`<binary-op>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
@@ -6,7 +6,7 @@ use crate::parsers::word;
 use crate::types::binary_op::names;
 use crate::types::BinaryOp;
 
-/// Parses a binary operator, ignoring case.
+/// Parses a binary operator (`<binary-op>`), ignoring case.
 pub(crate) fn parse_binary_op(node: &Node) -> R<BinaryOp> {
     word(
         node,

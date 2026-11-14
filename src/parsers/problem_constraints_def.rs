@@ -1,11 +1,11 @@
-//! Provides parsers for problem constraints definitions.
+//! Provides parsers for problem constraint definitions (`<problem-constraints>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{parse_pref_con_gd, prefix};
 use crate::types::ProblemConstraintsDef;
 
-/// Parses a problem constraints definition, i.e. `(:constraints <pref-con-GD>)`.
+/// Parses a problem constraint definition (`<problem-constraints>`), i.e. `(:constraints <pref-con-GD>)`.
 pub(crate) fn parse_problem_constraints_def(node: &Node) -> R<ProblemConstraintsDef> {
     prefix(node, ":constraints", |args| {
         parse_pref_con_gd(args.next()?).map(ProblemConstraintsDef::new)

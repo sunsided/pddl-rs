@@ -1,11 +1,11 @@
-//! Provides parsers for domain constraints definitions.
+//! Provides parsers for domain constraint definitions (`<constraints>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{parse_con_gd, prefix};
 use crate::types::DomainConstraintsDef;
 
-/// Parses a domain constraints definition, i.e. `(:constraints <con-GD>)`.
+/// Parses a domain constraint definition (`<constraints>`), i.e. `(:constraints <con-GD>)`.
 pub(crate) fn parse_domain_constraints_def(node: &Node) -> R<DomainConstraintsDef> {
     prefix(node, ":constraints", |args| {
         parse_con_gd(args.next()?).map(DomainConstraintsDef::new)

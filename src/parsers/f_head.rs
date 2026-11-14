@@ -1,11 +1,11 @@
-//! Provides parsers for function heads.
+//! Provides parsers for function heads (`<f-head>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{parens, parse_function_symbol, parse_term};
 use crate::types::FunctionHead;
 
-/// Parses a function head, i.e. `<function-symbol> | (<function-symbol> <term>*)`.
+/// Parses a function head (`<f-head>`), i.e. `<function-symbol> | (<function-symbol> <term>*)`.
 pub(crate) fn parse_f_head(node: &Node) -> R<FunctionHead> {
     if node.atom().is_some() {
         return parse_function_symbol(node).map(FunctionHead::new);

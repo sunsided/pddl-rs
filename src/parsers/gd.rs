@@ -1,4 +1,4 @@
-//! Provides parsers for goal definitions.
+//! Provides parsers for goal definitions (`<GD>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
@@ -7,7 +7,7 @@ use crate::parsers::{
 };
 use crate::types::GoalDefinition;
 
-/// Parses a goal definition.
+/// Parses a goal definition (`<GD>`).
 ///
 /// ## Requirements
 /// - `(not <GD>)` requires `:negative-preconditions` on atomic formulas, or

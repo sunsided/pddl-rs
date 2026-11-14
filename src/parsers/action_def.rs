@@ -1,4 +1,4 @@
-//! Provides parsers for action definitions.
+//! Provides parsers for action definitions (`<action-def>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
@@ -8,7 +8,7 @@ use crate::parsers::{
 };
 use crate::types::ActionDefinition;
 
-/// Parses an action definition, i.e. `(:action <action-symbol> :parameters (<typed list (variable)>)
+/// Parses an action definition (`<action-def>`), i.e. `(:action <action-symbol> :parameters (<typed list (variable)>)
 /// [:precondition <pre-GD>] [:effect <effect>])`. `()` stands for no precondition or effect.
 pub(crate) fn parse_action_def(node: &Node) -> R<ActionDefinition> {
     prefix(node, ":action", |args| {

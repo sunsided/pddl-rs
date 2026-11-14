@@ -1,4 +1,4 @@
-//! Provides parsers for intervals.
+//! Provides parsers for intervals (`<interval>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
@@ -6,7 +6,7 @@ use crate::parsers::word;
 use crate::types::interval::names;
 use crate::types::Interval;
 
-/// Parses an interval, ignoring case.
+/// Parses an interval (`<interval>`), ignoring case.
 pub(crate) fn parse_interval(node: &Node) -> R<Interval> {
     word(node, &[(names::ALL, Interval::All)])
 }

@@ -1,4 +1,4 @@
-//! Provides parsers for durative action definitions.
+//! Provides parsers for durative action definitions (`<durative-action-def>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
@@ -8,7 +8,7 @@ use crate::parsers::{
 };
 use crate::types::DurativeActionDefinition;
 
-/// Parses a durative action definition, i.e. `(:durative-action <da-symbol>
+/// Parses a durative action definition (`<durative-action-def>`), i.e. `(:durative-action <da-symbol>
 /// :parameters (<typed list (variable)>) :duration <duration-constraint>
 /// :condition <da-GD> :effect <da-effect>)`. `()` stands for no condition or effect.
 pub(crate) fn parse_da_def(node: &Node) -> R<DurativeActionDefinition> {

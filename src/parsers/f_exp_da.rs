@@ -1,11 +1,11 @@
-//! Provides parsers for durative action fluent expressions.
+//! Provides parsers for durative action fluent expressions (`<f-exp-da>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{alt, op_expr, parse_f_exp};
 use crate::types::DurativeActionFluentExpression;
 
-/// Parses a durative action fluent expression, i.e. `?duration | <f-exp>`, or an
+/// Parses a durative action fluent expression (`<f-exp-da>`), i.e. `?duration | <f-exp>`, or an
 /// arithmetic expression over them.
 pub(crate) fn parse_f_exp_da(node: &Node) -> R<DurativeActionFluentExpression> {
     type E = DurativeActionFluentExpression;

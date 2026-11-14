@@ -1,11 +1,11 @@
-//! Provides parsers for basic function terms.
+//! Provides parsers for basic function terms (`<basic-function-term>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{parens, parse_function_symbol, parse_name};
 use crate::types::BasicFunctionTerm;
 
-/// Parses a basic function term, i.e. `<function-symbol> | (<function-symbol> <name>*)`.
+/// Parses a basic function term (`<basic-function-term>`), i.e. `<function-symbol> | (<function-symbol> <name>*)`.
 pub(crate) fn parse_basic_function_term(node: &Node) -> R<BasicFunctionTerm> {
     if node.atom().is_some() {
         return parse_function_symbol(node).map(|symbol| BasicFunctionTerm::new(symbol, []));

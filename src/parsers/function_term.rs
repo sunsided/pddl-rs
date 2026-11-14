@@ -1,11 +1,11 @@
-//! Provides parsers for function terms.
+//! Provides parsers for function terms (`<function-term>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{parens, parse_function_symbol, parse_term};
 use crate::types::FunctionTerm;
 
-/// Parses a function term, i.e. `(<function-symbol> <term>*)`.
+/// Parses a function term (`<function-term>`), i.e. `(<function-symbol> <term>*)`.
 pub(crate) fn parse_function_term(node: &Node) -> R<FunctionTerm> {
     parens(node, |args| {
         let symbol = parse_function_symbol(args.next()?)?;

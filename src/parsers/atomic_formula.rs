@@ -5,7 +5,7 @@ use crate::parsers::sexpr::Node;
 use crate::parsers::{parens, parse_predicate};
 use crate::types::AtomicFormula;
 
-/// Parses an atomic formula, i.e. `(<predicate> t*) | (= t t)`, with `inner` for each `t`.
+/// Parses an atomic formula (`<atomic formula(t)>`), i.e. `(<predicate> t*) | (= t t)`, with `inner` for each `t`.
 pub(crate) fn atomic_formula<'n, 'a, O>(
     node: &'n Node<'a>,
     inner: impl Fn(&'n Node<'a>) -> R<O>,

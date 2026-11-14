@@ -1,11 +1,11 @@
-//! Provides parsers for durative action goal definitions.
+//! Provides parsers for durative action goal definitions (`<da-GD>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{alt, parse_pref_timed_gd, prefix, typed_variables};
 use crate::types::DurativeActionGoalDefinition;
 
-/// Parses a durative action goal definition, i.e. `<pref-timed-GD> | (and <da-GD>*)
+/// Parses a durative action goal definition (`<da-GD>`), i.e. `<pref-timed-GD> | (and <da-GD>*)
 /// | (forall (<typed list (variable)>) <da-GD>)`.
 pub(crate) fn parse_da_gd(node: &Node) -> R<DurativeActionGoalDefinition> {
     type G = DurativeActionGoalDefinition;

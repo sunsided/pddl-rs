@@ -1,11 +1,11 @@
-//! Provides parsers for timed goal definitions.
+//! Provides parsers for timed goal definitions (`<timed-GD>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{alt, parse_gd, parse_interval, parse_time_specifier, prefix};
 use crate::types::TimedGoalDefinition;
 
-/// Parses a timed goal definition, i.e. `(at <time-specifier> <GD>) | (over <interval> <GD>)`.
+/// Parses a timed goal definition (`<timed-GD>`), i.e. `(at <time-specifier> <GD>) | (over <interval> <GD>)`.
 pub(crate) fn parse_timed_gd(node: &Node) -> R<TimedGoalDefinition> {
     alt(
         node,

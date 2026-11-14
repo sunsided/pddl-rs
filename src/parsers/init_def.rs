@@ -1,11 +1,11 @@
-//! Provides parsers for problem initial states.
+//! Provides parsers for initial state definitions (`<init>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{parse_init_el, prefix};
 use crate::types::InitElements;
 
-/// Parses a problem initial state, i.e. `(:init <init-el>*)`.
+/// Parses an initial state definition (`<init>`), i.e. `(:init <init-el>*)`.
 pub(crate) fn parse_problem_init_def(node: &Node) -> R<InitElements> {
     prefix(node, ":init", |args| {
         args.list0(parse_init_el).map(InitElements::new)

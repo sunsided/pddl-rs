@@ -1,11 +1,11 @@
-//! Provides parsers for structure definitions.
+//! Provides parsers for structure definitions (`<structure-def>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{alt, parse_action_def, parse_da_def, parse_derived_predicate};
 use crate::types::StructureDef;
 
-/// Parses a structure definition, i.e. `<action-def> | <durative-action-def> | <derived-def>`.
+/// Parses a structure definition (`<structure-def>`), i.e. `<action-def> | <durative-action-def> | <derived-def>`.
 pub(crate) fn parse_structure_def(node: &Node) -> R<StructureDef> {
     alt(
         node,

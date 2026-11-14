@@ -1,4 +1,4 @@
-//! Provides parsers for timed assignment operators.
+//! Provides parsers for timed assignment operators (`<assign-op-t>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
@@ -6,7 +6,7 @@ use crate::parsers::word;
 use crate::types::assign_op_t::names;
 use crate::types::TimedAssignOperator;
 
-/// Parses a timed assignment operator, ignoring case.
+/// Parses a timed assignment operator (`<assign-op-t>`), ignoring case.
 pub(crate) fn parse_assign_op_t(node: &Node) -> R<TimedAssignOperator> {
     word(
         node,

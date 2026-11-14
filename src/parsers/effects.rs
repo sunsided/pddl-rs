@@ -1,11 +1,11 @@
-//! Provides parsers for effects.
+//! Provides parsers for effects (`<effect>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{alt, parse_c_effect, prefix};
 use crate::types::Effects;
 
-/// Parses effects, i.e. `(and <c-effect>*) | <c-effect>`.
+/// Parses effects (`<effect>`), i.e. `(and <c-effect>*) | <c-effect>`.
 pub(crate) fn parse_effect(node: &Node) -> R<Effects> {
     alt(
         node,

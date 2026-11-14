@@ -1,11 +1,11 @@
-//! Provides parsers for predicates definitions.
+//! Provides parsers for predicate definitions (`<predicates-def>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{parse_atomic_formula_skeleton, prefix};
 use crate::types::PredicateDefinitions;
 
-/// Parses a predicates definition, i.e. `(:predicates <atomic formula skeleton>⁺)`.
+/// Parses a predicate definition (`<predicates-def>`), i.e. `(:predicates <atomic formula skeleton>⁺)`.
 pub(crate) fn parse_predicates_def(node: &Node) -> R<PredicateDefinitions> {
     prefix(node, ":predicates", |args| {
         args.list1(parse_atomic_formula_skeleton)

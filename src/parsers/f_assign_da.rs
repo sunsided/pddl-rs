@@ -1,11 +1,11 @@
-//! Provides parsers for durative action function assignments.
+//! Provides parsers for durative action function assignments (`<f-assign-da>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{parens, parse_assign_op, parse_f_exp_da, parse_f_head};
 use crate::types::DurativeActionFunctionAssignment;
 
-/// Parses a durative action function assignment, i.e. `(<assign-op> <f-head> <f-exp-da>)`.
+/// Parses a durative action function assignment (`<f-assign-da>`), i.e. `(<assign-op> <f-head> <f-exp-da>)`.
 pub(crate) fn parse_f_assign_da(node: &Node) -> R<DurativeActionFunctionAssignment> {
     parens(node, |args| {
         Ok((

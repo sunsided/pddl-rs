@@ -1,11 +1,11 @@
-//! Provides parsers for terms.
+//! Provides parsers for terms (`<term>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{parse_function_term, parse_name, parse_variable};
 use crate::types::Term;
 
-/// Parses a term, i.e. `<name> | <variable> | <function-term>`.
+/// Parses a term (`<term>`), i.e. `<name> | <variable> | <function-term>`.
 pub(crate) fn parse_term(node: &Node) -> R<Term> {
     if node.atom().is_some() {
         return parse_variable(node)

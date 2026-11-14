@@ -1,11 +1,11 @@
-//! Provides parsers for preference goal definitions.
+//! Provides parsers for preference goal definitions (`<pref-GD>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{alt, parse_gd, parse_pref_name, prefix};
 use crate::types::{Preference, PreferenceGoalDefinition};
 
-/// Parses a preference goal definition, i.e. `<GD> | (preference [<pref-name>] <GD>)`.
+/// Parses a preference goal definition (`<pref-GD>`), i.e. `<GD> | (preference [<pref-name>] <GD>)`.
 pub(crate) fn parse_pref_gd(node: &Node) -> R<PreferenceGoalDefinition> {
     alt(
         node,

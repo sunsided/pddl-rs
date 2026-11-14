@@ -1,4 +1,4 @@
-//! Provides parsers for binary comparisons.
+//! Provides parsers for binary comparisons (`<binary-comp>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
@@ -6,7 +6,7 @@ use crate::parsers::word;
 use crate::types::binary_comp::names;
 use crate::types::BinaryComparison;
 
-/// Parses a binary comparison, ignoring case.
+/// Parses a binary comparison (`<binary-comp>`), ignoring case.
 pub(crate) fn parse_binary_comp(node: &Node) -> R<BinaryComparison> {
     word(
         node,

@@ -1,4 +1,4 @@
-//! Provides parsers for problem definitions.
+//! Provides parsers for problem definitions (`<problem>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
@@ -9,7 +9,7 @@ use crate::parsers::{
 };
 use crate::types::Problem;
 
-/// Parses a problem definition, i.e. `(define (problem <name>) <section>*)`.
+/// Parses a problem definition (`<problem>`), i.e. `(define (problem <name>) <section>*)`.
 ///
 /// The sections may appear in any order, each at most once; `:domain`, `:init`
 /// and `:goal` are required.

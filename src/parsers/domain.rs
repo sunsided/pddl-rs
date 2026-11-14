@@ -1,4 +1,4 @@
-//! Provides parsers for domain definitions.
+//! Provides parsers for domain definitions (`<domain>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
@@ -9,7 +9,7 @@ use crate::parsers::{
 };
 use crate::types::{Domain, StructureDefs};
 
-/// Parses a domain definition, i.e. `(define (domain <name>) <section>*)`.
+/// Parses a domain definition (`<domain>`), i.e. `(define (domain <name>) <section>*)`.
 ///
 /// The sections may appear in any order; each one except actions at most once.
 pub(crate) fn parse_domain(node: &Node) -> R<Domain> {

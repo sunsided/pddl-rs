@@ -1,11 +1,11 @@
-//! Provides parsers for preference constraint goal definitions.
+//! Provides parsers for preference constraint goal definitions (`<pref-con-GD>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{alt, parse_con_gd, parse_pref_name, prefix, typed_variables};
 use crate::types::PreferenceConstraintGoalDefinitions;
 
-/// Parses preference constraint goal definitions, i.e. `(and <pref-con-GD>*)
+/// Parses preference constraint goal definitions (`<pref-con-GD>`), i.e. `(and <pref-con-GD>*)
 /// | (forall (<typed list (variable)>) <pref-con-GD>) | (preference [<pref-name>] <con-GD>)
 /// | <con-GD>`.
 pub(crate) fn parse_pref_con_gd(node: &Node) -> R<PreferenceConstraintGoalDefinitions> {

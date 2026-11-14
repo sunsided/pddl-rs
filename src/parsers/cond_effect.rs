@@ -1,11 +1,11 @@
-//! Provides parsers for effect conditions.
+//! Provides parsers for effect conditions (`<cond-effect>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{alt, parse_p_effect, prefix};
 use crate::types::EffectCondition;
 
-/// Parses an effect condition, i.e. `(and <p-effect>*) | <p-effect>`.
+/// Parses an effect condition (`<cond-effect>`), i.e. `(and <p-effect>*) | <p-effect>`.
 #[allow(deprecated)]
 pub(crate) fn parse_effect_condition(node: &Node) -> R<EffectCondition> {
     alt(

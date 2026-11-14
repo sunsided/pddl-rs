@@ -1,4 +1,4 @@
-//! Provides parsers for primitive effects.
+//! Provides parsers for primitive effects (`<p-effect>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
@@ -8,7 +8,7 @@ use crate::parsers::{
 };
 use crate::types::PrimitiveEffect;
 
-/// Parses a primitive effect, i.e. `<atomic formula(term)> | (not <atomic formula(term)>)
+/// Parses a primitive effect (`<p-effect>`), i.e. `<atomic formula(term)> | (not <atomic formula(term)>)
 /// | (<assign-op> <f-head> <f-exp>) | (assign <function-term> <term>)
 /// | (assign <function-term> undefined)`.
 pub(crate) fn parse_p_effect(node: &Node) -> R<PrimitiveEffect> {

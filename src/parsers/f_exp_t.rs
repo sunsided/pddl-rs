@@ -1,11 +1,11 @@
-//! Provides parsers for timed fluent expressions.
+//! Provides parsers for timed fluent expressions (`<f-exp-t>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{parse_f_exp, prefix};
 use crate::types::TimedFluentExpression;
 
-/// Parses a timed fluent expression, i.e. `(* <f-exp> #t) | (* #t <f-exp>) | #t`.
+/// Parses a timed fluent expression (`<f-exp-t>`), i.e. `(* <f-exp> #t) | (* #t <f-exp>) | #t`.
 pub(crate) fn parse_f_exp_t(node: &Node) -> R<TimedFluentExpression> {
     if node.atom().is_some() {
         return if node.is("#t") {

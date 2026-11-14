@@ -1,11 +1,11 @@
-//! Provides parsers for constants definitions.
+//! Provides parsers for constant definitions (`<constants-def>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{parse_name, prefix, typed_list};
 use crate::types::Constants;
 
-/// Parses a constants definition, i.e. `(:constants <typed list (name)>)`.
+/// Parses a constant definition (`<constants-def>`), i.e. `(:constants <typed list (name)>)`.
 pub(crate) fn parse_constants_def(node: &Node) -> R<Constants> {
     prefix(node, ":constants", |args| {
         typed_list(args, parse_name).map(Constants::new)

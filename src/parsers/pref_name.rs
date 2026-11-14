@@ -1,11 +1,11 @@
-//! Provides parsers for preference names.
+//! Provides parsers for preference names (`<pref-name>`).
 
 use crate::parsers::error::R;
 use crate::parsers::parse_name;
 use crate::parsers::sexpr::Node;
 use crate::types::PreferenceName;
 
-/// Parses a preference name, i.e. `<name>`.
+/// Parses a preference name (`<pref-name>`), i.e. `<name>`.
 pub(crate) fn parse_pref_name(node: &Node) -> R<PreferenceName> {
     parse_name(node).map(PreferenceName::new)
 }

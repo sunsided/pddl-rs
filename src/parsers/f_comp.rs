@@ -1,11 +1,11 @@
-//! Provides parsers for fluent comparisons.
+//! Provides parsers for fluent comparisons (`<f-comp>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{parens, parse_binary_comp, parse_f_exp};
 use crate::types::FluentComparison;
 
-/// Parses a fluent comparison, i.e. `(<binary-comp> <f-exp> <f-exp>)`.
+/// Parses a fluent comparison (`<f-comp>`), i.e. `(<binary-comp> <f-exp> <f-exp>)`.
 pub(crate) fn parse_f_comp(node: &Node) -> R<FluentComparison> {
     parens(node, |args| {
         let comparison = parse_binary_comp(args.next()?)?;

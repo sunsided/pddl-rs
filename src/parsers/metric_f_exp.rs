@@ -1,4 +1,4 @@
-//! Provides parsers for metric fluent expressions.
+//! Provides parsers for metric fluent expressions (`<metric-f-exp>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
@@ -7,7 +7,7 @@ use crate::parsers::{
 };
 use crate::types::MetricFluentExpression;
 
-/// Parses a metric fluent expression, i.e. `<number> | total-time | (is-violated <pref-name>)
+/// Parses a metric fluent expression (`<metric-f-exp>`), i.e. `<number> | total-time | (is-violated <pref-name>)
 /// | (<function-symbol> <name>*) | <function-symbol>`, or an arithmetic expression over them.
 pub(crate) fn parse_metric_f_exp(node: &Node) -> R<MetricFluentExpression> {
     type M = MetricFluentExpression;

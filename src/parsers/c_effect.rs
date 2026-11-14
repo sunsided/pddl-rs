@@ -1,4 +1,4 @@
-//! Provides parsers for conditional effects.
+//! Provides parsers for conditional effects (`<c-effect>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
@@ -7,7 +7,7 @@ use crate::parsers::{
 };
 use crate::types::{ConditionalEffect, ForallConditionalEffect, WhenConditionalEffect};
 
-/// Parses a conditional effect, i.e. `(forall (<typed list (variable)>) <effect>)
+/// Parses a conditional effect (`<c-effect>`), i.e. `(forall (<typed list (variable)>) <effect>)
 /// | (when <GD> <cond-effect>) | <p-effect>`.
 #[allow(deprecated)]
 pub(crate) fn parse_c_effect(node: &Node) -> R<ConditionalEffect> {

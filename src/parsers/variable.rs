@@ -1,11 +1,11 @@
-//! Provides parsers for variables.
+//! Provides parsers for variables (`<variable>`).
 
 use crate::parsers::error::R;
 use crate::parsers::is_name;
 use crate::parsers::sexpr::Node;
 use crate::types::{Name, Variable};
 
-/// Parses a variable, i.e. `?<name>`.
+/// Parses a variable (`<variable>`), i.e. `?<name>`.
 pub(crate) fn parse_variable(node: &Node) -> R<Variable> {
     match node.atom().and_then(|text| text.strip_prefix('?')) {
         Some(name) if is_name(name) => Ok(Variable::from(Name::from(name))),

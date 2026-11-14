@@ -1,11 +1,11 @@
-//! Provides parsers for length specifications.
+//! Provides parsers for length specifications (`<length-spec>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{prefix, Args};
 use crate::types::LengthSpec;
 
-/// Parses a length specification, i.e. `(:length [(:serial <integer>)] [(:parallel <integer>)])`.
+/// Parses a length specification (`<length-spec>`), i.e. `(:length [(:serial <integer>)] [(:parallel <integer>)])`.
 ///
 /// Deprecated since PDDL 2.1.
 pub(crate) fn parse_problem_length_spec(node: &Node) -> R<LengthSpec> {

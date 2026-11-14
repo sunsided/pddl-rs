@@ -1,11 +1,11 @@
-//! Provides parsers for precondition goal definitions.
+//! Provides parsers for precondition goal definitions (`<pre-GD>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{alt, parse_pref_gd, prefix, typed_variables};
 use crate::types::{PreconditionGoalDefinition, PreconditionGoalDefinitions};
 
-/// Parses precondition goal definitions, i.e. `<pref-GD> | (and <pre-GD>*)
+/// Parses precondition goal definitions (`<pre-GD>`), i.e. `<pref-GD> | (and <pre-GD>*)
 /// | (forall (<typed list (variable)>) <pre-GD>)`.
 pub(crate) fn parse_pre_gd(node: &Node) -> R<PreconditionGoalDefinitions> {
     alt(

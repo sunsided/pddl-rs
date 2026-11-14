@@ -1,11 +1,11 @@
-//! Provides parsers for constraint goal definitions.
+//! Provides parsers for constraint goal definitions (`<con-GD>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{alt, parse_gd, parse_number, prefix, typed_variables};
 use crate::types::{ConstraintGoalDefinition, ConstraintGoalDefinitionInner};
 
-/// Parses a constraint goal definition, such as `(always <con2-GD>)` or `(at end <GD>)`.
+/// Parses a constraint goal definition (`<con-GD>`), such as `(always <con2-GD>)` or `(at end <GD>)`.
 ///
 /// ## Requirements
 /// Requires `:constraints`.

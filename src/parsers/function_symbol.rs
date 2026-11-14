@@ -1,11 +1,11 @@
-//! Provides parsers for function symbols.
+//! Provides parsers for function symbols (`<function-symbol>`).
 
 use crate::parsers::error::R;
 use crate::parsers::parse_name;
 use crate::parsers::sexpr::Node;
 use crate::types::FunctionSymbol;
 
-/// Parses a function symbol, i.e. `<name>`.
+/// Parses a function symbol (`<function-symbol>`), i.e. `<name>`.
 pub(crate) fn parse_function_symbol(node: &Node) -> R<FunctionSymbol> {
     parse_name(node).map(FunctionSymbol::new)
 }

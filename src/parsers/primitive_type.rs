@@ -1,11 +1,11 @@
-//! Provides parsers for primitive types.
+//! Provides parsers for primitive types (`<primitive-type>`).
 
 use crate::parsers::error::R;
 use crate::parsers::parse_name;
 use crate::parsers::sexpr::Node;
 use crate::types::PrimitiveType;
 
-/// Parses a primitive type, i.e. `object | <name>`.
+/// Parses a primitive type (`<primitive-type>`), i.e. `object | <name>`.
 pub(crate) fn parse_primitive_type(node: &Node) -> R<PrimitiveType> {
     parse_name(node).map(PrimitiveType::from)
 }

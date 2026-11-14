@@ -1,11 +1,11 @@
-//! Provides parsers for fluent expressions.
+//! Provides parsers for fluent expressions (`<f-exp>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{alt, parens, parse_binary_op, parse_f_head, parse_number};
 use crate::types::{BinaryOp, FluentExpression, MultiOp};
 
-/// Parses a fluent expression, i.e. `<number> | (<binary-op> <f-exp> <f-exp>)
+/// Parses a fluent expression (`<f-exp>`), i.e. `<number> | (<binary-op> <f-exp> <f-exp>)
 /// | (<multi-op> <f-exp> <f-exp>⁺) | (- <f-exp>) | <f-head>`.
 pub(crate) fn parse_f_exp(node: &Node) -> R<FluentExpression> {
     alt(

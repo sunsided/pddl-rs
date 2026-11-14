@@ -1,11 +1,11 @@
-//! Provides parsers for duration constraints.
+//! Provides parsers for duration constraints (`<duration-constraint>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{alt, empty_or, parse_one, parse_simple_duration_constraint, prefix};
 use crate::types::DurationConstraint;
 
-/// Parses a duration constraint, i.e. `() | <simple-duration-constraint>
+/// Parses a duration constraint (`<duration-constraint>`), i.e. `() | <simple-duration-constraint>
 /// | (and <simple-duration-constraint>⁺)`. The empty list `()` is `None`.
 pub(crate) fn parse_duration_constraint(node: &Node) -> R<Option<DurationConstraint>> {
     empty_or(node, |node| {

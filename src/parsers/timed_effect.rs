@@ -1,4 +1,4 @@
-//! Provides parsers for timed effects.
+//! Provides parsers for timed effects (`<timed-effect>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
@@ -8,7 +8,7 @@ use crate::parsers::{
 };
 use crate::types::TimedEffect;
 
-/// Parses a timed effect, i.e. `(at <time-specifier> <f-assign-da>)
+/// Parses a timed effect (`<timed-effect>`), i.e. `(at <time-specifier> <f-assign-da>)
 /// | (at <time-specifier> <cond-effect>) | (<assign-op-t> <f-head> <f-exp-t>)`.
 pub(crate) fn parse_timed_effect(node: &Node) -> R<TimedEffect> {
     alt(

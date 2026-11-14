@@ -1,11 +1,11 @@
-//! Provides parsers for action symbols.
+//! Provides parsers for action symbols (`<action-symbol>`).
 
 use crate::parsers::error::R;
 use crate::parsers::parse_name;
 use crate::parsers::sexpr::Node;
 use crate::types::ActionSymbol;
 
-/// Parses a action symbol, i.e. `<name>`.
+/// Parses an action symbol (`<action-symbol>`), i.e. `<name>`.
 pub(crate) fn parse_action_symbol(node: &Node) -> R<ActionSymbol> {
     parse_name(node).map(ActionSymbol::new)
 }

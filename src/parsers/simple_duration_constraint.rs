@@ -1,11 +1,11 @@
-//! Provides parsers for simple duration constraints.
+//! Provides parsers for simple duration constraints (`<simple-duration-constraint>`).
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{alt, parens, parse_d_op, parse_d_value, parse_time_specifier, prefix};
 use crate::types::SimpleDurationConstraint;
 
-/// Parses a simple duration constraint, i.e. `(<d-op> ?duration <d-value>)
+/// Parses a simple duration constraint (`<simple-duration-constraint>`), i.e. `(<d-op> ?duration <d-value>)
 /// | (at <time-specifier> <simple-duration-constraint>)`.
 pub(crate) fn parse_simple_duration_constraint(node: &Node) -> R<SimpleDurationConstraint> {
     alt(
