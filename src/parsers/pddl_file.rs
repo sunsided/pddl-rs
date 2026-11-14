@@ -2,12 +2,13 @@
 //! or any number of them via [`PddlFile`].
 
 use nom::branch::alt;
+use nom::bytes::complete::tag_no_case;
 use nom::combinator::map;
 use nom::Parser;
 
 use crate::parsers::utilities::skip_whitespace_and_comments;
 use crate::parsers::{parse_domain, parse_problem};
-use crate::parsers::{ws2, ParseResult, Span};
+use crate::parsers::{ws2, NomError, ParseResult, Span};
 use crate::types::{Definition, Domain, PddlFile, Problem};
 
 /// Parses a single `(define ...)` block, determining whether it's a domain or problem.
@@ -28,10 +29,9 @@ fn parse_define_blocks<'a>(input: Span<'a>) -> ParseResult<'a, Vec<Definition>> 
 
     loop {
         (remaining, ()) = skip_whitespace_and_comments(remaining)?;
-        let ahead = remaining.fragment().as_bytes();
-        if !ahead
-            .get(..7)
-            .is_some_and(|p| p.eq_ignore_ascii_case(b"(define"))
+        if tag_no_case::<_, _, NomError>("(define")
+            .parse(remaining)
+            .is_err()
         {
             break;
         }
