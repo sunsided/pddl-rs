@@ -518,3 +518,17 @@ fn nullary_function_terms_round_trip() {
 fn undefined_object_fluent_round_trips() {
     check!(round_trip_p_effect("(assign (loc x) undefined)") == "(assign (loc x) undefined)");
 }
+
+#[test]
+fn continuous_and_duration_dependent_effects_round_trip() {
+    let input = "(define (domain d)
+        (:requirements :durative-actions :continuous-effects :duration-inequalities)
+        (:durative-action burn
+            :parameters (?t)
+            :duration (= ?duration 5)
+            :condition ()
+            :effect (and (increase (heat ?t) #t)
+                         (decrease (fuel ?t) (* #t 2))
+                         (at end (decrease (fuel ?t) ?duration)))))";
+    round_trip_domain(input, 80, "continuous effects");
+}

@@ -347,6 +347,10 @@ pub use types::*;
 #[cfg(feature = "pretty")]
 pub mod pretty_print;
 
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
+#[cfg(feature = "serde")]
+pub mod serde;
+
 #[cfg_attr(docsrs, doc(cfg(feature = "pretty")))]
 #[cfg(feature = "pretty")]
 pub use pretty_print::{Pretty, PrettyPrinted, PrettyRenderer};

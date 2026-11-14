@@ -303,7 +303,7 @@ mod tests {
             head,
             TimedFluentExpression::Scaled(exp),
         );
-        check!(prettify!(te, 30) == "(increase x 1)");
+        check!(prettify!(te, 30) == "(increase x (* #t 1))");
     }
 
     #[test]

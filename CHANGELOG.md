@@ -7,6 +7,13 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- The optional `serde` feature serializes and deserializes domains, problems and every other PDDL
+  type in a schema that follows PDDL: atoms are arrays (`["at", "?t", "depot"]`), other forms are
+  objects keyed by their keyword (`{"not": ...}`, `{"forall": [vars, gd]}`, `{"at start": ...}`),
+  and typed lists, predicates, functions and actions are objects keyed by name. It works with JSON,
+  YAML, TOML and other self-describing formats; the `pddl::serde` module documents the schema.
+  Deserializing rebuilds the PDDL text and parses it, so input is checked against the grammar.
+  The `as_json`, `as_yaml` and `as_toml` examples convert a domain and read a hand-written problem.
 - `ParseError::help()` suggests the intended keyword for a likely misspelling, e.g.
   ``did you mean `:predicates`?`` for `(:predicats ...)`. It covers section names, action and
   durative-action keywords such as `:effect`, and keywords such as `start` or `minimize`; with the
@@ -70,6 +77,13 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- A constraint nested in another, such as `(always (sometime (q)))`, parses as a nested constraint.
+  It parsed as a goal with the predicate `sometime` whenever its argument also reads as a term, as
+  `(q)` does. `<con2-GD>` now tries `<con-GD>` first, as in the BNF.
+- Pretty-printing durative actions now produces PDDL that parses back: continuous effects print
+  `#t` and `(* #t exp)` instead of `now` and a bare `exp`, the duration prints as `?duration`
+  instead of `#t`, and a missing duration, condition or effect prints as `()` instead of being
+  left out, since `:durative-action` requires all three keywords.
 - `(assign <function-term> undefined)` pretty-prints with `undefined` again. It printed as
   `(assign <function-term>)`, which doesn't parse.
 - A function term without terms pretty-prints as `(f)` instead of `f`, which parsed back as the

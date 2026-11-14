@@ -84,11 +84,14 @@ pub(crate) fn parse_con_gd(node: &Node) -> R<ConstraintGoalDescription> {
 
 /// Parses a `<con2-GD>`: a goal description, or else a nested constraint goal description.
 pub(crate) fn parse_con2_gd(node: &Node) -> R<ConstraintGoalDescriptionInner> {
+    // `<con-GD>` first, as in the BNF: `(sometime (q))` is also a goal, with
+    // the predicate `sometime` and the function term `(q)`, but it is meant as
+    // a nested constraint. Plain goals match no `<con-GD>` form and fall through.
     alt(
         node,
         &[
-            &|n| parse_gd(n).map(ConstraintGoalDescriptionInner::new_goal),
             &|n| parse_con_gd(n).map(ConstraintGoalDescriptionInner::new_nested),
+            &|n| parse_gd(n).map(ConstraintGoalDescriptionInner::new_goal),
         ],
     )
 }
@@ -131,6 +134,20 @@ mod tests {
                 ))
             )))
         ));
+    }
+
+    /// `(sometime (q))` also parses as a goal with the predicate `sometime`, but
+    /// inside a constraint it is the nested constraint.
+    #[test]
+    fn a_nested_constraint_wins_over_a_goal_with_the_same_shape() {
+        let q = GoalDescription::atomic_formula(AtomicFormula::new_predicate("q".into(), []));
+        check!(
+            ConstraintGoalDescription::from_str("(always (sometime (q)))").is_value(
+                ConstraintGoalDescription::always(ConstraintGoalDescriptionInner::nested(
+                    ConstraintGoalDescription::sometime(ConstraintGoalDescriptionInner::goal(q))
+                ))
+            )
+        );
     }
 
     #[test]

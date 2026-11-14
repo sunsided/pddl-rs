@@ -56,28 +56,25 @@ impl Visitor<DurativeActionDefinition, RcDoc<'static>> for PrettyRenderer {
             .append(value.parameters().accept(self))
             .append(")");
 
-        if let Some(duration) = value.duration() {
+        // All three keywords are required; `()` stands for "none".
+        let empty = || RcDoc::text("()");
+        let parts = [
+            (
+                "duration",
+                value.duration().as_ref().map(|d| d.accept(self)),
+            ),
+            (
+                "condition",
+                value.condition().as_ref().map(|c| c.accept(self)),
+            ),
+            ("effect", value.effect().as_ref().map(|e| e.accept(self))),
+        ];
+        for (keyword, part) in parts {
             doc = doc
                 .append(RcDoc::hardline())
-                .append(self.keyword_line("duration"))
+                .append(self.keyword_line(keyword))
                 .append(RcDoc::text(" "))
-                .append(duration.accept(self));
-        }
-
-        if let Some(condition) = value.condition() {
-            doc = doc
-                .append(RcDoc::hardline())
-                .append(self.keyword_line("condition"))
-                .append(RcDoc::text(" "))
-                .append(condition.accept(self));
-        }
-
-        if let Some(effect) = value.effect() {
-            doc = doc
-                .append(RcDoc::hardline())
-                .append(self.keyword_line("effect"))
-                .append(RcDoc::text(" "))
-                .append(effect.accept(self));
+                .append(part.unwrap_or_else(empty));
         }
 
         doc.append(")")
@@ -172,24 +169,20 @@ mod tests {
     }
 
     #[test]
-    fn durative_action_no_duration() {
-        let input = r"(define (domain test)
-  (:requirements :durative-actions :strips)
-  (:predicates (p))
-  (:durative-action move
-    :parameters (?x)
-    :condition (and (at start (p)))
-    :effect (and (at start (p)))
-  )
-)";
-        let domain = crate::Domain::from_str(input);
-        // May or may not parse depending on parser implementation
-        if let Ok(domain) = domain {
-            let output = domain.pretty(80).to_string();
-            check!(!output.contains(":duration"));
-            check!(output.contains(":condition"));
-            check!(output.contains(":effect"));
-        }
+    fn durative_action_without_parts_prints_empty_lists() {
+        use crate::{DurativeActionDefinition, DurativeActionSymbol, TypedList};
+        let action = DurativeActionDefinition::new(
+            DurativeActionSymbol::string("move"),
+            TypedList::default(),
+            None,
+            None,
+            None,
+        );
+        let output = action.pretty(80).to_string();
+        check!(output.contains(":duration ()"));
+        check!(output.contains(":condition ()"));
+        check!(output.contains(":effect ()"));
+        check!(crate::DurativeActionDefinition::from_str(&output).is_ok());
     }
 
     #[test]
