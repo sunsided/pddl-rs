@@ -31,6 +31,8 @@ pub(crate) fn suggest(word: &str, candidates: &[&'static str]) -> Option<&'stati
 /// deletions, substitutions and swaps of adjacent characters that turn one into the
 /// other (optimal string alignment). A swap counts once, as in `strat` for `start`.
 fn distance(a: &str, b: &str) -> usize {
+    #[cfg(test)]
+    tests::COMPARISONS.with(|count| count.set(count.get() + 1));
     let a: Vec<char> = a.chars().collect();
     let b: Vec<char> = b.chars().collect();
     // d[i][j]: the distance between the first `i` characters of `a` and the first `j` of `b`.
@@ -60,6 +62,12 @@ fn distance(a: &str, b: &str) -> usize {
 mod tests {
     use super::*;
     use assert2::check;
+    use std::cell::Cell;
+
+    thread_local! {
+        /// How often [`distance`] ran on this thread.
+        pub(super) static COMPARISONS: Cell<usize> = const { Cell::new(0) };
+    }
 
     const SECTIONS: &[&str] = &[":predicates", ":functions", ":constants", ":action"];
 
@@ -90,6 +98,9 @@ mod tests {
     #[test]
     fn a_long_word_is_not_compared() {
         let word = "x".repeat(1_000_000);
+        COMPARISONS.with(|count| count.set(0));
         check!(suggest(&word, SECTIONS) == None);
+        // Rejected by length alone, without building a distance matrix.
+        check!(COMPARISONS.with(Cell::get) == 0);
     }
 }
