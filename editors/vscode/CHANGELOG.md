@@ -4,6 +4,8 @@ All notable changes to the PDDL (pddl-lsp) extension are documented in this file
 
 ## Unreleased
 
+## 0.1.1 - 2026-11-14
+
 ### Added
 
 - An icon for the Marketplace.

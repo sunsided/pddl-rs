@@ -2,7 +2,7 @@
   "name": "pddl-lsp",
   "displayName": "PDDL (pddl-lsp)",
   "description": "PDDL language support through the pddl-lsp language server: diagnostics, navigation, completion, rename and formatting.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "sunsided",
   "preview": true,
   "license": "EUPL-1.2",
