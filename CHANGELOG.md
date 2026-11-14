@@ -15,7 +15,9 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `ParseError::span()`, the byte range of the input that parsing stopped at: an atom, the start of a
   list up to its first atom (e.g. `(:bogus`), a single parenthesis, or an empty range at the end.
 - The optional `miette` feature implements `miette::Diagnostic` for `ParseError`, labelling that
-  span. Render an error with `miette::Report::new(error).with_source_code(input)`.
+  span. Render an error with `miette::Report::new(error).with_source_code(input)`; the `miette`
+  example shows the output. For a missing `)`, the report also marks the `(` that is never closed,
+  since the end of the input itself can't be marked.
 
 ### Changed
 
