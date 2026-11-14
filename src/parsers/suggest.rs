@@ -12,10 +12,15 @@ pub(crate) fn suggest(word: &str, candidates: &[&'static str]) -> Option<&'stati
         return None;
     }
     let word = word.to_ascii_lowercase();
-    let max_distance = word.chars().count().max(3) / 3;
+    let length = word.chars().count();
+    let max_distance = length.max(3) / 3;
     candidates
         .iter()
         .filter(|candidate| has_letter(candidate))
+        // The distance is at least the difference in length. Skipping candidates
+        // that can't be close keeps a long input token from costing
+        // `length * candidate length` per candidate.
+        .filter(|candidate| candidate.chars().count().abs_diff(length) <= max_distance)
         .map(|&candidate| (distance(&word, &candidate.to_ascii_lowercase()), candidate))
         .filter(|&(d, _)| (1..=max_distance).contains(&d))
         .min_by_key(|&(d, _)| d)
@@ -80,5 +85,11 @@ mod tests {
         check!(suggest(":action", SECTIONS) == None);
         check!(suggest("x", &["*", "+"]) == None);
         check!(suggest("<", &["<=", ">="]) == None);
+    }
+
+    #[test]
+    fn a_long_word_is_not_compared() {
+        let word = "x".repeat(1_000_000);
+        check!(suggest(&word, SECTIONS) == None);
     }
 }
