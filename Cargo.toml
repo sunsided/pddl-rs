@@ -8,6 +8,8 @@ categories = ["parser-implementations", "science", "simulation"]
 keywords = ["pddl", "planning", "parser"]
 repository = "https://github.com/sunsided/pddl-rs"
 readme = "README.md"
+# Third-party test inputs under their own licences; not part of the published crate.
+exclude = ["tests/data/", "tests/example_files.rs"]
 authors = ["Markus Mayer <widemeadows@gmail.com>"]
 edition = "2021"
 rust-version = "1.80.0"
@@ -43,6 +45,10 @@ required-features = ["pretty", "parser"]
 
 [[test]]
 name = "pddl_file"
+required-features = ["parser"]
+
+[[test]]
+name = "example_files"
 required-features = ["parser"]
 
 [[example]]

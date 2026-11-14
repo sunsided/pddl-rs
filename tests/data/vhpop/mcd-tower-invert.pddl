@@ -1,0 +1,7 @@
+(define (problem mcd-tower-invert)
+  (:domain mcd-blocksworld)
+  (:objects a b c d e)
+  (:init (block a) (block b) (block c) (block d) (block e) (block table)
+	 (clear a) (on a b) (on b c) (on c d) (on d e) (on e table)
+	 (clear table))
+  (:goal (and (on b c) (on c d) (on d e) (on e a))))
