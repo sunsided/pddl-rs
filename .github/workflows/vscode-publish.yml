@@ -4,6 +4,8 @@ name: Publish VS Code extension
 # Publishes editors/vscode to the VS Code Marketplace as sunsided.pddl-lsp, with
 # Trusted Publishing: the Marketplace accepts this workflow's OIDC token, so no
 # access token is stored. Run it from the Actions tab or with `task vscode:publish`.
+# Afterwards it tags the commit vscode-vX.Y.Z and creates a GitHub Release with
+# the .vsix attached.
 on:
   workflow_dispatch:
 
@@ -12,10 +14,16 @@ permissions: {}
 jobs:
   publish:
     name: Publish
+    # Only reviewed code: the Actions tab also offers other branches.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.package.outputs.version }}
     permissions:
       contents: read
+      # Trusted Publishing, and signing the build provenance attestation.
       id-token: write
+      attestations: write
     defaults:
       run:
         working-directory: editors/vscode
@@ -37,5 +45,71 @@ jobs:
           cp ../../target/wasm32-wasip1-threads/release/pddl-lsp.wasm server/
       - name: Install dependencies
         run: yarn install --frozen-lockfile --ignore-scripts
+      - name: Package
+        id: package
+        run: |
+          version=$(node -p 'require("./package.json").version')
+          vsix="pddl-lsp-$version.vsix"
+          yarn run package --out "$vsix"
+          sha256sum "$vsix" > "$vsix.sha256"
+          # The release notes: the section from "## X.Y.Z - date" up to the next
+          # "## " heading. Checked before anything is published, and written
+          # after packaging so it stays out of the .vsix.
+          awk -v heading="## $version " '
+            index($0, heading) == 1 { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          if ! grep -q '[^[:space:]]' release-notes.md; then
+            echo "::error::CHANGELOG.md has no '## $version - <date>' section with entries"
+            exit 1
+          fi
+          echo "VSIX=$vsix" >> "$GITHUB_ENV"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      # Package once and publish that file, so the attestation covers what is uploaded.
+      - name: Attest build provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: editors/vscode/${{ env.VSIX }}
       - name: Publish
-        run: yarn run publish:marketplace --oidc
+        run: yarn vsce publish --packagePath "$VSIX" --oidc
+      # Handed to the release job, which attaches this exact file.
+      - name: Keep the published files
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release
+          path: |
+            editors/vscode/${{ env.VSIX }}
+            editors/vscode/${{ env.VSIX }}.sha256
+            editors/vscode/release-notes.md
+          if-no-files-found: error
+
+  # A separate job so that "Re-run failed jobs" retries only the release, with the
+  # files the Marketplace already has, instead of failing at publishing again.
+  release:
+    name: GitHub Release
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      # Create the tag and the GitHub Release.
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release
+      - name: Create the GitHub Release
+        run: |
+          tag="vscode-v$VERSION"
+          vsix="pddl-lsp-$VERSION.vsix"
+          if gh release view "$tag" > /dev/null 2>&1; then
+            # A retry after a partial run: the files are the published ones.
+            gh release upload "$tag" "$vsix" "$vsix.sha256" --clobber
+          else
+            # Not "latest": that stays with the pddl crate's releases.
+            gh release create "$tag" "$vsix" "$vsix.sha256" --target "$GITHUB_SHA" \
+              --title "VS Code extension $VERSION" --notes-file release-notes.md --latest=false
+          fi
+        env:
+          VERSION: ${{ needs.publish.outputs.version }}
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}

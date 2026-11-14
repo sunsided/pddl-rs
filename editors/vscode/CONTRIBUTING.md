@@ -91,12 +91,18 @@ stored anywhere.
    | Environment      | (empty)              |
 
 2. Raise `version` in `package.json`; the Marketplace rejects a version it
-   already has. Merge that into `main`.
+   already has. In [CHANGELOG.md](CHANGELOG.md), move the entries under
+   "Unreleased" into a new `## X.Y.Z - YYYY-MM-DD` section; the workflow stops
+   before publishing if that section is missing. Merge both into `main`.
 
 3. Run `task publish`, which asks for confirmation and then starts the
    workflow on `main` with the GitHub CLI. You can also start it from the
-   repository's Actions tab. The workflow builds the server and the extension
-   and publishes them.
+   repository's Actions tab; it only runs on `main`. The workflow builds the
+   server and the extension, publishes the `.vsix`, tags the commit
+   `vscode-vX.Y.Z` and creates a GitHub Release with that changelog section
+   and the `.vsix` attached; if only that last part fails, use "Re-run failed
+   jobs" on the run. Check a downloaded `.vsix` with
+   `gh attestation verify <file> --repo sunsided/pddl-rs`.
 
 Relative links in README.md become GitHub URLs on `main` when the extension is
 packaged, so they work on the Marketplace page.

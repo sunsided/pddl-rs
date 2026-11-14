@@ -68,8 +68,9 @@ binary's full path instead.
 
 Use the extension in [`editors/vscode`](../editors/vscode). It adds syntax
 highlighting and bundles this server compiled to WebAssembly, so you don't need
-to install the binary. It isn't on the Marketplace yet, so build and install it
-yourself. This needs Node.js, [Yarn](https://classic.yarnpkg.com/), the
+to install the binary. Install it from the Marketplace as
+[`sunsided.pddl-lsp`](https://marketplace.visualstudio.com/items?itemName=sunsided.pddl-lsp),
+or build and install it yourself, which needs Node.js, [Yarn](https://classic.yarnpkg.com/), the
 `wasm32-wasip1-threads` Rust target and [Task](https://taskfile.dev). From the
 repository root, run:
 
@@ -238,7 +239,8 @@ Otherwise it uses the one whose file path sorts first.
    It runs the tests, publishes the crate to crates.io, creates a GitHub
    Release with the changelog section, and attaches binaries for Linux
    (x86-64 and ARM64), macOS (Apple silicon) and Windows (x86-64), each with
-   a SHA-256 checksum.
+   a SHA-256 checksum and a build provenance attestation. Check a download
+   with `gh attestation verify <file> --repo sunsided/pddl-rs`.
 
 The workflow publishes with crates.io's trusted publishing, which can only be
 set up for a crate that already exists. Before the first release, publish
