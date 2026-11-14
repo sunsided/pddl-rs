@@ -14,12 +14,88 @@ mod goals;
 mod structure;
 mod terms;
 
-pub(crate) use actions::*;
-pub(crate) use durative::*;
-pub(crate) use expressions::*;
-pub(crate) use goals::*;
-pub(crate) use structure::*;
-pub(crate) use terms::*;
+// structure: domain and problem definitions and their sections
+pub(crate) use structure::atomic_formula_skeleton::parse_atomic_formula_skeleton;
+pub(crate) use structure::atomic_function_skeleton::parse_atomic_function_skeleton;
+pub(crate) use structure::constants_def::parse_constants_def;
+pub(crate) use structure::domain::parse_domain;
+pub(crate) use structure::domain_constraints_def::parse_domain_constraints_def;
+pub(crate) use structure::functions_def::parse_functions_def;
+pub(crate) use structure::goal_def::parse_problem_goal_def;
+pub(crate) use structure::init_def::parse_problem_init_def;
+pub(crate) use structure::init_el::parse_init_el;
+pub(crate) use structure::length_spec::parse_problem_length_spec;
+pub(crate) use structure::metric_spec::parse_problem_metric_spec;
+pub(crate) use structure::objects_def::parse_problem_objects_declaration;
+pub(crate) use structure::predicates_def::parse_predicates_def;
+pub(crate) use structure::problem::parse_problem;
+pub(crate) use structure::problem_constraints_def::parse_problem_constraints_def;
+pub(crate) use structure::requirements::parse_require_def;
+pub(crate) use structure::structure_def::parse_structure_def;
+pub(crate) use structure::timeless_def::parse_timeless_def;
+pub(crate) use structure::types_def::parse_types_def;
+
+// actions: actions, derived predicates and their effects
+pub(crate) use actions::action_def::parse_action_def;
+pub(crate) use actions::action_symbol::parse_action_symbol;
+pub(crate) use actions::c_effect::parse_c_effect;
+pub(crate) use actions::cond_effect::parse_effect_condition;
+pub(crate) use actions::derived_predicate::parse_derived_predicate;
+pub(crate) use actions::effects::parse_effect;
+pub(crate) use actions::p_effect::parse_p_effect;
+
+// goals: goal descriptions, literals, atomic formulas and preferences
+pub(crate) use goals::atomic_formula::atomic_formula;
+pub(crate) use goals::con_gd::parse_con_gd;
+pub(crate) use goals::gd::parse_gd;
+pub(crate) use goals::literal::literal;
+pub(crate) use goals::pre_gd::parse_pre_gd;
+pub(crate) use goals::pref_con_gd::parse_pref_con_gd;
+pub(crate) use goals::pref_gd::parse_pref_gd;
+pub(crate) use goals::pref_name::parse_pref_name;
+
+// durative: durative actions: their conditions, effects, durations and timing
+pub(crate) use durative::assign_op_t::parse_assign_op_t;
+pub(crate) use durative::d_op::parse_d_op;
+pub(crate) use durative::d_value::parse_d_value;
+pub(crate) use durative::da_def::parse_da_def;
+pub(crate) use durative::da_effect::parse_da_effect;
+pub(crate) use durative::da_gd::parse_da_gd;
+pub(crate) use durative::da_symbol::parse_da_symbol;
+pub(crate) use durative::duration_constraint::parse_duration_constraint;
+pub(crate) use durative::f_assign_da::parse_f_assign_da;
+pub(crate) use durative::f_exp_da::parse_f_exp_da;
+pub(crate) use durative::f_exp_t::parse_f_exp_t;
+pub(crate) use durative::interval::parse_interval;
+pub(crate) use durative::pref_timed_gd::parse_pref_timed_gd;
+pub(crate) use durative::simple_duration_constraint::parse_simple_duration_constraint;
+pub(crate) use durative::time_specifier::parse_time_specifier;
+pub(crate) use durative::timed_effect::parse_timed_effect;
+pub(crate) use durative::timed_gd::parse_timed_gd;
+
+// expressions: numeric fluent expressions, comparisons and operators
+pub(crate) use expressions::assign_op::parse_assign_op;
+pub(crate) use expressions::binary_comp::parse_binary_comp;
+pub(crate) use expressions::binary_op::parse_binary_op;
+pub(crate) use expressions::f_comp::parse_f_comp;
+pub(crate) use expressions::f_exp::{op_expr, parse_f_exp};
+pub(crate) use expressions::f_head::parse_f_head;
+pub(crate) use expressions::metric_f_exp::parse_metric_f_exp;
+pub(crate) use expressions::optimization::parse_optimization;
+
+// terms: names, variables, numbers, terms and types
+pub(crate) use terms::basic_function_term::parse_basic_function_term;
+pub(crate) use terms::function_symbol::parse_function_symbol;
+pub(crate) use terms::function_term::parse_function_term;
+pub(crate) use terms::function_typed_list::function_typed_list;
+pub(crate) use terms::name::{is_name, parse_name};
+pub(crate) use terms::number::parse_number;
+pub(crate) use terms::predicate::parse_predicate;
+pub(crate) use terms::primitive_type::parse_primitive_type;
+pub(crate) use terms::r#type::parse_type;
+pub(crate) use terms::term::parse_term;
+pub(crate) use terms::typed_list::{typed_list, typed_variables};
+pub(crate) use terms::variable::parse_variable;
 
 mod error;
 mod sexpr;
