@@ -202,7 +202,6 @@ where
 
 /// A combinator that takes a parser `inner` and produces a parser that also
 /// consumes a whitespace separated list, returning the outputs of `inner`.
-#[allow(dead_code)]
 pub fn space_separated_list0<'a, P, O>(
     inner: P,
 ) -> impl Parser<Span<'a>, Output = Vec<O>, Error = NomError<'a>>
