@@ -102,6 +102,7 @@ impl<I: Into<Number> + Copy> PartialEq<I> for Number {
 
 impl Ord for Number {
     fn cmp(&self, other: &Self) -> Ordering {
+        debug_assert!(self.0.is_finite() && other.0.is_finite());
         // `partial_cmp` treats `-0.0` and `0.0` as equal, and is only `None` for NaN.
         self.0
             .partial_cmp(&other.0)
