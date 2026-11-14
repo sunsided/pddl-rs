@@ -106,7 +106,7 @@ impl Requirements {
     /// This expands all shorthand requirements such as `:adl` and adds the implicit
     /// `:strips` requirement if no requirements are specified.
     pub fn to_effective(&self) -> HashSet<Requirement> {
-        let mut set = HashSet::from_iter(self.iter().flat_map(Requirement::expand));
+        let mut set = HashSet::from_iter(self.iter().flat_map(|r| r.expand().iter().copied()));
 
         // :strips is an implicit requirement that is always given
         // when no requirement is specified.

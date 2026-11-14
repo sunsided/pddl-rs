@@ -212,27 +212,44 @@ impl Requirement {
         }
     }
 
-    /// Expands a requirement into a list of requirements.
+    /// Expands a requirement into the requirements it stands for.
     /// This can be helpful when dealing with requirements such as `:quantified-preconditions`,
-    /// `:fluents` and `:adl` that are shorthands for a set of other requirements.
-    pub fn expand(&self) -> Vec<Requirement> {
+    /// `:fluents` and `:adl` that are shorthands for a set of other requirements; any other
+    /// requirement expands to itself.
+    pub fn expand(&self) -> &'static [Requirement] {
         match self {
-            Requirement::QuantifiedPreconditions => vec![
-                Requirement::ExistentialPreconditions,
-                Requirement::UniversalPreconditions,
+            Self::QuantifiedPreconditions => {
+                &[Self::ExistentialPreconditions, Self::UniversalPreconditions]
+            }
+            Self::Fluents => &[Self::NumericFluents, Self::ObjectFluents],
+            Self::Adl => &[
+                Self::Strips,
+                Self::Typing,
+                Self::NegativePreconditions,
+                Self::DisjunctivePreconditions,
+                Self::Equality,
+                Self::ExistentialPreconditions, // added via Requirement::QuantifiedPreconditions,
+                Self::UniversalPreconditions,   // added via Requirement::QuantifiedPreconditions,
+                Self::ConditionalEffects,
             ],
-            Requirement::Fluents => vec![Requirement::NumericFluents, Requirement::ObjectFluents],
-            Requirement::Adl => vec![
-                Requirement::Strips,
-                Requirement::Typing,
-                Requirement::NegativePreconditions,
-                Requirement::DisjunctivePreconditions,
-                Requirement::Equality,
-                Requirement::ExistentialPreconditions, // added via Requirement::QuantifiedPreconditions,
-                Requirement::UniversalPreconditions, // added via Requirement::QuantifiedPreconditions,
-                Requirement::ConditionalEffects,
-            ],
-            r => vec![*r],
+            Self::Strips => &[Self::Strips],
+            Self::Typing => &[Self::Typing],
+            Self::NegativePreconditions => &[Self::NegativePreconditions],
+            Self::DisjunctivePreconditions => &[Self::DisjunctivePreconditions],
+            Self::Equality => &[Self::Equality],
+            Self::ExistentialPreconditions => &[Self::ExistentialPreconditions],
+            Self::UniversalPreconditions => &[Self::UniversalPreconditions],
+            Self::ConditionalEffects => &[Self::ConditionalEffects],
+            Self::NumericFluents => &[Self::NumericFluents],
+            Self::ObjectFluents => &[Self::ObjectFluents],
+            Self::DurativeActions => &[Self::DurativeActions],
+            Self::DurationInequalities => &[Self::DurationInequalities],
+            Self::ContinuousEffects => &[Self::ContinuousEffects],
+            Self::DerivedPredicates => &[Self::DerivedPredicates],
+            Self::TimedInitialLiterals => &[Self::TimedInitialLiterals],
+            Self::Preferences => &[Self::Preferences],
+            Self::Constraints => &[Self::Constraints],
+            Self::ActionCosts => &[Self::ActionCosts],
         }
     }
 }

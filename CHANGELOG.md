@@ -17,6 +17,8 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- `Requirement::expand` returns `&'static [Requirement]` instead of a `Vec`, so it no longer
+  allocates. Iterating over it yields `&Requirement`; call `.to_vec()` for an owned list.
 - [#104](https://github.com/sunsided/pddl-rs/issues/104): The parser is hand-written instead of
   built from `nom` combinators. It reads the input into a tree of atoms and parenthesized lists,
   then turns the tree into the AST, trying the grammar's alternatives in the same order as before.
