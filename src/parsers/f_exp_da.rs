@@ -2,14 +2,11 @@
 
 use nom::branch::alt;
 use nom::bytes::complete::tag_no_case;
-use nom::character::complete::{char, multispace0};
 use nom::combinator::map;
-use nom::sequence::preceded;
 use nom::Parser;
 
-use crate::parsers::sep;
-use crate::parsers::{parens, space_separated_list1, ParseResult, Span};
-use crate::parsers::{parse_binary_op, parse_f_exp, parse_multi_op};
+use crate::parsers::f_exp::op_expr;
+use crate::parsers::{parse_f_exp, ParseResult, Span};
 use crate::types::DurativeActionFluentExpression;
 
 /// Parses an f-exp-da.
@@ -46,32 +43,16 @@ pub fn parse_f_exp_da<'a, T: Into<Span<'a>>>(
         DurativeActionFluentExpression::new_duration()
     });
 
-    let binary_op = map(
-        parens((
-            parse_binary_op,
-            preceded(sep, parse_f_exp_da),
-            preceded(sep, parse_f_exp_da),
-        )),
-        |(op, lhs, rhs)| DurativeActionFluentExpression::new_binary_op(op, lhs, rhs),
-    );
-
-    let multi_op = map(
-        parens((
-            parse_multi_op,
-            preceded(sep, parse_f_exp_da),
-            preceded(sep, space_separated_list1(parse_f_exp_da)),
-        )),
-        |(op, lhs, rhs)| DurativeActionFluentExpression::new_multi_op(op, lhs, rhs),
-    );
-
-    let negated = map(
-        parens(preceded((char('-'), multispace0), parse_f_exp_da)),
+    let op = op_expr(
+        parse_f_exp_da,
         DurativeActionFluentExpression::new_negative,
+        DurativeActionFluentExpression::new_binary_op,
+        DurativeActionFluentExpression::new_multi_op,
     );
 
     let f_exp = map(parse_f_exp, DurativeActionFluentExpression::new_f_exp);
 
-    alt((duration, binary_op, multi_op, negated, f_exp)).parse(input.into())
+    alt((duration, op, f_exp)).parse(input.into())
 }
 
 impl crate::parsers::Parser for DurativeActionFluentExpression {

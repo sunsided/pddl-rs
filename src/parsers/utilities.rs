@@ -6,8 +6,9 @@ use nom::bytes::complete::{tag_no_case, take_while};
 use nom::character::complete::{char, multispace1};
 use nom::combinator::{recognize, value};
 use nom::multi::{many0, separated_list0, separated_list1};
-use nom::sequence::{delimited, pair, preceded};
+use nom::sequence::{delimited, pair, preceded, terminated};
 use nom::Parser;
+use std::cell::Cell;
 
 /// Recognizes a semicolon comment up to, but not including, the line ending.
 /// Accepts empty comments such as `;` followed immediately by `\n` or `\r\n`.
@@ -90,6 +91,39 @@ pub(crate) fn failure_at<'a>(at: Span<'a>, reason: &'a str) -> nom::Err<NomError
     nom::Err::Failure(NomError::with_context(at, reason))
 }
 
+/// The deepest `(` nesting the parsers accept. Each level costs stack, and a
+/// stack overflow aborts the process, so deeper input is an error instead.
+/// Real files nest about 8 deep. At 64, a release build needs well under the
+/// 2 MiB of a spawned thread; a debug build needs about 4 MiB (8 MiB main thread).
+pub(crate) const MAX_NESTING_DEPTH: u32 = 64;
+
+thread_local! {
+    static NESTING_DEPTH: Cell<u32> = const { Cell::new(0) };
+}
+
+/// Runs `body` one `(` level deeper; `at` is the opening parenthesis.
+/// Fails with a `Failure` past [`MAX_NESTING_DEPTH`] so no `alt` retries the subtree.
+pub(crate) fn nested<'a, O>(
+    at: Span<'a>,
+    body: impl FnOnce() -> ParseResult<'a, O>,
+) -> ParseResult<'a, O> {
+    struct Leave;
+    impl Drop for Leave {
+        fn drop(&mut self) {
+            NESTING_DEPTH.with(|d| d.set(d.get() - 1));
+        }
+    }
+    let depth = NESTING_DEPTH.with(|d| {
+        d.set(d.get() + 1);
+        d.get()
+    });
+    let _leave = Leave;
+    if depth > MAX_NESTING_DEPTH {
+        return Err(failure_at(at, "nesting too deep"));
+    }
+    body()
+}
+
 /// A combinator that takes a parser `inner` and produces a parser that also consumes a leading `(name` and trailing `)`, returning the output of `inner`.
 #[allow(clippy::needless_lifetimes)]
 pub fn prefix_expr<'a, P, O>(
@@ -109,22 +143,24 @@ where
     let mut close = ws(tag_no_case(")"));
     move |input: Span<'a>| {
         let (rest, _) = open.parse(input)?;
-        let (rest, value) = match inner.parse(rest) {
-            Err(nom::Err::Error(mut e) | nom::Err::Failure(mut e)) if commits => {
-                e.keyword.get_or_insert(name);
-                return Err(nom::Err::Failure(e));
+        nested(input, || {
+            let (rest, value) = match inner.parse(rest) {
+                Err(nom::Err::Error(mut e) | nom::Err::Failure(mut e)) if commits => {
+                    e.keyword.get_or_insert(name);
+                    return Err(nom::Err::Failure(e));
+                }
+                result => result?,
+            };
+            match close.parse(rest) {
+                // The form is complete but not closed, e.g. a missing `)` or extra input.
+                Err(nom::Err::Error(mut e) | nom::Err::Failure(mut e)) if commits => {
+                    e.keyword = Some(name);
+                    e.context = Some("expected `)`");
+                    Err(nom::Err::Failure(e))
+                }
+                result => result.map(|(rest, _)| (rest, value)),
             }
-            result => result?,
-        };
-        match close.parse(rest) {
-            // The form is complete but not closed, e.g. a missing `)` or extra input.
-            Err(nom::Err::Error(mut e) | nom::Err::Failure(mut e)) if commits => {
-                e.keyword = Some(name);
-                e.context = Some("expected `)`");
-                Err(nom::Err::Failure(e))
-            }
-            result => result.map(|(rest, _)| (rest, value)),
-        }
+        })
     }
 }
 
@@ -234,10 +270,12 @@ pub fn parens<'a, P, O>(inner: P) -> impl Parser<Span<'a>, Output = O, Error = N
 where
     P: Parser<Span<'a>, Output = O, Error = NomError<'a>>,
 {
-    preceded(
-        skip_whitespace_and_comments,
-        delimited(char('('), ws(inner), ws(char(')'))),
-    )
+    let mut open = preceded(skip_whitespace_and_comments, char('('));
+    let mut body = terminated(ws(inner), ws(char(')')));
+    move |input: Span<'a>| {
+        let (rest, _) = open.parse(input)?;
+        nested(input, || body.parse(rest))
+    }
 }
 
 #[cfg(test)]
@@ -265,6 +303,51 @@ mod tests {
             panic!("expected failure, got {result:?}");
         };
         assert_eq!(e.input.location_offset(), 2);
+    }
+
+    #[test]
+    fn deep_nesting_is_an_error_not_a_stack_overflow() {
+        // Debug builds need ~55 KiB of stack per level, more than a test thread's 2 MiB.
+        std::thread::Builder::new()
+            .stack_size(8 << 20)
+            .spawn(deep_nesting_checks)
+            .unwrap()
+            .join()
+            .unwrap();
+    }
+
+    fn deep_nesting_checks() {
+        use crate::{
+            DurativeActionFluentExpression, Effects, FluentExpression, FunctionTerm,
+            GoalDefinition, Parser,
+        };
+        let nest = |open: &str, leaf: &str, depth: u32| {
+            let depth = depth as usize;
+            format!("{}{leaf}{}", open.repeat(depth), ")".repeat(depth))
+        };
+        let max = MAX_NESTING_DEPTH;
+        for depth in [max, 100_000] {
+            let ok = depth <= max;
+            let gd = nest("(and ", "(p)", depth - 1);
+            assert_eq!(GoalDefinition::from_str(&gd).is_ok(), ok);
+            let gd = nest("(not ", "(p)", depth - 1);
+            assert_eq!(GoalDefinition::from_str(&gd).is_ok(), ok);
+            let f = nest("(- ", "x", depth);
+            assert_eq!(FluentExpression::from_str(&f).is_ok(), ok);
+            let f = nest("(+ 1 ", "x", depth);
+            assert_eq!(FluentExpression::from_str(&f).is_ok(), ok);
+            let f = nest("(* ", "?duration", depth);
+            let f = f.replace(')', " 2)");
+            assert_eq!(DurativeActionFluentExpression::from_str(&f).is_ok(), ok);
+            let t = nest("(f ", "x", depth);
+            assert_eq!(FunctionTerm::from_str(&t).is_ok(), ok);
+            let e = nest("(forall (?x) ", "(p)", (depth - 1) / 2);
+            assert_eq!(Effects::from_str(&e).is_ok(), ok);
+        }
+
+        let deep = nest("(and ", "(p)", 100_000);
+        let error = GoalDefinition::from_str(&deep).unwrap_err();
+        assert_eq!(error.reason(), Some("nesting too deep"));
     }
 
     #[test]

@@ -1,11 +1,12 @@
 //! Provides parsers for function terms.
 
+use crate::parsers::utilities::nested;
 use crate::parsers::{parse_function_symbol, parse_term};
 use crate::parsers::{space_separated_list0, ws, ParseResult, Span};
 use crate::types::FunctionTerm;
 use nom::bytes::complete::tag_no_case;
 use nom::combinator::map;
-use nom::sequence::delimited;
+use nom::sequence::terminated;
 use nom::Parser;
 
 /// Parses a function terms, i.e. `(<function symbol> <term>*)`.
@@ -30,15 +31,18 @@ use nom::Parser;
 /// assert!(parse_function_term("(fun-sym ?y x (fn a))").is_value(FunctionTerm::new("fun-sym".into(), vec![y, x, ft])));
 ///```
 pub fn parse_function_term<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, FunctionTerm> {
-    map(
-        delimited(
-            tag_no_case("("),
-            (parse_function_symbol, space_separated_list0(parse_term)),
-            ws(tag_no_case(")")),
-        ),
-        |(symbol, terms)| FunctionTerm::new(symbol, terms),
-    )
-    .parse(input.into())
+    let input = input.into();
+    let (rest, _) = tag_no_case("(").parse(input)?;
+    nested(input, || {
+        map(
+            terminated(
+                (parse_function_symbol, space_separated_list0(parse_term)),
+                ws(tag_no_case(")")),
+            ),
+            |(symbol, terms)| FunctionTerm::new(symbol, terms),
+        )
+        .parse(rest)
+    })
 }
 
 impl crate::parsers::Parser for FunctionTerm {
