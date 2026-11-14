@@ -74,7 +74,7 @@ task vscode:install
 
 This packages the extension and the server as a `.vsix` file and installs it
 into VS Code. To only build the `.vsix`, run `task vscode:package`. The
-[extension README](../editors/vscode/README.md#building) lists every task and
+[extension's CONTRIBUTING.md](../editors/vscode/CONTRIBUTING.md#building-and-installing) lists every task and
 the equivalent commands.
 
 To use a native binary instead of the bundled one, set `pddl.server.path` to

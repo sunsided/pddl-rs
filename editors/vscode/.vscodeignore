@@ -8,3 +8,4 @@ yarn.lock
 Taskfile.dist.yaml
 test/**
 .vscode-test/**
+CONTRIBUTING.md
