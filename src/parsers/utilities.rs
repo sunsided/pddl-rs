@@ -32,13 +32,36 @@ impl<'n, 'a> Args<'n, 'a> {
         self.items.first()
     }
 
-    /// Takes the atom `word`, or fails at whatever is there instead.
-    pub fn expect(&mut self, word: &str) -> R<()> {
+    /// Takes the atom `word`, or fails at whatever is there instead,
+    /// suggesting `word` if that looks like a misspelling of it.
+    pub fn expect(&mut self, word: &'static str) -> R<()> {
         let node = self.next()?;
         if node.is(word) {
-            Ok(())
-        } else {
-            Err(node.error())
+            return Ok(());
+        }
+        let error = node.error();
+        Err(match node.atom() {
+            Some(atom) => error.suggest(atom, &[word]),
+            None => error,
+        })
+    }
+
+    /// Fails at a leftover `:keyword` that looks like a misspelling of one of
+    /// `keywords`, with the same error as an unread child but a suggestion.
+    pub fn reject_misspelled(&self, keywords: &[&'static str]) -> R<()> {
+        let Some(node) = self.peek() else {
+            return Ok(());
+        };
+        match node.atom() {
+            Some(atom) if atom.starts_with(':') => {
+                let error = node.error().reason("expected `)`").suggest(atom, keywords);
+                if error.suggestion.is_some() {
+                    Err(error)
+                } else {
+                    Ok(())
+                }
+            }
+            _ => Ok(()),
         }
     }
 
@@ -179,12 +202,18 @@ pub(crate) fn set_once<T>(slot: &mut Option<T>, value: T, section: &Node) -> R<(
 }
 
 /// Maps the atom `node` through `words`, ignoring ASCII case.
-pub(crate) fn word<T: Clone>(node: &Node, words: &[(&str, T)]) -> R<T> {
-    words
-        .iter()
-        .find(|(w, _)| node.is(w))
-        .map(|(_, value)| value.clone())
-        .ok_or_else(|| node.error())
+pub(crate) fn word<T: Clone>(node: &Node, words: &[(&'static str, T)]) -> R<T> {
+    if let Some((_, value)) = words.iter().find(|(w, _)| node.is(w)) {
+        return Ok(value.clone());
+    }
+    let error = node.error();
+    Err(match node.atom() {
+        Some(atom) => {
+            let candidates: Vec<&'static str> = words.iter().map(|(w, _)| *w).collect();
+            error.suggest(atom, &candidates)
+        }
+        None => error,
+    })
 }
 
 #[cfg(test)]

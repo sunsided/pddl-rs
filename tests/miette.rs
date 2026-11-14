@@ -19,7 +19,7 @@ fn render(input: &'static str) -> String {
 }
 
 #[test]
-fn an_unknown_section_is_marked_with_its_reason() {
+fn an_unknown_section_is_marked_with_its_reason_and_a_suggestion() {
     let out = render("(define (domain d)\n  (:requirements :strips)\n  (:predicats (p ?x)))");
     check!(
         out == "\
@@ -32,6 +32,7 @@ pddl::parse
    ·   ─────┬─────
    ·        ╰── unknown section
    ╰────
+  help: did you mean `:predicates`?
 "
     );
 }

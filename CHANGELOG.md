@@ -7,6 +7,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `ParseError::help()` suggests the intended keyword for a likely misspelling, e.g.
+  ``did you mean `:predicates`?`` for `(:predicats ...)`. It covers section names, action and
+  durative-action keywords such as `:effect`, and keywords such as `start` or `minimize`; with the
+  `miette` feature it appears as the report's help line. `Display` is unchanged.
 - `IntoIterator` for `&Effects`, `&PreconditionGoalDescriptions` and
   `&PreferenceConstraintGoalDescriptions`, so `for x in &effects` works like `effects.iter()`.
 - `pddl::Definition`, a single domain or problem. `Definition::from_str` parses exactly one

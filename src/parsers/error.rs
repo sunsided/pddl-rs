@@ -28,7 +28,11 @@ const EXCERPT_CHARS: usize = 40;
 /// assert_eq!(error.to_string(), "line 2, column 3: unknown section: unexpected `(:bogus))`");
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ParseError {
+pub struct ParseError(Box<Details>);
+
+/// The contents of a [`ParseError`], boxed so that a `Result` with it stays small.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Details {
     /// Byte offset of the error in the input.
     offset: usize,
     /// Length in bytes of the input the error covers; see [`ParseError::span`].
@@ -46,13 +50,15 @@ pub struct ParseError {
     /// Byte offset of the `(` that is never closed, for an error at the end of the input.
     #[cfg_attr(not(feature = "miette"), allow(dead_code))]
     unclosed: Option<usize>,
+    /// A suggestion for fixing the mistake, e.g. "did you mean `:predicates`?".
+    help: Option<String>,
 }
 
 impl ParseError {
     /// The byte offset into the input at which parsing stopped.
     #[must_use]
     pub const fn offset(&self) -> usize {
-        self.offset
+        self.0.offset
     }
 
     /// The byte range of the input that parsing stopped at: an atom, the start
@@ -60,26 +66,26 @@ impl ParseError {
     /// or an empty range at the end of the input.
     #[must_use]
     pub const fn span(&self) -> Range<usize> {
-        self.offset..self.offset + self.len
+        self.0.offset..self.0.offset + self.0.len
     }
 
     /// The 1-based line at which parsing stopped.
     #[must_use]
     pub const fn line(&self) -> usize {
-        self.line
+        self.0.line
     }
 
     /// The 1-based column (in characters) at which parsing stopped.
     #[must_use]
     pub const fn column(&self) -> usize {
-        self.column
+        self.0.column
     }
 
     /// A short excerpt of the input at which parsing stopped,
     /// or `None` if the input ended early.
     #[must_use]
     pub fn found(&self) -> Option<&str> {
-        self.found.as_deref()
+        self.0.found.as_deref()
     }
 
     /// The PDDL keyword of the innermost form in which parsing stopped, if known,
@@ -89,7 +95,7 @@ impl ParseError {
     /// printable ASCII are escaped, and long values are cut and end in `...`.
     #[must_use]
     pub fn keyword(&self) -> Option<&str> {
-        self.keyword.as_deref()
+        self.0.keyword.as_deref()
     }
 
     /// Why parsing stopped, if known, e.g. `duplicate section`, ``missing `:goal` ``
@@ -99,7 +105,17 @@ impl ParseError {
     /// printable ASCII are escaped, and long values are cut and end in `...`.
     #[must_use]
     pub fn reason(&self) -> Option<&str> {
-        self.reason.as_deref()
+        self.0.reason.as_deref()
+    }
+
+    /// A suggestion for fixing the mistake, if one is known, e.g.
+    /// ``did you mean `:predicates`?`` for `(:predicats ...)`.
+    ///
+    /// Given for misspelled keywords from a fixed set: section names, action
+    /// keywords such as `:effect`, and keywords such as `start` or `minimize`.
+    #[must_use]
+    pub fn help(&self) -> Option<&str> {
+        self.0.help.as_deref()
     }
 
     /// Describes `error` within `input`.
@@ -108,7 +124,7 @@ impl ParseError {
         let before = &input[..offset];
         let line_start = before.rfind('\n').map_or(0, |i| i + 1);
         let rest = &input[offset..];
-        Self {
+        Self(Box::new(Details {
             offset,
             len: error.len.min(rest.len()),
             line: before.matches('\n').count() + 1,
@@ -117,20 +133,23 @@ impl ParseError {
             keyword: error.keyword.as_deref().map(sanitize),
             reason: error.reason.map(sanitize),
             unclosed: error.unclosed,
-        }
+            help: error
+                .suggestion
+                .map(|word| format!("did you mean `{word}`?")),
+        }))
     }
 }
 
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "line {}, column {}: ", self.line, self.column)?;
-        if let Some(keyword) = &self.keyword {
+        write!(f, "line {}, column {}: ", self.0.line, self.0.column)?;
+        if let Some(keyword) = &self.0.keyword {
             write!(f, "in `{keyword}`: ")?;
         }
-        if let Some(reason) = &self.reason {
+        if let Some(reason) = &self.0.reason {
             write!(f, "{reason}: ")?;
         }
-        match &self.found {
+        match &self.0.found {
             Some(found) => write!(f, "unexpected `{found}`"),
             None => f.write_str("unexpected end of input"),
         }
@@ -146,15 +165,26 @@ impl miette::Diagnostic for ParseError {
         Some(Box::new("pddl::parse"))
     }
 
+    fn help<'a>(&'a self) -> Option<Box<dyn fmt::Display + 'a>> {
+        self.0
+            .help
+            .as_ref()
+            .map(|help| Box::new(help) as Box<dyn fmt::Display>)
+    }
+
     fn labels(&self) -> Option<Box<dyn Iterator<Item = miette::LabeledSpan> + '_>> {
-        let text = self.reason.clone().unwrap_or_else(|| match &self.found {
-            Some(_) => "unexpected".to_string(),
-            None => "unexpected end of input".to_string(),
-        });
+        let text = self
+            .0
+            .reason
+            .clone()
+            .unwrap_or_else(|| match &self.0.found {
+                Some(_) => "unexpected".to_string(),
+                None => "unexpected end of input".to_string(),
+            });
         let label = miette::LabeledSpan::new_primary_with_span(Some(text), self.span());
         // An error at the end of the input has an empty span, which a report can't mark;
         // the `(` that is never closed shows where the missing `)` belongs.
-        let unclosed = self.unclosed.map(|offset| {
+        let unclosed = self.0.unclosed.map(|offset| {
             miette::LabeledSpan::new_with_span(
                 Some("this `(` is never closed".to_string()),
                 offset..offset + 1,
@@ -207,6 +237,8 @@ pub(crate) struct Error {
     pub fatal: bool,
     /// Byte offset of the `(` that is never closed, for an error at the end of the input.
     pub unclosed: Option<usize>,
+    /// A keyword that was probably meant instead of the input at the error.
+    pub suggestion: Option<&'static str>,
 }
 
 /// The result of a grammar rule.
@@ -222,7 +254,14 @@ impl Error {
             reason: None,
             fatal: false,
             unclosed: None,
+            suggestion: None,
         }
+    }
+
+    /// Suggests the candidate closest to `word`, if one is a likely misspelling of it.
+    pub fn suggest(mut self, word: &str, candidates: &[&'static str]) -> Self {
+        self.suggestion = crate::parsers::suggest::suggest(word, candidates);
+        self
     }
 
     /// Sets why parsing failed.
@@ -515,6 +554,48 @@ mod tests {
         check!((labels[0].offset(), labels[0].len()) == (19, 7));
         check!(labels[0].label() == Some("unknown section"));
         check!(error.code().unwrap().to_string() == "pddl::parse");
+    }
+
+    /// Misspelled keywords from a fixed set get a suggestion; everything else doesn't.
+    #[test]
+    fn misspelled_keywords_get_a_suggestion() {
+        use crate::{DurativeActionGoalDescription, Optimization};
+
+        const HEAD: &str = "(define (domain d) (:predicates (p ?x)) ";
+        let domain = |s: &str| Domain::from_str(s).unwrap_err().help().map(str::to_string);
+        let problem = |s: &str| Problem::from_str(s).unwrap_err().help().map(str::to_string);
+        let mean = |word: &str| Some(format!("did you mean `{word}`?"));
+
+        // Sections, in any case.
+        check!(domain("(define (domain d) (:predicats (p)))") == mean(":predicates"));
+        check!(domain("(define (domain d) (:REQUIREMENT :strips))") == mean(":requirements"));
+        check!(
+            problem("(define (problem p) (:domian d) (:init) (:goal (and)))") == mean(":domain")
+        );
+        // Action keywords, required or optional.
+        let action = |body: &str| domain(&format!("{HEAD}(:action a {body}))"));
+        check!(action(":paramters (?x) :effect (p ?x)") == mean(":parameters"));
+        check!(action(":parameters (?x) :precondtion (p ?x)") == mean(":precondition"));
+        check!(action(":parameters (?x) :efect (p ?x)") == mean(":effect"));
+        // Keywords inside forms, including a swapped pair of letters.
+        let error = DurativeActionGoalDescription::from_str("(at strat (p))").unwrap_err();
+        check!(error.help() == Some("did you mean `start`?"));
+        check!(
+            Optimization::from_str("minimise").unwrap_err().help()
+                == Some("did you mean `minimize`?")
+        );
+
+        // No suggestion for distant words or a missing `)`.
+        check!(domain("(define (domain d) (:bogus (p)))") == None);
+        check!(action(":parameters (?x) :effect (p ?x) :foo 1") == None);
+        check!(domain("(define (domain d) (:predicates (p)") == None);
+    }
+
+    /// The suggestion is part of the diagnostic, not of the message.
+    #[test]
+    fn the_message_does_not_include_the_suggestion() {
+        let error = Domain::from_str("(define (domain d) (:predicats (p)))").unwrap_err();
+        check!(!error.to_string().contains("did you mean"));
     }
 
     #[test]
