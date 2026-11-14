@@ -44,6 +44,7 @@ repository root, put `vscode:` in front of each name, as in `task vscode:package
 | `task test`    | Runs the extension and its server in a downloaded VS Code            |
 | `task package` | Packages the extension and the server as `pddl-lsp-<version>.vsix`   |
 | `task install` | Packages the extension and installs it into VS Code                  |
+| `task publish` | Publishes the extension and the server to the VS Code Marketplace    |
 | `task clean`   | Removes `out/`, `server/`, `node_modules/`, `.vsix` files and the downloaded VS Code |
 
 `task test` opens the PDDL files in [`test/workspace`](test/workspace) in a
@@ -61,6 +62,27 @@ yarn run compile
 yarn run package
 code --install-extension pddl-lsp-0.1.0.vsix
 ```
+
+## Publishing
+
+The extension is published as `sunsided.pddl-lsp` and marked as a preview,
+because the WASI runtime packages it uses are previews too.
+
+1. Create a personal access token in Azure DevOps with the
+   **Marketplace (Manage)** scope, and log in with it once:
+
+   ```shell
+   npx vsce login sunsided
+   ```
+
+   In CI, set the `VSCE_PAT` environment variable to the token instead.
+
+2. Raise `version` in `package.json`; the Marketplace rejects a version it already has.
+
+3. Run `task publish`, which asks for confirmation first. It builds the
+   server and the extension and publishes them. Relative links in this README
+   are rewritten to GitHub URLs on the `main` branch, so push the README
+   before publishing.
 
 ## Settings
 

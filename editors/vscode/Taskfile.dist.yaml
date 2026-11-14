@@ -80,6 +80,14 @@ tasks:
     cmds:
       - code --install-extension {{.VSIX}} --force
 
+  publish:
+    desc: Publish the extension, with the server, to the VS Code Marketplace
+    deps: [build, server]
+    prompt: Publish this version of the extension to the VS Code Marketplace?
+    cmds:
+      # Uses the token from `npx vsce login sunsided`, or the VSCE_PAT environment variable.
+      - "{{.YARN}} run publish:marketplace"
+
   clean:
     desc: Remove the compiled extension, server, packages and dependencies
     cmds:
