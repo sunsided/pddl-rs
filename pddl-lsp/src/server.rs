@@ -11,6 +11,7 @@ use lsp_types::notification::{
     DidChangeTextDocument, DidChangeWatchedFiles, DidCloseTextDocument, DidOpenTextDocument,
     Notification as _, PublishDiagnostics,
 };
+use lsp_types::request::InlayHintRequest;
 use lsp_types::request::{
     CodeActionRequest, Completion, DocumentHighlightRequest, DocumentSymbolRequest,
     FoldingRangeRequest, Formatting, GotoDefinition, HoverRequest, PrepareRenameRequest,
@@ -37,6 +38,7 @@ use lsp_types::{
     TextDocumentSyncKind, TextEdit, Url, WorkspaceEdit, WorkspaceSymbolParams,
     WorkspaceSymbolResponse,
 };
+use lsp_types::{InlayHint, InlayHintKind, InlayHintLabel, InlayHintParams};
 use pddl::syntax::{self, Node};
 use pddl::{Name, Parser, Variable};
 use serde::de::DeserializeOwned;
@@ -250,6 +252,7 @@ fn capabilities(encoding: Encoding) -> ServerCapabilities {
         document_formatting_provider: Some(OneOf::Left(true)),
         code_action_provider: Some(CodeActionProviderCapability::Simple(true)),
         folding_range_provider: Some(FoldingRangeProviderCapability::Simple(true)),
+        inlay_hint_provider: Some(OneOf::Left(true)),
         semantic_tokens_provider: Some(SemanticTokensServerCapabilities::SemanticTokensOptions(
             SemanticTokensOptions {
                 legend: SemanticTokensLegend {
@@ -310,6 +313,7 @@ impl Server {
             CodeActionRequest::METHOD => call(self, params, Self::code_actions),
             FoldingRangeRequest::METHOD => call(self, params, Self::folding_ranges),
             SemanticTokensFullRequest::METHOD => call(self, params, Self::semantic_tokens),
+            InlayHintRequest::METHOD => call(self, params, Self::inlay_hints),
             _ => {
                 return Response::new_err(
                     request.id,
@@ -876,6 +880,51 @@ impl Server {
             pending.extend(children);
         }
         Some(ranges)
+    }
+
+    /// The parameter names before the arguments of predicates and functions,
+    /// such as `?t:` in `(at t1 home)`. An argument that already is the
+    /// parameter's name, such as `?t` for `?t`, gets none.
+    fn inlay_hints(&self, params: InlayHintParams) -> Option<Vec<InlayHint>> {
+        let uri = &params.text_document.uri;
+        let document = self.workspace.documents.get(uri)?;
+        let start = document.lines.offset(&document.text, params.range.start);
+        let end = document.lines.offset(&document.text, params.range.end);
+        let mut hints = Vec::new();
+        for (index, reference) in document.analysis.references.iter().enumerate() {
+            let visible = reference.span.start <= end && start <= reference.span.end;
+            if reference.argument_starts.is_empty() || !visible {
+                continue;
+            }
+            let Some(definition) = self
+                .workspace
+                .resolve(uri, index)
+                .and_then(|target| self.workspace.definition(&target))
+            else {
+                continue;
+            };
+            for (&offset, param) in reference.argument_starts.iter().zip(&definition.params) {
+                let name = param.split_whitespace().next().unwrap_or(param);
+                let argument = document.text[offset..]
+                    .split(|c: char| c.is_whitespace() || c == ')' || c == '(')
+                    .next()
+                    .unwrap_or_default();
+                if argument.eq_ignore_ascii_case(name) {
+                    continue;
+                }
+                hints.push(InlayHint {
+                    position: document.lines.position(&document.text, offset),
+                    label: InlayHintLabel::String(format!("{name}:")),
+                    kind: Some(InlayHintKind::PARAMETER),
+                    text_edits: None,
+                    tooltip: None,
+                    padding_left: None,
+                    padding_right: Some(true),
+                    data: None,
+                });
+            }
+        }
+        Some(hints)
     }
 
     /// What each name is, for highlighting.

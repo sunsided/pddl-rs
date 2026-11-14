@@ -49,6 +49,9 @@ that corrects it.
   objects and constants, and the variables in scope after `?`.
 - **Signature help** shows a predicate's parameters while you type its
   arguments.
+- **Inlay hints** show parameter names before arguments, such as
+  `(at ?t: t1 ?p: home)` in a problem's `:init`. An argument that already has
+  the parameter's name gets none. Turn them off with `editor.inlayHints.enabled`.
 - **Snippets** for a domain, problem, action, durative action, derived
   predicate, `forall`, `exists` and `when`: type the name, such as `domain` or
   `:action`, and pick the snippet.

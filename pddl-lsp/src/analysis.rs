@@ -134,6 +134,9 @@ pub struct Reference {
     pub context: usize,
     /// The number of arguments given, for the head of a formula.
     pub args: Option<usize>,
+    /// The byte offset at which each argument starts, for the head of a
+    /// predicate or function applied to terms. Empty otherwise.
+    pub argument_starts: Vec<usize>,
 }
 
 /// A use of a variable.
@@ -313,6 +316,7 @@ impl Walker<'_> {
                 span: name.start..name.end,
                 context: self.context,
                 args,
+                argument_starts: Vec::new(),
             });
         }
     }
@@ -616,6 +620,11 @@ impl Walker<'_> {
     /// A predicate or function applied to terms, such as `(at ?x home)`.
     fn application(&mut self, head: &Node, args: &[Node]) {
         self.refer(Expect::PredicateOrFunction, head, Some(args.len()));
+        if head.atom().is_some() {
+            if let Some(reference) = self.out.references.last_mut() {
+                reference.argument_starts = args.iter().map(|a| a.start).collect();
+            }
+        }
         self.expressions(args);
     }
 

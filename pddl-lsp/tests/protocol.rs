@@ -188,3 +188,44 @@ fn an_editor_session() {
             == "(define (domain m)\n  (:predicats (p))\n  (:action a :parameters () :effect (p)))\n"
     );
 }
+
+#[test]
+fn inlay_hints_name_parameters() {
+    let (d, p) = ("file:///w/domain.pddl", "file:///w/problem.pddl");
+    let mut client = Client::start();
+    client.open(d, DOMAIN);
+    client.open(p, PROBLEM);
+    // Parameter names before the arguments of `(at t1 home)` in `:init`.
+    let range =
+        json!({ "start": { "line": 3, "character": 0 }, "end": { "line": 3, "character": 30 } });
+    let hints = client.request(
+        "textDocument/inlayHint",
+        json!({ "textDocument": { "uri": p }, "range": range }),
+    );
+    let hints: Vec<_> = hints
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|h| {
+            (
+                h["label"].as_str().unwrap(),
+                h["position"]["character"].as_u64().unwrap(),
+            )
+        })
+        .collect();
+    check!(hints == [("?t:", 13), ("?p:", 16)]);
+    // In the domain, `(at ?t ?from)` only needs a hint for `?from`.
+    let range =
+        json!({ "start": { "line": 6, "character": 0 }, "end": { "line": 6, "character": 40 } });
+    let hints = client.request(
+        "textDocument/inlayHint",
+        json!({ "textDocument": { "uri": d }, "range": range }),
+    );
+    let labels: Vec<_> = hints
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|h| h["label"].as_str().unwrap())
+        .collect();
+    check!(labels == ["?p:"]);
+}

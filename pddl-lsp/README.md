@@ -26,6 +26,8 @@ that speaks the [Language Server Protocol](https://microsoft.github.io/language-
 - **Completion** for section and action keywords, requirements, predicates,
   functions, types, objects, constants and the variables in scope.
 - **Signature help** while you type the arguments of a predicate or function.
+- **Inlay hints** with parameter names before arguments, such as
+  `(at ?t: t1 ?p: home)`, unless the argument already has that name.
 - **Formatting** that keeps comments and blank lines: one section per line,
   `:keyword value` pairs on their own lines, and lists kept on one line when
   they fit in 80 columns.
