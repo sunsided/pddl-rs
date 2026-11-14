@@ -3,34 +3,22 @@
 
 use nom::branch::alt;
 use nom::bytes::complete::tag_no_case;
-use nom::combinator::{map, value};
+use nom::combinator::map;
 use nom::Parser;
 
+use crate::parsers::utilities::skip_whitespace_and_comments;
 use crate::parsers::{parse_domain, parse_problem};
-use crate::parsers::{ws2, ParseResult, Span};
+use crate::parsers::{ws2, NomError, ParseResult, Span};
 use crate::types::{Definition, Domain, PddlFile, Problem};
 
 /// Parses a single `(define ...)` block, determining whether it's a domain or problem.
 fn parse_define_block<'a, T: Into<Span<'a>>>(input: T) -> ParseResult<'a, Definition> {
-    let input = input.into();
-
-    // First, skip whitespace/comments, then parse `(define`
-    // Then peek at the next keyword to determine domain vs problem
-    // Then dispatch to the appropriate parser
-
-    // We need to consume `(define` then look at the next token
-    // Both parse_domain and parse_problem expect the full `(define (domain|problem ...))` structure
-    // So we use alt with both parsers - but we need to ensure backtracking works
-
-    // The trick: both parsers start with ws2(prefix_expr("define", ...))
-    // alt will try parse_domain first; if it fails (because the keyword is "problem"),
-    // it backtracks and tries parse_problem
-
+    // `define` is not a `:keyword`, so a `(problem` header backtracks out of `parse_domain`.
     alt((
         map(parse_domain, Definition::Domain),
         map(parse_problem, Definition::Problem),
     ))
-    .parse(input)
+    .parse(input.into())
 }
 
 /// Parses zero or more `(define ...)` blocks, failing if a malformed
@@ -40,33 +28,18 @@ fn parse_define_blocks<'a>(input: Span<'a>) -> ParseResult<'a, Vec<Definition>> 
     let mut remaining = input;
 
     loop {
-        // Skip whitespace/comments
-        let (after_ws, _) = ws2::<_, ()>(value((), tag_no_case(""))).parse(remaining)?;
-        remaining = after_ws;
-
-        // Check if there's a `(define` ahead
-        if value(
-            (),
-            tag_no_case::<_, _, crate::parsers::NomError<'a>>("(define"),
-        )
-        .parse(remaining)
-        .is_err()
+        (remaining, ()) = skip_whitespace_and_comments(remaining)?;
+        if tag_no_case::<_, _, NomError>("(define")
+            .parse(remaining)
+            .is_err()
         {
             break;
         }
 
-        // We saw `(define`, so parse it. Fail immediately if the define
-        // block is malformed instead of silently stopping.
-        match ws2(parse_define_block).parse(remaining) {
-            Ok((next, block)) => {
-                blocks.push(block);
-                remaining = next;
-            }
-            Err(nom::Err::Error(e)) => {
-                return Err(nom::Err::Error(e));
-            }
-            Err(e) => return Err(e),
-        }
+        // Past `(define`, a malformed block is an error rather than the end of the list.
+        let (next, block) = ws2(parse_define_block).parse(remaining)?;
+        blocks.push(block);
+        remaining = next;
     }
 
     Ok((remaining, blocks))
@@ -231,6 +204,12 @@ mod tests {
 
     const DOMAIN: &str = "(define (domain d) (:predicates (p)))";
     const PROBLEM: &str = "(define (problem q) (:domain d) (:init) (:goal (p)))";
+
+    #[test]
+    fn define_is_matched_case_insensitively() {
+        let file = PddlFile::from_str(&format!("{}\n{}", DOMAIN.to_uppercase(), PROBLEM)).unwrap();
+        assert_eq!((file.domain_count(), file.problem_count()), (1, 1));
+    }
 
     #[test]
     fn definition_kind_comes_from_the_header_not_comments() {
