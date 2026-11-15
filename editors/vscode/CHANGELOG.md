@@ -6,6 +6,11 @@ All notable changes to the PDDL (pddl-lsp) extension are documented in this file
 
 ### Added
 
+- Snippets for `:functions`, `:constraints`, `:metric`, `imply`,
+  `preference`, `increase`, `decrease`, `at start`, `at end`, `over all` and
+  timed initial literals.
+- Completion offers domain names in `(:domain ...)`, types in `(either ...)`,
+  and `minimize` and `maximize` in `:metric`.
 - Arguments of the wrong type are reported, such as a `truck` passed where a
   `place` is expected.
 - Constructs the `:requirements` don't allow get a warning, such as `forall`

@@ -232,6 +232,18 @@ impl Workspace {
         found
     }
 
+    /// The names of the known domains, each once, ignoring case.
+    #[must_use]
+    pub fn domain_names(&self) -> Vec<&str> {
+        let mut seen = HashSet::new();
+        self.documents
+            .values()
+            .flat_map(|d| &d.analysis.definitions)
+            .filter(|d| d.kind == Kind::Domain && seen.insert(d.name.to_ascii_lowercase()))
+            .map(|d| d.name.as_str())
+            .collect()
+    }
+
     /// Whether the domain that `context` in `uri` sees is known.
     fn domain_known(&self, uri: &Url, context: usize) -> bool {
         let Some(document) = self.documents.get(uri) else {

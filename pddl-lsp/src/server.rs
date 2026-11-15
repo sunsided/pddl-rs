@@ -137,6 +137,12 @@ const FORMULA_WORDS: &[&str] = &[
     "either",
 ];
 
+/// The words that can start a fact of `:init`, for completion after `(`: a
+/// negated fact, a timed initial literal, or a function's value.
+const INIT_WORDS: &[&str] = &["not", "at", "="];
+/// The words that can start a `:metric` expression, for completion after `(`.
+const METRIC_WORDS: &[&str] = &["+", "-", "*", "/", "total-time", "is-violated"];
+
 /// The semantic token types, in legend order.
 const TOKEN_TYPES: &[SemanticTokenType] = &[
     SemanticTokenType::NAMESPACE,
@@ -701,11 +707,29 @@ impl Server {
         let before = text[..start].trim_end();
         let tree = syntax::read(text).ok()?;
         let context = document.analysis.context_at(offset);
+        let lists = enclosing_lists(&tree.nodes, offset);
+        // The head of the innermost list the word is an argument of, not the head of.
+        let parent = lists
+            .iter()
+            .rev()
+            .find(|list| list.start + 1 != start)
+            .and_then(|list| list.head())
+            .map(str::to_ascii_lowercase);
+        let within = |section: &str| {
+            lists
+                .iter()
+                .any(|l| l.head().is_some_and(|h| h.eq_ignore_ascii_case(section)))
+        };
         let item = |label: &str, kind, detail: Option<&str>| CompletionItem {
             label: label.to_string(),
             kind: Some(kind),
             detail: detail.map(str::to_string),
             ..CompletionItem::default()
+        };
+        let keywords = |words: &'static [&str]| {
+            words
+                .iter()
+                .map(move |w| item(w, CompletionItemKind::KEYWORD, None))
         };
         let visible = |kinds: &[Kind]| -> Vec<CompletionItem> {
             context
@@ -731,12 +755,6 @@ impl Server {
                 .map(|d| item(&d.name, CompletionItemKind::VARIABLE, Some(&d.detail)))
                 .collect()
         } else if word.starts_with(':') {
-            let parent = enclosing_lists(&tree.nodes, offset)
-                .into_iter()
-                .rev()
-                .find(|list| list.start + 1 != start)
-                .and_then(Node::head)
-                .map(str::to_ascii_lowercase);
             let problem =
                 context.is_some_and(|c| document.analysis.contexts[c].kind == Kind::Problem);
             let words = match parent.as_deref() {
@@ -747,19 +765,31 @@ impl Server {
                 Some(":requirements") => REQUIREMENTS,
                 _ => &[],
             };
-            words
-                .iter()
-                .map(|w| item(w, CompletionItemKind::KEYWORD, None))
-                .collect()
+            keywords(words).collect()
         } else if before.ends_with('(') {
-            let mut items = visible(&[Kind::Predicate, Kind::Function]);
-            items.extend(
-                FORMULA_WORDS
-                    .iter()
-                    .map(|w| item(w, CompletionItemKind::KEYWORD, None)),
-            );
+            // `:init` holds facts, and `:metric` a numeric expression.
+            let (kinds, words): (&[Kind], &[&str]) = if within(":init") {
+                (&[Kind::Predicate, Kind::Function], INIT_WORDS)
+            } else if within(":metric") {
+                (&[Kind::Function], METRIC_WORDS)
+            } else {
+                (&[Kind::Predicate, Kind::Function], FORMULA_WORDS)
+            };
+            let mut items = visible(kinds);
+            items.extend(keywords(words));
             items
-        } else if before.ends_with(" -") || before.ends_with("\t-") || before.ends_with("\n-") {
+        } else if parent.as_deref() == Some(":domain") {
+            let domains = self.workspace.domain_names().into_iter();
+            domains
+                .map(|name| item(name, CompletionItemKind::MODULE, None))
+                .collect()
+        } else if parent.as_deref() == Some(":metric") {
+            keywords(&["minimize", "maximize"]).collect()
+        } else if parent.as_deref() == Some("either")
+            || before.ends_with(" -")
+            || before.ends_with("\t-")
+            || before.ends_with("\n-")
+        {
             let mut items = visible(&[Kind::Type]);
             items.push(item("object", CompletionItemKind::CLASS, None));
             items

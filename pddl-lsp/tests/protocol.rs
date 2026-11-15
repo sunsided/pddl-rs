@@ -323,11 +323,49 @@ fn completes_by_context() {
             "(define (problem c10) (:domain logistics) (:objects t9 - truck)\n  (:init (at |",
             "t9",
         ),
+        ("(define (problem c11) (:domain |", "logistics"),
+        (
+            "(define (domain c12) (:types block)\n  (:constants b1 - (either |",
+            "block",
+        ),
+        (
+            "(define (problem c13) (:domain logistics)\n  (:metric |",
+            "minimize",
+        ),
+        (
+            "(define (problem c14) (:domain logistics)\n  (:metric minimize (|",
+            "total-time",
+        ),
+        (
+            "(define (problem c15) (:domain logistics)\n  (:init (|",
+            "at",
+        ),
     ];
     for (index, (text, expected)) in cases.into_iter().enumerate() {
         let uri = format!("file:///w/complete{index}.pddl");
         let labels = complete(&mut client, &uri, text);
         check!(labels.iter().any(|l| l == expected), "{text:?}: {labels:?}");
+    }
+
+    // Words that can't appear there are not offered.
+    let absent = [
+        (
+            "(define (problem c16) (:domain logistics)\n  (:init (|",
+            "forall",
+        ),
+        (
+            "(define (problem c17) (:domain logistics)\n  (:metric minimize (|",
+            "and",
+        ),
+        ("(define (problem c18) (:objects t9)\n  (:domain |", "t9"),
+    ];
+    for (index, (text, unexpected)) in absent.into_iter().enumerate() {
+        let uri = format!("file:///w/absent{index}.pddl");
+        let labels = complete(&mut client, &uri, text);
+        check!(
+            !labels.iter().any(|l| l == unexpected),
+            "{text:?}: {labels:?}"
+        );
     }
 }
 

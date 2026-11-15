@@ -45,16 +45,20 @@ that corrects it.
 - **Rename** (F2) a predicate, function, type, constant, object, action,
   domain or variable everywhere it's used, including in other files.
 - **Completion** suggests section and action keywords after `:`, requirements
-  in `:requirements`, predicates and functions after `(`, types after `-`,
-  objects and constants, and the variables in scope after `?`.
+  in `:requirements`, predicates and functions after `(`, types after `-` and
+  in `(either ...)`, domain names in `(:domain ...)`, `minimize` and
+  `maximize` in `:metric`, objects and constants, and the variables in scope
+  after `?`. In `:init` it leaves out words that can't start a fact.
 - **Signature help** shows a predicate's parameters while you type its
   arguments.
 - **Inlay hints** show parameter names before arguments, such as
   `(at ?t: t1 ?p: home)` in a problem's `:init`. An argument that already has
   the parameter's name gets none. Turn them off with `editor.inlayHints.enabled`.
 - **Snippets** for a domain, problem, action, durative action, derived
-  predicate, `forall`, `exists` and `when`: type the name, such as `domain` or
-  `:action`, and pick the snippet.
+  predicate, `:functions`, `:constraints`, `:metric`, `forall`, `exists`,
+  `when`, `imply`, `preference`, `increase`, `decrease`, `at start`, `at end`,
+  `over all` and a timed initial literal (`at time`): type the name, such as
+  `domain` or `:action`, and pick the snippet.
 - **Format Document** indents by nesting, puts each section and each
   `:keyword value` pair on its own line, and keeps short lists on one line.
   It keeps your comments and blank lines.
