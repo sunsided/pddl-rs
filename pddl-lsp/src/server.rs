@@ -528,7 +528,7 @@ impl Server {
         }
         if self.workspace.is_static(&target) {
             value.push_str(
-                "\n\nStatic: no action changes it, so only `:init` decides where it holds.",
+                "\n\nStatic: no action changes it, so only `:init` and timed initial literals decide where it holds.",
             );
         }
         let (document, offset) = self.locate(at)?;

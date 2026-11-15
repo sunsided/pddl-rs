@@ -233,8 +233,15 @@ pub struct Analysis {
     pub variables: Vec<VariableUse>,
     /// Every construct that needs a requirement.
     pub needs: Vec<Need>,
-    /// The ground facts of each problem's `:init`, and the literals its `:goal` needs.
+    /// The atoms of each problem's `:init`, and the literals its `:goal` needs.
+    /// Their heads aren't checked here: only one that is a reference at
+    /// [`Fact::head`] names a predicate or function.
     pub facts: Vec<Fact>,
+    /// The predicates and functions that something can change, by context and
+    /// in lowercase: an effect, a timed initial literal or a derived predicate's head.
+    pub changed: HashSet<(usize, String)>,
+    /// The predicates of each domain's `:timeless`, by context and in lowercase.
+    pub timeless: HashSet<(usize, String)>,
     /// The names this file refers to, in lowercase, by what they're expected to be.
     /// Lets the workspace find unused definitions without walking every reference.
     pub referenced: HashSet<(Expect, String)>,
@@ -271,6 +278,12 @@ impl Analysis {
             .references
             .iter()
             .map(|r| (r.expect, r.name.to_ascii_lowercase()))
+            .collect();
+        out.changed = out
+            .references
+            .iter()
+            .filter(|r| r.changes && r.expect == Expect::PredicateOrFunction)
+            .map(|r| (r.context, r.name.to_ascii_lowercase()))
             .collect();
         out
     }
@@ -705,7 +718,19 @@ impl Walker<'_> {
                 self.need(&[Requirement::Constraints], head);
                 self.in_mode(Mode::Goal, |w| w.formulas(args));
             }
-            Some(":timeless") => self.in_mode(Mode::Init, |w| w.formulas(args)),
+            Some(":timeless") => {
+                for literal in args {
+                    let atom = match literal.children() {
+                        Some([not, atom]) if not.is("not") => atom,
+                        _ => literal,
+                    };
+                    if let Some(name) = atom.children().and_then(|c| c.first()?.atom()) {
+                        let name = name.to_ascii_lowercase();
+                        self.out.timeless.insert((self.context, name));
+                    }
+                }
+                self.in_mode(Mode::Init, |w| w.formulas(args));
+            }
             Some(":action") => self.action(section, args),
             Some(":durative-action") => {
                 self.need(&[Requirement::DurativeActions], head);
@@ -717,8 +742,10 @@ impl Walker<'_> {
                 if let Some(skeleton) = args.first() {
                     if let Some([name, vars @ ..]) = skeleton.children() {
                         let count = typed_list(vars).len();
+                        let before = self.out.references.len();
                         self.refer(Expect::PredicateOrFunction, name, Some(count));
-                        if let Some(reference) = self.out.references.last_mut() {
+                        // `refer` records nothing for a head that isn't a name.
+                        if let Some(reference) = self.out.references.get_mut(before) {
                             reference.changes = true;
                         }
                         let defined = self.typed_defs(Kind::Variable, vars, &range, Some(&range));

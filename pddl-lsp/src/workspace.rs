@@ -367,16 +367,18 @@ impl Workspace {
     /// literals can still change it within a problem.
     #[must_use]
     pub fn is_static(&self, target: &Target) -> bool {
-        let references = &self.documents[&target.uri].analysis.references;
-        self.definition(target).is_some_and(|definition| {
-            definition.kind == Kind::Predicate
-                && !references.iter().any(|r| {
-                    r.changes
-                        && r.context == definition.context
-                        && r.expect == Expect::PredicateOrFunction
-                        && r.name.eq_ignore_ascii_case(&definition.name)
-                })
-        })
+        let Some(document) = self.documents.get(&target.uri) else {
+            return false;
+        };
+        document
+            .analysis
+            .definitions
+            .get(target.index)
+            .is_some_and(|d| {
+                d.kind == Kind::Predicate
+                    && !(document.analysis.changed)
+                        .contains(&(d.context, d.name.to_ascii_lowercase()))
+            })
     }
 
     /// Literals of a problem's `:goal` that can never hold: their predicate is
@@ -423,18 +425,24 @@ impl Workspace {
                 continue;
             };
             let reference = &analysis.references[index];
-            let timed = analysis.references.iter().any(|r| {
-                r.changes
-                    && r.context == fact.context
-                    && r.name.eq_ignore_ascii_case(&reference.name)
-            });
-            let is_static = targets[index].as_ref().is_some_and(|t| self.is_static(t));
-            // An unknown argument already has its own error.
-            let known = reference
-                .argument_starts
-                .iter()
-                .all(|start| terms.get(start).is_some_and(|&i| targets[i].is_some()));
-            if !is_static || timed || !known {
+            let lowercase = reference.name.to_ascii_lowercase();
+            let timed = analysis
+                .changed
+                .contains(&(fact.context, lowercase.clone()));
+            let Some(target) = targets[index].as_ref().filter(|t| self.is_static(t)) else {
+                continue;
+            };
+            let owner = &self.documents[&target.uri].analysis;
+            let definition = &owner.definitions[target.index];
+            // `:timeless` facts hold in every problem; they aren't in `:init`.
+            let timeless = owner.timeless.contains(&(definition.context, lowercase));
+            // Unknown arguments and a wrong count already have their own error.
+            let known = definition.arity() == Some(reference.argument_starts.len())
+                && reference
+                    .argument_starts
+                    .iter()
+                    .all(|start| terms.get(start).is_some_and(|&i| targets[i].is_some()));
+            if timed || timeless || !known {
                 continue;
             }
             let key = (fact.context, name(&fact.head), fact.args.as_slice());
@@ -1026,6 +1034,32 @@ mod tests {
         check!(!ws.is_static(&ws.target_at(&uri("s.pddl"), at).unwrap()));
         let near = domain.find("near").unwrap();
         check!(!ws.is_static(&ws.target_at(&uri("s.pddl"), near).unwrap()));
+    }
+
+    #[test]
+    fn leaves_timeless_wrong_count_and_malformed_derived_goals_alone() {
+        let domain = "(define (domain s)
+  (:requirements :derived-predicates :negative-preconditions)
+  (:predicates (road ?a ?b) (wall ?a) (open ?a))
+  (:timeless (wall x) (not (wall y)))
+  (:derived ((road) ?a) (open ?a)))";
+        let problem = "(define (problem p) (:domain s) (:objects x y)
+  (:init) (:goal (and (wall x) (not (wall y)) (road x) (open x))))";
+        let ws = workspace(&[("s.pddl", domain), ("p.pddl", problem)]);
+        let messages = messages(&ws, "p.pddl");
+        check!(messages
+            .iter()
+            .all(|m| !m.contains("(wall") && !m.contains("(road")));
+        check!(messages
+            .iter()
+            .any(|m| m.contains("`(open x)` can never hold")));
+        let open = domain.find("(open ?a)").unwrap() + 1;
+        check!(ws.is_static(&ws.target_at(&uri("s.pddl"), open).unwrap()));
+        let stale = Target {
+            uri: uri("gone.pddl"),
+            index: 0,
+        };
+        check!(!ws.is_static(&stale));
     }
 
     #[test]
