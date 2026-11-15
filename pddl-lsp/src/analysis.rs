@@ -1271,6 +1271,32 @@ atom
     }
 
     #[test]
+    fn records_only_ground_atoms_as_facts() {
+        // Half-typed files have atoms and lists where atoms belong.
+        let text = "(define (problem p) (:domain d)
+  (:init loose ((p)) (= (f) 1) (on a ?x) (at a b))
+  (:goal (and done (not (on a b)) (not (not (q))) (preference n (r c)))))";
+        let a = analyze(text);
+        let facts: Vec<_> = a
+            .facts
+            .iter()
+            .map(|f| (&text[f.span.clone()], f.place))
+            .collect();
+        let goal = |positive, preference| Place::Goal {
+            positive,
+            preference,
+        };
+        check!(
+            facts
+                == [
+                    ("(at a b)", Place::Init),
+                    ("(on a b)", goal(false, false)),
+                    ("(r c)", goal(true, true)),
+                ]
+        );
+    }
+
+    #[test]
     fn records_what_needs_a_requirement() {
         let a = analyze(
             "(define (domain d)

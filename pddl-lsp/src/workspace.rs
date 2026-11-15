@@ -367,20 +367,16 @@ impl Workspace {
     /// literals can still change it within a problem.
     #[must_use]
     pub fn is_static(&self, target: &Target) -> bool {
-        let Some(definition) = self.definition(target) else {
-            return false;
-        };
-        definition.kind == Kind::Predicate
-            && !self.documents[&target.uri]
-                .analysis
-                .references
-                .iter()
-                .any(|r| {
+        let references = &self.documents[&target.uri].analysis.references;
+        self.definition(target).is_some_and(|definition| {
+            definition.kind == Kind::Predicate
+                && !references.iter().any(|r| {
                     r.changes
                         && r.context == definition.context
                         && r.expect == Expect::PredicateOrFunction
                         && r.name.eq_ignore_ascii_case(&definition.name)
                 })
+        })
     }
 
     /// Literals of a problem's `:goal` that can never hold: their predicate is
@@ -1007,10 +1003,11 @@ mod tests {
   (:action go :parameters (?a ?b)
     :precondition (and (at ?a) (road ?a ?b))
     :effect (and (not (at ?a)) (at ?b))))";
+        // `(over all x)` looks like an atom but names no predicate.
         let problem = "(define (problem p) (:domain s) (:objects x y)
   (:init (at x) (road x y) (at 5 (lit y)))
   (:goal (and (road x y) (road y x) (not (road x y)) (not (open x))
-    (preference p (open y)) (near y x) (at y) (lit y) (or (road y y) (at x)) (road x z))))";
+    (preference p (open y)) (near y x) (at y) (lit y) (or (road y y) (at x)) (road x z) (over all x))))";
         let ws = workspace(&[("s.pddl", domain), ("p.pddl", problem)]);
         check!(
             messages(&ws, "p.pddl")
