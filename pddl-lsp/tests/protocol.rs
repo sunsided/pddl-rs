@@ -369,7 +369,22 @@ fn completes_by_context() {
 fn leaves_out_completions_that_cannot_appear() {
     let mut client = Client::start();
     client.open("file:///w/domain.pddl", DOMAIN);
+    let fuelled = "(define (domain fuelled) (:predicates (parked ?x)) (:functions (fuel ?x)))";
+    client.open("file:///w/fuelled.pddl", fuelled);
     let absent = [
+        // A function only starts a fact within `(= ...)`.
+        (
+            "(define (problem c27) (:domain fuelled)\n  (:init (|",
+            "fuel",
+        ),
+        (
+            "(define (problem c28) (:domain fuelled)\n  (:init (= (|",
+            "parked",
+        ),
+        (
+            "(define (problem c29) (:domain logistics)\n  (:init (at 10 (|",
+            "and",
+        ),
         (
             "(define (problem c16) (:domain logistics)\n  (:init (|",
             "forall",
@@ -391,7 +406,6 @@ fn leaves_out_completions_that_cannot_appear() {
             "(define (problem c24) (:domain logistics)\n  (:metric minimize |",
             "minimize",
         ),
-        ("(define (problem c25) (:domain logistics |", "logistics"),
     ];
     for (index, (text, unexpected)) in absent.into_iter().enumerate() {
         let uri = format!("file:///w/absent{index}.pddl");
@@ -401,6 +415,15 @@ fn leaves_out_completions_that_cannot_appear() {
             "{text:?}: {labels:?}"
         );
     }
+
+    let text = "(define (problem c30) (:domain fuelled)\n  (:init (= (|";
+    let labels = complete(&mut client, "file:///w/value.pddl", text);
+    check!(labels == ["fuel"], "{labels:?}");
+
+    // Only `)` can follow the domain's name.
+    let text = "(define (problem c25) (:objects t9) (:domain logistics |";
+    let labels = complete(&mut client, "file:///w/named.pddl", text);
+    check!(labels.is_empty(), "{labels:?}");
 
     // The predicate `at` stands for the keyword `at`, so it's offered once.
     let text = "(define (problem c26) (:domain logistics)\n  (:init (|";

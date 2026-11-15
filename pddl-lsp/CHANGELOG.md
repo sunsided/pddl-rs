@@ -10,8 +10,8 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Completion offers domain names in a problem's `(:domain ...)`, types in
   `(either ...)`, `minimize` and `maximize` after `:metric`, and functions and
   `total-time` in the metric expression. In `:init`, it offers only
-  predicates, functions, `not`, `at` and `=` after `(`, and only functions
-  inside `(= ...)`.
+  predicates, `not`, `at` and `=` after `(`, and only functions inside
+  `(= ...)`.
 - Arguments whose declared type doesn't fit the parameter are reported, such as
   `(at t1 t1)` where the second parameter of `at` is a `place`. Subtypes and
   `(either ...)` types fit; untyped names and types the workspace doesn't know

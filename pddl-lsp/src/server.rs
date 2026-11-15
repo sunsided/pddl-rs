@@ -44,7 +44,7 @@ use pddl::{Name, Parser, Variable};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use crate::analysis::{node_range, Definition, Expect, Kind, Occurrence};
+use crate::analysis::{node_range, Analysis, Definition, Expect, Kind, Occurrence};
 use crate::format::format;
 use crate::line_index::Encoding;
 use crate::workspace::{Document, Severity, Target, Workspace};
@@ -138,7 +138,8 @@ const FORMULA_WORDS: &[&str] = &[
 ];
 
 /// The words that can start a fact of `:init`, for completion after `(`: a
-/// negated fact, a timed initial literal, or a function's value.
+/// negated fact, a timed initial literal, or a function's value. A function
+/// itself can't, only within `(= ...)`.
 const INIT_WORDS: &[&str] = &["not", "at", "="];
 /// The words that can start a `:metric` expression, for completion after `(`.
 const METRIC_WORDS: &[&str] = &["+", "-", "*", "/", "total-time", "is-violated"];
@@ -746,17 +747,7 @@ impl Server {
                 .collect()
         };
         let items = if word.starts_with('?') {
-            let mut seen = std::collections::HashSet::new();
-            document
-                .analysis
-                .definitions
-                .iter()
-                .filter(|d| {
-                    d.scope
-                        .as_ref()
-                        .is_some_and(|s| s.start < offset && offset <= s.end)
-                })
-                .filter(|d| seen.insert(d.name.to_ascii_lowercase()))
+            variables_in_scope(&document.analysis, offset)
                 .map(|d| item(&d.name, CompletionItemKind::VARIABLE, Some(&d.detail)))
                 .collect()
         } else if word.starts_with(':') {
@@ -779,9 +770,10 @@ impl Server {
             let words: Vec<_> = keywords(words).filter(new).collect();
             items.extend(words);
             items
-        } else if parent.as_deref() == Some(":domain") && first {
+        } else if parent.as_deref() == Some(":domain") {
             let domains = self.workspace.domain_names().into_iter();
             domains
+                .filter(|_| first) // Only `)` can follow the name.
                 .map(|name| item(name, CompletionItemKind::MODULE, None))
                 .collect()
         } else if parent.as_deref() == Some(":metric") && first {
@@ -1025,6 +1017,20 @@ fn enclosing_lists<'n, 'a>(nodes: &'n [Node<'a>], offset: usize) -> Vec<&'n Node
     found
 }
 
+/// The variables declared around `offset`, each name once.
+fn variables_in_scope(analysis: &Analysis, offset: usize) -> impl Iterator<Item = &Definition> {
+    let mut seen = std::collections::HashSet::new();
+    analysis
+        .definitions
+        .iter()
+        .filter(move |d| {
+            d.scope
+                .as_ref()
+                .is_some_and(|s| s.start < offset && offset <= s.end)
+        })
+        .filter(move |d| seen.insert(d.name.to_ascii_lowercase()))
+}
+
 /// What can start a list in `section` whose enclosing list has the head
 /// `parent`: definitions of these kinds, and these words. `:init` holds facts,
 /// and `:metric` a numeric expression.
@@ -1033,7 +1039,7 @@ fn list_starts(
     parent: Option<&str>,
 ) -> (&'static [Kind], &'static [&'static str]) {
     match (section, parent) {
-        (Some(":init"), Some(":init")) => (&[Kind::Predicate, Kind::Function], INIT_WORDS),
+        (Some(":init"), Some(":init")) => (&[Kind::Predicate], INIT_WORDS),
         (Some(":init"), Some("=")) => (&[Kind::Function], &[]),
         (Some(":init"), Some("at")) => (&[Kind::Predicate], &["not"]),
         (Some(":init"), _) => (&[Kind::Predicate], &[]),
