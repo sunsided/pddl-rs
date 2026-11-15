@@ -12,7 +12,12 @@ that speaks the [Language Server Protocol](https://microsoft.github.io/language-
   - arguments whose type doesn't fit the parameter, such as a `truck` passed
     where a `place` is expected, following the type hierarchy and `either`,
   - variables that no parameter list or quantifier declares,
-  - duplicate definitions.
+  - duplicate definitions,
+  - goals that can never hold, because their predicate is static and `:init`
+    decides them: `(road a b)` missing from `:init`, or `(not (road a b))`
+    when it's there. A static predicate is one that no action changes, that
+    isn't derived and that no timed initial literal sets. In a preference,
+    this is a warning.
 
   Constructs the `:requirements` don't allow get a warning, such as `forall`
   in a precondition without `:universal-preconditions`, or typed names without
@@ -42,7 +47,8 @@ that speaks the [Language Server Protocol](https://microsoft.github.io/language-
   and for missing requirements, which adds the key to `(:requirements ...)` or
   adds that section.
 - **Semantic highlighting**, so types, predicates, functions, actions, objects
-  and variables each get their own color.
+  and variables each get their own color. Static predicates also carry the
+  `readonly` modifier, and their hover says so.
 
 ## Installation
 
@@ -227,6 +233,9 @@ Otherwise it uses the one whose file path sorts first.
 - Argument types are only checked for variables, constants and objects with
   a declared type. Untyped names and nested function terms such as
   `(at (location-of t1) home)` are not checked.
+- Only goal literals with constant arguments that the goal needs through
+  `and`, `not` and `preference` are checked against static predicates, not
+  those under `or`, `imply` or a quantifier.
 - `(not (= ?x ?y))` only needs `:equality`, as planners accept it, although
   PDDL 3.1 also asks for `:negative-preconditions`. `:action-costs` allows
   any `increase`, `decrease` or numeric `:init` fact, not just `total-cost`.

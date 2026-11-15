@@ -17,6 +17,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `:adl` and `:fluents` are expanded, and a problem also has its domain's
   requirements. A quick fix adds the missing requirement, creating the
   `(:requirements ...)` section if there is none.
+- Goals that can never hold are reported: a literal of a static predicate,
+  one that no action changes, that `:init` decides against, such as
+  `(road a b)` missing from `:init`. Static predicates are marked in hover and
+  carry the `readonly` semantic token modifier.
 
 ## [0.1.0] - 2026-11-14
 

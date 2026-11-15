@@ -257,7 +257,10 @@ fn capabilities(encoding: Encoding) -> ServerCapabilities {
             SemanticTokensOptions {
                 legend: SemanticTokensLegend {
                     token_types: TOKEN_TYPES.to_vec(),
-                    token_modifiers: vec![SemanticTokenModifier::DECLARATION],
+                    token_modifiers: vec![
+                        SemanticTokenModifier::DECLARATION,
+                        SemanticTokenModifier::READONLY,
+                    ],
                 },
                 full: Some(SemanticTokensFullOptions::Bool(true)),
                 ..SemanticTokensOptions::default()
@@ -521,6 +524,11 @@ impl Server {
                 definition.kind.label(),
                 owner.kind.label(),
                 owner.name
+            );
+        }
+        if self.workspace.is_static(&target) {
+            value.push_str(
+                "\n\nStatic: no action changes it, so only `:init` and timed initial literals decide where it holds.",
             );
         }
         let (document, offset) = self.locate(at)?;
@@ -927,14 +935,20 @@ impl Server {
         let uri = &params.text_document.uri;
         let document = self.workspace.documents.get(uri)?;
         let analysis = &document.analysis;
-        let mut tokens: Vec<(Range<usize>, Kind, bool)> = Vec::new();
-        for definition in &analysis.definitions {
-            tokens.push((definition.span.clone(), definition.kind, true));
+        // Each token's span, kind, and modifier bits: 1 a declaration, 2 a static predicate.
+        let mut tokens: Vec<(Range<usize>, Kind, u32)> = Vec::new();
+        for (index, definition) in analysis.definitions.iter().enumerate() {
+            let target = Target {
+                uri: uri.clone(),
+                index,
+            };
+            let readonly = u32::from(self.workspace.is_static(&target)) << 1;
+            tokens.push((definition.span.clone(), definition.kind, 1 | readonly));
         }
         for (index, reference) in analysis.references.iter().enumerate() {
-            let kind = self
-                .workspace
-                .resolve(uri, index)
+            let target = self.workspace.resolve(uri, index);
+            let readonly = target.as_ref().is_some_and(|t| self.workspace.is_static(t));
+            let kind = target
                 .and_then(|t| self.workspace.definition(&t).map(|d| d.kind))
                 .unwrap_or(match reference.expect {
                     Expect::PredicateOrFunction => Kind::Predicate,
@@ -942,16 +956,16 @@ impl Server {
                     Expect::Type => Kind::Type,
                     Expect::Domain => Kind::Domain,
                 });
-            tokens.push((reference.span.clone(), kind, false));
+            tokens.push((reference.span.clone(), kind, u32::from(readonly) << 1));
         }
         for variable in &analysis.variables {
-            tokens.push((variable.span.clone(), Kind::Variable, false));
+            tokens.push((variable.span.clone(), Kind::Variable, 0));
         }
         tokens.sort_by_key(|(span, ..)| span.start);
         tokens.dedup_by_key(|(span, ..)| span.start);
         let mut data = Vec::with_capacity(tokens.len());
         let (mut line, mut column) = (0, 0);
-        for (span, kind, declaration) in tokens {
+        for (span, kind, modifiers) in tokens {
             let start = document.lines.position(&document.text, span.start);
             let end = document.lines.position(&document.text, span.end);
             let delta_line = start.line - line;
@@ -965,7 +979,7 @@ impl Server {
                 delta_start,
                 length: end.character.saturating_sub(start.character),
                 token_type: token_type(kind),
-                token_modifiers_bitset: u32::from(declaration),
+                token_modifiers_bitset: modifiers,
             });
             (line, column) = (start.line, start.character);
         }
