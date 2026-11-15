@@ -160,6 +160,39 @@ pub struct Reference {
     /// The byte offset at which each argument starts, for the head of a
     /// predicate or function applied to terms. Empty otherwise.
     pub argument_starts: Vec<usize>,
+    /// Whether this use can change the predicate or function: in an effect,
+    /// a timed initial literal, or the head of a derived predicate.
+    pub changes: bool,
+}
+
+/// A ground atom, such as `(at truck home)`, in a problem's `:init` or `:goal`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Fact {
+    /// The byte range of the atom.
+    pub span: Range<usize>,
+    /// Where its predicate's name starts, which is where its reference starts.
+    pub head: usize,
+    /// The arguments, in lowercase.
+    pub args: Vec<String>,
+    /// The index of the problem it is in, in [`Analysis::contexts`].
+    pub context: usize,
+    /// Where it is.
+    pub place: Place,
+}
+
+/// Where a [`Fact`] is.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Place {
+    /// A fact of `:init`, not a timed one.
+    Init,
+    /// A literal the `:goal` needs, found through `and`, `not` and
+    /// `preference` only, so the goal fails without it.
+    Goal {
+        /// `false` for `(not <atom>)`.
+        positive: bool,
+        /// Within a `preference`, which may fail without failing the goal.
+        preference: bool,
+    },
 }
 
 /// A use of a variable.
@@ -200,6 +233,8 @@ pub struct Analysis {
     pub variables: Vec<VariableUse>,
     /// Every construct that needs a requirement.
     pub needs: Vec<Need>,
+    /// The ground facts of each problem's `:init`, and the literals its `:goal` needs.
+    pub facts: Vec<Fact>,
     /// The names this file refers to, in lowercase, by what they're expected to be.
     /// Lets the workspace find unused definitions without walking every reference.
     pub referenced: HashSet<(Expect, String)>,
@@ -226,6 +261,7 @@ impl Analysis {
             scope: Vec::new(),
             context: 0,
             mode: Mode::Other,
+            timed: false,
         };
         for node in &tree.nodes {
             walker.top_level(node);
@@ -309,6 +345,8 @@ struct Walker<'t> {
     context: usize,
     /// What the current formula is, which decides the requirements it needs.
     mode: Mode,
+    /// Whether the walker is in a timed initial literal.
+    timed: bool,
 }
 
 /// What kind of formula the walker is in.
@@ -405,6 +443,7 @@ impl Walker<'_> {
                 context: self.context,
                 args,
                 argument_starts: Vec::new(),
+                changes: false,
             });
         }
     }
@@ -418,6 +457,69 @@ impl Walker<'_> {
                 span: word.start..word.end,
                 context: self.context,
             });
+        }
+    }
+
+    /// Records `node` as a fact at `place` if it is a ground atom.
+    fn fact(&mut self, node: &Node, place: Place) {
+        let Some([head, args @ ..]) = node.children() else {
+            return;
+        };
+        let Some(name) = head.atom() else {
+            return;
+        };
+        let mut keywords = CONNECTIVES
+            .iter()
+            .chain(&COMPARISONS)
+            .chain(&["=", "preference"]);
+        if keywords.any(|k| name.eq_ignore_ascii_case(k)) {
+            return;
+        }
+        let args: Option<Vec<String>> = args
+            .iter()
+            .map(|a| a.atom().filter(|a| !a.starts_with('?') && !is_number(a)))
+            .map(|a| a.map(str::to_ascii_lowercase))
+            .collect();
+        if let Some(args) = args {
+            self.out.facts.push(Fact {
+                span: node_range(node),
+                head: head.start,
+                args,
+                context: self.context,
+                place,
+            });
+        }
+    }
+
+    /// Records the literals that the goal `node` needs, `positive` or negated,
+    /// as facts, looking through `and`, `not` and `preference` only.
+    fn goal_facts(&mut self, node: &Node, positive: bool, preference: bool) {
+        let Some([head, args @ ..]) = node.children() else {
+            return;
+        };
+        match head.atom().map(str::to_ascii_lowercase).as_deref() {
+            Some("and") if positive => {
+                for arg in args {
+                    self.goal_facts(arg, true, preference);
+                }
+            }
+            Some("not") if positive => {
+                if let [inner] = args {
+                    self.goal_facts(inner, false, preference);
+                }
+            }
+            Some("preference") => {
+                if let Some(inner) = args.last() {
+                    self.goal_facts(inner, positive, true);
+                }
+            }
+            _ => self.fact(
+                node,
+                Place::Goal {
+                    positive,
+                    preference,
+                },
+            ),
         }
     }
 
@@ -616,6 +718,9 @@ impl Walker<'_> {
                     if let Some([name, vars @ ..]) = skeleton.children() {
                         let count = typed_list(vars).len();
                         self.refer(Expect::PredicateOrFunction, name, Some(count));
+                        if let Some(reference) = self.out.references.last_mut() {
+                            reference.changes = true;
+                        }
                         let defined = self.typed_defs(Kind::Variable, vars, &range, Some(&range));
                         self.scope.extend(defined);
                     }
@@ -745,8 +850,18 @@ impl Walker<'_> {
             Some(":objects") => {
                 self.typed_defs(Kind::Object, args, &range, None);
             }
-            Some(":init") => self.in_mode(Mode::Init, |w| w.formulas(args)),
-            Some(":goal") => self.in_mode(Mode::Goal, |w| w.formulas(args)),
+            Some(":init") => {
+                for fact in args {
+                    self.fact(fact, Place::Init);
+                }
+                self.in_mode(Mode::Init, |w| w.formulas(args));
+            }
+            Some(":goal") => {
+                for goal in args {
+                    self.goal_facts(goal, true, false);
+                }
+                self.in_mode(Mode::Goal, |w| w.formulas(args));
+            }
             Some(":constraints") => {
                 self.need(&[Requirement::Constraints], head);
                 self.in_mode(Mode::Goal, |w| w.formulas(args));
@@ -837,12 +952,7 @@ impl Walker<'_> {
             | "sometime-before" | "within" | "always-within" | "hold-during" | "hold-after" => {
                 self.formulas(args);
             }
-            "at" if first_is(&["start", "end"]) => {
-                if self.mode == Mode::Init && args[0].atom().is_some_and(is_number) {
-                    self.need(&[Requirement::TimedInitialLiterals], head);
-                }
-                self.formulas(&args[1..]);
-            }
+            "at" if first_is(&["start", "end"]) => self.at(head, args),
             "over" if first_is(&["all"]) => self.formulas(&args[1..]),
             "forall" | "exists" => {
                 let universal = word.eq_ignore_ascii_case("forall");
@@ -875,6 +985,19 @@ impl Walker<'_> {
             }
             _ => self.application(head, args),
         }
+    }
+
+    /// `(at <time> <formula>)`: a timed initial literal in `:init`, otherwise
+    /// a timed condition or effect.
+    fn at(&mut self, head: &Node, args: &[Node]) {
+        let timed = self.mode == Mode::Init && args[0].atom().is_some_and(is_number);
+        if timed {
+            self.need(&[Requirement::TimedInitialLiterals], head);
+        }
+        let outer = self.timed;
+        self.timed |= timed;
+        self.formulas(&args[1..]);
+        self.timed = outer;
     }
 
     /// The requirements a comparison, assignment or arithmetic form `word` with
@@ -911,6 +1034,7 @@ impl Walker<'_> {
         if head.atom().is_some() {
             if let Some(reference) = self.out.references.last_mut() {
                 reference.argument_starts = args.iter().map(|a| a.start).collect();
+                reference.changes = self.mode == Mode::Effect || self.timed;
             }
         }
         self.expressions(args);

@@ -12,7 +12,7 @@ use lsp_types::Url;
 use pddl::{syntax, Requirement};
 
 use crate::analysis::{
-    Analysis, Definition, Expect, Kind, Need, Occurrence, RequirementsAt, VariableUse,
+    Analysis, Definition, Expect, Kind, Need, Occurrence, Place, RequirementsAt, VariableUse,
 };
 use crate::line_index::{Encoding, LineIndex};
 
@@ -353,6 +353,7 @@ impl Workspace {
         }
         problems.extend(self.argument_types(uri, &targets));
         problems.extend(self.missing_requirements(uri));
+        problems.extend(self.impossible_goals(uri, &targets));
         problems.extend(duplicates(analysis));
         problems.extend(self.unused(uri));
         problems.sort_by_key(|p| p.span.start);
@@ -361,6 +362,113 @@ impl Workspace {
 }
 
 impl Workspace {
+    /// Whether `target` is a predicate that no action changes, nor a derived
+    /// predicate, so that only `:init` decides where it holds. Timed initial
+    /// literals can still change it within a problem.
+    #[must_use]
+    pub fn is_static(&self, target: &Target) -> bool {
+        let Some(definition) = self.definition(target) else {
+            return false;
+        };
+        definition.kind == Kind::Predicate
+            && !self.documents[&target.uri]
+                .analysis
+                .references
+                .iter()
+                .any(|r| {
+                    r.changes
+                        && r.context == definition.context
+                        && r.expect == Expect::PredicateOrFunction
+                        && r.name.eq_ignore_ascii_case(&definition.name)
+                })
+    }
+
+    /// Literals of a problem's `:goal` that can never hold: their predicate is
+    /// static, so a positive one must be in `:init` and a negated one must not.
+    /// `targets` holds what each reference in `uri` resolves to.
+    fn impossible_goals(&self, uri: &Url, targets: &[Option<Target>]) -> Vec<Problem> {
+        let document = &self.documents[uri];
+        let analysis = &document.analysis;
+        let heads: HashMap<usize, usize> = analysis
+            .references
+            .iter()
+            .enumerate()
+            .filter(|(_, r)| r.expect == Expect::PredicateOrFunction)
+            .map(|(index, r)| (r.span.start, index))
+            .collect();
+        let terms: HashMap<usize, usize> = analysis
+            .references
+            .iter()
+            .enumerate()
+            .filter(|(_, r)| r.expect == Expect::Term)
+            .map(|(index, r)| (r.span.start, index))
+            .collect();
+        let name = |head: &usize| {
+            heads
+                .get(head)
+                .map(|&i| analysis.references[i].name.to_ascii_lowercase())
+        };
+        let init: HashSet<(usize, Option<String>, &[String])> = analysis
+            .facts
+            .iter()
+            .filter(|f| f.place == Place::Init)
+            .map(|f| (f.context, name(&f.head), f.args.as_slice()))
+            .collect();
+        let mut problems = Vec::new();
+        for fact in &analysis.facts {
+            let Place::Goal {
+                positive,
+                preference,
+            } = fact.place
+            else {
+                continue;
+            };
+            let Some(&index) = heads.get(&fact.head) else {
+                continue;
+            };
+            let reference = &analysis.references[index];
+            let timed = analysis.references.iter().any(|r| {
+                r.changes
+                    && r.context == fact.context
+                    && r.name.eq_ignore_ascii_case(&reference.name)
+            });
+            let is_static = targets[index].as_ref().is_some_and(|t| self.is_static(t));
+            // An unknown argument already has its own error.
+            let known = reference
+                .argument_starts
+                .iter()
+                .all(|start| terms.get(start).is_some_and(|&i| targets[i].is_some()));
+            if !is_static || timed || !known {
+                continue;
+            }
+            let key = (fact.context, name(&fact.head), fact.args.as_slice());
+            if init.contains(&key) == positive {
+                continue;
+            }
+            let atom = &document.text[fact.span.clone()];
+            let (literal, init_says) = if positive {
+                (atom.to_string(), "doesn't have it")
+            } else {
+                (format!("(not {atom})"), "has it")
+            };
+            let (severity, what) = if preference {
+                (Severity::Warning, "preference")
+            } else {
+                (Severity::Error, "goal")
+            };
+            problems.push(Problem {
+                span: fact.span.clone(),
+                severity,
+                message: format!(
+                    "{what} `{literal}` can never hold: no action changes `{}`, and `:init` {init_says}",
+                    reference.name
+                ),
+                fix: None,
+            });
+        }
+        problems
+    }
+
     /// Arguments whose declared type doesn't fit the parameter they are passed to.
     ///
     /// `targets` holds what each reference in `uri` resolves to. An argument is
@@ -715,7 +823,7 @@ mod tests {
 
     #[test]
     fn resolves_problem_names_in_another_file() {
-        let problem = "(define (problem p) (:domain D) (:objects t1 - truck) (:init (at t1 depot)) (:goal (ready)))";
+        let problem = "(define (problem p) (:domain D) (:objects t1 - truck) (:init (at t1 depot) (ready)) (:goal (ready)))";
         let ws = workspace(&[("d.pddl", DOMAIN), ("p.pddl", problem)]);
         let at = problem.find("(at").unwrap() + 1;
         let target = ws.target_at(&uri("p.pddl"), at).unwrap();
@@ -887,6 +995,40 @@ mod tests {
                     "`assign` needs `:object-fluents` in `:requirements`",
                 ]
         );
+    }
+
+    #[test]
+    fn reports_goals_on_static_predicates_that_can_never_hold() {
+        let domain = "(define (domain s)
+  (:requirements :disjunctive-preconditions :preferences :derived-predicates
+    :timed-initial-literals)
+  (:predicates (road ?a ?b) (at ?a) (open ?a) (near ?a ?b) (lit ?a))
+  (:derived (near ?a ?b) (road ?a ?b))
+  (:action go :parameters (?a ?b)
+    :precondition (and (at ?a) (road ?a ?b))
+    :effect (and (not (at ?a)) (at ?b))))";
+        let problem = "(define (problem p) (:domain s) (:objects x y)
+  (:init (at x) (road x y) (at 5 (lit y)))
+  (:goal (and (road x y) (road y x) (not (road x y)) (not (open x))
+    (preference p (open y)) (near y x) (at y) (lit y) (or (road y y) (at x)) (road x z))))";
+        let ws = workspace(&[("s.pddl", domain), ("p.pddl", problem)]);
+        check!(
+            messages(&ws, "p.pddl")
+                == [
+                    "goal `(road y x)` can never hold: no action changes `road`, and `:init` doesn't have it",
+                    "goal `(not (road x y))` can never hold: no action changes `road`, and `:init` has it",
+                    "preference `(open y)` can never hold: no action changes `open`, and `:init` doesn't have it",
+                    "unknown object or constant `z`",
+                ]
+        );
+        check!(ws.is_static(
+            &ws.target_at(&uri("s.pddl"), domain.find("road").unwrap())
+                .unwrap()
+        ));
+        let at = domain.find("(at ?a)").unwrap() + 1;
+        check!(!ws.is_static(&ws.target_at(&uri("s.pddl"), at).unwrap()));
+        let near = domain.find("near").unwrap();
+        check!(!ws.is_static(&ws.target_at(&uri("s.pddl"), near).unwrap()));
     }
 
     #[test]

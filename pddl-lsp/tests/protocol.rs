@@ -217,6 +217,7 @@ fn an_editor_session() {
     let params = json!({ "textDocument": { "uri": "file:///w/two.pddl" }, "range": both, "context": { "diagnostics": [] } });
     let actions = client.request("textDocument/codeAction", params);
     check!(actions.as_array().unwrap().len() == 2);
+
     let options = json!({ "tabSize": 2, "insertSpaces": true });
     let params = json!({ "textDocument": { "uri": "file:///w/messy.pddl" }, "options": options });
     let edits = client.request("textDocument/formatting", params);
@@ -224,6 +225,34 @@ fn an_editor_session() {
         edits[0]["newText"]
             == "(define (domain m)\n  (:predicats (p))\n  (:action a :parameters () :effect (p)))\n"
     );
+}
+
+/// A predicate no action changes is static, in hover and highlighting.
+#[test]
+fn marks_static_predicates() {
+    let mut client = Client::start();
+    let roads = "(define (domain r) (:predicates (road ?a) (at ?a))\n(:action go :parameters (?a) :precondition (road ?a) :effect (at ?a)))";
+    client.open("file:///w/roads.pddl", roads);
+    client.diagnostics("file:///w/roads.pddl");
+    let hover = client.request("textDocument/hover", at("file:///w/roads.pddl", 0, 33));
+    check!(hover["contents"]["value"]
+        .as_str()
+        .unwrap()
+        .contains("Static: no action changes it"));
+    let hover = client.request("textDocument/hover", at("file:///w/roads.pddl", 0, 45));
+    check!(!hover["contents"]["value"]
+        .as_str()
+        .unwrap()
+        .contains("Static"));
+    let tokens = client.request(
+        "textDocument/semanticTokens/full",
+        json!({ "textDocument": { "uri": "file:///w/roads.pddl" } }),
+    );
+    // The fifth number of each token is its modifiers: `road` is a static
+    // declaration (1 | 2), `at` a plain one (1).
+    let data = tokens["data"].as_array().unwrap();
+    check!(data[4 + 5] == 3);
+    check!(data[4 + 3 * 5] == 1);
 }
 
 #[test]

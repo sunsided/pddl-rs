@@ -11,6 +11,8 @@ All notable changes to the PDDL (pddl-lsp) extension are documented in this file
 - Constructs the `:requirements` don't allow get a warning, such as `forall`
   in a precondition without `:universal-preconditions`, with a quick fix that
   adds the requirement.
+- Goals that can never hold are reported, such as `(road a b)` missing from
+  `:init` when no action changes `road`. Hover marks such predicates as static.
 
 ## 0.1.1 - 2026-11-14
 
