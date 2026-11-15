@@ -39,7 +39,7 @@ exports.run = async function () {
   const uri = definition.uri ?? definition.targetUri;
   const range = definition.range ?? definition.targetRange;
   assert.strictEqual(uri.toString(), vscode.Uri.joinPath(root, "domain.pddl").toString());
-  assert.deepStrictEqual([range.start.line, range.start.character], [2, 16]);
+  assert.deepStrictEqual([range.start.line, range.start.character], [3, 16]);
 
   const hovers = await vscode.commands.executeCommand("vscode.executeHoverProvider", problem, at);
   const text = hovers.flatMap((h) => h.contents.map((c) => c.value ?? String(c))).join("\n");

@@ -9,8 +9,15 @@ that speaks the [Language Server Protocol](https://microsoft.github.io/language-
 - **Diagnostics**: every syntax error in a file, not just the first, plus:
   - unknown predicates, functions, types, constants and objects,
   - predicates and functions called with the wrong number of arguments,
+  - arguments whose type doesn't fit the parameter, such as a `truck` passed
+    where a `place` is expected, following the type hierarchy and `either`,
   - variables that no parameter list or quantifier declares,
   - duplicate definitions.
+
+  Constructs the `:requirements` don't allow get a warning, such as `forall`
+  in a precondition without `:universal-preconditions`, or typed names without
+  `:typing`. Shorthands such as `:adl` count as everything they stand for, and
+  a problem also has its domain's requirements.
 
   Types, constants, predicates, functions, objects and parameters that
   nothing uses get a hint, which editors usually show as faded text.
@@ -31,7 +38,9 @@ that speaks the [Language Server Protocol](https://microsoft.github.io/language-
 - **Formatting** that keeps comments and blank lines: one section per line,
   `:keyword value` pairs on their own lines, and lists kept on one line when
   they fit in 80 columns.
-- **Quick fixes** for misspelled keywords, such as `:predicats` → `:predicates`.
+- **Quick fixes** for misspelled keywords, such as `:predicats` → `:predicates`,
+  and for missing requirements, which adds the key to `(:requirements ...)` or
+  adds that section.
 - **Semantic highlighting**, so types, predicates, functions, actions, objects
   and variables each get their own color.
 
@@ -215,10 +224,12 @@ Otherwise it uses the one whose file path sorts first.
 
 ## Limitations
 
-- Argument types are not checked: `(at truck1 truck2)` passes even if the
-  second parameter is a `location`.
-- Requirements are not checked: using `forall` without
-  `:universal-preconditions` is not reported.
+- Argument types are only checked for variables, constants and objects with
+  a declared type. Untyped names and nested function terms such as
+  `(at (location-of t1) home)` are not checked.
+- `(not (= ?x ?y))` only needs `:equality`, as planners accept it, although
+  PDDL 3.1 also asks for `:negative-preconditions`. `:action-costs` allows
+  any `increase`, `decrease` or numeric `:init` fact, not just `total-cost`.
 - After a syntax error, checking resumes at the next section or action, so
   each section reports at most one syntax error.
 - The formatter always uses two-space indents and an 80-column limit. It
