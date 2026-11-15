@@ -527,9 +527,7 @@ impl Server {
             );
         }
         if self.workspace.is_static(&target) {
-            value.push_str(
-                "\n\nStatic: no action changes it, so only `:init` and timed initial literals decide where it holds.",
-            );
+            value.push_str("\n\nStatic: no action changes it.");
         }
         let (document, offset) = self.locate(at)?;
         let span = match document.analysis.occurrence_at(offset)? {

@@ -429,11 +429,16 @@ impl Workspace {
             let timed = analysis
                 .changed
                 .contains(&(fact.context, lowercase.clone()));
-            let Some(target) = targets[index].as_ref().filter(|t| self.is_static(t)) else {
+            let found = targets[index]
+                .as_ref()
+                .filter(|t| self.is_static(t))
+                .and_then(|t| {
+                    let owner = &self.documents.get(&t.uri)?.analysis;
+                    Some((owner, owner.definitions.get(t.index)?))
+                });
+            let Some((owner, definition)) = found else {
                 continue;
             };
-            let owner = &self.documents[&target.uri].analysis;
-            let definition = &owner.definitions[target.index];
             // `:timeless` facts hold in every problem; they aren't in `:init`.
             let timeless = owner.timeless.contains(&(definition.context, lowercase));
             // Unknown arguments and a wrong count already have their own error.
