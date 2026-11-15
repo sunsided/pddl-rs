@@ -58,7 +58,8 @@ that corrects it.
   predicate, `:functions`, `:constraints`, `:metric`, `forall`, `exists`,
   `when`, `imply`, `preference`, `increase`, `decrease`, `at start`, `at end`,
   `over all` and a timed initial literal (`at time`): type the name, such as
-  `domain` or `:action`, and pick the snippet.
+  `domain` or `:action`, and pick the snippet. Names of two words also work
+  without the space, such as `atstart`.
 - **Format Document** indents by nesting, puts each section and each
   `:keyword value` pair on its own line, and keeps short lists on one line.
   It keeps your comments and blank lines.

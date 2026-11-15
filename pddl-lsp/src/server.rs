@@ -709,17 +709,22 @@ impl Server {
         let context = document.analysis.context_at(offset);
         let lists = enclosing_lists(&tree.nodes, offset);
         // The head of the innermost list the word is an argument of, not the head of.
-        let parent = lists
-            .iter()
-            .rev()
-            .find(|list| list.start + 1 != start)
+        let outer = lists.iter().rev().find(|list| list.start + 1 != start);
+        let parent = outer
             .and_then(|list| list.head())
             .map(str::to_ascii_lowercase);
-        let within = |section: &str| {
-            lists
-                .iter()
-                .any(|l| l.head().is_some_and(|h| h.eq_ignore_ascii_case(section)))
-        };
+        // Whether the word is the first argument, such as the domain's name.
+        let first = outer
+            .and_then(|list| list.children())
+            .is_some_and(|c| c.iter().skip(1).all(|c| c.start >= start));
+        // The innermost section, such as `:init`, so that an unclosed one
+        // doesn't decide for the sections after it.
+        let section = lists
+            .iter()
+            .rev()
+            .filter_map(|l| l.head())
+            .find(|h| h.starts_with(':'))
+            .map(str::to_ascii_lowercase);
         let item = |label: &str, kind, detail: Option<&str>| CompletionItem {
             label: label.to_string(),
             kind: Some(kind),
@@ -767,24 +772,24 @@ impl Server {
             };
             keywords(words).collect()
         } else if before.ends_with('(') {
-            // `:init` holds facts, and `:metric` a numeric expression.
-            let (kinds, words): (&[Kind], &[&str]) = if within(":init") {
-                (&[Kind::Predicate, Kind::Function], INIT_WORDS)
-            } else if within(":metric") {
-                (&[Kind::Function], METRIC_WORDS)
-            } else {
-                (&[Kind::Predicate, Kind::Function], FORMULA_WORDS)
-            };
+            let (kinds, words) = list_starts(section.as_deref(), parent.as_deref());
             let mut items = visible(kinds);
-            items.extend(keywords(words));
+            // A predicate named `at` already stands for the keyword.
+            let new = |k: &CompletionItem| items.iter().all(|i| i.label != k.label);
+            let words: Vec<_> = keywords(words).filter(new).collect();
+            items.extend(words);
             items
-        } else if parent.as_deref() == Some(":domain") {
+        } else if parent.as_deref() == Some(":domain") && first {
             let domains = self.workspace.domain_names().into_iter();
             domains
                 .map(|name| item(name, CompletionItemKind::MODULE, None))
                 .collect()
-        } else if parent.as_deref() == Some(":metric") {
+        } else if parent.as_deref() == Some(":metric") && first {
             keywords(&["minimize", "maximize"]).collect()
+        } else if parent.as_deref() == Some(":metric") {
+            let mut items = visible(&[Kind::Function]);
+            items.push(item("total-time", CompletionItemKind::KEYWORD, None));
+            items
         } else if parent.as_deref() == Some("either")
             || before.ends_with(" -")
             || before.ends_with("\t-")
@@ -1018,6 +1023,23 @@ fn enclosing_lists<'n, 'a>(nodes: &'n [Node<'a>], offset: usize) -> Vec<&'n Node
         level = list.children().unwrap_or_default();
     }
     found
+}
+
+/// What can start a list in `section` whose enclosing list has the head
+/// `parent`: definitions of these kinds, and these words. `:init` holds facts,
+/// and `:metric` a numeric expression.
+fn list_starts(
+    section: Option<&str>,
+    parent: Option<&str>,
+) -> (&'static [Kind], &'static [&'static str]) {
+    match (section, parent) {
+        (Some(":init"), Some(":init")) => (&[Kind::Predicate, Kind::Function], INIT_WORDS),
+        (Some(":init"), Some("=")) => (&[Kind::Function], &[]),
+        (Some(":init"), Some("at")) => (&[Kind::Predicate], &["not"]),
+        (Some(":init"), _) => (&[Kind::Predicate], &[]),
+        (Some(":metric"), _) => (&[Kind::Function], METRIC_WORDS),
+        _ => (&[Kind::Predicate, Kind::Function], FORMULA_WORDS),
+    }
 }
 
 /// The outline symbol for a kind of definition.

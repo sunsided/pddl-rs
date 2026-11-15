@@ -338,7 +338,24 @@ fn completes_by_context() {
         ),
         (
             "(define (problem c15) (:domain logistics)\n  (:init (|",
-            "at",
+            "not",
+        ),
+        (
+            "(define (problem c15) (:domain logistics)\n  (:init (|",
+            "=",
+        ),
+        (
+            "(define (problem c19) (:domain logistics)\n  (:init (at 10 (|",
+            "not",
+        ),
+        (
+            "(define (problem c20) (:domain logistics)\n  (:metric minimize |",
+            "total-time",
+        ),
+        // `:init` is still open, but the metric decides.
+        (
+            "(define (problem c21) (:domain logistics)\n  (:init (at t1 home)\n  (:metric minimize (|",
+            "total-time",
         ),
     ];
     for (index, (text, expected)) in cases.into_iter().enumerate() {
@@ -346,8 +363,12 @@ fn completes_by_context() {
         let labels = complete(&mut client, &uri, text);
         check!(labels.iter().any(|l| l == expected), "{text:?}: {labels:?}");
     }
+}
 
-    // Words that can't appear there are not offered.
+#[test]
+fn leaves_out_completions_that_cannot_appear() {
+    let mut client = Client::start();
+    client.open("file:///w/domain.pddl", DOMAIN);
     let absent = [
         (
             "(define (problem c16) (:domain logistics)\n  (:init (|",
@@ -358,6 +379,19 @@ fn completes_by_context() {
             "and",
         ),
         ("(define (problem c18) (:objects t9)\n  (:domain |", "t9"),
+        (
+            "(define (problem c22) (:domain logistics)\n  (:init (= (|",
+            "at",
+        ),
+        (
+            "(define (problem c23) (:domain logistics)\n  (:init (not (|",
+            "not",
+        ),
+        (
+            "(define (problem c24) (:domain logistics)\n  (:metric minimize |",
+            "minimize",
+        ),
+        ("(define (problem c25) (:domain logistics |", "logistics"),
     ];
     for (index, (text, unexpected)) in absent.into_iter().enumerate() {
         let uri = format!("file:///w/absent{index}.pddl");
@@ -367,6 +401,14 @@ fn completes_by_context() {
             "{text:?}: {labels:?}"
         );
     }
+
+    // The predicate `at` stands for the keyword `at`, so it's offered once.
+    let text = "(define (problem c26) (:domain logistics)\n  (:init (|";
+    let labels = complete(&mut client, "file:///w/once.pddl", text);
+    check!(
+        labels.iter().filter(|l| *l == "at").count() == 1,
+        "{labels:?}"
+    );
 }
 
 #[test]

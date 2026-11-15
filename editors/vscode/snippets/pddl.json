@@ -84,7 +84,7 @@
   },
   "Constraints": {
     "prefix": ":constraints",
-    "description": "Conditions that must hold along the whole plan",
+    "description": "Trajectory constraints on the states a plan visits",
     "body": [
       "(:constraints (and",
       "  (${1|always,sometime,at-most-once|} ${2:goal})))$0"
@@ -116,22 +116,22 @@
     "body": ["(preference ${1:name} ${2:goal})$0"]
   },
   "At start": {
-    "prefix": "at start",
+    "prefix": ["at start", "atstart"],
     "description": "A condition or effect at the start of a durative action",
     "body": ["(at start ${1})$0"]
   },
   "At end": {
-    "prefix": "at end",
+    "prefix": ["at end", "atend"],
     "description": "A condition or effect at the end of a durative action",
     "body": ["(at end ${1})$0"]
   },
   "Over all": {
-    "prefix": "over all",
+    "prefix": ["over all", "overall"],
     "description": "A condition that holds while a durative action runs",
     "body": ["(over all ${1})$0"]
   },
   "Timed initial literal": {
-    "prefix": "at time",
+    "prefix": ["at time", "attime"],
     "description": "A fact in :init that becomes true at a point in time",
     "body": ["(at ${1:10} (${2:fact}))$0"]
   }
