@@ -166,6 +166,10 @@ pub struct Server {
 /// The error a server run ends with.
 type RunError = Box<dyn Error + Send + Sync>;
 
+/// Why a run fails on `exit` without `shutdown`, which the protocol counts as
+/// an abnormal end.
+const EXIT_EARLY: &str = "the client exited without shutting the server down";
+
 /// Runs the server on `connection` until the client shuts it down.
 ///
 /// ## Errors
@@ -180,6 +184,8 @@ pub fn run(connection: &Connection) -> Result<(), RunError> {
 /// Runs the server on stdin and stdout until the client shuts it down, on the
 /// calling thread. Unlike [`Connection::stdio`], it starts no threads, so it
 /// also runs on `wasm32-wasip1`, which has none, as in VS Code for the Web.
+/// It waits for `initialize` without a time limit, and a reply waits until the
+/// client reads stdout, as every LSP client does while it writes.
 ///
 /// ## Errors
 ///
@@ -209,7 +215,7 @@ fn serve(
                     request.id, code, message,
                 )))?;
             }
-            Some(Message::Notification(n)) if n.method == "exit" => return Ok(()),
+            Some(Message::Notification(n)) if n.method == "exit" => return Err(EXIT_EARLY.into()),
             Some(_) => {}
             None => return Err("the client closed the connection before initializing".into()),
         }
@@ -250,14 +256,28 @@ fn serve(
         }
     }
 
+    // After `shutdown`, requests get an error, and `exit` ends the run.
+    let mut shut_down = false;
     for message in inbox {
         match message? {
             Message::Request(request) if request.method == "shutdown" => {
+                shut_down = true;
                 send(Message::Response(Response::new_ok(request.id, ())))?;
+            }
+            Message::Request(request) if shut_down => {
+                let code = ErrorCode::InvalidRequest as i32;
+                let message = "the server is shutting down".to_string();
+                send(Message::Response(Response::new_err(
+                    request.id, code, message,
+                )))?;
             }
             Message::Request(request) => send(Message::Response(server.request(request)))?,
             Message::Notification(notification) if notification.method == "exit" => {
-                return Ok(());
+                return if shut_down {
+                    Ok(())
+                } else {
+                    Err(EXIT_EARLY.into())
+                };
             }
             Message::Notification(notification) => {
                 if server.notification(notification) {

@@ -29,7 +29,7 @@ repository root, put `vscode:` in front of each name, as in `task vscode:package
 |----------------|--------------|
 | `task deps`    | Installs the dependencies with `yarn install --frozen-lockfile` |
 | `task build`   | Bundles `src/` into `dist/extension.js` (desktop) and `dist/browser.js` (web) |
-| `task watch`   | Rebundles on every change (alias: `task dev`) |
+| `task watch`   | Rebundles on every change, without type checking (alias: `task dev`); `task build` or `yarn run typecheck` checks types |
 | `task server`  | Builds the server as WebAssembly into `server/pddl-lsp.wasm` |
 | `task test`    | Runs the extension and its server in a downloaded VS Code |
 | `task package` | Packages the extension and the server as `pddl-lsp-<version>.vsix` |

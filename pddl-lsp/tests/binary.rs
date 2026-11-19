@@ -74,6 +74,12 @@ fn serves_over_stdio_until_exit() {
         &serde_json::json!({ "jsonrpc": "2.0", "id": 2, "method": "shutdown" }),
     );
     check!(receive(&mut stdout)["id"] == 2);
+    // After `shutdown`, only `exit` is accepted. InvalidRequest.
+    send(
+        &mut stdin,
+        &serde_json::json!({ "jsonrpc": "2.0", "id": 3, "method": "textDocument/hover", "params": {} }),
+    );
+    check!(receive(&mut stdout)["error"]["code"] == -32600);
     send(
         &mut stdin,
         &serde_json::json!({ "jsonrpc": "2.0", "method": "exit" }),
@@ -82,7 +88,7 @@ fn serves_over_stdio_until_exit() {
 }
 
 #[test]
-fn answers_only_initialize_until_initialized() {
+fn answers_only_initialize_until_initialized_and_fails_on_an_early_exit() {
     let mut child = Command::new(BINARY)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -104,7 +110,8 @@ fn answers_only_initialize_until_initialized() {
         &mut stdin,
         &serde_json::json!({ "jsonrpc": "2.0", "method": "exit" }),
     );
-    check!(child.wait().unwrap().success());
+    // `exit` without `shutdown` is an abnormal end.
+    check!(!child.wait().unwrap().success());
 }
 
 #[test]
@@ -118,4 +125,25 @@ fn fails_if_the_client_leaves_before_initializing() {
     let output = child.wait_with_output().unwrap();
     check!(!output.status.success());
     check!(String::from_utf8_lossy(&output.stderr).contains("before initializing"));
+}
+
+#[test]
+fn fails_on_exit_without_shutdown() {
+    let mut child = Command::new(BINARY)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let mut stdin = child.stdin.take().unwrap();
+    let mut stdout = BufReader::new(child.stdout.take().unwrap());
+    send(
+        &mut stdin,
+        &serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "initialize", "params": { "capabilities": {} } }),
+    );
+    check!(receive(&mut stdout)["id"] == 1);
+    send(
+        &mut stdin,
+        &serde_json::json!({ "jsonrpc": "2.0", "method": "exit" }),
+    );
+    check!(!child.wait().unwrap().success());
 }
