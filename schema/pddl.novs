@@ -170,7 +170,7 @@ record Change:
 type Duration = SimpleDuration | DurationAnd
 
 record DurationAnd:
-  and: SimpleDuration[]
+  and: SimpleDuration[] @len(1..)
 
 # `{"<=": ("?duration", value)}`, or one at a time point.
 type SimpleDuration = DurationAtMost | DurationExactly | DurationAtLeast | DurationAtStart | DurationAtEnd

@@ -26,8 +26,9 @@ fn nova_schema_checks_sections() {
     check!(schema.resolve_as(&value, &problem_type).is_err());
 }
 
-/// `schema/pddl.novs` accepts every form the corpus lacks: constraints,
-/// preferences, conditional and numeric effects, durative actions and metrics.
+/// Every form the corpus lacks round-trips through NOVA text and is valid under
+/// `schema/pddl.novs`: constraints, preferences, numeric and object-fluent
+/// effects, continuous effects, duration constraints and metrics.
 #[test]
 fn nova_schema_accepts_every_form() {
     let domain = "(define (domain d)
@@ -69,12 +70,12 @@ fn nova_schema_accepts_every_form() {
         domains: vec![Domain::from_str(domain).unwrap()],
         problems: vec![Problem::from_str(problem).unwrap()],
     };
+    let nova = novafile::serde::to_string(&file).unwrap();
+    let back: PddlFile = novafile::serde::from_str(&nova).unwrap_or_else(|e| panic!("{e}\n{nova}"));
+    check!(serde_json::to_string(&back).unwrap() == serde_json::to_string(&file).unwrap());
     let value = novafile::serde::to_value(&file).unwrap();
     if let Err(issues) = nova_schema().validate(&value) {
-        panic!(
-            "not valid under schema/pddl.novs: {issues:?}\n{}",
-            novafile::serde::to_string(&file).unwrap()
-        );
+        panic!("not valid under schema/pddl.novs: {issues:?}\n{nova}");
     }
 }
 
@@ -95,6 +96,15 @@ fn nova_schema_checks_formulas() {
     check!(with_goal("{increase: ([f], 1)}").is_err());
     check!(with_goal("5").is_err());
     check!(with_goal("[]").is_err());
+
+    // `(and)` is no duration constraint: PDDL needs at least one.
+    let domain_type = novafile::schema::parse_type("Domain").unwrap();
+    let with_duration = |duration: &str| {
+        let text = format!("domain: d\ndurative-actions:\n  a:\n    duration: {duration}\n");
+        schema.resolve_as(&novafile::text::parse(&text).unwrap(), &domain_type)
+    };
+    check!(with_duration(r#"{and: [{"<=": ("?duration", 5)}]}"#).is_ok());
+    check!(with_duration("{and: []}").is_err());
 }
 
 /// Every corpus file the parser accepts serializes to JSON, YAML, TOML and NOVA
