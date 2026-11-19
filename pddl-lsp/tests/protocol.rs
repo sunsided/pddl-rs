@@ -420,6 +420,11 @@ fn leaves_out_completions_that_cannot_appear() {
     let labels = complete(&mut client, "file:///w/value.pddl", text);
     check!(labels == ["fuel"], "{labels:?}");
 
+    // A function without arguments needs no `(`, but an object can't go there.
+    let text = "(define (problem c31) (:domain fuelled) (:objects t9)\n  (:init (= |";
+    let labels = complete(&mut client, "file:///w/bare.pddl", text);
+    check!(labels == ["fuel"], "{labels:?}");
+
     // Only `)` can follow the domain's name.
     let text = "(define (problem c25) (:objects t9) (:domain logistics |";
     let labels = complete(&mut client, "file:///w/named.pddl", text);

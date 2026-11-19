@@ -776,6 +776,8 @@ impl Server {
                 .filter(|_| first) // Only `)` can follow the name.
                 .map(|name| item(name, CompletionItemKind::MODULE, None))
                 .collect()
+        } else if (section.as_deref(), parent.as_deref()) == (Some(":init"), Some("=")) && first {
+            visible(&[Kind::Function]) // A function without arguments, such as `(= total-cost 0)`.
         } else if parent.as_deref() == Some(":metric") && first {
             keywords(&["minimize", "maximize"]).collect()
         } else if parent.as_deref() == Some(":metric") {
