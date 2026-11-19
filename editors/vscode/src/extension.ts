@@ -5,12 +5,18 @@ import { LanguageClient } from "vscode-languageclient/node";
 import * as vscode from "vscode";
 import { activateWith, deactivate } from "./client";
 import { solveWithPlanutils } from "./planner";
+import { validatePlan } from "./validate";
 
 export { deactivate };
 
 export function activate(context: vscode.ExtensionContext): Promise<void> {
   // Only the desktop can start processes.
-  context.subscriptions.push(vscode.commands.registerCommand("pddl.solveWithPlanutils", solveWithPlanutils));
+  const val = vscode.languages.createDiagnosticCollection("VAL");
+  context.subscriptions.push(
+    val,
+    vscode.commands.registerCommand("pddl.solveWithPlanutils", solveWithPlanutils),
+    vscode.commands.registerCommand("pddl.validatePlan", () => validatePlan(context, val)),
+  );
   return activateWith(
     context,
     (native, wasm, options) =>

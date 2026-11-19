@@ -2,6 +2,7 @@
 
 const assert = require("assert");
 const vscode = require("vscode");
+const path = require("path");
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -65,4 +66,36 @@ exports.run = ((checks) => async function () {
   ]);
   assert.strictEqual(options.cwd, vscode.Uri.joinPath(root, "problems").fsPath);
   terminal.dispose();
+})(exports.run);
+
+// Plans: a step leads to its action, and VAL's findings land on the steps.
+exports.run = ((checks) => async function () {
+  await checks();
+  const root = vscode.workspace.workspaceFolders[0].uri;
+  const plan = vscode.Uri.joinPath(root, "problems", "deliver.plan");
+  const document = await vscode.workspace.openTextDocument(plan);
+  await vscode.window.showTextDocument(document);
+  assert.strictEqual(document.languageId, "pddl-plan");
+
+  // `DRIVE` on line 3 leads to `(:action drive` in the domain the problem names.
+  const definitions = await vscode.commands.executeCommand(
+    "vscode.executeDefinitionProvider", plan, new vscode.Position(2, 2),
+  );
+  assert.strictEqual(definitions.length, 1, JSON.stringify(definitions));
+  assert.strictEqual(definitions[0].uri.toString(), vscode.Uri.joinPath(root, "domain.pddl").toString());
+  assert.deepStrictEqual([definitions[0].range.start.line, definitions[0].range.start.character], [4, 11]);
+
+  const config = vscode.workspace.getConfiguration("pddl");
+  await config.update("validator", ["node", path.join(__dirname, "fake-val.js")], vscode.ConfigurationTarget.Global);
+  try {
+    const valid = await vscode.commands.executeCommand("pddl.validatePlan");
+    assert.strictEqual(valid, false);
+    const found = vscode.languages.getDiagnostics(plan);
+    assert.strictEqual(found.length, 1, JSON.stringify(found));
+    assert.strictEqual(found[0].range.start.line, 2);
+    assert.ok(found[0].message.startsWith("VAL: unsatisfied precondition in (drive t1 home shop)"), found[0].message);
+    assert.ok(found[0].message.includes("(Set (at t1 home) to true)"), found[0].message);
+  } finally {
+    await config.update("validator", undefined, vscode.ConfigurationTarget.Global);
+  }
 })(exports.run);

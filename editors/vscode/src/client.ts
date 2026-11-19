@@ -3,6 +3,7 @@
 // Shared by the desktop entry point (extension.ts) and the web one (browser.ts).
 
 import * as vscode from "vscode";
+import { planDefinitions } from "./plans";
 import { Wasm, type ProcessOptions } from "@vscode/wasm-wasi/v1";
 import { createStdioOptions, createUriConverters, startServer } from "@vscode/wasm-wasi-lsp";
 import type {
@@ -47,6 +48,7 @@ export async function activateWith(
       }
     }),
     vscode.workspace.onDidGrantWorkspaceTrust(() => start(context, output)),
+    vscode.languages.registerDefinitionProvider({ language: "pddl-plan" }, planDefinitions(context)),
   );
   await start(context, output);
 }

@@ -33,7 +33,8 @@
       "description": "In Restricted Mode, only syntax highlighting is available. The language server starts once you trust the folder, so an untrusted folder can't choose a program through `pddl.server.path`.",
       "restrictedConfigurations": [
         "pddl.server.path",
-        "pddl.planner"
+        "pddl.planner",
+        "pddl.validator"
       ]
     }
   },
@@ -49,6 +50,22 @@
         ],
         "extensions": [
           ".pddl"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "pddl-plan",
+        "aliases": [
+          "PDDL Plan"
+        ],
+        "extensions": [
+          ".plan"
+        ],
+        "filenames": [
+          "sas_plan"
+        ],
+        "filenamePatterns": [
+          "sas_plan.*"
         ],
         "configuration": "./language-configuration.json"
       }
@@ -114,6 +131,11 @@
         "embeddedLanguages": {
           "meta.embedded.block.pddl": "pddl"
         }
+      },
+      {
+        "language": "pddl-plan",
+        "scopeName": "source.pddl.plan",
+        "path": "./syntaxes/pddl-plan.tmLanguage.json"
       }
     ],
     "configuration": {
@@ -139,6 +161,16 @@
           "type": "string",
           "default": "lama-first",
           "markdownDescription": "The [planutils](https://pypi.org/project/planutils) planner that **PDDL: Solve with planutils** runs, such as `lama-first`, `lama` or `enhsp`. Install it with `planutils install <planner>`."
+        },
+        "pddl.validator": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "Validate"
+          ],
+          "markdownDescription": "The command that runs [VAL](https://github.com/KCL-Planning/VAL) for **PDDL: Validate Plan with VAL**, as a program and its first arguments. The extension appends `-v <domain> <problem> <plan>`. With planutils (`planutils install val`), use `[\"val\", \"Validate\"]`."
         }
       }
     },
@@ -150,6 +182,11 @@
       {
         "command": "pddl.solveWithPlanutils",
         "title": "PDDL: Solve with planutils",
+        "enablement": "!isWeb"
+      },
+      {
+        "command": "pddl.validatePlan",
+        "title": "PDDL: Validate Plan with VAL",
         "enablement": "!isWeb"
       }
     ],
@@ -164,6 +201,10 @@
         {
           "command": "pddl.solveWithPlanutils",
           "when": "!isWeb && editorLangId == pddl"
+        },
+        {
+          "command": "pddl.validatePlan",
+          "when": "!isWeb && editorLangId == pddl-plan"
         }
       ]
     }

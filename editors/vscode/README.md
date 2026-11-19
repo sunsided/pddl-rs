@@ -73,6 +73,15 @@ Planners such as `lama-first` write the plan to `sas_plan` there. Install
 planutils with `pip install planutils` and a planner with
 `planutils install lama-first`. Desktop only, in a trusted folder.
 
+**PDDL: Validate Plan with VAL** checks the open plan (a `.plan`, `sas_plan`
+or `sas_plan.N` file) with [VAL](https://github.com/KCL-Planning/VAL) against
+its problem and domain, and marks the step whose precondition fails, or the
+last step if the goal isn't reached, with VAL's repair advice. The problem is
+the only one in the plan's folder, or the one you pick the first time. Go to
+Definition on a step's action opens it in the domain. Install VAL with
+`planutils install val` and set `pddl.validator` to `["val", "Validate"]`, or
+put VAL's `Validate` on `PATH`. Desktop only, in a trusted folder.
+
 ### Highlighting
 
 Syntax highlighting for keywords, variables, numbers and comments. Semantic
@@ -104,6 +113,7 @@ the other features above don't cover embedded PDDL.
 |---------------------|---------|-------------|
 | `pddl.server.path`  | (empty) | Path to a native `pddl-lsp` binary. If empty, the extension uses the server it comes with. Ignored on the web. |
 | `pddl.planner`      | `lama-first` | The planutils planner that **PDDL: Solve with planutils** runs. |
+| `pddl.validator`    | `["Validate"]` | The VAL command, as a program and its first arguments; the extension appends `-v <domain> <problem> <plan>`. |
 | `pddl.trace.server` | `off`   | Logs the messages between VS Code and the server to the "PDDL Language Server" output panel. |
 
 The **PDDL: Restart Language Server** command restarts the server.
