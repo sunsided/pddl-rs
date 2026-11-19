@@ -50,14 +50,14 @@
 //! # fn main() {}
 //! ```
 
-use std::cell::Cell;
+use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
 // The types `ground` returns and their fields, so callers can name them
 // without depending on `sas-plus` themselves.
 pub use sas_plus::fdr::{self, SasFile};
-pub use sas_plus::{Fact, Task, Value, VarId};
 use sas_plus::fdr::{SasEffect, SasOperator, SasVariable};
+pub use sas_plus::{Fact, Task, Value, VarId};
 
 use crate::{
     ActionDefinition, AssignOp, AtomicFormula, ConditionalEffect, Domain, EffectCondition, Effects,
@@ -143,7 +143,7 @@ pub fn ground(domain: &Domain, problem: &Problem) -> Result<SasFile, GroundError
     let mut goal_lits = Vec::new();
     Builder {
         world: &world,
-        next_exists: Cell::new(0),
+        params: RefCell::default(),
     }
     .preconditions(problem.goals(), &HashMap::new(), false, &mut goal_lits)?;
     let goal = ground_goal(&goal_lits, &grounder, &index)?;
@@ -454,21 +454,11 @@ impl Schema {
             params.push(world.objects_of(var.type_())?);
         }
         let arity = params.len();
-        for pre in action.precondition() {
-            if let PreconditionGoalDescription::Preference(PreferenceGoalDescription::Goal(gd)) =
-                pre
-            {
-                collect_exists(gd, &mut |var| {
-                    params.push(world.objects_of(var.type_())?);
-                    Ok(())
-                })?;
-            }
-        }
 
         // Effects see only the declared parameters, not the `exists` binders.
         let builder = Builder {
             world,
-            next_exists: Cell::new(arity),
+            params: RefCell::new(params),
         };
         let mut pre = Vec::new();
         builder.preconditions(action.precondition(), &subst, true, &mut pre)?;
@@ -480,7 +470,7 @@ impl Schema {
         Ok(Self {
             name: lc(action.symbol()),
             arity,
-            params,
+            params: builder.params.into_inner(),
             pre,
             effects,
             cost,
@@ -488,29 +478,13 @@ impl Schema {
     }
 }
 
-/// Calls `f` for every variable of an `exists` reachable through `and` from
-/// the top of a precondition; those variables become extra parameters.
-fn collect_exists(
-    gd: &GoalDescription,
-    f: &mut impl FnMut(&crate::Typed<crate::Variable>) -> Result<(), GroundError>,
-) -> Result<(), GroundError> {
-    match gd {
-        GoalDescription::And(gds) => gds.iter().try_for_each(|gd| collect_exists(gd, f)),
-        GoalDescription::Exists(vars, inner) => {
-            vars.iter().try_for_each(&mut *f)?;
-            collect_exists(inner, f)
-        }
-        _ => Ok(()),
-    }
-}
-
 /// Turns goal descriptions and effects into schematic literals and effects.
 struct Builder<'a> {
     /// The objects, for `forall` and constant names.
     world: &'a World,
-    /// The parameter index of the next `exists` binder; binders are numbered
-    /// in the order `collect_exists` visits them.
-    next_exists: Cell<usize>,
+    /// The objects each parameter can be bound to; a top-level `exists` in a
+    /// precondition adds a parameter per binder.
+    params: RefCell<Vec<Vec<String>>>,
 }
 
 impl Builder<'_> {
@@ -627,13 +601,14 @@ impl Builder<'_> {
                     self.goal(gd, subst, allow_exists, out)?;
                 }
             }
-            // `collect_exists` added the variables as parameters, in this order.
             GoalDescription::Exists(vars, inner) if allow_exists => {
                 let mut scope = subst.clone();
+                // Each binder becomes an extra parameter of the action.
                 for var in vars.iter() {
-                    let i = self.next_exists.get();
-                    self.next_exists.set(i + 1);
-                    scope.insert(lc(var.value()), Arg::Var(i));
+                    let objects = self.world.objects_of(var.type_())?;
+                    let mut params = self.params.borrow_mut();
+                    scope.insert(lc(var.value()), Arg::Var(params.len()));
+                    params.push(objects);
                 }
                 self.goal(inner, &scope, true, out)?;
             }
