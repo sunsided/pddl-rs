@@ -3,7 +3,7 @@
 //! [`ground`] instantiates every action over the problem's objects, keeps the
 //! groundings that are reachable in the delete relaxation, and returns a
 //! [`SasFile`] that prints as Fast Downward's `output.sas` (file version 3).
-//! Call [`SasFile::to_task`] for a plain `sas_plus::Task`.
+//! Call [`SasFile::to_task`] for a plain [`Task`].
 //!
 //! ## Encoding
 //! Every reachable ground atom of a fluent predicate (one that some action
@@ -53,9 +53,11 @@
 use std::cell::Cell;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
-pub use sas_plus::fdr::SasFile;
+// The types `ground` returns and their fields, so callers can name them
+// without depending on `sas-plus` themselves.
+pub use sas_plus::fdr::{self, SasFile};
+pub use sas_plus::{Fact, Task, Value, VarId};
 use sas_plus::fdr::{SasEffect, SasOperator, SasVariable};
-use sas_plus::{Fact, Value, VarId};
 
 use crate::{
     ActionDefinition, AssignOp, AtomicFormula, ConditionalEffect, Domain, EffectCondition, Effects,
