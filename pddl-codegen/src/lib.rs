@@ -98,8 +98,39 @@ impl std::error::Error for Error {}
 /// An [`Error`] for an unsupported requirement or construct, an undeclared
 /// name, or PDDL names that map to the same Rust identifier.
 pub fn lifted(domain: &Domain) -> Result<TokenStream, Error> {
+    lifted_with(domain, &Bindings::default())
+}
+
+/// PDDL types bound to Rust types, and predicates and functions attached to
+/// Rust functions (#131).
+///
+/// - A bound type `robot => crate::Robot` puts one `crate::Robot` per object
+///   of type `robot` (subtypes included) into `Task::bound().robot`, indexed
+///   by the object's id. `Task::new` takes a closure per bound type that
+///   makes the value from the object's name. States keep holding ids only.
+/// - An attached predicate `near => crate::near` is not stored: preconditions,
+///   goals and rules call `crate::near(&bound, a, b) -> bool` with the
+///   arguments as typed ids. An attached function returns `f64`. Attachments
+///   must be pure, and see only the bound values, not the state: a predicate
+///   or function that an action or rule changes can't be attached.
+#[derive(Debug, Clone, Default)]
+pub struct Bindings {
+    /// PDDL type names and the Rust types they bind to.
+    pub types: Vec<(String, TokenStream)>,
+    /// Predicate or function names and the paths of the Rust functions they
+    /// attach to.
+    pub attachments: Vec<(String, TokenStream)>,
+}
+
+/// Like [`lifted`], with types bound to Rust types and predicates and
+/// functions attached to Rust functions.
+///
+/// # Errors
+/// As [`lifted`], and if a binding names an unknown type, predicate or
+/// function, or attaches one that actions or rules change.
+pub fn lifted_with(domain: &Domain, bindings: &Bindings) -> Result<TokenStream, Error> {
     let model = model::Model::new(domain)?;
-    lifted::generate(&model)
+    lifted::generate(&model, bindings)
 }
 
 /// Limits on the size of a grounded task, so that a large problem fails with

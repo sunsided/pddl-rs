@@ -27,3 +27,6 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `grounded` grounds a domain and problem with `pddl::sas_plus::ground` and
   generates the task as constant mask tables over a `[u64; WORDS]` state
   (level B2), with `Limits` on its size.
+- `lifted_with` and `Bindings`: PDDL types bound to Rust types, whose values
+  live in a side arena `Bound` next to the state, and static predicates and
+  functions attached to pure Rust functions.

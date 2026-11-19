@@ -17,11 +17,14 @@ struct Arguments {
     problem: Option<(LitStr, Form)>,
     /// The size limits of a grounded task.
     limits: pddl_codegen::Limits,
+    /// Types bound to Rust types, and attached predicates and functions.
+    bindings: pddl_codegen::Bindings,
 }
 
 /// What the attribute accepts, for error messages.
 const EXPECTED: &str = "expected `domain = \"file.pddl\"` or `domain_source = \"...\"`, \
-     optionally `problem`/`problem_source`, `max_operators` and `max_facts`";
+     optionally `problem`/`problem_source`, `max_operators`, `max_facts`, \
+     `types(name = Type, ...)` and `attach(name = path, ...)`";
 
 /// Parses `domain = "file.pddl"` or `domain_source = "(define ...)"`, and the
 /// same for `problem`, plus `max_operators = N` and `max_facts = N`.
@@ -37,6 +40,26 @@ fn arguments(attr: TokenStream) -> syn::Result<Arguments> {
             (&mut args.problem, Form::File)
         } else if path.is_ident("problem_source") {
             (&mut args.problem, Form::Inline)
+        } else if path.is_ident("types") || path.is_ident("attach") {
+            let types = path.is_ident("types");
+            return meta.parse_nested_meta(|inner| {
+                // PDDL names may have `-`, which an identifier can't: use `_`.
+                let name = inner
+                    .path
+                    .get_ident()
+                    .ok_or_else(|| inner.error("expected a PDDL name"))?
+                    .to_string()
+                    .replace('_', "-");
+                let value = inner.value()?;
+                if types {
+                    let ty: syn::Type = value.parse()?;
+                    args.bindings.types.push((name, quote!(#ty)));
+                } else {
+                    let function: syn::Path = value.parse()?;
+                    args.bindings.attachments.push((name, quote!(#function)));
+                }
+                Ok(())
+            });
         } else if path.is_ident("max_operators") || path.is_ident("max_facts") {
             let value: syn::LitInt = meta.value()?.parse()?;
             let value = value.base10_parse()?;
@@ -91,7 +114,13 @@ pub fn expand_task(
     let domain = Domain::from_str(&source.text).expect("validated as a domain");
     let mut tracked = vec![source.expr];
     let items = match args.problem {
-        None => pddl_codegen::lifted(&domain),
+        None => pddl_codegen::lifted_with(&domain, &args.bindings),
+        Some(_) if !args.bindings.types.is_empty() || !args.bindings.attachments.is_empty() => {
+            return Err(syn::Error::new_spanned(
+                attr,
+                "`types` and `attach` need the lifted form: leave out `problem`",
+            ));
+        }
         Some((problem_literal, form)) => {
             let problem_source = expand::load(form, &problem_literal, call_site)?;
             expand::validate(Kind::Problem, &problem_source, &problem_literal)?;
@@ -184,6 +213,39 @@ mod tests {
                 .to_string()
                 .starts_with("the grounded task has 2 operators"),
             "{error}"
+        );
+    }
+
+    #[test]
+    fn checks_bindings() {
+        let domain = r#""(define (domain d) (:types robot) (:predicates (p ?x) (q ?x)) (:action a :parameters (?x) :precondition (q ?x) :effect (p ?x)))""#;
+        let ok = expand_str(
+            &format!("domain_source = {domain}, types(robot = u8), attach(q = crate::q)"),
+            "mod d {}",
+        )
+        .unwrap();
+        assert!(ok.contains("pub robot"), "{ok}");
+        let error = |args: &str| {
+            expand_str(&format!("domain_source = {domain}, {args}"), "mod d {}")
+                .unwrap_err()
+                .to_string()
+        };
+        assert_eq!(
+            error("attach(p = crate::p)"),
+            "can't attach `p`: actions or rules change it, and attachments must be static"
+        );
+        assert_eq!(
+            error("attach(r = crate::r)"),
+            "can't attach `r`: no such predicate or function"
+        );
+        assert_eq!(
+            error("types(truck = u8)"),
+            "can't bind `truck`: no such type"
+        );
+        let problem = r#""(define (problem q) (:domain d) (:init) (:goal (and)))""#;
+        assert_eq!(
+            error(&format!("problem_source = {problem}, types(robot = u8)")),
+            "`types` and `attach` need the lifted form: leave out `problem`"
         );
     }
 

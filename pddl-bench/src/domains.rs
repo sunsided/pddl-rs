@@ -93,3 +93,48 @@ pub mod bw_large_a_grounded {}
     problem = "../../tests/data/sas-plus/gripper-2/problem.pddl"
 )]
 pub mod gripper_2_grounded {}
+
+/// Rovers on a grid of places, with Rust values bound to both types and
+/// attachments that compute adjacency and distance from them (#131).
+#[pddl::task(
+    domain_source = r"
+(define (domain rovers)
+  (:requirements :typing :numeric-fluents :action-costs)
+  (:types rover place)
+  (:predicates (at ?r - rover ?p - place) (adjacent ?a ?b - place) (seen ?p - place))
+  (:functions (distance ?a ?b - place) (total-cost))
+  (:action go :parameters (?r - rover ?a ?b - place)
+    :precondition (and (at ?r ?a) (adjacent ?a ?b))
+    :effect (and (not (at ?r ?a)) (at ?r ?b) (seen ?b) (increase (total-cost) (distance ?a ?b)))))
+",
+    types(place = crate::domains::Cell),
+    attach(adjacent = crate::domains::adjacent, distance = crate::domains::distance)
+)]
+pub mod rovers {}
+
+/// A grid cell: the Rust value of a `place` in [`rovers`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Cell {
+    /// The column.
+    pub x: i32,
+    /// The row.
+    pub y: i32,
+}
+
+/// Whether two places are next to each other on the grid.
+#[must_use]
+pub fn adjacent(bound: &rovers::Bound, a: rovers::types::Place, b: rovers::types::Place) -> bool {
+    let (a, b) = (bound.place[a.0 as usize], bound.place[b.0 as usize]);
+    (a.x - b.x).abs() + (a.y - b.y).abs() == 1
+}
+
+/// The cost of driving between two places: 1 along a row, 2 across rows.
+#[must_use]
+pub fn distance(bound: &rovers::Bound, a: rovers::types::Place, b: rovers::types::Place) -> f64 {
+    let (a, b) = (bound.place[a.0 as usize], bound.place[b.0 as usize]);
+    if a.y == b.y {
+        1.0
+    } else {
+        2.0
+    }
+}

@@ -4,7 +4,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::model::{ActionInfo, Arg, Comparison, Cond, Effect, Model, NumExpr, NumericOp};
-use crate::Error;
+use crate::{Bindings, Error};
 
 /// Rust keywords, which can't be identifiers.
 const KEYWORDS: &[&str] = &[
@@ -146,6 +146,12 @@ struct Gen<'a> {
     model: &'a Model,
     /// The identifiers.
     names: Names,
+    /// The Rust type each PDDL type is bound to, if any.
+    bound: Vec<Option<TokenStream>>,
+    /// The Rust function each predicate is attached to, if any.
+    attached_predicates: Vec<Option<TokenStream>>,
+    /// The Rust function each numeric function is attached to, if any.
+    attached_functions: Vec<Option<TokenStream>>,
 }
 
 /// The variable holding slot `i`'s object number.
@@ -153,11 +159,47 @@ fn var(i: usize) -> Ident {
     format_ident!("v{}", i)
 }
 
-/// Generates the items of level B1 for `model`.
-pub fn generate(model: &Model) -> Result<TokenStream, Error> {
+/// Generates the items of level B1 for `model`, with `bindings`.
+pub fn generate(model: &Model, bindings: &Bindings) -> Result<TokenStream, Error> {
+    let mut bound = vec![None; model.types.len()];
+    for (name, path) in &bindings.types {
+        let t = model
+            .types
+            .iter()
+            .position(|t| t.name == crate::model::lc(name))
+            .ok_or_else(|| Error::new(format!("can't bind `{name}`: no such type")))?;
+        bound[t] = Some(path.clone());
+    }
+    let mut attached_predicates = vec![None; model.predicates.len()];
+    let mut attached_functions = vec![None; model.functions.len()];
+    for (name, path) in &bindings.attachments {
+        let name = crate::model::lc(name);
+        if let Some(p) = model.predicates.iter().position(|p| p.name == name) {
+            if !model.predicates[p].is_static {
+                return Err(Error::new(format!(
+                    "can't attach `{name}`: actions or rules change it, and attachments must be static"
+                )));
+            }
+            attached_predicates[p] = Some(path.clone());
+        } else if let Some(f) = model.functions.iter().position(|f| f.name == name) {
+            if !model.functions[f].is_static {
+                return Err(Error::new(format!(
+                    "can't attach `{name}`: actions change it, and attachments must be static"
+                )));
+            }
+            attached_functions[f] = Some(path.clone());
+        } else {
+            return Err(Error::new(format!(
+                "can't attach `{name}`: no such predicate or function"
+            )));
+        }
+    }
     let generator = Gen {
         model,
         names: Names::new(model)?,
+        bound,
+        attached_predicates,
+        attached_functions,
     };
     Ok(generator.items())
 }
@@ -277,6 +319,12 @@ impl Gen<'_> {
         state: &TokenStream,
     ) -> TokenStream {
         let info = &self.model.functions[func];
+        if let Some(path) = &self.attached_functions[func] {
+            let args: Vec<_> = args.iter().map(|&a| self.arg(action, a)).collect();
+            let guard = self.guard(&info.args, &args);
+            let call = self.call(path, &info.args, &args, &quote!(self.starts));
+            return quote!((if #guard { ::core::option::Option::Some(#call) } else { ::core::option::Option::None }));
+        }
         let field = &self.names.functions[func];
         let store = if info.is_static {
             quote!(self.statics)
@@ -287,6 +335,22 @@ impl Gen<'_> {
         let guard = self.guard(&info.args, &args);
         let index = Self::index(&info.args, &args);
         quote!((if #guard { #store.#field.get(&#index) } else { ::core::option::Option::None }))
+    }
+
+    /// A call of an attachment with the bound values and the arguments as
+    /// typed ids of the types `types`.
+    fn call(
+        &self,
+        path: &TokenStream,
+        types: &[usize],
+        args: &[(TokenStream, usize)],
+        starts: &TokenStream,
+    ) -> TokenStream {
+        let ids = types
+            .iter()
+            .zip(args)
+            .map(|(&t, (g, _))| self.local(t, g, starts));
+        quote!(#path(&self.bound, #(#ids),*))
     }
 
     /// The index array of a `Values` entry for arguments of the types `types`.
@@ -357,6 +421,15 @@ impl Gen<'_> {
             Cond::Atom { pred, args } => {
                 let args: Vec<_> = args.iter().map(|&a| self.arg(action, a)).collect();
                 let guard = self.type_guard(*pred, &args);
+                if let Some(path) = &self.attached_predicates[*pred] {
+                    let call = self.call(
+                        path,
+                        &self.model.predicates[*pred].args,
+                        &args,
+                        &quote!(self.starts),
+                    );
+                    return quote!((#guard && #call));
+                }
                 let globals: Vec<TokenStream> = args.into_iter().map(|(g, _)| g).collect();
                 let fact = self.fact(
                     &self.store(*pred, state),
@@ -853,7 +926,9 @@ impl Gen<'_> {
                 .predicates
                 .iter()
                 .enumerate()
-                .filter(move |(_, p)| p.is_static == static_)
+                .filter(move |(i, p)| {
+                    p.is_static == static_ && self.attached_predicates[*i].is_none()
+                })
                 .map(|(i, p)| {
                     let ident = &self.names.predicates[i];
                     let ty = self.storage_type(i);
@@ -867,7 +942,9 @@ impl Gen<'_> {
                 .functions
                 .iter()
                 .enumerate()
-                .filter(move |(_, f)| f.is_static == static_)
+                .filter(move |(i, f)| {
+                    f.is_static == static_ && self.attached_functions[*i].is_none()
+                })
                 .map(|(i, f)| {
                     let ident = &self.names.functions[i];
                     let doc = format!("The values of `{}`.", f.name);
@@ -884,7 +961,9 @@ impl Gen<'_> {
                 .predicates
                 .iter()
                 .enumerate()
-                .filter(move |(_, p)| p.is_static == static_)
+                .filter(move |(i, p)| {
+                    p.is_static == static_ && self.attached_predicates[*i].is_none()
+                })
                 .map(|(i, _)| {
                     let ident = &self.names.predicates[i];
                     let new = self.storage_new(i);
@@ -897,7 +976,9 @@ impl Gen<'_> {
                 .functions
                 .iter()
                 .enumerate()
-                .filter(move |(_, f)| f.is_static == static_)
+                .filter(move |(i, f)| {
+                    f.is_static == static_ && self.attached_functions[*i].is_none()
+                })
                 .map(|(i, f)| {
                     let ident = &self.names.functions[i];
                     let args = &f.args;
@@ -910,7 +991,17 @@ impl Gen<'_> {
         let mut new_statics = new_fields(true);
         new_statics.extend(new_function(true));
 
+        let globals_of = |types: &[usize]| -> Vec<(TokenStream, usize)> {
+            types
+                .iter()
+                .enumerate()
+                .map(|(k, &t)| (quote!(args[#k]), t))
+                .collect()
+        };
         let set_values = model.functions.iter().enumerate().map(|(i, f)| {
+            if self.attached_functions[i].is_some() {
+                return quote!(#i => {});
+            }
             let store = if f.is_static {
                 quote!(statics)
             } else {
@@ -925,6 +1016,10 @@ impl Gen<'_> {
             quote!(#i => #store.#field.set(&[#(#index),*], ::core::option::Option::Some(*value)),)
         });
         let read_value = model.functions.iter().enumerate().map(|(i, f)| {
+            if let Some(path) = &self.attached_functions[i] {
+                let call = self.call(path, &f.args, &globals_of(&f.args), &quote!(self.starts));
+                return quote!(#i => ::core::option::Option::Some(#call),);
+            }
             let store = if f.is_static {
                 quote!(self.statics)
             } else {
@@ -982,6 +1077,10 @@ impl Gen<'_> {
         });
 
         let set_initial = model.predicates.iter().enumerate().map(|(i, p)| {
+            // Facts of an attached predicate come from its function, not the problem.
+            if self.attached_predicates[i].is_some() {
+                return quote!(#i => {});
+            }
             let store = if p.is_static {
                 quote!(statics)
             } else {
@@ -992,6 +1091,10 @@ impl Gen<'_> {
             quote!(#i => { #set; })
         });
         let read_fact = model.predicates.iter().enumerate().map(|(i, p)| {
+            if let Some(path) = &self.attached_predicates[i] {
+                let call = self.call(path, &p.args, &globals_of(&p.args), &quote!(self.starts));
+                return quote!(#i => #call,);
+            }
             let store = if p.is_static {
                 quote!(self.statics)
             } else {
@@ -1040,6 +1143,51 @@ impl Gen<'_> {
             }
         });
         let signature = self.signature();
+        let bound_fields: Vec<TokenStream> = self
+            .bound
+            .iter()
+            .enumerate()
+            .filter_map(|(t, path)| {
+                let path = path.as_ref()?;
+                let field = Ident::new(&snake(&model.types[t].name), Span::call_site());
+                let doc = format!(
+                    "The value of each object of type `{}`, by its id.",
+                    model.types[t].name
+                );
+                Some(quote!(#[doc = #doc] pub #field: ::std::vec::Vec<#path>))
+            })
+            .collect();
+        let bound_params: Vec<TokenStream> = self
+            .bound
+            .iter()
+            .enumerate()
+            .filter_map(|(t, path)| {
+                let path = path.as_ref()?;
+                let field = Ident::new(&snake(&model.types[t].name), Span::call_site());
+                Some(quote!(mut #field: impl FnMut(&str) -> #path))
+            })
+            .collect();
+        let bound_values: Vec<TokenStream> = self.bound.iter().enumerate().filter_map(|(t, path)| {
+            path.as_ref()?;
+            let field = Ident::new(&snake(&model.types[t].name), Span::call_site());
+            Some(quote!(#field: (loaded.starts[#t]..loaded.ends[#t]).map(|g| #field(&loaded.names[g as usize])).collect()))
+        }).collect();
+        let bound_docs = if bound_params.is_empty() {
+            quote!()
+        } else {
+            let names: Vec<String> = self
+                .bound
+                .iter()
+                .enumerate()
+                .filter(|(_, p)| p.is_some())
+                .map(|(t, _)| format!("`{}`", model.types[t].name))
+                .collect();
+            let doc = format!(
+                "The closures give the bound value of each object of the types {}, by name.",
+                names.join(", ")
+            );
+            quote!(#[doc = ""] #[doc = #doc])
+        };
         let derive = self.derive();
         let domain_doc = format!(
             "The planning task of domain `{}`, generated by `pddl-codegen`.",
@@ -1066,6 +1214,13 @@ impl Gen<'_> {
                 #(#static_fields,)*
             }
 
+            /// The values of the objects of the PDDL types bound to Rust types,
+            /// indexed by id: `bound.robot[id.0 as usize]`. Attachments read them.
+            #[derive(Clone, Debug)]
+            pub struct Bound {
+                #(#bound_fields,)*
+            }
+
             /// A ground action, with its arguments as typed ids.
             #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
             pub enum Action {
@@ -1086,6 +1241,8 @@ impl Gen<'_> {
                 constants: ::std::vec::Vec<u32>,
                 /// The static facts.
                 statics: Statics,
+                /// The values of the objects of bound types.
+                bound: Bound,
                 /// The initial state.
                 initial: State,
                 /// The goal.
@@ -1101,7 +1258,8 @@ impl Gen<'_> {
                 /// # Errors
                 /// A [`LoadError`](::pddl::codegen::LoadError) if the problem is for another
                 /// domain, uses undeclared names, or uses an unsupported construct.
-                pub fn new(problem: &::pddl::Problem) -> ::core::result::Result<Self, ::pddl::codegen::LoadError> {
+                #bound_docs
+                pub fn new(problem: &::pddl::Problem, #(#bound_params),*) -> ::core::result::Result<Self, ::pddl::codegen::LoadError> {
                     let loaded = ::pddl::codegen::load(&SIGNATURE, problem)?;
                     let count = |t: usize| (loaded.ends[t] - loaded.starts[t]) as usize;
                     let mut state = State { #(#new_state,)* };
@@ -1126,12 +1284,14 @@ impl Gen<'_> {
                             _ => unreachable!("the loader checks function indices"),
                         }
                     }
+                    let bound = Bound { #(#bound_values,)* };
                     let mut task = Self {
                         names: loaded.names,
                         starts: loaded.starts,
                         ends: loaded.ends,
                         constants: loaded.constants,
                         statics,
+                        bound,
                         initial: state,
                         goal: loaded.goal,
                         use_costs: loaded.minimize_total_cost,
@@ -1145,6 +1305,11 @@ impl Gen<'_> {
                 /// The name of each object, by number.
                 pub fn names(&self) -> &[::std::string::String] {
                     &self.names
+                }
+
+                /// The values of the objects of bound types.
+                pub fn bound(&self) -> &Bound {
+                    &self.bound
                 }
 
                 /// The static facts.

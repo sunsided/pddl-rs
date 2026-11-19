@@ -260,3 +260,44 @@ Reading them:
 - bw-large-a with the goal count solves in 9 expansions, so its row measures
   little beyond setup. A heavier instance (logistics-e with A* and the goal
   count) did not finish in five minutes with any of these reference searches.
+
+## 9. Bound types and semantic attachments (#131)
+
+```rust
+#[pddl::task(
+    domain = "rovers.pddl",
+    types(place = crate::Cell),
+    attach(adjacent = crate::adjacent, distance = crate::distance),
+)]
+mod rovers {}
+
+let task = rovers::Task::new(&problem, |name| Cell::parse(name))?;
+fn adjacent(bound: &rovers::Bound, a: rovers::types::Place, b: rovers::types::Place) -> bool { .. }
+```
+
+The two open questions of #131, decided:
+
+- **Syntax: attribute arguments**, not a side file next to the `.pddl`. The
+  bindings name Rust paths, which belong in Rust source, and the attribute
+  already carries the domain. `-` in a PDDL name is written `_`.
+- **Attachments see the bound values, not the state.** An attachment gets
+  `&Bound` and its arguments as typed ids. So an attached predicate or
+  function must be static: one that an action or rule changes is a compile
+  error. This keeps attachments pure for a given binding, which search relies
+  on, and keeps `State` the only thing that changes.
+
+How it works:
+
+- A bound type gets a field in `Bound`: `Vec<crate::Cell>`, one value per object
+  of the type and its subtypes, in id order. `Task::new` takes one
+  `FnMut(&str) -> T` per bound type and calls it with each object's name. The
+  state keeps ids only, as #131 asks, so cloning and hashing stay cheap.
+- An attached predicate has no storage: preconditions, goals and rules call the
+  function where they would read the fact, and the problem's initial facts for
+  it are ignored. An attached function returns `f64` and is read where a
+  fluent would be, including in action costs.
+- Bindings need the lifted form; with a `problem` they are a compile error.
+
+Checks: `pddl-bench/tests/bindings.rs` plans on a grid whose adjacency and
+distances come from attachments over bound cell coordinates; `task.rs` tests
+the errors.

@@ -166,6 +166,13 @@ pub fn validated_file(input: TokenStream) -> TokenStream {
 /// itself. Items already in the module stay. Unsupported requirements and
 /// constructs are compile errors. Needs the `codegen` feature.
 ///
+/// `types(robot = crate::Robot)` binds a PDDL type to a Rust type: `Task::new`
+/// then takes a closure per bound type that makes each object's value from its
+/// name, and `task.bound().robot[id.0 as usize]` holds it. `attach(near =
+/// crate::near)` backs a static predicate (`fn(&Bound, ids..) -> bool`) or
+/// function (`-> f64`) with a pure Rust function. Write `-` in PDDL names as
+/// `_`. See `pddl_codegen::Bindings`.
+///
 /// With `problem = "p.pddl"` (or `problem_source = "..."`) the task is
 /// grounded while the crate compiles instead (level B2): the module holds
 /// `State = [u64; WORDS]`, the mask tables `OPERATORS`, the names `NAMES`, and
