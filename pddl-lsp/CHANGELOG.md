@@ -7,6 +7,9 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `pddl_lsp::server::run_stdio` serves stdin and stdout on the calling thread,
+  so the server builds and runs on `wasm32-wasip1`, which has no threads. The
+  binary uses it.
 - Completion offers domain names in a problem's `(:domain ...)`, types in
   `(either ...)`, `minimize` and `maximize` after `:metric`, and functions and
   `total-time` in the metric expression. In `:init`, it offers only
