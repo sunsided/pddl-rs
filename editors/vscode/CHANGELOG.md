@@ -15,8 +15,8 @@ All notable changes to the PDDL (pddl-lsp) extension are documented in this file
   setting) on the open plan and shows its findings on the failing step.
   Desktop only.
 - **PDDL: Solve with planutils** runs the planner of the new `pddl.planner`
-  setting (`lama-first` by default) on the open problem and its domain, in a
-  terminal. Desktop only.
+  setting (`lama-first` by default) on the open problem and its domain, as a
+  task. Desktop only.
 - A smoke test (`yarn run test:web`) runs the web entry point in VS Code for
   the Web in a headless Chromium and checks that the bundled server publishes
   diagnostics. It runs in CI.

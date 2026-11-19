@@ -52,31 +52,44 @@ function directory(uri: vscode.Uri): string {
 }
 
 /**
- * Solves the active problem with the planutils planner of `pddl.planner`, in a
- * terminal. Runs `planutils run <planner> <domain> <problem>` directly, without
- * a shell, in the problem's folder, so planners that write `sas_plan` put it
- * next to the problem.
+ * Solves the active problem with the planutils planner of `pddl.planner`, as a
+ * task. Runs `planutils run <planner> <domain> <problem>` directly, without a
+ * shell, in the problem's folder, so planners that write `sas_plan` put it next
+ * to the problem. The task's terminal keeps the planner's output after it ends.
  */
-export async function solveWithPlanutils(): Promise<vscode.Terminal | undefined> {
+export async function solveWithPlanutils(): Promise<vscode.TaskExecution | undefined> {
   if (!vscode.workspace.isTrusted) {
     vscode.window.showErrorMessage("Trust this folder to run a planner on it.");
     return undefined;
   }
-  const task = await activeTask();
-  if (!task) {
+  const solve = await activeTask();
+  if (!solve) {
     return undefined;
   }
-  await vscode.workspace.save(task.problem);
+  await vscode.workspace.save(solve.problem);
   const planner = vscode.workspace.getConfiguration("pddl").get<string>("planner", "lama-first").trim();
-  const terminal = vscode.window.createTerminal({
-    name: `PDDL: ${planner}`,
-    shellPath: "planutils",
-    shellArgs: ["run", planner, task.domain.fsPath, task.problem.fsPath],
-    cwd: directory(task.problem),
-    message:
-      `Running planutils run ${planner} on ${vscode.workspace.asRelativePath(task.problem)}. ` +
-      `If planutils is missing: pip install planutils. If the planner is: planutils install ${planner}.`,
+  const task = new vscode.Task(
+    { type: "pddl-planutils", planner },
+    vscode.TaskScope.Workspace,
+    `${planner} on ${vscode.workspace.asRelativePath(solve.problem)}`,
+    "PDDL",
+    new vscode.ProcessExecution("planutils", ["run", planner, solve.domain.fsPath, solve.problem.fsPath], {
+      cwd: directory(solve.problem),
+    }),
+  );
+  const execution = await vscode.tasks.executeTask(task);
+  const ended = vscode.tasks.onDidEndTaskProcess((event) => {
+    if (event.execution !== execution) {
+      return;
+    }
+    ended.dispose();
+    // planutils exits 1 when the planner isn't installed; a missing planutils can't start.
+    if (event.exitCode !== 0) {
+      vscode.window.showErrorMessage(
+        `planutils run ${planner} failed. If planutils is missing: pip install planutils. ` +
+          `If the planner is: planutils install ${planner}.`,
+      );
+    }
   });
-  terminal.show();
-  return terminal;
+  return execution;
 }

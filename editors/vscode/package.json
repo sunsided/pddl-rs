@@ -222,7 +222,21 @@
           "when": "editorLangId == pddl"
         }
       ]
-    }
+    },
+    "taskDefinitions": [
+      {
+        "type": "pddl-planutils",
+        "required": [
+          "planner"
+        ],
+        "properties": {
+          "planner": {
+            "type": "string",
+            "description": "The planutils planner to run."
+          }
+        }
+      }
+    ]
   },
   "scripts": {
     "typecheck": "tsc -p .",

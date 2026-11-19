@@ -67,8 +67,9 @@ that corrects it.
 ### Planning
 
 **PDDL: Solve with planutils** runs a [planutils](https://pypi.org/project/planutils)
-planner on the open problem and the domain its `(:domain ...)` names, in a
-terminal in the problem's folder: `planutils run <planner> <domain> <problem>`.
+planner on the open problem and the domain its `(:domain ...)` names, as a
+task in the problem's folder: `planutils run <planner> <domain> <problem>`.
+Its terminal keeps the planner's output.
 Planners such as `lama-first` write the plan to `sas_plan` there. Install
 planutils with `pip install planutils` and a planner with
 `planutils install lama-first`. Desktop only, in a trusted folder.

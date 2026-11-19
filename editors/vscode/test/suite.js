@@ -54,18 +54,17 @@ exports.run = ((checks) => async function () {
   const root = vscode.workspace.workspaceFolders[0].uri;
   const problem = vscode.Uri.joinPath(root, "problems", "deliver.pddl");
   await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(problem));
-  const terminal = await vscode.commands.executeCommand("pddl.solveWithPlanutils");
-  assert.ok(terminal, "no terminal");
-  const options = terminal.creationOptions;
-  assert.strictEqual(options.shellPath, "planutils");
-  assert.deepStrictEqual(options.shellArgs, [
+  const execution = await vscode.commands.executeCommand("pddl.solveWithPlanutils");
+  assert.ok(execution, "no task");
+  const process = execution.task.execution;
+  assert.strictEqual(process.process, "planutils");
+  assert.deepStrictEqual(process.args, [
     "run",
     "lama-first",
     vscode.Uri.joinPath(root, "domain.pddl").fsPath,
     problem.fsPath,
   ]);
-  assert.strictEqual(options.cwd, vscode.Uri.joinPath(root, "problems").fsPath);
-  terminal.dispose();
+  assert.strictEqual(process.options.cwd, vscode.Uri.joinPath(root, "problems").fsPath);
 })(exports.run);
 
 // Plans: a step leads to its action, and VAL's findings land on the steps.
