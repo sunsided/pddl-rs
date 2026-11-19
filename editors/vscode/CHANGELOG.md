@@ -4,6 +4,12 @@ All notable changes to the PDDL (pddl-lsp) extension are documented in this file
 
 ## Unreleased
 
+### Added
+
+- A smoke test (`yarn run test:web`) runs the web entry point in VS Code for
+  the Web in a headless Chromium and checks that the bundled server publishes
+  diagnostics. It runs in CI.
+
 ## 0.2.0 - 2026-11-19
 
 ### Added

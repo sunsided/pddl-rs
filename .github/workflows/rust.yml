@@ -152,6 +152,10 @@ jobs:
         run: yarn run compile
       - name: Test in VS Code
         run: xvfb-run -a yarn run test
+      - name: Install Chromium for the web test
+        run: yarn playwright install --with-deps chromium
+      - name: Test in VS Code for the Web
+        run: yarn run test:web
       - name: Package
         run: yarn run package
 
