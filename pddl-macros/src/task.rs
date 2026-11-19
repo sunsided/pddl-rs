@@ -43,13 +43,13 @@ fn arguments(attr: TokenStream) -> syn::Result<Arguments> {
         } else if path.is_ident("types") || path.is_ident("attach") {
             let types = path.is_ident("types");
             return meta.parse_nested_meta(|inner| {
-                // PDDL names may have `-`, which an identifier can't: use `_`.
+                // PDDL names may have `-`, which an identifier can't; codegen
+                // also matches `_` as `-`.
                 let name = inner
                     .path
                     .get_ident()
                     .ok_or_else(|| inner.error("expected a PDDL name"))?
-                    .to_string()
-                    .replace('_', "-");
+                    .to_string();
                 let value = inner.value()?;
                 if types {
                     let ty: syn::Type = value.parse()?;

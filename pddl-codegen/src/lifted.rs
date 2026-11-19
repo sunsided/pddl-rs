@@ -159,6 +159,13 @@ fn var(i: usize) -> Ident {
     format_ident!("v{}", i)
 }
 
+/// Whether a binding's `name` names the PDDL name `pddl`: exactly, or with
+/// `_` standing for `-`, which Rust identifiers can't hold.
+fn names_match(pddl: &str, name: &str) -> bool {
+    let name = crate::model::lc(name);
+    pddl == name || pddl == name.replace('_', "-")
+}
+
 /// Generates the items of level B1 for `model`, with `bindings`.
 pub fn generate(model: &Model, bindings: &Bindings) -> Result<TokenStream, Error> {
     let mut bound = vec![None; model.types.len()];
@@ -166,7 +173,7 @@ pub fn generate(model: &Model, bindings: &Bindings) -> Result<TokenStream, Error
         let t = model
             .types
             .iter()
-            .position(|t| t.name == crate::model::lc(name))
+            .position(|t| names_match(&t.name, name))
             .ok_or_else(|| Error::new(format!("can't bind `{name}`: no such type")))?;
         bound[t] = Some(path.clone());
     }
@@ -174,14 +181,22 @@ pub fn generate(model: &Model, bindings: &Bindings) -> Result<TokenStream, Error
     let mut attached_functions = vec![None; model.functions.len()];
     for (name, path) in &bindings.attachments {
         let name = crate::model::lc(name);
-        if let Some(p) = model.predicates.iter().position(|p| p.name == name) {
+        if let Some(p) = model
+            .predicates
+            .iter()
+            .position(|p| names_match(&p.name, &name))
+        {
             if !model.predicates[p].is_static {
                 return Err(Error::new(format!(
                     "can't attach `{name}`: actions or rules change it, and attachments must be static"
                 )));
             }
             attached_predicates[p] = Some(path.clone());
-        } else if let Some(f) = model.functions.iter().position(|f| f.name == name) {
+        } else if let Some(f) = model
+            .functions
+            .iter()
+            .position(|f| names_match(&f.name, &name))
+        {
             if !model.functions[f].is_static {
                 return Err(Error::new(format!(
                     "can't attach `{name}`: actions change it, and attachments must be static"
