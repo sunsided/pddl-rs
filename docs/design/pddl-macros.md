@@ -69,8 +69,11 @@ Token input's only gain is per-token spans for errors.
     so Cargo recompiles the crate when the file changes, and proc macros re-expand on every compile.
     This replaces the separate `const _: &[u8] = include_bytes!(..)` from #122: the include is the source.
     Build the path literal with `LitStr::new` so Windows backslashes get escaped.
-  - The file is read twice: once by the macro to validate it, once by `include_str!`.
-    The bytes can differ only if the file changes during the build. The next build then catches it.
+  - The macro embeds the text it validated as a literal. The `include_str!` sits in an unused
+    `const _` and only feeds the dep-info. Embedding `include_str!`'s own read instead would let a file
+    rewritten mid-build ship unchecked PDDL.
+  - If `Span::local_file` is `None` (tokens from another macro, some IDE expansions), paths resolve
+    against `CARGO_MANIFEST_DIR`. The "couldn't read" error names the absolute path it tried.
 
 ## 3. Diagnostics
 

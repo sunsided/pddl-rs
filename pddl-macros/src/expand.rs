@@ -47,7 +47,9 @@ pub enum Form {
 #[derive(Debug, Clone, Default)]
 pub struct CallSite {
     /// The directory that relative paths resolve against: the directory of the
-    /// calling file, or the crate root if the compiler does not know the file.
+    /// calling file. If the compiler can't name that file, as for tokens that
+    /// another macro generated, it is the crate root (`CARGO_MANIFEST_DIR`), and
+    /// without that, the compiler's working directory.
     pub base_dir: PathBuf,
     /// The calling `.rs` file as the compiler shows it, e.g. `src/main.rs`.
     /// `None` outside the compiler.
@@ -61,8 +63,9 @@ pub struct CallSite {
 struct Source {
     /// The PDDL text.
     text: String,
-    /// An expression of type `&'static str` that yields the same text in the
-    /// expansion: the literal itself, or `include_str!` of the file.
+    /// An expression of type `&'static str` that yields exactly the checked
+    /// text in the expansion: the literal itself, or, for a file, the text read
+    /// here as a new literal (see [`load_file`]).
     expr: TokenStream,
     /// How error messages name the place of the PDDL.
     origin: diagnostics::Origin,
@@ -88,6 +91,11 @@ fn compile_errors(error: &syn::Error) -> TokenStream {
 }
 
 /// Describes the call site from the compiler's spans.
+///
+/// Falls back to the crate root when `local_file` is `None` rather than
+/// failing: IDE expansions and generated tokens have no local file, and a
+/// path that resolves elsewhere still gets a "couldn't read" error naming the
+/// absolute path it tried.
 fn call_site(input: &proc_macro::TokenStream) -> CallSite {
     let span = proc_macro::Span::call_site();
     let base_dir = span
@@ -160,26 +168,34 @@ fn lines_match(literal: &LitStr) -> bool {
     token.starts_with('r') || !token.contains('\\')
 }
 
-/// Reads a PDDL file and embeds it with `include_str!`, which also makes Cargo
-/// rebuild the crate when the file changes.
+/// Reads a PDDL file and embeds the text it checked as a literal.
+///
+/// The expansion also holds an unused `include_str!` of the file. That puts
+/// the file into the compiler's dependency info, so Cargo rebuilds the crate
+/// when it changes. It is not the embedded text, because the file could change
+/// between this read and the compiler's, and then unchecked PDDL would ship.
 fn load_file(literal: &LitStr, call_site: &CallSite) -> syn::Result<Source> {
     let relative = literal.value();
-    let path = call_site.base_dir.join(&relative);
     let error = |message: String| syn::Error::new(literal.span(), message);
 
-    let path = path
-        .canonicalize()
-        .map_err(|e| error(format!("couldn't read `{}`: {e}", path.display())))?;
+    // `absolute`, not `canonicalize`: no symlink resolution, and no `\\?\`
+    // prefix on Windows, so error messages show the path as the user knows it.
+    let path = std::path::absolute(call_site.base_dir.join(&relative))
+        .map_err(|e| error(format!("couldn't resolve `{relative}`: {e}")))?;
     let text = std::fs::read_to_string(&path)
         .map_err(|e| error(format!("couldn't read `{}`: {e}", path.display())))?;
     let path = path
         .to_str()
         .ok_or_else(|| error(format!("the path `{}` is not valid UTF-8", path.display())))?;
     let path = LitStr::new(path, literal.span());
+    let checked = LitStr::new(&text, literal.span());
 
     Ok(Source {
         text,
-        expr: quote!(::core::include_str!(#path)),
+        expr: quote!({
+            const _: &str = ::core::include_str!(#path);
+            #checked
+        }),
         origin: diagnostics::Origin::File { path: relative },
     })
 }
@@ -346,8 +362,20 @@ mod tests {
             r#""tests/fixtures/switches-domain.pddl""#,
         )
         .unwrap();
-        assert!(tokens.contains("include_str !"), "{tokens}");
-        assert!(tokens.contains(env!("CARGO_MANIFEST_DIR")), "{tokens}");
+
+        let path =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/switches-domain.pddl");
+        let path = LitStr::new(path.to_str().unwrap(), proc_macro2::Span::call_site());
+        let text = std::fs::read_to_string("tests/fixtures/switches-domain.pddl").unwrap();
+        let text = LitStr::new(&text, proc_macro2::Span::call_site());
+        assert!(
+            tokens.contains(&format!(
+                "const _ : & str = :: core :: include_str ! ({})",
+                quote!(#path)
+            )),
+            "{tokens}"
+        );
+        assert!(tokens.contains(&quote!(#text).to_string()), "{tokens}");
     }
 
     #[test]

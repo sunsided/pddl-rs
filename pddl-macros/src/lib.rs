@@ -13,7 +13,9 @@
 //!
 //! The inline forms take one string literal; raw strings (`r#"..."#`) are the
 //! easiest to write. The `_file` forms take a path that, like
-//! [`include_str!`], is relative to the file that calls the macro. Cargo
+//! [`include_str!`], is relative to the file that calls the macro (or to the
+//! crate root where the compiler can't name that file, as in tokens that
+//! another macro generated). Cargo
 //! rebuilds the crate when the PDDL file changes.
 //!
 //! The usual way in is the `pddl` crate's `macros` feature, which re-exports
