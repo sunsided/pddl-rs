@@ -11,8 +11,8 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   with `domain!`, `problem!`, `pddl!` and `validated!` and their `_file` forms.
   The new `macros` feature re-exports them, as `pddl::domain!` and so on.
 - The `serde` feature works with NOVA (`novafile::serde`), and
-  `schema/pddl.novs` is a NOVA schema for it, which the test corpus validates
-  against. The `as_nova` example converts a domain and reads a hand-written
+  `schema/pddl.novs` is a NOVA schema for it, down to the PDDL 3.1 grammar of
+  goals, effects and expressions, which the test corpus validates against. The `as_nova` example converts a domain and reads a hand-written
   problem.
 
 ### Changed

@@ -1,26 +1,387 @@
 # SPDX-License-Identifier: EUPL-1.2
 # PDDL domains and problems in NOVA, as the pddl crate's `serde` feature writes
 # and reads them. The `pddl::serde` module documents the mapping; this schema
-# checks its outline. tests/serde.rs validates the whole test corpus against it.
+# follows the PDDL 3.1 grammar through it. tests/serde.rs validates the whole
+# test corpus against it.
 #
 # The root is a whole PDDL file. `Domain` and `Problem` also validate a single
 # definition (`novafile::schema::Schema::resolve_as`).
+#
+# Every form `(keyword args...)` is a record with the keyword as its only field,
+# so a union of them dispatches on the keyword. Arguments are tuples in PDDL
+# order. NOVA schemas can't tell a variable from a name or pin a string to one
+# value, so `?duration`, `#t`, `total-time` and `undefined` are `Name`s.
 @schema pddl@0.1.0
 @root PddlFile
 
 # A PDDL name: a symbol such as `truck`, or a variable with its `?`, such as `?t`.
 type Name = string @len(1..)
 
-# Names mapped to their types, in order: `{"?t": truck, "?l": location}`. A type
-# is a name, or a list of names for `either`, which NOVA schemas can't express
-# without unions.
-type TypedList = map<Name, any>
+# Whole numbers are written as integers.
+type Number = int | float
 
-# A goal, condition, effect or expression: an atom as a list, symbol first
-# (`[at, "?t", depot]`), or `{keyword: arguments}`. Keywords such as `=` and
-# `at start` aren't NOVA names, so the forms can't be enum variants, and an
-# atom isn't a record; without unions, a formula is `any`.
-type Formula = any
+# A type name, or the members of an `either` type.
+type Type = Name | Name[] @len(1..)
+
+# Names mapped to their types, in order: `{"?t": truck, "?l": location}`.
+type TypedList = map<Name, Type>
+
+# --- Terms and atoms --------------------------------------------------------
+
+# A name, a variable, or a function term such as `[home, "?t"]`.
+type Term = Name | Term[] @len(1..)
+
+# An atom, symbol first: `[at, "?t", depot]`, or `["=", "?a", "?b"]`. Also a
+# function head, `[distance, "?a", "?b"]` or `[total-cost]`.
+type Atom = Term[] @len(1..)
+
+# An atom over names only, as in `init`, and a ground function term.
+type GroundAtom = Name[] @len(1..)
+
+type GroundLiteral = GroundAtom | NotGroundAtom
+
+record NotGroundAtom:
+  not: GroundAtom
+
+# --- Numeric expressions ----------------------------------------------------
+
+# `<f-exp>`: a number, a function head, or an operation on expressions.
+type Exp = Number | Atom | Minus | Divide | Plus | Times
+
+# `{"-": x}` is negation, `{"-": (a, b)}` subtraction.
+record Minus:
+  "-": Exp | (Exp, Exp)
+
+record Divide:
+  "/": (Exp, Exp)
+
+record Plus:
+  "+": Exp[] @len(2..) | (Exp, Exp)
+
+record Times:
+  "*": Exp[] @len(2..) | (Exp, Exp)
+
+# --- Goals ------------------------------------------------------------------
+
+# `<GD>`.
+type Goal = Atom | Not | And | Or | Imply | Exists | Forall | Comparison
+
+record Not:
+  not: Goal
+
+record And:
+  and: Goal[]
+
+record Or:
+  or: Goal[]
+
+record Imply:
+  imply: (Goal, Goal)
+
+record Exists:
+  exists: (TypedList, Goal)
+
+record Forall:
+  forall: (TypedList, Goal)
+
+type Comparison = Less | LessOrEqual | Equal | GreaterOrEqual | Greater
+
+record Less:
+  "<": (Exp, Exp)
+
+record LessOrEqual:
+  "<=": (Exp, Exp)
+
+record Equal:
+  "=": (Exp, Exp)
+
+record GreaterOrEqual:
+  ">=": (Exp, Exp)
+
+record Greater:
+  ">": (Exp, Exp)
+
+record Preference:
+  preference: Goal
+  name?: Name
+
+# `<pre-GD>`, also a problem's goal. A conjunction of one is its member alone.
+type Precondition = PreconditionGoal | PreconditionAnd
+
+record PreconditionAnd:
+  and: PreconditionGoal[]
+
+type PreconditionGoal = Goal | Preference | PreconditionForall
+
+record PreconditionForall:
+  forall: (TypedList, Precondition)
+
+# --- Effects ----------------------------------------------------------------
+
+# `<effect>`.
+type Effect = ConditionalEffect | EffectAnd
+
+record EffectAnd:
+  and: ConditionalEffect[]
+
+# `<c-effect>`.
+type ConditionalEffect = PrimitiveEffect | EffectForall | EffectWhen
+
+record EffectForall:
+  forall: (TypedList, Effect)
+
+record EffectWhen:
+  when: (Goal, EffectCondition)
+
+# `<cond-effect>`.
+type EffectCondition = PrimitiveEffect | PrimitiveEffectAnd
+
+record PrimitiveEffectAnd:
+  and: PrimitiveEffect[]
+
+# `<p-effect>`: an atom, its negation, or an assignment to a function head.
+type PrimitiveEffect = Atom | NotAtom | Assign | ScaleUp | ScaleDown | Increase | Decrease | Change
+
+record NotAtom:
+  not: Atom
+
+# Also assigns an object fluent a term, or `undefined`.
+record Assign:
+  assign: (Atom, Exp | Term)
+
+record ScaleUp:
+  scale-up: (Atom, Exp)
+
+record ScaleDown:
+  scale-down: (Atom, Exp)
+
+record Increase:
+  increase: (Atom, Exp)
+
+record Decrease:
+  decrease: (Atom, Exp)
+
+record Change:
+  change: (Atom, Exp)
+
+# --- Durative actions -------------------------------------------------------
+
+# `<duration-constraint>`.
+type Duration = SimpleDuration | DurationAnd
+
+record DurationAnd:
+  and: SimpleDuration[]
+
+# `{"<=": ("?duration", value)}`, or one at a time point.
+type SimpleDuration = DurationAtMost | DurationExactly | DurationAtLeast | DurationAtStart | DurationAtEnd
+
+record DurationAtMost:
+  "<=": (Name, Exp)
+
+record DurationExactly:
+  "=": (Name, Exp)
+
+record DurationAtLeast:
+  ">=": (Name, Exp)
+
+record DurationAtStart:
+  "at start": SimpleDuration
+
+record DurationAtEnd:
+  "at end": SimpleDuration
+
+# `<da-GD>`.
+type DurativeGoal = PreferenceTimedGoal | DurativeGoalAnd | DurativeGoalForall
+
+record DurativeGoalAnd:
+  and: DurativeGoal[]
+
+record DurativeGoalForall:
+  forall: (TypedList, DurativeGoal)
+
+type PreferenceTimedGoal = TimedGoal | TimedPreference
+
+record TimedPreference:
+  preference: TimedGoal
+  name?: Name
+
+# `<timed-GD>`.
+type TimedGoal = AtStart | AtEnd | OverAll
+
+record AtStart:
+  "at start": Goal
+
+record AtEnd:
+  "at end": Goal
+
+record OverAll:
+  "over all": Goal
+
+# `<da-effect>`.
+type DurativeEffect = TimedEffect | DurativeEffectAnd | DurativeEffectForall | DurativeEffectWhen
+
+record DurativeEffectAnd:
+  and: DurativeEffect[]
+
+record DurativeEffectForall:
+  forall: (TypedList, DurativeEffect)
+
+record DurativeEffectWhen:
+  when: (DurativeGoal, TimedEffect)
+
+# `<timed-effect>`: an effect at a time point, or a continuous change by `#t`.
+type TimedEffect = EffectAtStart | EffectAtEnd | ContinuousIncrease | ContinuousDecrease
+
+record EffectAtStart:
+  "at start": EffectCondition | DurativeAssignment
+
+record EffectAtEnd:
+  "at end": EffectCondition | DurativeAssignment
+
+record ContinuousIncrease:
+  increase: (Atom, TimedExp)
+
+record ContinuousDecrease:
+  decrease: (Atom, TimedExp)
+
+# `<f-exp-t>`: `#t`, or `{"*": ("#t", exp)}`.
+type TimedExp = Name | TimedScale
+
+record TimedScale:
+  "*": (Name, Exp)
+
+# `<f-assign-da>`.
+type DurativeAssignment = DurativeAssign | DurativeScaleUp | DurativeScaleDown | DurativeIncrease | DurativeDecrease | DurativeChange
+
+record DurativeAssign:
+  assign: (Atom, DurativeExp)
+
+record DurativeScaleUp:
+  scale-up: (Atom, DurativeExp)
+
+record DurativeScaleDown:
+  scale-down: (Atom, DurativeExp)
+
+record DurativeIncrease:
+  increase: (Atom, DurativeExp)
+
+record DurativeDecrease:
+  decrease: (Atom, DurativeExp)
+
+record DurativeChange:
+  change: (Atom, DurativeExp)
+
+# `<f-exp-da>`: an `Exp` that may use `?duration`.
+type DurativeExp = Number | Name | Atom | DurativeMinus | DurativeDivide | DurativePlus | DurativeTimes
+
+record DurativeMinus:
+  "-": DurativeExp | (DurativeExp, DurativeExp)
+
+record DurativeDivide:
+  "/": (DurativeExp, DurativeExp)
+
+record DurativePlus:
+  "+": DurativeExp[] @len(2..) | (DurativeExp, DurativeExp)
+
+record DurativeTimes:
+  "*": DurativeExp[] @len(2..) | (DurativeExp, DurativeExp)
+
+# --- Constraints ------------------------------------------------------------
+
+# `<con-GD>`, a domain's constraints.
+type Constraint = ConstraintAnd | ConstraintForall | ConstraintAtEnd | Always | Sometime | Within | AtMostOnce | SometimeAfter | SometimeBefore | AlwaysWithin | HoldDuring | HoldAfter
+
+# `<con2-GD>`.
+type ConstraintArgument = Goal | Constraint
+
+record ConstraintAnd:
+  and: Constraint[]
+
+record ConstraintForall:
+  forall: (TypedList, Constraint)
+
+record ConstraintAtEnd:
+  "at end": Goal
+
+record Always:
+  always: ConstraintArgument
+
+record Sometime:
+  sometime: ConstraintArgument
+
+record Within:
+  within: (Number, ConstraintArgument)
+
+record AtMostOnce:
+  at-most-once: ConstraintArgument
+
+record SometimeAfter:
+  sometime-after: (ConstraintArgument, ConstraintArgument)
+
+record SometimeBefore:
+  sometime-before: (ConstraintArgument, ConstraintArgument)
+
+record AlwaysWithin:
+  always-within: (Number, ConstraintArgument, ConstraintArgument)
+
+record HoldDuring:
+  hold-during: (Number, Number, ConstraintArgument)
+
+record HoldAfter:
+  hold-after: (Number, ConstraintArgument)
+
+# `<pref-con-GD>`, a problem's constraints. A conjunction of one is its member alone.
+type ProblemConstraints = PreferenceConstraint | PreferenceConstraintAnd
+
+record PreferenceConstraintAnd:
+  and: PreferenceConstraint[]
+
+type PreferenceConstraint = Constraint | PreferenceConstraintForall | ConstraintPreference
+
+record PreferenceConstraintForall:
+  forall: (TypedList, ProblemConstraints)
+
+record ConstraintPreference:
+  preference: Constraint
+  name?: Name
+
+# --- Problems ---------------------------------------------------------------
+
+# `<init-el>`: a literal, a timed literal, or a function's value.
+type InitElement = GroundLiteral | TimedLiteral | InitialValue
+
+record TimedLiteral:
+  at: (Number, GroundLiteral)
+
+record InitialValue:
+  "=": (GroundAtom, Number | Name)
+
+# `{minimize: expression}` or `{maximize: expression}`.
+enum Metric = minimize(MetricExp) | maximize(MetricExp)
+
+# `<metric-f-exp>`: also `total-time` and `{is-violated: preference}`.
+type MetricExp = Number | Name | GroundAtom | IsViolated | MetricMinus | MetricDivide | MetricPlus | MetricTimes
+
+record IsViolated:
+  is-violated: Name
+
+record MetricMinus:
+  "-": MetricExp | (MetricExp, MetricExp)
+
+record MetricDivide:
+  "/": (MetricExp, MetricExp)
+
+record MetricPlus:
+  "+": MetricExp[] @len(2..) | (MetricExp, MetricExp)
+
+record MetricTimes:
+  "*": MetricExp[] @len(2..) | (MetricExp, MetricExp)
+
+record Length:
+  serial?: u64
+  parallel?: u64
+
+# --- Files and definitions --------------------------------------------------
 
 record PddlFile:
   domains?: Domain[]
@@ -35,46 +396,43 @@ record Domain:
   types?: TypedList
   constants?: TypedList
   predicates?: map<Name, TypedList>
-  # A function maps to its parameters (a `TypedList`) when its type is
-  # `number`, and to `{parameters, type}` otherwise.
-  functions?: map<Name, any>
-  constraints?: Formula
-  timeless?: Formula[]
+  functions?: map<Name, FunctionSignature | TypedList>
+  constraints?: Constraint
+  timeless?: GroundLiteral[]
   actions?: map<Name, Action>
-  # PDDL's spelling, not snake_case: `nvf lint` warns about it (field-case).
+  # PDDL's spelling, not snake_case, like the keywords above: `nvf lint` warns
+  # about them (field-case), and a schema can't switch the rule off.
   durative-actions?: map<Name, DurativeAction>
   derived?: Derived[]
 
+# A function whose type isn't `number`; a `number` function is its parameters alone.
+record FunctionSignature:
+  parameters?: TypedList
+  type: Type
+
 record Action:
   parameters?: TypedList
-  precondition?: Formula
-  effect?: Formula
+  precondition?: Precondition
+  effect?: Effect
 
 record DurativeAction:
   parameters?: TypedList
-  duration?: Formula
-  condition?: Formula
-  effect?: Formula
+  duration?: Duration
+  condition?: DurativeGoal
+  effect?: DurativeEffect
 
 record Derived:
   predicate: Name
   parameters?: TypedList
-  condition: Formula
+  condition: Goal
 
 record Problem:
   problem: Name
   domain: Name
   requirements?: string[]
   objects?: TypedList
-  init: Formula[]
-  goal: Formula
-  constraints?: Formula
+  init: InitElement[]
+  goal: Precondition
+  constraints?: ProblemConstraints
   metric?: Metric
   length?: Length
-
-# `{minimize: expression}` or `{maximize: expression}`.
-enum Metric = minimize(Formula) | maximize(Formula)
-
-record Length:
-  serial?: u64
-  parallel?: u64

@@ -26,6 +26,77 @@ fn nova_schema_checks_sections() {
     check!(schema.resolve_as(&value, &problem_type).is_err());
 }
 
+/// `schema/pddl.novs` accepts every form the corpus lacks: constraints,
+/// preferences, conditional and numeric effects, durative actions and metrics.
+#[test]
+fn nova_schema_accepts_every_form() {
+    let domain = "(define (domain d)
+      (:requirements :adl :fluents :durative-actions :constraints :preferences :object-fluents)
+      (:types truck place - object)
+      (:constants depot - place)
+      (:predicates (at ?t - truck ?p - place) (ok))
+      (:functions (fuel ?t - truck) (total-cost) (home ?t - truck) - place)
+      (:constraints (and (always (ok)) (sometime (at-most-once (ok)))
+        (within 5 (ok)) (sometime-after (ok) (ok)) (sometime-before (ok) (ok))
+        (always-within 3 (ok) (ok)) (hold-during 1 2 (ok)) (hold-after 4 (ok))
+        (forall (?t - truck) (at end (at ?t depot)))))
+      (:action drive
+        :parameters (?t - truck ?from ?to - (either place truck))
+        :precondition (and (at ?t ?from) (not (= ?from ?to)) (or (ok) (imply (ok) (ok)))
+          (exists (?x - place) (at ?t ?x)) (>= (fuel ?t) (- (* 2 (fuel ?t) 3) (/ 1 (- 4))))
+          (preference p1 (ok)) (forall (?y - place) (at ?t ?y)))
+        :effect (and (not (at ?t ?from)) (at ?t ?to) (increase (total-cost) 1)
+          (decrease (fuel ?t) (+ 1 2)) (scale-up (fuel ?t) 2) (scale-down (fuel ?t) 2)
+          (assign (fuel ?t) 0) (assign (home ?t) ?to) (assign (home ?t) undefined)
+          (forall (?p - place) (when (ok) (and (ok) (not (ok)))))))
+      (:durative-action load
+        :parameters (?t - truck)
+        :duration (and (<= ?duration 5) (at start (>= ?duration (fuel ?t))))
+        :condition (and (at start (ok)) (over all (ok)) (at end (ok))
+          (preference p2 (at start (ok))) (forall (?p - place) (over all (at ?t ?p))))
+        :effect (and (at start (not (ok))) (at end (increase (fuel ?t) (* ?duration 2)))
+          (increase (total-cost) (* #t 2)) (decrease (fuel ?t) #t)
+          (forall (?p - place) (at end (at ?t ?p)))
+          (when (at start (ok)) (at end (ok)))))
+      (:derived (parked ?t - truck) (at ?t depot)))";
+    let problem = "(define (problem p) (:domain d)
+      (:objects t1 - truck)
+      (:init (at t1 depot) (not (ok)) (at 10 (ok)) (= (fuel t1) 5) (= (home t1) depot))
+      (:goal (and (at t1 depot) (preference p3 (ok))))
+      (:constraints (and (preference p4 (always (ok))) (forall (?t - truck) (sometime (ok)))))
+      (:metric minimize (+ (total-cost) (* 2 (is-violated p1)) (- total-time) (fuel t1))))";
+    let file = PddlFile {
+        domains: vec![Domain::from_str(domain).unwrap()],
+        problems: vec![Problem::from_str(problem).unwrap()],
+    };
+    let value = novafile::serde::to_value(&file).unwrap();
+    if let Err(issues) = nova_schema().validate(&value) {
+        panic!(
+            "not valid under schema/pddl.novs: {issues:?}\n{}",
+            novafile::serde::to_string(&file).unwrap()
+        );
+    }
+}
+
+/// `schema/pddl.novs` rejects malformed formulas, not just misplaced sections.
+#[test]
+fn nova_schema_checks_formulas() {
+    let schema = nova_schema();
+    let problem_type = novafile::schema::parse_type("Problem").unwrap();
+    let with_goal = |goal: &str| {
+        let text = format!("problem: p\ndomain: d\ninit: []\ngoal: {goal}\n");
+        schema.resolve_as(&novafile::text::parse(&text).unwrap(), &problem_type)
+    };
+    check!(with_goal("{imply: ([a], [b])}").is_ok());
+    check!(with_goal(r#"{">=": ([f], 2)}"#).is_ok());
+    // Unknown keyword, wrong arity, an effect in a goal, a number as an atom.
+    check!(with_goal("{nand: [[a], [b]]}").is_err());
+    check!(with_goal("{imply: ([a],)}").is_err());
+    check!(with_goal("{increase: ([f], 1)}").is_err());
+    check!(with_goal("5").is_err());
+    check!(with_goal("[]").is_err());
+}
+
 /// Every corpus file the parser accepts serializes to JSON, YAML, TOML and NOVA
 /// and deserializes back to a value that serializes to the same JSON. Problems also
 /// compare equal; domains may come back with their actions, durative actions and
