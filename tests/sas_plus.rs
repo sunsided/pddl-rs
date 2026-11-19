@@ -1,7 +1,7 @@
 //! Grounds the fixtures in `tests/data/sas-plus` (the PDDL inputs of the
 //! `sas-plus` translator fixtures) and checks the results against known optima.
 
-use pddl::sas_plus::{ground, GroundError, MAX_DELETE_PIECES};
+use pddl::sas_plus::{ground, ground_scaled, GroundError, MAX_DELETE_PIECES};
 use pddl::{Domain, Parser, Problem};
 use sas_plus::fdr::SasFile;
 
@@ -536,4 +536,107 @@ fn unreachable_groundings_are_never_built() {
     let mut names: Vec<_> = file.operators.iter().map(|op| op.name.as_str()).collect();
     names.sort_unstable();
     assert_eq!(names, ["go a", "mk"]);
+}
+
+/// From `a`, reach `c` directly for `direct`, or through `b` for `step` twice.
+fn decimal_costs(direct: &str, step: &str) -> (Domain, Problem) {
+    let domain = Domain::from_str(
+        "(define (domain d) (:requirements :action-costs) (:predicates (at ?x) (road ?x ?y))
+           (:functions (len ?x ?y) (total-cost))
+           (:action go :parameters (?x ?y) :precondition (and (at ?x) (road ?x ?y))
+             :effect (and (not (at ?x)) (at ?y) (increase (total-cost) (len ?x ?y)))))",
+    )
+    .unwrap();
+    let problem = Problem::from_str(&format!(
+        "(define (problem p) (:domain d) (:objects a b c)
+           (:init (at a) (road a c) (road a b) (road b c)
+                  (= (len a c) {direct}) (= (len a b) {step}) (= (len b c) {step}) (= (total-cost) 0))
+           (:goal (at c)) (:metric minimize (total-cost)))"
+    ))
+    .unwrap();
+    (domain, problem)
+}
+
+#[test]
+fn decimal_costs_scale_to_exact_integers() {
+    // 0.1 + 0.1 beats 0.3: scaled by 10, 1 + 1 beats 3.
+    let (domain, problem) = decimal_costs("0.3", "0.1");
+    let scaled = ground_scaled(&domain, &problem).unwrap();
+    assert_eq!(scaled.cost_scale, 10);
+    let mut costs: Vec<_> = scaled
+        .file
+        .operators
+        .iter()
+        .map(|op| (op.name.as_str(), op.cost))
+        .collect();
+    costs.sort_unstable();
+    assert_eq!(costs, [("go a b", 1), ("go a c", 3), ("go b c", 1)]);
+    let task = scaled.file.to_task();
+    assert_eq!(task.perfect_heuristic()(&task.initial), Some(2));
+
+    // `ground` still rejects costs that aren't integers.
+    assert!(matches!(
+        ground(&domain, &problem),
+        Err(GroundError::InvalidCost { .. })
+    ));
+}
+
+#[test]
+fn decimal_cost_sums_stay_exact() {
+    // In f64, 0.1 + 0.2 is 0.30000000000000004; summed exactly it is 3 tenths.
+    let domain = Domain::from_str(
+        "(define (domain d) (:requirements :action-costs) (:predicates (done))
+           (:functions (total-cost))
+           (:action a :parameters () :precondition ()
+             :effect (and (done) (increase (total-cost) 0.1) (increase (total-cost) 0.2))))",
+    )
+    .unwrap();
+    let problem = Problem::from_str(
+        "(define (problem p) (:domain d) (:init (= (total-cost) 0)) (:goal (done))
+           (:metric minimize (total-cost)))",
+    )
+    .unwrap();
+    let scaled = ground_scaled(&domain, &problem).unwrap();
+    assert_eq!(scaled.cost_scale, 10);
+    assert_eq!(scaled.file.operators[0].cost, 3);
+}
+
+#[test]
+fn integer_costs_ground_as_before() {
+    for name in ["gripper-costs", "courier"] {
+        let (domain, problem) = (
+            Domain::from_str(
+                &std::fs::read_to_string(format!("tests/data/sas-plus/{name}/domain.pddl"))
+                    .unwrap(),
+            )
+            .unwrap(),
+            Problem::from_str(
+                &std::fs::read_to_string(format!("tests/data/sas-plus/{name}/problem.pddl"))
+                    .unwrap(),
+            )
+            .unwrap(),
+        );
+        let scaled = ground_scaled(&domain, &problem).unwrap();
+        assert_eq!(scaled.cost_scale, 1, "{name}");
+        assert_eq!(scaled.file, ground(&domain, &problem).unwrap(), "{name}");
+    }
+}
+
+#[test]
+fn scaled_costs_that_do_not_fit_are_errors() {
+    // 4 294 967.296 at 3 places is u32::MAX + 1.
+    let (domain, problem) = decimal_costs("4294967.296", "1");
+    assert_eq!(
+        ground_scaled(&domain, &problem),
+        Err(GroundError::CostOutOfRange {
+            action: "go a c".into(),
+            places: 3
+        })
+    );
+    // 10 places: the scale itself is more than a u32 holds.
+    let (domain, problem) = decimal_costs("0.0000000001", "1");
+    assert!(matches!(
+        ground_scaled(&domain, &problem),
+        Err(GroundError::CostOutOfRange { places: 10, .. })
+    ));
 }
