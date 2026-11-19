@@ -6,6 +6,9 @@ All notable changes to the PDDL (pddl-lsp) extension are documented in this file
 
 ### Added
 
+- **PDDL: Solve with Planning-as-a-Service** solves the open problem on the
+  server of the new `pddl.planningAsAService.url` setting. Off by default; it
+  asks before it sends the domain and problem to a server.
 - Plan files (`.plan`, `sas_plan`) are highlighted, and Go to Definition on
   a step's action opens it in the domain.
 - **PDDL: Validate Plan with VAL** runs VAL (the new `pddl.validator`

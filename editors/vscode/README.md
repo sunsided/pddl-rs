@@ -82,6 +82,15 @@ Definition on a step's action opens it in the domain. Install VAL with
 `planutils install val` and set `pddl.validator` to `["val", "Validate"]`, or
 put VAL's `Validate` on `PATH`. Desktop only, in a trusted folder.
 
+**PDDL: Solve with Planning-as-a-Service** sends the open problem and its
+domain to a [Planning-as-a-Service](https://github.com/AI-Planning/planning-as-a-service)
+server, runs `pddl.planner` there and opens the plan it returns. It is off
+until you set `pddl.planningAsAService.url` in your user settings, such as
+`http://localhost:5001` for a server you run with
+`planutils install server-environment`, and it asks before it sends the files
+to a server for the first time. Works on the web too, where the server allows
+it (CORS).
+
 ### Highlighting
 
 Syntax highlighting for keywords, variables, numbers and comments. Semantic
@@ -114,6 +123,7 @@ the other features above don't cover embedded PDDL.
 | `pddl.server.path`  | (empty) | Path to a native `pddl-lsp` binary. If empty, the extension uses the server it comes with. Ignored on the web. |
 | `pddl.planner`      | `lama-first` | The planutils planner that **PDDL: Solve with planutils** runs. |
 | `pddl.validator`    | `["Validate"]` | The VAL command, as a program and its first arguments; the extension appends `-v <domain> <problem> <plan>`. |
+| `pddl.planningAsAService.url` | (empty) | A Planning-as-a-Service server for **PDDL: Solve with Planning-as-a-Service**; empty turns it off. User settings only. |
 | `pddl.trace.server` | `off`   | Logs the messages between VS Code and the server to the "PDDL Language Server" output panel. |
 
 The **PDDL: Restart Language Server** command restarts the server.

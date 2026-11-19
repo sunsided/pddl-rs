@@ -4,6 +4,7 @@
 
 import * as vscode from "vscode";
 import { planDefinitions } from "./plans";
+import { solveWithService } from "./service";
 import { Wasm, type ProcessOptions } from "@vscode/wasm-wasi/v1";
 import { createStdioOptions, createUriConverters, startServer } from "@vscode/wasm-wasi-lsp";
 import type {
@@ -49,6 +50,7 @@ export async function activateWith(
     }),
     vscode.workspace.onDidGrantWorkspaceTrust(() => start(context, output)),
     vscode.languages.registerDefinitionProvider({ language: "pddl-plan" }, planDefinitions(context)),
+    vscode.commands.registerCommand("pddl.solveWithService", () => solveWithService(context)),
   );
   await start(context, output);
 }

@@ -34,7 +34,8 @@
       "restrictedConfigurations": [
         "pddl.server.path",
         "pddl.planner",
-        "pddl.validator"
+        "pddl.validator",
+        "pddl.planningAsAService.url"
       ]
     }
   },
@@ -171,6 +172,12 @@
             "Validate"
           ],
           "markdownDescription": "The command that runs [VAL](https://github.com/KCL-Planning/VAL) for **PDDL: Validate Plan with VAL**, as a program and its first arguments. The extension appends `-v <domain> <problem> <plan>`. With planutils (`planutils install val`), use `[\"val\", \"Validate\"]`."
+        },
+        "pddl.planningAsAService.url": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "markdownDescription": "A [Planning-as-a-Service](https://github.com/AI-Planning/planning-as-a-service) server, such as `http://localhost:5001` for one you run with `planutils install server-environment`. Empty (the default) turns **PDDL: Solve with Planning-as-a-Service** off. The command sends the full text of the domain and problem to this server, and asks before it does. Only user settings can set it, not a workspace."
         }
       }
     },
@@ -188,6 +195,10 @@
         "command": "pddl.validatePlan",
         "title": "PDDL: Validate Plan with VAL",
         "enablement": "!isWeb"
+      },
+      {
+        "command": "pddl.solveWithService",
+        "title": "PDDL: Solve with Planning-as-a-Service"
       }
     ],
     "snippets": [
@@ -205,6 +216,10 @@
         {
           "command": "pddl.validatePlan",
           "when": "!isWeb && editorLangId == pddl-plan"
+        },
+        {
+          "command": "pddl.solveWithService",
+          "when": "editorLangId == pddl"
         }
       ]
     }
