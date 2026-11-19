@@ -1,4 +1,4 @@
-; A plan for deliver.pddl, which VAL rejects in test/fake-val.js.
+; A plan for deliver.pddl that VAL rejects: t1 is not at shop.
 (drive t1 home home)
-(DRIVE  t1 home shop)
+(DRIVE  t1 shop home)
 ; cost = 2 (unit cost)

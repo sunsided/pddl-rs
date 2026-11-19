@@ -83,7 +83,9 @@ export async function solveWithPlanutils(): Promise<vscode.TaskExecution | undef
       return;
     }
     ended.dispose();
-    // planutils exits 1 when the planner isn't installed; a missing planutils can't start.
+    // `planutils run` exits 1 for an unknown planner, and a missing planutils
+    // can't start; it exits 0 when the planner isn't installed or fails, and the
+    // task's terminal shows why.
     if (event.exitCode !== 0) {
       vscode.window.showErrorMessage(
         `planutils run ${planner} failed. If planutils is missing: pip install planutils. ` +

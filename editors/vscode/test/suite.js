@@ -92,8 +92,8 @@ exports.run = ((checks) => async function () {
     const found = vscode.languages.getDiagnostics(plan);
     assert.strictEqual(found.length, 1, JSON.stringify(found));
     assert.strictEqual(found[0].range.start.line, 2);
-    assert.ok(found[0].message.startsWith("VAL: unsatisfied precondition in (drive t1 home shop)"), found[0].message);
-    assert.ok(found[0].message.includes("(Set (at t1 home) to true)"), found[0].message);
+    assert.ok(found[0].message.startsWith("VAL: unsatisfied precondition in (drive t1 shop home)"), found[0].message);
+    assert.ok(found[0].message.includes("(Set (at t1 shop) to true)"), found[0].message);
   } finally {
     await config.update("validator", undefined, vscode.ConfigurationTarget.Global);
   }
