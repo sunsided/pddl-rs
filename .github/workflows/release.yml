@@ -2,8 +2,9 @@
 name: Release
 
 # Runs when `cargo release -p pddl-core -p pddl` pushes a vX.Y.Z tag (see
-# pddl/release.toml). Publishes pddl-core, then pddl, which re-exports it; both
-# carry the same version. Only plain X.Y.Z versions are released; pre-release
+# pddl/release.toml). Publishes pddl-core, then pddl-macros if its version is
+# not on crates.io yet, then pddl, which re-exports both. pddl-core and pddl
+# carry the same version; pddl-macros has its own. Only plain X.Y.Z versions are released; pre-release
 # tags such as v1.0.0-rc.1 don't match.
 on:
   push:
@@ -52,7 +53,6 @@ jobs:
             echo "::error::Tag $GITHUB_REF_NAME points at a commit that is not on main"
             exit 1
           fi
-          echo "VERSION=$version" >> "$GITHUB_ENV"
       # The same feature combinations as the Rust CI workflow.
       - name: Run tests
         run: |
@@ -62,21 +62,24 @@ jobs:
           cargo test --no-default-features --features parser
           cargo test -p pddl --all-features
       # Re-runs skip crates whose version is already on crates.io, so a release
-      # that published pddl-core but failed on pddl can be finished.
+      # that published pddl-core but failed on pddl can be finished. The same
+      # check publishes pddl-macros only when its version is new.
       - name: Check which crates are already on crates.io
         id: crates-io
         run: |
+          metadata=$(cargo metadata --no-deps --format-version 1)
           pending=""
-          for crate in pddl-core pddl; do
+          for crate in pddl-core pddl-macros pddl; do
+            version=$(jq -r --arg crate "$crate" '.packages[] | select(.name == $crate) | .version' <<< "$metadata")
             response="$RUNNER_TEMP/crates-io-$crate.json"
             # --retry covers timeouts, 429 and 5xx; a 404 means "not published yet".
             status=$(curl -s --max-time 10 --retry 3 -o "$response" -w '%{http_code}' \
               -A "pddl-rs release workflow (https://github.com/sunsided/pddl-rs)" \
-              "https://crates.io/api/v1/crates/$crate/$VERSION")
+              "https://crates.io/api/v1/crates/$crate/$version")
             case "$status" in
               200)
                 if [ "$(jq -r '.version.yanked' "$response")" != "false" ]; then
-                  echo "::error::$crate $VERSION is on crates.io but yanked; it can't be published again"
+                  echo "::error::$crate $version is on crates.io but yanked; it can't be published again"
                   exit 1
                 fi
                 jq -r --arg crate "$crate" '"\($crate) \(.version.num) is already on crates.io (published \(.version.created_at), checksum \(.version.checksum)); skipping"' "$response"
@@ -92,7 +95,7 @@ jobs:
         uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1.0.6
       - name: Publish
         if: steps.crates-io.outputs.pending != ''
-        # pddl-core comes first: pddl depends on it.
+        # In dependency order: pddl-macros depends on pddl-core, pddl on both.
         run: |
           for crate in $PENDING; do
             cargo publish -p "$crate"

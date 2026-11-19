@@ -2,9 +2,9 @@
 #
 # `cargo release <patch|minor|major> -p pddl-macros --execute` bumps the version,
 # turns the "## Unreleased" section of this crate's CHANGELOG.md into the
-# release's section, commits, tags pddl-macros-vX.Y.Z and pushes. Publishing to
-# crates.io and the GitHub Release happen in
-# .github/workflows/release-pddl-macros.yml (not set up yet) once the tag is pushed.
+# release's section, commits, tags pddl-macros-vX.Y.Z and pushes. The next
+# pddl release (.github/workflows/release.yml) publishes the new version to
+# crates.io; the tag itself triggers no workflow.
 publish = false
 allow-branch = ["main"]
 tag = true
