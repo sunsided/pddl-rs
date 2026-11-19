@@ -81,6 +81,8 @@ jobs:
       - name: Test with MSRV
         run: |
           cargo test -p pddl-core --all-features
+          cargo test -p pddl-runtime --all-features
+          cargo test -p pddl-codegen
           cargo test -p pddl-lsp --all-features
           cargo test -p pddl --features miette,pretty,serde
       # `proc_macro::Span::local_file` and `line` are stable since 1.88. The
