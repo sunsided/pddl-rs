@@ -1,0 +1,21 @@
+[package]
+name = "pddl-nova-tests"
+version = "0.0.0"
+description = "NOVA round-trip and schema tests for pddl's serde feature; not published"
+license = "EUPL-1.2"
+repository = "https://github.com/sunsided/pddl-rs"
+authors = ["Markus Mayer <widemeadows@gmail.com>"]
+edition = "2021"
+# novafile needs Rust 1.90. These tests live in their own crate so that
+# pddl-core's tests don't build novafile and still run on pddl-core's MSRV.
+rust-version = "1.90.0"
+publish = false
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+pddl = { path = "../pddl", default-features = false, features = ["serde"] }
+assert2 = "0.4.1"
+novafile = "0.3.0"
+serde_json = { version = "1", features = ["preserve_order"] }
