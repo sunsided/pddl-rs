@@ -5,6 +5,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [0.2.0] - 2026-11-19
+
+[0.2.0]: https://github.com/sunsided/pddl-rs/releases/tag/pddl-lsp-v0.2.0
+
 ### Added
 
 - `pddl_lsp::server::run_stdio` serves stdin and stdout on the calling thread,
