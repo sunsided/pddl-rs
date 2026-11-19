@@ -138,6 +138,9 @@ folder, and a workspace can only set `pddl.server.path` after that.
 The extension also works in VS Code for the Web, such as
 [vscode.dev](https://vscode.dev) and github.dev, with the same bundled server.
 A native server can't run there.
+The server's WASI runtime needs a cross-origin isolated page
+(`SharedArrayBuffer`). If the extension reports that the page isn't, add
+`?vscode-coi=on` to the vscode.dev URL.
 
 ### Using a native server
 

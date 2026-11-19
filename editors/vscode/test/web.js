@@ -27,8 +27,8 @@ async function main() {
     folderPath: path.join(__dirname, "workspace"),
     quality: "stable",
     // The WASI runtime blocks on the server's stdin with SharedArrayBuffer and
-    // Atomics.wait, which need a cross-origin isolated page, as vscode.dev serves.
-    // Without it the server never answers and the extension never activates.
+    // Atomics.wait, which need a cross-origin isolated page. Without it the
+    // extension shows an error instead of starting the server.
     coi: true,
   });
 }
