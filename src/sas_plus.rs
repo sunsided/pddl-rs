@@ -1,7 +1,8 @@
 //! Grounds a PDDL domain and problem into a Fast Downward SAS+ task.
 //!
-//! [`ground`] instantiates every action over the problem's objects, keeps the
-//! groundings that are reachable in the delete relaxation, and returns a
+//! [`ground`] instantiates the actions over the problem's objects that are
+//! reachable in the delete relaxation, computing reachability while it binds
+//! parameters so unreachable groundings are never built, and returns a
 //! [`SasFile`] that prints as Fast Downward's `output.sas` (file version 3).
 //! Call [`SasFile::to_task`] for a plain [`Task`].
 //!
@@ -153,12 +154,7 @@ pub fn ground(domain: &Domain, problem: &Problem) -> Result<SasFile, GroundError
         functions: &functions,
         use_metric,
     };
-    let mut ops = Vec::new();
-    for schema in &schemas {
-        grounder.instantiate(schema, &mut ops)?;
-    }
-
-    let reachable = relaxed_reachability(&init, &fluent, &mut ops);
+    let (ops, reachable) = grounder.reachable_ops(&schemas)?;
     let index: HashMap<&Atom, VarId> = reachable
         .iter()
         .enumerate()
@@ -195,7 +191,6 @@ pub fn ground(domain: &Domain, problem: &Problem) -> Result<SasFile, GroundError
         goal,
         operators: ops
             .iter()
-            .filter(|op| op.applicable)
             .filter_map(|op| op.to_sas(&index).transpose())
             .collect::<Result<_, _>>()?,
         axioms: Vec::new(),
@@ -309,6 +304,7 @@ impl World {
     /// The objects of `ty`, a single type or an `either` of types.
     fn objects_of(&self, ty: &Type) -> Result<Vec<String>, GroundError> {
         let mut objects = Vec::new();
+        let mut seen = HashSet::new();
         for primitive in ty.clone() {
             let name = lc(&primitive);
             let members = self
@@ -316,7 +312,7 @@ impl World {
                 .get(&name)
                 .ok_or(GroundError::UnknownType(name))?;
             for object in members {
-                if !objects.contains(object) {
+                if seen.insert(object) {
                     objects.push(object.clone());
                 }
             }
@@ -324,29 +320,41 @@ impl World {
         Ok(objects)
     }
 
-    /// Every way of binding `vars` to objects, each extending `subst`.
-    fn substitutions(
+    /// Calls `f` with every way of binding `vars` to objects, each extending
+    /// `subst`, one at a time.
+    fn each_substitution(
         &self,
         vars: &TypedVariables,
         subst: &Scope,
-    ) -> Result<Vec<Scope>, GroundError> {
-        let mut result = vec![subst.clone()];
-        for var in vars.iter() {
-            let name = lc(var.value());
-            let objects = self.objects_of(var.type_())?;
-            result = result
-                .into_iter()
-                .flat_map(|s| {
-                    let name = &name;
-                    objects.iter().map(move |object| {
-                        let mut s = s.clone();
-                        s.insert(name.clone(), Arg::Obj(object.clone()));
-                        s
-                    })
-                })
-                .collect();
+        f: &mut dyn FnMut(&Scope) -> Result<(), GroundError>,
+    ) -> Result<(), GroundError> {
+        let vars = vars
+            .iter()
+            .map(|var| Ok((lc(var.value()), self.objects_of(var.type_())?)))
+            .collect::<Result<Vec<_>, GroundError>>()?;
+        let mut scope = subst.clone();
+        Self::bind_each(&vars, &mut scope, f)
+    }
+
+    /// Binds the first of `vars` to each of its objects, then the rest.
+    fn bind_each(
+        vars: &[(String, Vec<String>)],
+        scope: &mut Scope,
+        f: &mut dyn FnMut(&Scope) -> Result<(), GroundError>,
+    ) -> Result<(), GroundError> {
+        let Some(((name, objects), rest)) = vars.split_first() else {
+            return f(scope);
+        };
+        let shadowed = scope.get(name).cloned();
+        for object in objects {
+            scope.insert(name.clone(), Arg::Obj(object.clone()));
+            Self::bind_each(rest, scope, f)?;
         }
-        Ok(result)
+        match shadowed {
+            Some(arg) => scope.insert(name.clone(), arg),
+            None => scope.remove(name),
+        };
+        Ok(())
     }
 }
 
@@ -586,9 +594,9 @@ impl Builder<'_> {
                     return Err(GroundError::Unsupported("preferences"));
                 }
                 PreconditionGoalDescription::Forall(vars, inner) => {
-                    for s in self.world.substitutions(vars, subst)? {
-                        self.preconditions(inner, &s, false, out)?;
-                    }
+                    self.world.each_substitution(vars, subst, &mut |s| {
+                        self.preconditions(inner, s, false, out)
+                    })?;
                 }
             }
         }
@@ -639,9 +647,8 @@ impl Builder<'_> {
             }
             GoalDescription::Exists(..) => return Err(GroundError::Unsupported("nested exists")),
             GoalDescription::ForAll(vars, inner) => {
-                for s in self.world.substitutions(vars, subst)? {
-                    self.goal(inner, &s, false, out)?;
-                }
+                self.world
+                    .each_substitution(vars, subst, &mut |s| self.goal(inner, s, false, out))?;
             }
             GoalDescription::Or(_) => return Err(GroundError::Unsupported("or")),
             GoalDescription::Imply(..) => return Err(GroundError::Unsupported("imply")),
@@ -667,9 +674,10 @@ impl Builder<'_> {
                     self.primitive(effect, subst, conds, out, cost)?;
                 }
                 ConditionalEffect::Forall(forall) => {
-                    for s in self.world.substitutions(&forall.variables, subst)? {
-                        self.effects(&forall.effects, &s, conds, out, cost)?;
-                    }
+                    self.world
+                        .each_substitution(&forall.variables, subst, &mut |s| {
+                            self.effects(&forall.effects, s, conds, out, cost)
+                        })?;
                 }
                 ConditionalEffect::When(when) => {
                     let mut conds = conds.to_vec();
@@ -770,8 +778,24 @@ struct GroundOp {
     effects: Vec<GEffect>,
     /// The cost.
     cost: u32,
-    /// Whether the action is reachable in the delete relaxation.
-    applicable: bool,
+}
+
+/// The state of binding the parameters of one schema.
+struct Search<'s, 'o> {
+    /// The schema being instantiated.
+    schema: &'s Schema,
+    /// The literals to check once each parameter is bound.
+    checks: &'s [Vec<&'s SLit>],
+    /// The fluent atoms reachable so far.
+    reachable: &'s HashSet<Atom>,
+    /// The bindings already grounded, as object indices.
+    emitted: &'o mut HashSet<Vec<usize>>,
+    /// The objects bound so far.
+    binding: Vec<String>,
+    /// The indices of those objects in the parameters' object lists.
+    path: Vec<usize>,
+    /// The ground actions found, with their object indices.
+    out: &'o mut Vec<(Vec<usize>, GroundOp)>,
 }
 
 /// Instantiates schemas against the initial state.
@@ -828,48 +852,147 @@ impl Grounder<'_> {
         Some(out)
     }
 
-    /// Adds every grounding of `schema` whose static preconditions hold.
-    fn instantiate(&self, schema: &Schema, out: &mut Vec<GroundOp>) -> Result<(), GroundError> {
-        // Check each static literal as soon as its last parameter is bound.
+    /// Grounds the actions that are applicable in the delete relaxation and
+    /// returns them, in schema and parameter order, with the reachable fluent
+    /// atoms, sorted.
+    ///
+    /// Grounding and reachability alternate, as in Fast Downward: a parameter
+    /// is only bound to objects for which the static and positive fluent
+    /// preconditions mentioning it already hold or are reachable, so groundings
+    /// that can never apply are never built.
+    fn reachable_ops(
+        &self,
+        schemas: &[Schema],
+    ) -> Result<(Vec<GroundOp>, BTreeSet<Atom>), GroundError> {
+        let mut reachable: HashSet<Atom> = self
+            .init
+            .iter()
+            .filter(|(pred, _)| self.fluent.contains(pred.as_str()))
+            .cloned()
+            .collect();
+        // Each ground action with its schema and the indices of its objects,
+        // which order them as one pass over every binding would.
+        let mut ops: Vec<(usize, Vec<usize>, GroundOp)> = Vec::new();
+        let mut emitted: Vec<HashSet<Vec<usize>>> = vec![HashSet::new(); schemas.len()];
+        // The add effects of `ops` whose conditions were not reachable yet.
+        let mut pending: Vec<(Vec<GLit>, Atom)> = Vec::new();
+        loop {
+            let before = ops.len();
+            for (i, schema) in schemas.iter().enumerate() {
+                let mut found = Vec::new();
+                self.instantiate(schema, &reachable, &mut emitted[i], &mut found)?;
+                ops.extend(found.into_iter().map(|(path, op)| (i, path, op)));
+            }
+            if ops.len() == before {
+                break;
+            }
+            for (_, _, op) in &ops[before..] {
+                pending.extend(
+                    op.effects
+                        .iter()
+                        .filter(|effect| effect.add)
+                        .map(|effect| (effect.conds.clone(), effect.atom.clone())),
+                );
+            }
+            // Fire the conditional adds of the actions found so far.
+            loop {
+                let count = reachable.len();
+                pending.retain(|(conds, atom)| {
+                    if reachable.contains(atom) {
+                        false
+                    } else if holds_relaxed(conds, &reachable) {
+                        reachable.insert(atom.clone());
+                        false
+                    } else {
+                        true
+                    }
+                });
+                if reachable.len() == count {
+                    break;
+                }
+            }
+        }
+        ops.sort_by(|(a, pa, _), (b, pb, _)| (a, pa).cmp(&(b, pb)));
+        Ok((
+            ops.into_iter().map(|(_, _, op)| op).collect(),
+            reachable.into_iter().collect(),
+        ))
+    }
+
+    /// Adds every grounding of `schema` that is not in `emitted` and whose
+    /// static preconditions hold and positive fluent preconditions are
+    /// `reachable`, with the indices of its objects.
+    fn instantiate(
+        &self,
+        schema: &Schema,
+        reachable: &HashSet<Atom>,
+        emitted: &mut HashSet<Vec<usize>>,
+        out: &mut Vec<(Vec<usize>, GroundOp)>,
+    ) -> Result<(), GroundError> {
+        // Check each literal as soon as its last parameter is bound.
         let mut checks: Vec<Vec<&SLit>> = vec![Vec::new(); schema.params.len()];
         for lit in &schema.pre {
-            let is_static = match lit {
+            let checked = match lit {
                 SLit::Eq(..) => true,
-                SLit::Atom(atom, _) => !self.fluent.contains(atom.pred.as_str()),
+                SLit::Atom(atom, positive) => {
+                    *positive || !self.fluent.contains(atom.pred.as_str())
+                }
             };
-            if is_static {
+            if checked {
                 match lit.last_param() {
                     Some(i) => checks[i].push(lit),
-                    None if self.eval_static(lit, &[]) == Some(false) => return Ok(()),
+                    None if !self.relaxed(lit, &[], reachable) => return Ok(()),
                     None => {}
                 }
             }
         }
-        let mut binding = Vec::with_capacity(schema.params.len());
-        self.bind(schema, &checks, &mut binding, out)
+        let mut search = Search {
+            schema,
+            checks: &checks,
+            reachable,
+            emitted,
+            binding: Vec::with_capacity(schema.params.len()),
+            path: Vec::with_capacity(schema.params.len()),
+            out,
+        };
+        self.bind(&mut search)
+    }
+
+    /// Whether `lit` can hold in the delete relaxation: a static literal that
+    /// holds, or a positive fluent atom that is `reachable`. Negative fluent
+    /// literals are ignored, as the relaxation assumes they can hold.
+    fn relaxed(&self, lit: &SLit, binding: &[String], reachable: &HashSet<Atom>) -> bool {
+        match (self.eval_static(lit, binding), lit) {
+            (Some(holds), _) => holds,
+            (None, SLit::Atom(atom, true)) => reachable.contains(&Self::atom(atom, binding)),
+            (None, _) => true,
+        }
     }
 
     /// Binds the next parameter, recursively.
-    fn bind(
-        &self,
-        schema: &Schema,
-        checks: &[Vec<&SLit>],
-        binding: &mut Vec<String>,
-        out: &mut Vec<GroundOp>,
-    ) -> Result<(), GroundError> {
-        let depth = binding.len();
-        if depth == schema.params.len() {
-            return self.emit(schema, binding, out);
-        }
-        for object in &schema.params[depth] {
-            binding.push(object.clone());
-            if checks[depth]
-                .iter()
-                .all(|lit| self.eval_static(lit, binding) != Some(false))
-            {
-                self.bind(schema, checks, binding, out)?;
+    fn bind(&self, search: &mut Search<'_, '_>) -> Result<(), GroundError> {
+        let depth = search.binding.len();
+        if depth == search.schema.params.len() {
+            if search.emitted.insert(search.path.clone()) {
+                let mut found = Vec::new();
+                self.emit(search.schema, &search.binding, &mut found)?;
+                search
+                    .out
+                    .extend(found.into_iter().map(|op| (search.path.clone(), op)));
             }
-            binding.pop();
+            return Ok(());
+        }
+        for (i, object) in search.schema.params[depth].iter().enumerate() {
+            search.binding.push(object.clone());
+            search.path.push(i);
+            if search.checks[depth]
+                .iter()
+                .all(|lit| self.relaxed(lit, &search.binding, search.reachable))
+            {
+                self.bind(search)?;
+            }
+            search.binding.pop();
+            search.path.pop();
         }
         Ok(())
     }
@@ -912,7 +1035,6 @@ impl Grounder<'_> {
             pre,
             effects,
             cost,
-            applicable: false,
         });
         Ok(())
     }
@@ -945,46 +1067,11 @@ fn ground_arg(arg: &Arg, binding: &[String]) -> String {
     }
 }
 
-/// Marks the actions applicable in the delete relaxation and returns the
-/// reachable fluent atoms, sorted.
-fn relaxed_reachability(
-    init: &HashSet<Atom>,
-    fluent: &HashSet<&str>,
-    ops: &mut [GroundOp],
-) -> BTreeSet<Atom> {
-    let mut reachable: HashSet<Atom> = init
-        .iter()
-        .filter(|(pred, _)| fluent.contains(pred.as_str()))
-        .cloned()
-        .collect();
-    let holds = |lits: &[GLit], reachable: &HashSet<Atom>| {
-        lits.iter()
-            .all(|(atom, pos)| !pos || reachable.contains(atom))
-    };
-    loop {
-        let mut changed = false;
-        for op in ops.iter_mut() {
-            if !op.applicable {
-                if !holds(&op.pre, &reachable) {
-                    continue;
-                }
-                op.applicable = true;
-                changed = true;
-            }
-            for effect in &op.effects {
-                if effect.add
-                    && !reachable.contains(&effect.atom)
-                    && holds(&effect.conds, &reachable)
-                {
-                    reachable.insert(effect.atom.clone());
-                    changed = true;
-                }
-            }
-        }
-        if !changed {
-            return reachable.into_iter().collect();
-        }
-    }
+/// Whether a conjunction of fluent literals can hold in the delete relaxation:
+/// each positive atom is `reachable`.
+fn holds_relaxed(lits: &[GLit], reachable: &HashSet<Atom>) -> bool {
+    lits.iter()
+        .all(|(atom, pos)| !pos || reachable.contains(atom))
 }
 
 /// Resolves a ground literal to a fact on a binary variable: `Ok(None)` if it

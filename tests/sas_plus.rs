@@ -519,3 +519,21 @@ fn delete_splits_are_bounded() {
         })
     );
 }
+
+#[test]
+fn unreachable_groundings_are_never_built() {
+    // `(r b)` never becomes true, so `go b` is never grounded and its missing
+    // cost `(c b)` is not an error.
+    let file = ground_str(
+        "(define (domain d) (:types t) (:predicates (r ?x) (q ?x)) (:functions (c ?x) (total-cost))
+           (:action mk :parameters () :precondition () :effect (r a))
+           (:action go :parameters (?x - t) :precondition (r ?x)
+             :effect (and (q ?x) (increase (total-cost) (c ?x)))))",
+        "(define (problem pr) (:domain d) (:objects a b - t)
+           (:init (= (c a) 2) (= (total-cost) 0)) (:goal (q a)) (:metric minimize (total-cost)))",
+    )
+    .unwrap();
+    let mut names: Vec<_> = file.operators.iter().map(|op| op.name.as_str()).collect();
+    names.sort_unstable();
+    assert_eq!(names, ["go a", "mk"]);
+}
