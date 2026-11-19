@@ -36,7 +36,11 @@ that speaks the [Language Server Protocol](https://microsoft.github.io/language-
 - **Rename** for predicates, functions, types, constants, objects, actions,
   domains and variables, across domain and problem files.
 - **Completion** for section and action keywords, requirements, predicates,
-  functions, types, objects, constants and the variables in scope.
+  functions, types (also in `(either ...)`), objects, constants, the variables
+  in scope, domain names in a problem's `(:domain ...)`, `minimize` and
+  `maximize` after `:metric`, and functions and `total-time` in the metric
+  expression. In `:init`, only predicates, `not`, `at` and `=` are offered
+  after `(`, and only functions inside `(= ...)`.
 - **Signature help** while you type the arguments of a predicate or function.
 - **Inlay hints** with parameter names before arguments, such as
   `(at ?t: t1 ?p: home)`, unless the argument already has that name.

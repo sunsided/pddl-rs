@@ -44,7 +44,7 @@ use pddl::{Name, Parser, Variable};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use crate::analysis::{node_range, Definition, Expect, Kind, Occurrence};
+use crate::analysis::{node_range, Analysis, Definition, Expect, Kind, Occurrence};
 use crate::format::format;
 use crate::line_index::Encoding;
 use crate::workspace::{Document, Severity, Target, Workspace};
@@ -136,6 +136,13 @@ const FORMULA_WORDS: &[&str] = &[
     "hold-after",
     "either",
 ];
+
+/// The words that can start a fact of `:init`, for completion after `(`: a
+/// negated fact, a timed initial literal, or a function's value. A function
+/// itself can't, only within `(= ...)`.
+const INIT_WORDS: &[&str] = &["not", "at", "="];
+/// The words that can start a `:metric` expression, for completion after `(`.
+const METRIC_WORDS: &[&str] = &["+", "-", "*", "/", "total-time", "is-violated"];
 
 /// The semantic token types, in legend order.
 const TOKEN_TYPES: &[SemanticTokenType] = &[
@@ -709,11 +716,34 @@ impl Server {
         let before = text[..start].trim_end();
         let tree = syntax::read(text).ok()?;
         let context = document.analysis.context_at(offset);
+        let lists = enclosing_lists(&tree.nodes, offset);
+        // The head of the innermost list the word is an argument of, not the head of.
+        let outer = lists.iter().rev().find(|list| list.start + 1 != start);
+        let parent = outer
+            .and_then(|list| list.head())
+            .map(str::to_ascii_lowercase);
+        // Whether the word is the first argument, such as the domain's name.
+        let first = outer
+            .and_then(|list| list.children())
+            .is_some_and(|c| c.iter().skip(1).all(|c| c.start >= start));
+        // The innermost section, such as `:init`, so that an unclosed one
+        // doesn't decide for the sections after it.
+        let section = lists
+            .iter()
+            .rev()
+            .filter_map(|l| l.head())
+            .find(|h| h.starts_with(':'))
+            .map(str::to_ascii_lowercase);
         let item = |label: &str, kind, detail: Option<&str>| CompletionItem {
             label: label.to_string(),
             kind: Some(kind),
             detail: detail.map(str::to_string),
             ..CompletionItem::default()
+        };
+        let keywords = |words: &'static [&str]| {
+            words
+                .iter()
+                .map(move |w| item(w, CompletionItemKind::KEYWORD, None))
         };
         let visible = |kinds: &[Kind]| -> Vec<CompletionItem> {
             context
@@ -725,26 +755,10 @@ impl Server {
                 .collect()
         };
         let items = if word.starts_with('?') {
-            let mut seen = std::collections::HashSet::new();
-            document
-                .analysis
-                .definitions
-                .iter()
-                .filter(|d| {
-                    d.scope
-                        .as_ref()
-                        .is_some_and(|s| s.start < offset && offset <= s.end)
-                })
-                .filter(|d| seen.insert(d.name.to_ascii_lowercase()))
+            variables_in_scope(&document.analysis, offset)
                 .map(|d| item(&d.name, CompletionItemKind::VARIABLE, Some(&d.detail)))
                 .collect()
         } else if word.starts_with(':') {
-            let parent = enclosing_lists(&tree.nodes, offset)
-                .into_iter()
-                .rev()
-                .find(|list| list.start + 1 != start)
-                .and_then(Node::head)
-                .map(str::to_ascii_lowercase);
             let problem =
                 context.is_some_and(|c| document.analysis.contexts[c].kind == Kind::Problem);
             let words = match parent.as_deref() {
@@ -755,19 +769,34 @@ impl Server {
                 Some(":requirements") => REQUIREMENTS,
                 _ => &[],
             };
-            words
-                .iter()
-                .map(|w| item(w, CompletionItemKind::KEYWORD, None))
-                .collect()
+            keywords(words).collect()
         } else if before.ends_with('(') {
-            let mut items = visible(&[Kind::Predicate, Kind::Function]);
-            items.extend(
-                FORMULA_WORDS
-                    .iter()
-                    .map(|w| item(w, CompletionItemKind::KEYWORD, None)),
-            );
+            let (kinds, words) = list_starts(section.as_deref(), parent.as_deref());
+            let mut items = visible(kinds);
+            // A predicate named `at` already stands for the keyword.
+            let new = |k: &CompletionItem| items.iter().all(|i| i.label != k.label);
+            let words: Vec<_> = keywords(words).filter(new).collect();
+            items.extend(words);
             items
-        } else if before.ends_with(" -") || before.ends_with("\t-") || before.ends_with("\n-") {
+        } else if parent.as_deref() == Some(":domain") {
+            let domains = self.workspace.domain_names().into_iter();
+            domains
+                .filter(|_| first) // Only `)` can follow the name.
+                .map(|name| item(name, CompletionItemKind::MODULE, None))
+                .collect()
+        } else if (section.as_deref(), parent.as_deref()) == (Some(":init"), Some("=")) && first {
+            visible(&[Kind::Function]) // A function without arguments, such as `(= total-cost 0)`.
+        } else if parent.as_deref() == Some(":metric") && first {
+            keywords(&["minimize", "maximize"]).collect()
+        } else if parent.as_deref() == Some(":metric") {
+            let mut items = visible(&[Kind::Function]);
+            items.push(item("total-time", CompletionItemKind::KEYWORD, None));
+            items
+        } else if parent.as_deref() == Some("either")
+            || before.ends_with(" -")
+            || before.ends_with("\t-")
+            || before.ends_with("\n-")
+        {
             let mut items = visible(&[Kind::Type]);
             items.push(item("object", CompletionItemKind::CLASS, None));
             items
@@ -1002,6 +1031,37 @@ fn enclosing_lists<'n, 'a>(nodes: &'n [Node<'a>], offset: usize) -> Vec<&'n Node
         level = list.children().unwrap_or_default();
     }
     found
+}
+
+/// The variables declared around `offset`, each name once.
+fn variables_in_scope(analysis: &Analysis, offset: usize) -> impl Iterator<Item = &Definition> {
+    let mut seen = std::collections::HashSet::new();
+    analysis
+        .definitions
+        .iter()
+        .filter(move |d| {
+            d.scope
+                .as_ref()
+                .is_some_and(|s| s.start < offset && offset <= s.end)
+        })
+        .filter(move |d| seen.insert(d.name.to_ascii_lowercase()))
+}
+
+/// What can start a list in `section` whose enclosing list has the head
+/// `parent`: definitions of these kinds, and these words. `:init` holds facts,
+/// and `:metric` a numeric expression.
+fn list_starts(
+    section: Option<&str>,
+    parent: Option<&str>,
+) -> (&'static [Kind], &'static [&'static str]) {
+    match (section, parent) {
+        (Some(":init"), Some(":init")) => (&[Kind::Predicate], INIT_WORDS),
+        (Some(":init"), Some("=")) => (&[Kind::Function], &[]),
+        (Some(":init"), Some("at")) => (&[Kind::Predicate], &["not"]),
+        (Some(":init"), _) => (&[Kind::Predicate], &[]),
+        (Some(":metric"), _) => (&[Kind::Function], METRIC_WORDS),
+        _ => (&[Kind::Predicate, Kind::Function], FORMULA_WORDS),
+    }
 }
 
 /// The outline symbol for a kind of definition.

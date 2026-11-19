@@ -352,12 +352,120 @@ fn completes_by_context() {
             "(define (problem c10) (:domain logistics) (:objects t9 - truck)\n  (:init (at |",
             "t9",
         ),
+        ("(define (problem c11) (:domain |", "logistics"),
+        (
+            "(define (domain c12) (:types block)\n  (:constants b1 - (either |",
+            "block",
+        ),
+        (
+            "(define (problem c13) (:domain logistics)\n  (:metric |",
+            "minimize",
+        ),
+        (
+            "(define (problem c14) (:domain logistics)\n  (:metric minimize (|",
+            "total-time",
+        ),
+        (
+            "(define (problem c15) (:domain logistics)\n  (:init (|",
+            "not",
+        ),
+        (
+            "(define (problem c15) (:domain logistics)\n  (:init (|",
+            "=",
+        ),
+        (
+            "(define (problem c19) (:domain logistics)\n  (:init (at 10 (|",
+            "not",
+        ),
+        (
+            "(define (problem c20) (:domain logistics)\n  (:metric minimize |",
+            "total-time",
+        ),
+        // `:init` is still open, but the metric decides.
+        (
+            "(define (problem c21) (:domain logistics)\n  (:init (at t1 home)\n  (:metric minimize (|",
+            "total-time",
+        ),
     ];
     for (index, (text, expected)) in cases.into_iter().enumerate() {
         let uri = format!("file:///w/complete{index}.pddl");
         let labels = complete(&mut client, &uri, text);
         check!(labels.iter().any(|l| l == expected), "{text:?}: {labels:?}");
     }
+}
+
+#[test]
+fn leaves_out_completions_that_cannot_appear() {
+    let mut client = Client::start();
+    client.open("file:///w/domain.pddl", DOMAIN);
+    let fuelled = "(define (domain fuelled) (:predicates (parked ?x)) (:functions (fuel ?x)))";
+    client.open("file:///w/fuelled.pddl", fuelled);
+    let absent = [
+        // A function only starts a fact within `(= ...)`.
+        (
+            "(define (problem c27) (:domain fuelled)\n  (:init (|",
+            "fuel",
+        ),
+        (
+            "(define (problem c28) (:domain fuelled)\n  (:init (= (|",
+            "parked",
+        ),
+        (
+            "(define (problem c29) (:domain logistics)\n  (:init (at 10 (|",
+            "and",
+        ),
+        (
+            "(define (problem c16) (:domain logistics)\n  (:init (|",
+            "forall",
+        ),
+        (
+            "(define (problem c17) (:domain logistics)\n  (:metric minimize (|",
+            "and",
+        ),
+        ("(define (problem c18) (:objects t9)\n  (:domain |", "t9"),
+        (
+            "(define (problem c22) (:domain logistics)\n  (:init (= (|",
+            "at",
+        ),
+        (
+            "(define (problem c23) (:domain logistics)\n  (:init (not (|",
+            "not",
+        ),
+        (
+            "(define (problem c24) (:domain logistics)\n  (:metric minimize |",
+            "minimize",
+        ),
+    ];
+    for (index, (text, unexpected)) in absent.into_iter().enumerate() {
+        let uri = format!("file:///w/absent{index}.pddl");
+        let labels = complete(&mut client, &uri, text);
+        check!(
+            !labels.iter().any(|l| l == unexpected),
+            "{text:?}: {labels:?}"
+        );
+    }
+
+    let text = "(define (problem c30) (:domain fuelled)\n  (:init (= (|";
+    let labels = complete(&mut client, "file:///w/value.pddl", text);
+    check!(labels == ["fuel"], "{labels:?}");
+
+    // A function without arguments needs no `(`, but an object can't go there.
+    let text = "(define (problem c31) (:domain fuelled) (:objects t9)\n  (:init (= |";
+    let labels = complete(&mut client, "file:///w/bare.pddl", text);
+    check!(labels == ["fuel"], "{labels:?}");
+
+    // Only `)` can follow the domain's name.
+    let text = "(define (problem c25) (:objects t9) (:domain logistics |";
+    let labels = complete(&mut client, "file:///w/named.pddl", text);
+    check!(labels.is_empty(), "{labels:?}");
+
+    // The predicate `at` stands for the keyword `at`, so it's offered once.
+    let text = "(define (problem c26) (:domain logistics)\n  (:init (|";
+    let labels = complete(&mut client, "file:///w/once.pddl", text);
+    check!(
+        labels.iter().filter(|l| *l == "at").count() == 1,
+        "{labels:?}"
+    );
 }
 
 #[test]

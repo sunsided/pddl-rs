@@ -76,5 +76,63 @@
     "prefix": "when",
     "description": "An effect that applies only if a condition holds",
     "body": ["(when ${1:condition}", "  ${2:effect})$0"]
+  },
+  "Functions": {
+    "prefix": ":functions",
+    "description": "Numeric fluents, such as a vehicle's fuel",
+    "body": ["(:functions", "  (${1:fuel} ?${2:x} - ${3:object}) - number)$0"]
+  },
+  "Constraints": {
+    "prefix": ":constraints",
+    "description": "Trajectory constraints on the states a plan visits",
+    "body": [
+      "(:constraints (and",
+      "  (${1|always,sometime,at-most-once|} ${2:goal})))$0"
+    ]
+  },
+  "Metric": {
+    "prefix": ":metric",
+    "description": "What a good plan minimizes or maximizes",
+    "body": ["(:metric ${1|minimize,maximize|} (${2:total-cost}))$0"]
+  },
+  "Increase": {
+    "prefix": "increase",
+    "description": "An effect that adds to a numeric fluent",
+    "body": ["(increase (${1:total-cost}) ${2:1})$0"]
+  },
+  "Decrease": {
+    "prefix": "decrease",
+    "description": "An effect that subtracts from a numeric fluent",
+    "body": ["(decrease (${1:fuel} ?${2:x}) ${3:1})$0"]
+  },
+  "Implication": {
+    "prefix": "imply",
+    "description": "A formula that holds if the condition is false or the consequence holds",
+    "body": ["(imply ${1:condition} ${2:consequence})$0"]
+  },
+  "Preference": {
+    "prefix": "preference",
+    "description": "A named goal a plan should, but need not, achieve",
+    "body": ["(preference ${1:name} ${2:goal})$0"]
+  },
+  "At start": {
+    "prefix": ["at start", "atstart"],
+    "description": "A condition or effect at the start of a durative action",
+    "body": ["(at start ${1})$0"]
+  },
+  "At end": {
+    "prefix": ["at end", "atend"],
+    "description": "A condition or effect at the end of a durative action",
+    "body": ["(at end ${1})$0"]
+  },
+  "Over all": {
+    "prefix": ["over all", "overall"],
+    "description": "A condition that holds while a durative action runs",
+    "body": ["(over all ${1})$0"]
+  },
+  "Timed initial literal": {
+    "prefix": ["at time", "attime"],
+    "description": "A fact in :init that becomes true at a point in time",
+    "body": ["(at ${1:10} (${2:fact}))$0"]
   }
 }
