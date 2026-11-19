@@ -2,8 +2,6 @@
 
 use std::process::ExitCode;
 
-use lsp_server::Connection;
-
 fn main() -> ExitCode {
     for arg in std::env::args().skip(1) {
         match arg.as_str() {
@@ -29,15 +27,8 @@ fn main() -> ExitCode {
             }
         }
     }
-    let (connection, io_threads) = Connection::stdio();
-    let result = pddl_lsp::server::run(&connection);
-    drop(connection);
-    match result.map(|()| io_threads.join()) {
-        Ok(Ok(())) => ExitCode::SUCCESS,
-        Ok(Err(error)) => {
-            eprintln!("pddl-lsp: {error}");
-            ExitCode::FAILURE
-        }
+    match pddl_lsp::server::run_stdio() {
+        Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
             eprintln!("pddl-lsp: {error}");
             ExitCode::FAILURE

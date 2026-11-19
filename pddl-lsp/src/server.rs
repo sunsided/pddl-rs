@@ -163,13 +163,63 @@ pub struct Server {
     encoding: Encoding,
 }
 
+/// The error a server run ends with.
+type RunError = Box<dyn Error + Send + Sync>;
+
+/// Why a run fails on `exit` without `shutdown`, which the protocol counts as
+/// an abnormal end.
+const EXIT_EARLY: &str = "the client exited without shutting the server down";
+
 /// Runs the server on `connection` until the client shuts it down.
 ///
 /// ## Errors
 ///
 /// Fails if the connection breaks or the client sends a malformed initialization.
-pub fn run(connection: &Connection) -> Result<(), Box<dyn Error + Send + Sync>> {
-    let (id, params) = connection.initialize_start()?;
+pub fn run(connection: &Connection) -> Result<(), RunError> {
+    serve(connection.receiver.iter().map(Ok), |message| {
+        Ok(connection.sender.send(message)?)
+    })
+}
+
+/// Runs the server on stdin and stdout until the client shuts it down, on the
+/// calling thread. Unlike [`Connection::stdio`], it starts no threads, so it
+/// also runs on `wasm32-wasip1`, which has none, as in VS Code for the Web.
+/// It waits for `initialize` without a time limit, and a reply waits until the
+/// client reads stdout, as every LSP client does while it writes.
+///
+/// ## Errors
+///
+/// As [`run`], and fails if reading stdin or writing stdout fails.
+pub fn run_stdio() -> Result<(), RunError> {
+    let mut stdin = std::io::stdin().lock();
+    let mut stdout = std::io::stdout().lock();
+    let inbox = std::iter::from_fn(|| Message::read(&mut stdin).map_err(Into::into).transpose());
+    serve(inbox, |message| Ok(message.write(&mut stdout)?))
+}
+
+/// Answers the messages of `inbox` through `send` until the client exits.
+fn serve(
+    mut inbox: impl Iterator<Item = Result<Message, RunError>>,
+    mut send: impl FnMut(Message) -> Result<(), RunError>,
+) -> Result<(), RunError> {
+    // Until `initialize`, requests get an error and notifications are dropped.
+    let (id, params) = loop {
+        match inbox.next().transpose()? {
+            Some(Message::Request(request)) if request.method == "initialize" => {
+                break (request.id, request.params);
+            }
+            Some(Message::Request(request)) => {
+                let code = ErrorCode::ServerNotInitialized as i32;
+                let message = "the server is not initialized".to_string();
+                send(Message::Response(Response::new_err(
+                    request.id, code, message,
+                )))?;
+            }
+            Some(Message::Notification(n)) if n.method == "exit" => return Err(EXIT_EARLY.into()),
+            Some(_) => {}
+            None => return Err("the client closed the connection before initializing".into()),
+        }
+    };
     let params: InitializeParams = serde_json::from_value(params)?;
     let utf8 = params
         .capabilities
@@ -189,7 +239,7 @@ pub fn run(connection: &Connection) -> Result<(), Box<dyn Error + Send + Sync>> 
             version: Some(env!("CARGO_PKG_VERSION").into()),
         },
     });
-    connection.initialize_finish(id, result)?;
+    send(Message::Response(Response::new_ok(id, result)))?;
 
     let mut server = Server {
         workspace: Workspace::default(),
@@ -206,21 +256,37 @@ pub fn run(connection: &Connection) -> Result<(), Box<dyn Error + Send + Sync>> 
         }
     }
 
-    for message in &connection.receiver {
-        match message {
-            Message::Request(request) => {
-                if connection.handle_shutdown(&request)? {
-                    return Ok(());
-                }
-                let response = server.request(request);
-                connection.sender.send(Message::Response(response))?;
+    // After `shutdown`, requests get an error, including another `shutdown`,
+    // notifications other than `exit` are dropped, and `exit` ends the run.
+    let mut shut_down = false;
+    for message in inbox {
+        match message? {
+            Message::Request(request) if shut_down => {
+                let code = ErrorCode::InvalidRequest as i32;
+                let message = "the server is shutting down".to_string();
+                send(Message::Response(Response::new_err(
+                    request.id, code, message,
+                )))?;
             }
+            Message::Request(request) if request.method == "shutdown" => {
+                shut_down = true;
+                send(Message::Response(Response::new_ok(request.id, ())))?;
+            }
+            Message::Request(request) => send(Message::Response(server.request(request)))?,
+            Message::Notification(notification) if notification.method == "exit" => {
+                return if shut_down {
+                    Ok(())
+                } else {
+                    Err(EXIT_EARLY.into())
+                };
+            }
+            Message::Notification(_) if shut_down => {}
             Message::Notification(notification) => {
                 if server.notification(notification) {
                     for diagnostics in server.diagnostics() {
                         let params = serde_json::to_value(diagnostics)?;
                         let message = Notification::new(PublishDiagnostics::METHOD.into(), params);
-                        connection.sender.send(Message::Notification(message))?;
+                        send(Message::Notification(message))?;
                     }
                 }
             }

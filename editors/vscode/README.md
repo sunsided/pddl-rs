@@ -93,7 +93,7 @@ the other features above don't cover embedded PDDL.
 
 | Setting             | Default | Description |
 |---------------------|---------|-------------|
-| `pddl.server.path`  | (empty) | Path to a native `pddl-lsp` binary. If empty, the extension uses the server it comes with. |
+| `pddl.server.path`  | (empty) | Path to a native `pddl-lsp` binary. If empty, the extension uses the server it comes with. Ignored on the web. |
 | `pddl.trace.server` | `off`   | Logs the messages between VS Code and the server to the "PDDL Language Server" output panel. |
 
 The **PDDL: Restart Language Server** command restarts the server.
@@ -101,6 +101,12 @@ The **PDDL: Restart Language Server** command restarts the server.
 In [Restricted Mode](https://code.visualstudio.com/docs/editing/workspaces/workspace-trust),
 only syntax highlighting is available. The server starts once you trust the
 folder, and a workspace can only set `pddl.server.path` after that.
+
+### On the web
+
+The extension also works in VS Code for the Web, such as
+[vscode.dev](https://vscode.dev) and github.dev, with the same bundled server.
+A native server can't run there.
 
 ### Using a native server
 

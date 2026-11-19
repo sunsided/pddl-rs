@@ -6,6 +6,8 @@ All notable changes to the PDDL (pddl-lsp) extension are documented in this file
 
 ### Added
 
+- The extension works in VS Code for the Web, such as vscode.dev and
+  github.dev, with the bundled server.
 - Snippets for `:functions`, `:constraints`, `:metric`, `imply`,
   `preference`, `increase`, `decrease`, `at start`, `at end`, `over all` and
   timed initial literals.

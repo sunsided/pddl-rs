@@ -90,7 +90,7 @@ highlighting and bundles this server compiled to WebAssembly, so you don't need
 to install the binary. Install it from the Marketplace as
 [`sunsided.pddl-lsp`](https://marketplace.visualstudio.com/items?itemName=sunsided.pddl-lsp),
 or build and install it yourself, which needs Node.js, [Yarn](https://classic.yarnpkg.com/), the
-`wasm32-wasip1-threads` Rust target and [Task](https://taskfile.dev). From the
+`wasm32-wasip1` Rust target and [Task](https://taskfile.dev). From the
 repository root, run:
 
 ```shell

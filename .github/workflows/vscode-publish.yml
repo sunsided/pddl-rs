@@ -36,13 +36,13 @@ jobs:
           node-version: 22
       - name: Install Rust
         run: |
-          rustup toolchain install stable --profile minimal --target wasm32-wasip1-threads --no-self-update
+          rustup toolchain install stable --profile minimal --target wasm32-wasip1 --no-self-update
           rustup default stable
       - name: Build the server as WebAssembly
         run: |
-          cargo build --release -p pddl-lsp --target wasm32-wasip1-threads
+          cargo build --release -p pddl-lsp --target wasm32-wasip1
           mkdir -p server
-          cp ../../target/wasm32-wasip1-threads/release/pddl-lsp.wasm server/
+          cp ../../target/wasm32-wasip1/release/pddl-lsp.wasm server/
       - name: Install dependencies
         run: yarn install --frozen-lockfile --ignore-scripts
       - name: Package
