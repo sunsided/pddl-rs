@@ -1,0 +1,5 @@
+(define (problem two-switches)
+  (:domain switches)
+  (:objects s1 s2)
+  (:init)
+  (:goal (and (on s1) (on s2))))

@@ -49,6 +49,25 @@ position of every atom, list and comment, and
 [`pddl::parsers::check`](https://docs.rs/pddl/latest/pddl/parsers/fn.check.html)
 reports every error in a file rather than only the first.
 
+## Compile-time Checked PDDL
+
+The `macros` feature checks PDDL while your crate compiles and turns syntax
+errors into compile errors. It needs Rust 1.88.
+
+```toml
+[dependencies]
+pddl = { version = "*", features = ["macros"] }
+```
+
+```rust ignore
+static DOMAIN: LazyLock<Domain> = pddl::domain_file!("blocks-domain.pddl");
+```
+
+The macros come from [`pddl-macros`](pddl-macros); see its
+[README](pddl-macros/README.md) for all of them. The types and the parser
+live in `pddl-core`, which `pddl` re-exports, so that `pddl-macros` can use the
+parser without a dependency cycle. Depend on `pddl`, not on `pddl-core`.
+
 ## Usage Example
 
 See [`tests/briefcase_world.rs`](tests/briefcase_world.rs) for the full example.

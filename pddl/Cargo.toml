@@ -1,0 +1,50 @@
+[package]
+name = "pddl"
+version = "0.4.0"
+description = "A PDDL 3.1 parser, strongly typed"
+license = "EUPL-1.2"
+documentation = "https://docs.rs/pddl"
+categories = ["parser-implementations", "science", "simulation"]
+keywords = ["pddl", "planning", "parser"]
+repository = "https://github.com/sunsided/pddl-rs"
+readme = "../README.md"
+# `tests/macros.rs` reads the pddl-core test corpus, which is not part of this crate.
+exclude = ["tests/macros.rs", "release.toml"]
+authors = ["Markus Mayer <widemeadows@gmail.com>"]
+edition = "2021"
+# The `macros` feature needs Rust 1.88; everything else builds on 1.86.
+rust-version = "1.86.0"
+
+[lints]
+workspace = true
+
+# Features
+
+[features]
+default = ["parser", "interning"]
+## Enables parsing of PDDL types through the `Parser` trait.
+parser = ["pddl-core/parser"]
+## Implements `miette::Diagnostic` for `ParseError`.
+miette = ["parser", "pddl-core/miette"]
+## Enables string interning for `Name` types to reduce memory footprint.
+interning = ["pddl-core/interning"]
+## Enables pretty-printing of PDDL types via the `pretty` crate.
+pretty = ["pddl-core/pretty"]
+## Implements `serde::Serialize` and `serde::Deserialize` for the PDDL types, using a
+## JSON-friendly schema that mirrors PDDL (see the `serde` module docs).
+serde = ["parser", "pddl-core/serde"]
+## Re-exports the compile-time checked `domain!`, `problem!`, `pddl!` and `validated!`
+## macros from `pddl-macros`, with their `_file` forms. Needs Rust 1.88.
+macros = ["parser", "dep:pddl-macros"]
+
+[dependencies]
+pddl-core = { version = "0.4.0", path = "..", default-features = false }
+pddl-macros = { version = "0.1.0", path = "../pddl-macros", optional = true }
+
+[[test]]
+name = "macros"
+required-features = ["macros"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

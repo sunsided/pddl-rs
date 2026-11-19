@@ -1,0 +1,37 @@
+[package]
+name = "pddl-macros"
+version = "0.1.0"
+description = "Compile-time checked PDDL: domain!, problem! and pddl! macros for the pddl crate"
+license = "EUPL-1.2"
+categories = ["parser-implementations", "science", "development-tools::procedural-macro-helpers"]
+keywords = ["pddl", "planning", "macro", "parser"]
+repository = "https://github.com/sunsided/pddl-rs"
+readme = "README.md"
+# `tests/macros.rs` reads the pddl crate's test corpus, which is not part of this crate.
+exclude = ["tests/macros.rs", "release.toml"]
+authors = ["Markus Mayer <widemeadows@gmail.com>"]
+edition = "2021"
+# `Span::local_file` and `Span::line` resolve paths and report lines; both are stable since 1.88.
+rust-version = "1.88.0"
+
+[lib]
+proc-macro = true
+
+[lints]
+workspace = true
+
+[dependencies]
+# Validates on the host with the same parser the expansion runs on the target.
+# `pddl-core`, not `pddl`: `pddl` re-exports these macros, so depending on it would be a cycle.
+# Not pinned exactly: Cargo builds one pddl-core 0.4.x for both the macros and
+# the program, so the parser that checks and the one that parses are the same.
+# An exact pin would make every pddl-core release break `pddl`'s `macros`
+# feature until pddl-macros is re-released.
+pddl-core = { version = "0.4.0", path = "..", default-features = false, features = ["parser"] }
+proc-macro2 = "1.0.107"
+quote = "1.0.47"
+syn = { version = "3.0.10", default-features = false, features = ["parsing", "printing", "proc-macro"] }
+
+[dev-dependencies]
+pddl = { version = "0.4.0", path = "../pddl" }
+trybuild = "1.0.125"

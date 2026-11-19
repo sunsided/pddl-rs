@@ -1,0 +1,9 @@
+error: ../fixtures/broken-domain.pddl:3:3: unknown section: unexpected `(:predicats (on ?s))) `
+         = help: did you mean `:predicates`?
+         |
+       3 |   (:predicats (on ?s)))
+         |   ^~~~~~~~~~~
+ --> tests/ui/broken_file.rs:2:31
+  |
+2 |     pddl_macros::domain_file!("../fixtures/broken-domain.pddl");
+  |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

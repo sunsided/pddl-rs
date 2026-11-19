@@ -1,0 +1,13 @@
+error: $DIR/tests/ui/typo.rs:3:7: unknown section: unexpected `(:predicats (on ?s))) `
+         = help: did you mean `:predicates`?
+         |
+       3 |       (:predicats (on ?s)))
+         |       ^~~~~~~~~~~
+ --> tests/ui/typo.rs:1:73
+  |
+1 |   static DOMAIN: std::sync::LazyLock<pddl::Domain> = pddl_macros::domain!(r#"
+  |  _________________________________________________________________________^
+2 | |     (define (domain d)
+3 | |       (:predicats (on ?s)))
+4 | | "#);
+  | |__^

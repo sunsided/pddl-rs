@@ -1,0 +1,15 @@
+# Configuration for cargo-release: https://github.com/crate-ci/cargo-release
+#
+# `cargo release <patch|minor|major> -p pddl-macros --execute` bumps the version,
+# turns the "## Unreleased" section of this crate's CHANGELOG.md into the
+# release's section, commits, tags pddl-macros-vX.Y.Z and pushes. The next
+# pddl release (.github/workflows/release.yml) publishes the new version to
+# crates.io; the tag itself triggers no workflow.
+publish = false
+allow-branch = ["main"]
+tag = true
+tag-name = "pddl-macros-v{{version}}"
+pre-release-commit-message = "Release pddl-macros {{version}}"
+pre-release-replacements = [
+  { file = "CHANGELOG.md", search = "## Unreleased", replace = "## Unreleased\n\n## [{{version}}] - {{date}}\n\n[{{version}}]: https://github.com/sunsided/pddl-rs/releases/tag/pddl-macros-v{{version}}", exactly = 1 },
+]

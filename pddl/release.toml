@@ -1,0 +1,17 @@
+# Configuration for cargo-release: https://github.com/crate-ci/cargo-release
+#
+# Release pddl together with pddl-core (see ../release.toml):
+#
+#     cargo release <patch|minor|major> -p pddl-core -p pddl --execute
+#
+# This crate's part turns the "## Unreleased" section of CHANGELOG.md into the
+# release's section, commits, and tags vX.Y.Z, which starts
+# .github/workflows/release.yml.
+publish = false
+allow-branch = ["main"]
+tag = true
+tag-name = "v{{version}}"
+pre-release-commit-message = "Release {{version}}"
+pre-release-replacements = [
+  { file = "../CHANGELOG.md", search = "## Unreleased", replace = "## Unreleased\n\n## [{{version}}] - {{date}}\n\n[{{version}}]: https://github.com/sunsided/pddl-rs/releases/tag/v{{version}}", exactly = 1 },
+]
