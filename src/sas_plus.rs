@@ -27,6 +27,8 @@
 //!
 //! ## Example
 //! ```
+//! # #[cfg(feature = "parser")]
+//! # fn main() {
 //! use pddl::{Domain, Parser, Problem};
 //!
 //! let domain = Domain::from_str(
@@ -43,12 +45,16 @@
 //! assert_eq!(file.variables.len(), 2);
 //! assert_eq!(file.operators[0].name, "switch a");
 //! print!("{file}"); // output.sas
+//! # }
+//! # #[cfg(not(feature = "parser"))]
+//! # fn main() {}
 //! ```
 
 use std::cell::Cell;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
-use sas_plus::fdr::{SasEffect, SasFile, SasOperator, SasVariable};
+pub use sas_plus::fdr::SasFile;
+use sas_plus::fdr::{SasEffect, SasOperator, SasVariable};
 use sas_plus::{Fact, Value, VarId};
 
 use crate::{
@@ -249,10 +255,10 @@ impl World {
             by_type: parents.keys().map(|ty| (ty.clone(), Vec::new())).collect(),
         };
         for typed in domain.constants().iter().chain(problem.objects().iter()) {
+            // A redeclared object, e.g. a constant listed again as an object,
+            // gets the types of every declaration.
             let object = lc(typed.value());
-            if !world.objects.insert(object.clone()) {
-                continue;
-            }
+            let redeclared = !world.objects.insert(object.clone());
             let mut pending: Vec<String> =
                 typed.type_().clone().into_iter().map(|t| lc(&t)).collect();
             pending.push("object".to_string());
@@ -263,11 +269,10 @@ impl World {
                 };
                 if seen.insert(ty.clone()) {
                     pending.extend(ty_parents.iter().cloned());
-                    world
-                        .by_type
-                        .get_mut(&ty)
-                        .expect("declared")
-                        .push(object.clone());
+                    let members = world.by_type.get_mut(&ty).expect("declared");
+                    if !redeclared || !members.contains(&object) {
+                        members.push(object.clone());
+                    }
                 }
             }
         }

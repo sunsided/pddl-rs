@@ -363,6 +363,19 @@ fn shared_supertypes_list_objects_once() {
     assert_eq!(file.operators.len(), 2);
 }
 
+#[test]
+fn redeclared_objects_keep_every_type() {
+    let file = ground_str(
+        "(define (domain d) (:types u v) (:constants a - u) (:predicates (p ?x))
+           (:action set :parameters (?x - v) :precondition () :effect (p ?x)))",
+        "(define (problem pr) (:domain d) (:objects a b - v) (:init) (:goal (p a)))",
+    )
+    .unwrap();
+    let mut names: Vec<_> = file.operators.iter().map(|op| op.name.as_str()).collect();
+    names.sort_unstable();
+    assert_eq!(names, ["set a", "set b"]);
+}
+
 /// The atoms an operator's effects set, as `Atom r(a)` or `NegatedAtom r(a)`.
 fn effect_values<'a>(file: &'a SasFile, op: &str) -> Vec<&'a str> {
     file.operators
