@@ -1012,12 +1012,35 @@ fn facts(map: &BTreeMap<VarId, Value>) -> Vec<Fact> {
         .collect()
 }
 
+/// Splits the conjunction `conds` into conjunctions that together hold
+/// exactly where `conds` holds and `other` does not.
+fn unless(conds: Vec<Fact>, other: &[Fact]) -> Vec<Vec<Fact>> {
+    let value = |var| conds.iter().find(|f| f.var == var).map(|f| f.value);
+    if other
+        .iter()
+        .any(|f| value(f.var).is_some_and(|v| v != f.value))
+    {
+        return vec![conds]; // the two never hold together
+    }
+    other
+        .iter()
+        .filter(|f| value(f.var).is_none())
+        .map(|f| {
+            let negated = Fact::new(f.var, if f.value == TRUE { FALSE } else { TRUE });
+            let mut piece = conds.clone();
+            piece.push(negated);
+            piece.sort();
+            piece
+        })
+        .collect()
+}
+
 impl GroundOp {
     /// Converts the action to a SAS+ operator, or `None` if its precondition
     /// can never hold.
     fn to_sas(&self, index: &HashMap<&Atom, VarId>) -> Option<SasOperator> {
         let pre = resolve_all(index, &self.pre)?;
-        let mut effects: Vec<(Vec<Fact>, VarId, Value)> = self
+        let effects: Vec<(Vec<Fact>, VarId, Value)> = self
             .effects
             .iter()
             .filter_map(|effect| {
@@ -1026,14 +1049,25 @@ impl GroundOp {
                 Some((facts(&conds), var, if effect.add { TRUE } else { FALSE }))
             })
             .collect();
-        // An add wins over a delete of the same atom under the same conditions.
-        let adds: HashSet<(Vec<Fact>, VarId)> = effects
+        // PDDL applies deletes before adds, so an add wins over a delete of the
+        // same atom: restrict each delete to the states where no add fires.
+        let adds: Vec<(Vec<Fact>, VarId)> = effects
             .iter()
             .filter(|(_, _, post)| *post == TRUE)
             .map(|(conds, var, _)| (conds.clone(), *var))
             .collect();
-        effects
-            .retain(|(conds, var, post)| *post == TRUE || !adds.contains(&(conds.clone(), *var)));
+        let mut effects: Vec<_> = effects
+            .into_iter()
+            .flat_map(|(conds, var, post)| {
+                let mut pieces = vec![conds];
+                if post == FALSE {
+                    for (add, _) in adds.iter().filter(|(_, v)| *v == var) {
+                        pieces = pieces.into_iter().flat_map(|c| unless(c, add)).collect();
+                    }
+                }
+                pieces.into_iter().map(move |c| (c, var, post))
+            })
+            .collect();
         effects.sort();
         effects.dedup();
         // Like Fast Downward, drop effects that cannot change the state, and

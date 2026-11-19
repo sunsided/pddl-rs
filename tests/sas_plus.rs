@@ -398,3 +398,51 @@ fn sibling_exists_binders_are_independent() {
     .unwrap();
     assert_eq!(effect_values(&file, "act"), ["Atom q()"]);
 }
+
+/// Each effect of an operator as its conditions and the value it sets.
+fn effects_of<'a>(file: &'a SasFile, op: &str) -> Vec<(Vec<&'a str>, &'a str)> {
+    let value = |var: usize, value: u32| {
+        file.variables[var].values[usize::try_from(value).unwrap()].as_str()
+    };
+    file.operators
+        .iter()
+        .filter(|o| o.name == op)
+        .flat_map(|o| &o.effects)
+        .map(|e| {
+            let conds = e.conditions.iter().map(|c| value(c.var, c.value)).collect();
+            (conds, value(e.var, e.post))
+        })
+        .collect()
+}
+
+#[test]
+fn adds_win_over_deletes_under_other_conditions() {
+    let file = ground_str(
+        "(define (domain d) (:predicates (p) (q) (r))
+           (:action setq :parameters () :precondition () :effect (and (q) (r)))
+           (:action act :parameters () :precondition ()
+             :effect (and (not (p)) (when (q) (p))))
+           (:action act2 :parameters () :precondition ()
+             :effect (and (when (r) (not (p))) (when (q) (p)))))",
+        "(define (problem pr) (:domain d) (:init (p)) (:goal (and (p) (q))))",
+    )
+    .unwrap();
+    let mut act = effects_of(&file, "act");
+    act.sort();
+    assert_eq!(
+        act,
+        [
+            (vec!["Atom q()"], "Atom p()"),
+            (vec!["NegatedAtom q()"], "NegatedAtom p()"),
+        ]
+    );
+    let mut act2 = effects_of(&file, "act2");
+    act2.sort();
+    assert_eq!(
+        act2,
+        [
+            (vec!["Atom q()"], "Atom p()"),
+            (vec!["NegatedAtom q()", "Atom r()"], "NegatedAtom p()"),
+        ]
+    );
+}
