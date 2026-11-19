@@ -4,6 +4,8 @@ All notable changes to the PDDL (pddl-lsp) extension are documented in this file
 
 ## Unreleased
 
+## 0.2.0 - 2026-11-19
+
 ### Added
 
 - The extension works in VS Code for the Web, such as vscode.dev and
