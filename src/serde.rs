@@ -1,5 +1,5 @@
-//! Serde support: PDDL domains and problems as JSON, YAML, TOML or any other
-//! self-describing format.
+//! Serde support: PDDL domains and problems as JSON, YAML, TOML, NOVA or any
+//! other self-describing format.
 //!
 //! Every PDDL type implements [`Serialize`], and every type with
 //! a [`Parser`] also implements [`Deserialize`].
@@ -77,6 +77,17 @@
 //!   "metric": {"minimize": ["total-cost"]}
 //! }
 //! ```
+//!
+//! # NOVA schema
+//!
+//! [`schema/pddl.novs`](https://github.com/sunsided/pddl-rs/blob/main/schema/pddl.novs)
+//! describes this schema for [NOVA](https://novafile.dev/) documents written with
+//! `novafile::serde`, down to the formulas: goals, effects, expressions, duration
+//! constraints, timed and constraint goals, `init` elements and metrics follow the
+//! PDDL 3.1 grammar, each keyword form a record with the keyword as its only field.
+//! NOVA can't tell a variable from a name, so `?duration`, `#t` and `total-time`
+//! are plain names there. `nvf validate file.nova --schema schema/pddl.novs` checks a whole
+//! [`PddlFile`](crate::PddlFile), `{domains: [...], problems: [...]}`.
 //!
 //! # Deserialization
 //!

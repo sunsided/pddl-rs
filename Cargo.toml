@@ -100,6 +100,10 @@ name = "as_yaml"
 required-features = ["serde"]
 
 [[example]]
+name = "as_nova"
+required-features = ["serde"]
+
+[[example]]
 name = "as_toml"
 required-features = ["serde"]
 
@@ -119,6 +123,7 @@ miette = { version = "=7.6.0", default-features = false, features = ["fancy-no-s
 serde_json = { version = "1", features = ["preserve_order"] }
 toml = { version = "1.2.1", features = ["preserve_order"] }
 serde_yaml_ng = "0.10"
+novafile = "0.3.0"
 criterion = { version = "0.8", default-features = false, features = ["cargo_bench_support"] }
 
 [package.metadata.docs.rs]
