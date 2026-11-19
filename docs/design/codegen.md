@@ -169,3 +169,26 @@ domain with numeric preconditions and effects against a hand-computed optimum;
 undefined values; invalid costs. No reference planner for general numeric
 domains was run (none installed): the grounder rejects numeric fluents other
 than costs.
+
+## 6. Derived predicates in B1 (#130)
+
+- A `:derived` rule becomes an `ActionInfo` named after its predicate: its
+  parameters are the head's arguments, its precondition the body. Several
+  rules for one predicate are a disjunction.
+- **Strata, at compile time.** A rule's stratum is at least the stratum of
+  every derived predicate its body reads, and one more than every one it reads
+  under an odd number of `not`s. A predicate that would need a stratum beyond
+  the number of derived predicates depends on its own negation: a compile
+  error (`tests/ui/task_not_stratifiable.rs`).
+- **Evaluation.** Derived facts live in `State`, so goals and preconditions
+  read them like other facts. `derive` clears them, then fires each stratum's
+  rules, lowest first, until nothing changes. It runs at the end of every
+  `apply` and on the initial state, so derived facts are a function of the
+  basic facts and never make two states with the same basic facts differ.
+  Recomputing from scratch is the simple choice; computing them lazily was
+  not measured.
+- An action that changes a derived predicate is a compile error.
+
+Checks: `pddl-bench/tests/derived.rs` solves `wiring` (a recursive derived
+predicate) at Fast Downward's optimum of 4 with A* and IDA*, and checks the
+derived facts after single steps; `model.rs` tests the stratum order.

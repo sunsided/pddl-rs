@@ -20,3 +20,7 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   comparisons and `assign`, `increase`, `decrease`, `scale-up`, `scale-down`
   are generated arithmetic, and `(increase (total-cost) ...)` over static
   functions becomes `Task::cost` when the problem minimizes `total-cost`.
+- Derived predicates: stratified when the crate compiles (a predicate that
+  depends on its own negation is a compile error), kept in `State` and
+  recomputed from the other facts after every action and for the initial
+  state.

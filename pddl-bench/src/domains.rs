@@ -68,3 +68,7 @@ pub mod courier {}
     :effect (and (assign (fuel) (capacity)) (increase (total-cost) 1))))
 ")]
 pub mod fuel {}
+
+/// The wiring of `wiring`: a derived predicate defined recursively.
+#[pddl::task(domain = "../../tests/data/sas-plus/wiring/domain.pddl")]
+pub mod wiring {}

@@ -5,10 +5,10 @@ use std::collections::{HashMap, HashSet};
 
 use pddl_core::{
     ActionDefinition, AssignOp, AtomicFormula, BinaryComparison, BinaryOp, ConditionalEffect,
-    Domain, EffectCondition, Effects, FluentExpression, FunctionHead, FunctionTerm,
-    GoalDescription, Literal, MultiOp, PreconditionGoalDescription, PreconditionGoalDescriptions,
-    PreferenceGoalDescription, PrimitiveEffect, Requirement, StructureDef, Term, Type,
-    TypedVariables,
+    DerivedPredicate, Domain, EffectCondition, Effects, FluentExpression, FunctionHead,
+    FunctionTerm, GoalDescription, Literal, MultiOp, PreconditionGoalDescription,
+    PreconditionGoalDescriptions, PreferenceGoalDescription, PrimitiveEffect, Requirement,
+    StructureDef, Term, Type, TypedVariables,
 };
 
 use crate::Error;
@@ -34,6 +34,8 @@ pub struct PredicateInfo {
     pub args: Vec<usize>,
     /// Whether no action changes it, so its facts are fixed by the problem.
     pub is_static: bool,
+    /// Whether it is derived: computed from the other facts by rules.
+    pub derived: bool,
 }
 
 /// A numeric function, other than `total-cost`.
@@ -254,6 +256,10 @@ pub struct Model {
     pub constants: Vec<(String, usize)>,
     /// The actions, in declaration order.
     pub actions: Vec<ActionInfo>,
+    /// The rules of the derived predicates, grouped by stratum, lowest first.
+    /// A rule is an [`ActionInfo`] named after its predicate, whose parameters
+    /// are the head's arguments and whose precondition is the body.
+    pub strata: Vec<Vec<ActionInfo>>,
 }
 
 /// The requirements generated code supports.
@@ -273,6 +279,7 @@ const SUPPORTED: &[Requirement] = &[
     Requirement::Fluents,
     // Allowed so that `:fluents` works; using an object fluent is an error.
     Requirement::ObjectFluents,
+    Requirement::DerivedPredicates,
 ];
 
 /// Returns an error for an unsupported construct.
@@ -312,6 +319,7 @@ impl Model {
                 name,
                 args,
                 is_static: true,
+                derived: false,
             });
         }
 
@@ -333,7 +341,21 @@ impl Model {
             functions,
             constants,
             actions: Vec::new(),
+            strata: Vec::new(),
         };
+        let mut rules = Vec::new();
+        for def in domain.structure().iter() {
+            if let StructureDef::Derived(derived) = def {
+                let rule = Scope::new(&model).rule(derived)?;
+                let pred = model
+                    .predicates
+                    .iter()
+                    .position(|p| p.name == rule.name)
+                    .expect("the rule resolved its predicate");
+                model.predicates[pred].derived = true;
+                rules.push((pred, rule));
+            }
+        }
         for def in domain.structure().iter() {
             match def {
                 StructureDef::Action(action) => {
@@ -341,27 +363,11 @@ impl Model {
                     model.actions.push(action);
                 }
                 StructureDef::DurativeAction(_) => return unsupported("durative actions"),
-                StructureDef::Derived(_) => return unsupported("derived predicates"),
+                StructureDef::Derived(_) => {}
             }
         }
-        let mut changed = HashSet::new();
-        for effect in model.actions.iter().flat_map(|a| &a.effects) {
-            effect.facts(&mut |pred, _| {
-                changed.insert(pred);
-            });
-        }
-        for (i, pred) in model.predicates.iter_mut().enumerate() {
-            pred.is_static = !changed.contains(&i);
-        }
-        let mut assigned = HashSet::new();
-        for effect in model.actions.iter().flat_map(|a| &a.effects) {
-            effect.assigned(&mut |func| {
-                assigned.insert(func);
-            });
-        }
-        for (i, func) in model.functions.iter_mut().enumerate() {
-            func.is_static = !assigned.contains(&i);
-        }
+        model.strata = stratify(&model.predicates, rules)?;
+        model.mark_static()?;
         for action in &model.actions {
             for term in &action.cost {
                 model
@@ -370,6 +376,36 @@ impl Model {
             }
         }
         Ok(model)
+    }
+
+    /// Marks the predicates and functions that no action changes as static,
+    /// and rejects actions that change a derived predicate.
+    fn mark_static(&mut self) -> Result<(), Error> {
+        let mut changed = HashSet::new();
+        for effect in self.actions.iter().flat_map(|a| &a.effects) {
+            effect.facts(&mut |pred, _| {
+                changed.insert(pred);
+            });
+        }
+        for (i, pred) in self.predicates.iter_mut().enumerate() {
+            if pred.derived && changed.contains(&i) {
+                return Err(Error::new(format!(
+                    "an action changes the derived predicate `{}`",
+                    pred.name
+                )));
+            }
+            pred.is_static = !pred.derived && !changed.contains(&i);
+        }
+        let mut assigned = HashSet::new();
+        for effect in self.actions.iter().flat_map(|a| &a.effects) {
+            effect.assigned(&mut |func| {
+                assigned.insert(func);
+            });
+        }
+        for (i, func) in self.functions.iter_mut().enumerate() {
+            func.is_static = !assigned.contains(&i);
+        }
+        Ok(())
     }
 
     /// Checks that a summand of an action cost is a non-negative integer for
@@ -427,6 +463,68 @@ fn resolve_type(types: &[TypeInfo], ty: &Type) -> Result<(usize, Option<Vec<usiz
             }
         }
     }
+}
+
+/// Calls `f` with every predicate a condition reads and whether it reads it
+/// negated (under an odd number of `not`s).
+fn reads(cond: &Cond, negated: bool, f: &mut impl FnMut(usize, bool)) {
+    match cond {
+        Cond::Atom { pred, .. } => f(*pred, negated),
+        Cond::Not(inner) => reads(inner, !negated, f),
+        Cond::Exists(_, inner) | Cond::Forall(_, inner) => reads(inner, negated, f),
+        Cond::And(parts) | Cond::Or(parts) => {
+            for part in parts {
+                reads(part, negated, f);
+            }
+        }
+        Cond::Eq(..) | Cond::Compare(..) => {}
+    }
+}
+
+/// Groups the derived predicates' rules into strata: a rule's stratum is at
+/// least that of every derived predicate its body reads, and above that of
+/// every one it reads negated, so each stratum only negates finished ones.
+fn stratify(
+    predicates: &[PredicateInfo],
+    rules: Vec<(usize, ActionInfo)>,
+) -> Result<Vec<Vec<ActionInfo>>, Error> {
+    let mut stratum = vec![0usize; predicates.len()];
+    let derived = predicates.iter().filter(|p| p.derived).count();
+    loop {
+        let mut changed = false;
+        for (head, rule) in &rules {
+            let mut need = stratum[*head];
+            for cond in &rule.pre {
+                reads(cond, false, &mut |pred, negated| {
+                    if predicates[pred].derived {
+                        need = need.max(stratum[pred] + usize::from(negated));
+                    }
+                });
+            }
+            if need > stratum[*head] {
+                if need >= derived.max(1) {
+                    return Err(Error::new(format!(
+                        "the derived predicates can't be stratified: `{}` depends on its own negation",
+                        predicates[*head].name
+                    )));
+                }
+                stratum[*head] = need;
+                changed = true;
+            }
+        }
+        if !changed {
+            break;
+        }
+    }
+    let mut strata: Vec<Vec<ActionInfo>> = Vec::new();
+    for (head, rule) in rules {
+        let s = stratum[head];
+        if strata.len() <= s {
+            strata.resize_with(s + 1, Vec::new);
+        }
+        strata[s].push(rule);
+    }
+    Ok(strata)
 }
 
 /// The numeric functions, without `total-cost`.
@@ -582,6 +680,33 @@ impl<'a> Scope<'a> {
                 None => self.vars.remove(&name),
             };
         }
+    }
+
+    /// Resolves the rule of a derived predicate.
+    fn rule(mut self, derived: &DerivedPredicate) -> Result<ActionInfo, Error> {
+        let name = lc(derived.predicate().name());
+        let context = |e: Error| Error::new(format!("derived predicate `{name}`: {}", e.message()));
+        let pred = self
+            .model
+            .predicates
+            .iter()
+            .position(|p| p.name == name)
+            .ok_or_else(|| context(Error::new("it is not declared in :predicates")))?;
+        let variables = derived.predicate().variables();
+        if variables.len() != self.model.predicates[pred].args.len() {
+            return Err(context(Error::new("it has the wrong number of arguments")));
+        }
+        self.bind(variables).map_err(context)?;
+        let arity = self.slots.len();
+        let body = self.cond(derived.expression()).map_err(context)?;
+        Ok(ActionInfo {
+            name,
+            slots: self.slots,
+            arity,
+            pre: vec![body],
+            effects: Vec::new(),
+            cost: Vec::new(),
+        })
     }
 
     /// Resolves an action.
@@ -926,5 +1051,43 @@ impl<'a> Scope<'a> {
             }
             PrimitiveEffect::AssignObjectFluent(..) => unsupported("object fluents"),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pddl_core::Parser;
+
+    /// The strata of a domain's derived predicates, by predicate name.
+    fn strata(domain: &str) -> Result<Vec<Vec<String>>, Error> {
+        let model = Model::new(&Domain::from_str(domain).unwrap())?;
+        Ok(model
+            .strata
+            .iter()
+            .map(|rules| rules.iter().map(|r| r.name.clone()).collect())
+            .collect())
+    }
+
+    #[test]
+    fn negated_derived_predicates_come_first() {
+        let domain = "(define (domain d) (:requirements :derived-predicates)
+          (:predicates (p ?x) (q ?x) (r ?x) (base ?x))
+          (:derived (r ?x) (not (q ?x)))
+          (:derived (q ?x) (or (base ?x) (q ?x)))
+          (:derived (p ?x) (and (r ?x) (q ?x))))";
+        assert_eq!(strata(domain).unwrap(), [vec!["q"], vec!["r", "p"]]);
+    }
+
+    #[test]
+    fn derived_predicates_must_not_be_changed_by_actions() {
+        let domain = "(define (domain d) (:requirements :derived-predicates)
+          (:predicates (p) (q))
+          (:derived (p) (q))
+          (:action a :parameters () :precondition () :effect (p)))";
+        assert!(strata(domain)
+            .unwrap_err()
+            .message()
+            .contains("changes the derived predicate `p`"));
     }
 }
