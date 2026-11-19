@@ -1,0 +1,28 @@
+error: $DIR/tests/ui/two_errors.rs:3:7: unknown section: unexpected `(:predicats (on ?s))       (:action flip...`
+         = help: did you mean `:predicates`?
+         |
+       3 |       (:predicats (on ?s))
+         |       ^~~~~~~~~~~
+ --> tests/ui/two_errors.rs:1:73
+  |
+1 |   static DOMAIN: std::sync::LazyLock<pddl::Domain> = pddl_macros::domain!(r#"
+  |  _________________________________________________________________________^
+2 | |     (define (domain d)
+3 | |       (:predicats (on ?s))
+4 | |       (:action flip :parameters (?s -)))
+5 | | "#);
+  | |__^
+
+error: $DIR/tests/ui/two_errors.rs:4:38: in `:parameters`: unexpected `))) `
+         |
+       4 |       (:action flip :parameters (?s -)))
+         |                                      ^
+ --> tests/ui/two_errors.rs:1:73
+  |
+1 |   static DOMAIN: std::sync::LazyLock<pddl::Domain> = pddl_macros::domain!(r#"
+  |  _________________________________________________________________________^
+2 | |     (define (domain d)
+3 | |       (:predicats (on ?s))
+4 | |       (:action flip :parameters (?s -)))
+5 | | "#);
+  | |__^

@@ -1,0 +1,5 @@
+error: expected a string literal
+ --> tests/ui/not_a_literal.rs:3:73
+  |
+3 | static DOMAIN: std::sync::LazyLock<pddl::Domain> = pddl_macros::domain!(PDDL);
+  |                                                                         ^^^^

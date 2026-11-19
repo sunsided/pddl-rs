@@ -9,6 +9,7 @@ on:
       - 'Cargo.lock'
       - 'src/**'
       - 'pddl-lsp/**'
+      - 'pddl-macros/**'
       - 'editors/vscode/**'
       - '.github/workflows/rust.yml'
   pull_request:
@@ -18,6 +19,7 @@ on:
       - 'Cargo.lock'
       - 'src/**'
       - 'pddl-lsp/**'
+      - 'pddl-macros/**'
       - 'editors/vscode/**'
       - '.github/workflows/rust.yml'
 
@@ -57,9 +59,15 @@ jobs:
           rustup toolchain install 1.86.0 --profile minimal --no-self-update
           rustup default 1.86.0
       - name: Build with MSRV
-        run: cargo build --workspace --all-features
+        run: cargo build --workspace --all-features --exclude pddl-macros
       - name: Test with MSRV
-        run: cargo test --workspace --all-features
+        run: cargo test --workspace --all-features --exclude pddl-macros
+      # pddl-macros needs Rust 1.88 (`proc_macro::Span::local_file` and `line`).
+      # The compile-fail tests are left out: their `.stderr` files follow stable rustc.
+      - name: Install Rust 1.88 for pddl-macros
+        run: rustup toolchain install 1.88.0 --profile minimal --no-self-update
+      - name: Test pddl-macros with its MSRV
+        run: cargo +1.88.0 test -p pddl-macros --lib --test macros
 
   build:
     name: Build and Test

@@ -49,6 +49,17 @@ position of every atom, list and comment, and
 [`pddl::parsers::check`](https://docs.rs/pddl/latest/pddl/parsers/fn.check.html)
 reports every error in a file rather than only the first.
 
+## Compile-time Checked PDDL
+
+[`pddl-macros`](pddl-macros) checks PDDL while your crate compiles and turns
+syntax errors into compile errors:
+
+```rust ignore
+static DOMAIN: LazyLock<Domain> = pddl_macros::domain_file!("blocks-domain.pddl");
+```
+
+See the [`pddl-macros` README](pddl-macros/README.md) for all macros.
+
 ## Usage Example
 
 See [`tests/briefcase_world.rs`](tests/briefcase_world.rs) for the full example.

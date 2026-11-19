@@ -5,6 +5,11 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+### Added
+
+- `pddl-macros`, a new crate in this repository, checks PDDL at compile time
+  with `domain!`, `problem!`, `pddl!` and `validated!` and their `_file` forms.
+
 ## [0.4.0] - 2026-11-14
 
 [0.4.0]: https://github.com/sunsided/pddl-rs/releases/tag/v0.4.0

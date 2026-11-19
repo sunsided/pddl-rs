@@ -33,7 +33,7 @@ pretty = ["dep:pretty"]
 serde = ["parser", "dep:serde"]
 
 [workspace]
-members = ["pddl-lsp"]
+members = ["pddl-lsp", "pddl-macros"]
 
 [workspace.lints.rust]
 missing_docs = "warn"

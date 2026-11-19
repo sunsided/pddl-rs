@@ -1,0 +1,8 @@
+error: expected a single domain: $DIR/tests/ui/wrong_kind.rs:2: unexpected `(problem p) (:domain d) (:init) (:goal (...`
+         |
+       1 | (define (problem p) (:domain d) (:init) (:goal (and)))
+         |         ^~~~~~~~
+ --> tests/ui/wrong_kind.rs:2:26
+  |
+2 |     pddl_macros::domain!("(define (problem p) (:domain d) (:init) (:goal (and)))");
+  |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
