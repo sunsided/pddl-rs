@@ -12,6 +12,11 @@
 //! Static predicates are evaluated during grounding and do not become variables.
 //! There are no mutex groups and no axioms.
 //!
+//! PDDL applies deletes before adds, so a delete effect only fires where no add
+//! of the same atom does. Where conditional adds overlap a delete, the delete is
+//! split into conditional effects that exclude them; a split that would need more
+//! than [`MAX_DELETE_PIECES`] effects fails with [`GroundError::ConflictingEffects`].
+//!
 //! ## Supported subset
 //! - typing, including `either` and supertypes; constants and objects,
 //! - preconditions and goals made of `and`, atoms, negated atoms and `=`,
@@ -91,7 +96,27 @@ pub enum GroundError {
     /// The goal is false in every reachable state.
     #[error("the goal is unreachable")]
     Unsolvable,
+    /// A delete effect overlaps so many conditional adds of the same atom
+    /// that encoding "the add wins" would take more than
+    /// [`MAX_DELETE_PIECES`] conditional effects.
+    #[error(
+        "action `{action}` deletes an atom that too many conditional adds of it overlap \
+         to encode in at most {MAX_DELETE_PIECES} conditional effects"
+    )]
+    ConflictingEffects {
+        /// The ground action, e.g. `drive depot north`.
+        action: String,
+    },
 }
+
+/// The most conditional effects one delete effect of a ground action may be
+/// split into; see [`GroundError::ConflictingEffects`].
+///
+/// PDDL applies deletes before adds, so a delete only takes effect where no add
+/// of the same atom fires. Each conditional add the delete's conditions neither
+/// imply nor contradict splits the delete into one piece per literal of the
+/// add's condition, so the number of pieces is a product over those adds.
+pub const MAX_DELETE_PIECES: usize = 1024;
 
 /// Grounds `domain` and `problem` into a SAS+ task with one binary variable
 /// per reachable fluent atom. See the [module documentation](self) for the
@@ -171,8 +196,8 @@ pub fn ground(domain: &Domain, problem: &Problem) -> Result<SasFile, GroundError
         operators: ops
             .iter()
             .filter(|op| op.applicable)
-            .filter_map(|op| op.to_sas(&index))
-            .collect(),
+            .filter_map(|op| op.to_sas(&index).transpose())
+            .collect::<Result<_, _>>()?,
         axioms: Vec::new(),
     })
 }
@@ -995,7 +1020,8 @@ fn facts(map: &BTreeMap<VarId, Value>) -> Vec<Fact> {
 }
 
 /// Splits the conjunction `conds` into conjunctions that together hold
-/// exactly where `conds` holds and `other` does not.
+/// exactly where `conds` holds and `other` does not. The facts of each piece
+/// stay sorted.
 fn unless(conds: Vec<Fact>, other: &[Fact]) -> Vec<Vec<Fact>> {
     let value = |var| conds.iter().find(|f| f.var == var).map(|f| f.value);
     if other
@@ -1017,11 +1043,35 @@ fn unless(conds: Vec<Fact>, other: &[Fact]) -> Vec<Vec<Fact>> {
         .collect()
 }
 
+/// Drops every conjunction that implies another one in `pieces`, keeping their
+/// disjunction the same. Each conjunction's facts must be sorted.
+fn drop_subsumed(mut pieces: Vec<Vec<Fact>>) -> Vec<Vec<Fact>> {
+    pieces.sort_by_key(Vec::len);
+    pieces.dedup();
+    let mut kept: Vec<Vec<Fact>> = Vec::with_capacity(pieces.len());
+    for piece in pieces {
+        // A shorter or equal kept piece whose facts all occur in `piece` covers it.
+        if !kept
+            .iter()
+            .any(|k| k.iter().all(|f| piece.binary_search(f).is_ok()))
+        {
+            kept.push(piece);
+        }
+    }
+    kept
+}
+
 impl GroundOp {
     /// Converts the action to a SAS+ operator, or `None` if its precondition
     /// can never hold.
-    fn to_sas(&self, index: &HashMap<&Atom, VarId>) -> Option<SasOperator> {
-        let pre = resolve_all(index, &self.pre)?;
+    ///
+    /// # Errors
+    /// [`GroundError::ConflictingEffects`] if restricting a delete to where no
+    /// add of the same atom fires needs more than [`MAX_DELETE_PIECES`] effects.
+    fn to_sas(&self, index: &HashMap<&Atom, VarId>) -> Result<Option<SasOperator>, GroundError> {
+        let Some(pre) = resolve_all(index, &self.pre) else {
+            return Ok(None);
+        };
         let effects: Vec<(Vec<Fact>, VarId, Value)> = self
             .effects
             .iter()
@@ -1038,29 +1088,34 @@ impl GroundOp {
             .filter(|(_, _, post)| *post == TRUE)
             .map(|(conds, var, _)| (conds.clone(), *var))
             .collect();
-        let mut effects: Vec<_> = effects
-            .into_iter()
-            .flat_map(|(conds, var, post)| {
-                let mut pieces = vec![conds];
-                if post == FALSE {
-                    for (add, _) in adds.iter().filter(|(_, v)| *v == var) {
-                        pieces = pieces.into_iter().flat_map(|c| unless(c, add)).collect();
+        let mut split = Vec::with_capacity(effects.len());
+        for (conds, var, post) in effects {
+            let mut pieces = vec![conds];
+            if post == FALSE {
+                for (add, _) in adds.iter().filter(|(_, v)| *v == var) {
+                    pieces =
+                        drop_subsumed(pieces.into_iter().flat_map(|c| unless(c, add)).collect());
+                    if pieces.len() > MAX_DELETE_PIECES {
+                        return Err(GroundError::ConflictingEffects {
+                            action: self.name.clone(),
+                        });
                     }
                 }
-                pieces.into_iter().map(move |c| (c, var, post))
-            })
-            .collect();
+            }
+            split.extend(pieces.into_iter().map(|c| (c, var, post)));
+        }
+        let mut effects = split;
         effects.sort();
         effects.dedup();
         // Like Fast Downward, drop effects that cannot change the state, and
         // operators left without effects.
         effects.retain(|(conds, var, post)| !(conds.is_empty() && pre.get(var) == Some(post)));
         if effects.is_empty() {
-            return None;
+            return Ok(None);
         }
 
         let affected: HashSet<VarId> = effects.iter().map(|(_, var, _)| *var).collect();
-        Some(SasOperator {
+        Ok(Some(SasOperator {
             name: self.name.clone(),
             prevail: pre
                 .iter()
@@ -1077,7 +1132,7 @@ impl GroundOp {
                 })
                 .collect(),
             cost: self.cost,
-        })
+        }))
     }
 }
 

@@ -1,7 +1,7 @@
 //! Grounds the fixtures in `tests/data/sas-plus` (the PDDL inputs of the
 //! `sas-plus` translator fixtures) and checks the results against known optima.
 
-use pddl::sas_plus::{ground, GroundError};
+use pddl::sas_plus::{ground, GroundError, MAX_DELETE_PIECES};
 use pddl::{Domain, Parser, Problem};
 use sas_plus::fdr::SasFile;
 
@@ -457,5 +457,65 @@ fn adds_win_over_deletes_under_other_conditions() {
             (vec!["Atom q()"], "Atom p()"),
             (vec!["NegatedAtom q()", "Atom r()"], "NegatedAtom p()"),
         ]
+    );
+}
+
+#[test]
+fn delete_pieces_covered_by_others_are_dropped() {
+    // `(q) and (r)` splits the delete into `not q` and `not r`. `(q)` then
+    // narrows `not r` to `not r and not q`, which `not q` already covers.
+    let file = ground_str(
+        "(define (domain d) (:predicates (p) (q) (r))
+           (:action setq :parameters () :precondition () :effect (and (q) (r)))
+           (:action act :parameters () :precondition ()
+             :effect (and (not (p)) (when (and (q) (r)) (p)) (when (q) (p)))))",
+        "(define (problem pr) (:domain d) (:init (p)) (:goal (and (p) (q))))",
+    )
+    .unwrap();
+    let mut act = effects_of(&file, "act");
+    act.sort();
+    assert_eq!(
+        act,
+        [
+            (vec!["Atom q()"], "Atom p()"),
+            (vec!["Atom q()", "Atom r()"], "Atom p()"),
+            (vec!["NegatedAtom q()"], "NegatedAtom p()"),
+        ]
+    );
+}
+
+/// A domain whose `act` deletes `(p)` unless some `(r ?y) and (s ?y)` holds,
+/// with a problem of `objects` objects.
+fn overlapping_adds(objects: usize) -> (String, String) {
+    let domain = "(define (domain d) (:types t) (:predicates (p) (r ?y) (s ?y))
+       (:action mark :parameters (?y - t) :precondition () :effect (and (r ?y) (s ?y)))
+       (:action act :parameters () :precondition ()
+         :effect (and (not (p)) (forall (?y - t) (when (and (r ?y) (s ?y)) (p))))))";
+    let names: Vec<_> = (0..objects).map(|i| format!("o{i}")).collect();
+    let problem = format!(
+        "(define (problem pr) (:domain d) (:objects {} - t) (:init (p)) (:goal (p)))",
+        names.join(" ")
+    );
+    (domain.to_string(), problem)
+}
+
+#[test]
+fn delete_splits_are_bounded() {
+    // Each of the n adds doubles the pieces: 2^10 fits, 2^11 doesn't.
+    assert_eq!(MAX_DELETE_PIECES, 1 << 10);
+    let (domain, problem) = overlapping_adds(10);
+    let file = ground_str(&domain, &problem).unwrap();
+    let deletes = effects_of(&file, "act")
+        .into_iter()
+        .filter(|(_, post)| *post == "NegatedAtom p()")
+        .count();
+    assert_eq!(deletes, 1 << 10);
+
+    let (domain, problem) = overlapping_adds(11);
+    assert_eq!(
+        ground_str(&domain, &problem),
+        Err(GroundError::ConflictingEffects {
+            action: "act".to_string()
+        })
     );
 }
