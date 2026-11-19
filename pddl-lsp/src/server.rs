@@ -256,20 +256,21 @@ fn serve(
         }
     }
 
-    // After `shutdown`, requests get an error, and `exit` ends the run.
+    // After `shutdown`, requests get an error, including another `shutdown`,
+    // notifications other than `exit` are dropped, and `exit` ends the run.
     let mut shut_down = false;
     for message in inbox {
         match message? {
-            Message::Request(request) if request.method == "shutdown" => {
-                shut_down = true;
-                send(Message::Response(Response::new_ok(request.id, ())))?;
-            }
             Message::Request(request) if shut_down => {
                 let code = ErrorCode::InvalidRequest as i32;
                 let message = "the server is shutting down".to_string();
                 send(Message::Response(Response::new_err(
                     request.id, code, message,
                 )))?;
+            }
+            Message::Request(request) if request.method == "shutdown" => {
+                shut_down = true;
+                send(Message::Response(Response::new_ok(request.id, ())))?;
             }
             Message::Request(request) => send(Message::Response(server.request(request)))?,
             Message::Notification(notification) if notification.method == "exit" => {
@@ -279,6 +280,7 @@ fn serve(
                     Err(EXIT_EARLY.into())
                 };
             }
+            Message::Notification(_) if shut_down => {}
             Message::Notification(notification) => {
                 if server.notification(notification) {
                     for diagnostics in server.diagnostics() {

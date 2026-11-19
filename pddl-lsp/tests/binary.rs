@@ -74,12 +74,22 @@ fn serves_over_stdio_until_exit() {
         &serde_json::json!({ "jsonrpc": "2.0", "id": 2, "method": "shutdown" }),
     );
     check!(receive(&mut stdout)["id"] == 2);
-    // After `shutdown`, only `exit` is accepted. InvalidRequest.
+    // After `shutdown`, notifications are dropped, so opening a broken file
+    // publishes no diagnostics, and requests, even another `shutdown`, get
+    // InvalidRequest.
+    let open = serde_json::json!({
+        "jsonrpc": "2.0", "method": "textDocument/didOpen", "params": { "textDocument": {
+            "uri": "file:///late.pddl", "languageId": "pddl", "version": 1, "text": "(define",
+        } },
+    });
+    send(&mut stdin, &open);
     send(
         &mut stdin,
-        &serde_json::json!({ "jsonrpc": "2.0", "id": 3, "method": "textDocument/hover", "params": {} }),
+        &serde_json::json!({ "jsonrpc": "2.0", "id": 3, "method": "shutdown" }),
     );
-    check!(receive(&mut stdout)["error"]["code"] == -32600);
+    let late = receive(&mut stdout);
+    check!(late["id"] == 3);
+    check!(late["error"]["code"] == -32600);
     send(
         &mut stdin,
         &serde_json::json!({ "jsonrpc": "2.0", "method": "exit" }),
