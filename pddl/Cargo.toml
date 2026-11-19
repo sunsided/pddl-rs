@@ -25,14 +25,14 @@ default = ["parser", "interning"]
 ## Enables parsing of PDDL types through the `Parser` trait.
 parser = ["pddl-core/parser"]
 ## Implements `miette::Diagnostic` for `ParseError`.
-miette = ["pddl-core/miette"]
+miette = ["parser", "pddl-core/miette"]
 ## Enables string interning for `Name` types to reduce memory footprint.
 interning = ["pddl-core/interning"]
 ## Enables pretty-printing of PDDL types via the `pretty` crate.
 pretty = ["pddl-core/pretty"]
 ## Implements `serde::Serialize` and `serde::Deserialize` for the PDDL types, using a
 ## JSON-friendly schema that mirrors PDDL (see the `serde` module docs).
-serde = ["pddl-core/serde"]
+serde = ["parser", "pddl-core/serde"]
 ## Re-exports the compile-time checked `domain!`, `problem!`, `pddl!` and `validated!`
 ## macros from `pddl-macros`, with their `_file` forms. Needs Rust 1.88.
 macros = ["parser", "dep:pddl-macros"]

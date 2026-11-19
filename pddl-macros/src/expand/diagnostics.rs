@@ -92,7 +92,7 @@ fn description(error: &ParseError) -> String {
 
 /// The source line of the error with a `^~~~` marker under the error's span,
 /// clipped to that line; `None` if the line does not exist (an error at the
-/// very end of the input).
+/// end of input that ends in a newline).
 fn snippet(error: &ParseError, source: &str) -> Option<String> {
     let text = source.lines().nth(error.line() - 1)?;
     let column = error.column() - 1;
@@ -194,7 +194,8 @@ mod tests {
             line: None,
             lines_match: true,
         };
-        let message = format("(define (domain d)", &origin);
-        assert!(message.starts_with("line 1, column "), "{message}");
+        let message = format("(define (domain d)\n", &origin);
+        assert!(message.starts_with("line 2, column 1: "), "{message}");
+        assert!(!message.contains(" | "), "{message}");
     }
 }

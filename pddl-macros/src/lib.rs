@@ -19,9 +19,11 @@
 //! rebuilds the crate when the PDDL file changes.
 //!
 //! The usual way in is the `pddl` crate's `macros` feature, which re-exports
-//! these macros as `pddl::domain!` and so on. The expansion refers to `::pddl`,
-//! so your crate needs `pddl` as a direct dependency with its `parser` feature
-//! (enabled by default), whether you call the macros through `pddl` or here.
+//! these macros as `pddl::domain!` and so on. The `LazyLock` expansions refer
+//! to `::pddl`, so your crate needs `pddl` as a direct dependency with its
+//! `parser` feature (enabled by default), whether you call the macros through
+//! `pddl` or here. [`validated!`] and [`validated_file!`] expand to text alone
+//! and need neither.
 //!
 //! ## Example
 //! ```
@@ -145,7 +147,7 @@ pub fn validated(input: TokenStream) -> TokenStream {
 }
 
 /// Like [`validated!`], but reads the PDDL from a file, relative to the file
-/// that calls the macro. Expands to `include_str!` of that file.
+/// that calls the macro. Expands to the checked text of that file.
 ///
 /// `const SOURCE: &str = validated_file!("blocks-domain.pddl");`
 #[proc_macro]

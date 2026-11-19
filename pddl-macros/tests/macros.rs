@@ -20,6 +20,9 @@ static SWITCHES: LazyLock<Domain> = pddl_macros::domain_file!("fixtures/switches
 static TWO_SWITCHES: LazyLock<Problem> =
     pddl_macros::problem_file!("fixtures/switches-problem.pddl");
 
+/// The test domain, from a file, as a [`PddlFile`].
+static SWITCHES_FILE: LazyLock<PddlFile> = pddl_macros::pddl_file!("fixtures/switches-domain.pddl");
+
 /// The test domain and problem as one file.
 static BOTH: LazyLock<PddlFile> = pddl_macros::pddl!(
     "
@@ -56,6 +59,7 @@ fn file_macros_match_runtime_parsing() {
         Domain::from_str(&read("fixtures/switches-domain.pddl")).unwrap()
     );
     assert_eq!(TWO_SWITCHES.domain(), "switches");
+    assert_eq!(SWITCHES_FILE.domains, std::slice::from_ref(&*SWITCHES));
     assert_eq!(SWITCHES_SOURCE, read("fixtures/switches-domain.pddl"));
 }
 
