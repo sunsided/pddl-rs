@@ -219,3 +219,44 @@ let plan = pddl::runtime::search::breadth_first(&p1::Task);
 
 Checks (`pddl-bench/tests/grounded.rs`): lockstep against `GroundTask` on all
 of gripper-4 and 3000 states of bw-large-a, the gripper-4 optimum, and replay.
+
+## 8. Reference searches and benchmarks (#125)
+
+- `pddl_runtime::search` (feature `search`): `breadth_first`, `astar(task, h)`
+  and `ida_star(task, h)`, generic over `Task`, each returning the plan and the
+  number of expanded states; `replay` checks a plan against `successors` and
+  `apply`. Reference searches, not a planner.
+- `pddl-bench/tests/cross_check.rs`: on gripper-2 and gripper-4, the runtime
+  grounder, B1 and B2 each find the optimal cost with all three searches, and
+  every plan replays. Costs are compared, not lengths, and only for optimal
+  searches; A* with the goal count is not admissible and only gets a replay
+  check.
+- `cargo bench -p pddl-bench --bench compare` prints the table below;
+  `--bench search` is the criterion version for gripper-4.
+
+Numbers from one run on the development machine (release build, Rust 1.100):
+
+| instance | search | implementation | expanded | time to solve | states/s |
+|---|---|---|---:|---:|---:|
+| gripper-4 | breadth-first | runtime grounder | 218 | 0.113 ms | 1935765 |
+| gripper-4 | breadth-first | B1 (generated) | 218 | 0.423 ms | 515853 |
+| gripper-4 | breadth-first | B2 (grounded at compile time) | 218 | 0.028 ms | 7897406 |
+| bw-large-a | A*, goal count | runtime grounder | 9 | 0.026 ms | 347598 |
+| bw-large-a | A*, goal count | B1 (generated) | 9 | 0.046 ms | 195329 |
+| bw-large-a | A*, goal count | B2 (grounded at compile time) | 9 | 0.014 ms | 664403 |
+
+Reading them:
+
+- **B2 is the fastest**, 2–4× the runtime grounder: a `[u64; N]` state needs
+  no allocation to clone or hash, and the mask loop has a constant length.
+- **B1 is slower than the runtime grounder here**, about 4× on gripper-4. Its
+  state has one heap-allocated bit set per predicate, so every successor clones
+  several boxes where the grounder clones one, and its loops enumerate every
+  object of a parameter's type where the grounder only scans operators that
+  survived grounding. B1's gain is elsewhere: it loads any problem of the
+  domain at run time without grounding, in memory that grows with the objects,
+  not the ground actions. Packing all predicates into one bit vector per state
+  is the obvious next step; it is not done here.
+- bw-large-a with the goal count solves in 9 expansions, so its row measures
+  little beyond setup. A heavier instance (logistics-e with A* and the goal
+  count) did not finish in five minutes with any of these reference searches.

@@ -16,6 +16,17 @@ workspace = true
 pddl = { path = "../pddl", default-features = false, features = ["parser", "sas-plus", "codegen"] }
 pddl-runtime = { path = "../pddl-runtime", features = ["search"] }
 
+[dev-dependencies]
+criterion = { version = "0.8", default-features = false, features = ["cargo_bench_support"] }
+
+[[bench]]
+name = "search"
+harness = false
+
+[[bench]]
+name = "compare"
+harness = false
+
 [build-dependencies]
 # Generates the gripper domain into OUT_DIR, as a build script user would.
 pddl-codegen = { path = "../pddl-codegen" }

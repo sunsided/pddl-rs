@@ -86,3 +86,10 @@ pub mod gripper_4_grounded {}
     problem = "../../tests/data/sas-plus/bw-large-a/problem.pddl"
 )]
 pub mod bw_large_a_grounded {}
+
+/// `gripper-2`, grounded when the crate compiles (level B2).
+#[pddl::task(
+    domain = "../../tests/data/sas-plus/gripper-2/domain.pddl",
+    problem = "../../tests/data/sas-plus/gripper-2/problem.pddl"
+)]
+pub mod gripper_2_grounded {}
