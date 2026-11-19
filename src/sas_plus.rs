@@ -45,6 +45,7 @@
 //! print!("{file}"); // output.sas
 //! ```
 
+use std::cell::Cell;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
 use sas_plus::fdr::{SasEffect, SasFile, SasOperator, SasVariable};
@@ -134,7 +135,7 @@ pub fn ground(domain: &Domain, problem: &Problem) -> Result<SasFile, GroundError
     let mut goal_lits = Vec::new();
     Builder {
         world: &world,
-        params: &[],
+        next_exists: Cell::new(0),
     }
     .preconditions(problem.goals(), &HashMap::new(), false, &mut goal_lits)?;
     let goal = ground_goal(&goal_lits, &grounder, &index)?;
@@ -295,8 +296,8 @@ impl World {
     fn substitutions(
         &self,
         vars: &TypedVariables,
-        subst: &HashMap<String, String>,
-    ) -> Result<Vec<HashMap<String, String>>, GroundError> {
+        subst: &Scope,
+    ) -> Result<Vec<Scope>, GroundError> {
         let mut result = vec![subst.clone()];
         for var in vars.iter() {
             let name = lc(var.value());
@@ -307,7 +308,7 @@ impl World {
                     let name = &name;
                     objects.iter().map(move |object| {
                         let mut s = s.clone();
-                        s.insert(name.clone(), object.clone());
+                        s.insert(name.clone(), Arg::Obj(object.clone()));
                         s
                     })
                 })
@@ -353,6 +354,10 @@ fn initial_state(problem: &Problem, world: &World) -> Result<Initial, GroundErro
     }
     Ok((atoms, functions))
 }
+
+/// The variables in scope, each bound to a parameter or, inside `forall`, to
+/// an object.
+type Scope = HashMap<String, Arg>;
 
 /// An argument of a schematic atom: a parameter (by index) or an object.
 #[derive(Clone)]
@@ -435,10 +440,10 @@ struct Schema {
 impl Schema {
     /// Flattens an action definition.
     fn new(world: &World, action: &ActionDefinition) -> Result<Self, GroundError> {
-        let mut names = Vec::new();
+        let mut subst = Scope::new();
         let mut params = Vec::new();
         for var in action.parameters().iter() {
-            names.push(lc(var.value()));
+            subst.insert(lc(var.value()), Arg::Var(params.len()));
             params.push(world.objects_of(var.type_())?);
         }
         let arity = params.len();
@@ -447,18 +452,17 @@ impl Schema {
                 pre
             {
                 collect_exists(gd, &mut |var| {
-                    names.push(lc(var.value()));
                     params.push(world.objects_of(var.type_())?);
                     Ok(())
                 })?;
             }
         }
 
+        // Effects see only the declared parameters, not the `exists` binders.
         let builder = Builder {
             world,
-            params: &names,
+            next_exists: Cell::new(arity),
         };
-        let subst = HashMap::new();
         let mut pre = Vec::new();
         builder.preconditions(action.precondition(), &subst, true, &mut pre)?;
         let mut effects = Vec::new();
@@ -497,13 +501,14 @@ fn collect_exists(
 struct Builder<'a> {
     /// The objects, for `forall` and constant names.
     world: &'a World,
-    /// The parameter names, lowercase, by index.
-    params: &'a [String],
+    /// The parameter index of the next `exists` binder; binders are numbered
+    /// in the order `collect_exists` visits them.
+    next_exists: Cell<usize>,
 }
 
 impl Builder<'_> {
     /// Resolves a term to a parameter or an object.
-    fn arg(&self, term: &Term, subst: &HashMap<String, String>) -> Result<Arg, GroundError> {
+    fn arg(&self, term: &Term, subst: &Scope) -> Result<Arg, GroundError> {
         match term {
             Term::Name(name) => {
                 let name = lc(name);
@@ -515,13 +520,10 @@ impl Builder<'_> {
             }
             Term::Variable(var) => {
                 let name = lc(var);
-                if let Some(object) = subst.get(&name) {
-                    Ok(Arg::Obj(object.clone()))
-                } else if let Some(i) = self.params.iter().rposition(|p| *p == name) {
-                    Ok(Arg::Var(i))
-                } else {
-                    Err(GroundError::UnknownVariable(name))
-                }
+                subst
+                    .get(&name)
+                    .cloned()
+                    .ok_or(GroundError::UnknownVariable(name))
             }
             Term::Function(_) => Err(GroundError::Unsupported("object fluents")),
         }
@@ -532,7 +534,7 @@ impl Builder<'_> {
         &self,
         formula: &AtomicFormula<Term>,
         positive: bool,
-        subst: &HashMap<String, String>,
+        subst: &Scope,
     ) -> Result<SLit, GroundError> {
         Ok(match formula {
             AtomicFormula::Equality(eq) => SLit::Eq(
@@ -545,11 +547,7 @@ impl Builder<'_> {
     }
 
     /// Converts a predicate atom.
-    fn atom(
-        &self,
-        formula: &AtomicFormula<Term>,
-        subst: &HashMap<String, String>,
-    ) -> Result<SAtom, GroundError> {
+    fn atom(&self, formula: &AtomicFormula<Term>, subst: &Scope) -> Result<SAtom, GroundError> {
         match formula {
             AtomicFormula::Predicate(atom) => Ok(SAtom {
                 pred: lc(atom.predicate()),
@@ -567,7 +565,7 @@ impl Builder<'_> {
     fn preconditions(
         &self,
         pres: &PreconditionGoalDescriptions,
-        subst: &HashMap<String, String>,
+        subst: &Scope,
         allow_exists: bool,
         out: &mut Vec<SLit>,
     ) -> Result<(), GroundError> {
@@ -595,7 +593,7 @@ impl Builder<'_> {
     fn goal(
         &self,
         gd: &GoalDescription,
-        subst: &HashMap<String, String>,
+        subst: &Scope,
         allow_exists: bool,
         out: &mut Vec<SLit>,
     ) -> Result<(), GroundError> {
@@ -622,9 +620,15 @@ impl Builder<'_> {
                     self.goal(gd, subst, allow_exists, out)?;
                 }
             }
-            // The variables were added as parameters by `collect_exists`.
-            GoalDescription::Exists(_, inner) if allow_exists => {
-                self.goal(inner, subst, true, out)?;
+            // `collect_exists` added the variables as parameters, in this order.
+            GoalDescription::Exists(vars, inner) if allow_exists => {
+                let mut scope = subst.clone();
+                for var in vars.iter() {
+                    let i = self.next_exists.get();
+                    self.next_exists.set(i + 1);
+                    scope.insert(lc(var.value()), Arg::Var(i));
+                }
+                self.goal(inner, &scope, true, out)?;
             }
             GoalDescription::Exists(..) => return Err(GroundError::Unsupported("nested exists")),
             GoalDescription::ForAll(vars, inner) => {
@@ -645,7 +649,7 @@ impl Builder<'_> {
     fn effects(
         &self,
         effects: &Effects,
-        subst: &HashMap<String, String>,
+        subst: &Scope,
         conds: &[SLit],
         out: &mut Vec<SEffect>,
         cost: &mut Vec<CostTerm>,
@@ -680,7 +684,7 @@ impl Builder<'_> {
     fn primitive(
         &self,
         effect: &PrimitiveEffect,
-        subst: &HashMap<String, String>,
+        subst: &Scope,
         conds: &[SLit],
         out: &mut Vec<SEffect>,
         cost: &mut Vec<CostTerm>,

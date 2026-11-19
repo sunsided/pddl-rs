@@ -362,3 +362,39 @@ fn shared_supertypes_list_objects_once() {
     let file = file.unwrap();
     assert_eq!(file.operators.len(), 2);
 }
+
+/// The atoms an operator's effects set, as `Atom r(a)` or `NegatedAtom r(a)`.
+fn effect_values<'a>(file: &'a SasFile, op: &str) -> Vec<&'a str> {
+    file.operators
+        .iter()
+        .filter(|o| o.name == op)
+        .flat_map(|o| &o.effects)
+        .map(|e| file.variables[e.var].values[usize::try_from(e.post).unwrap()].as_str())
+        .collect()
+}
+
+#[test]
+fn exists_binders_do_not_capture_parameters() {
+    let file = ground_str(
+        "(define (domain d) (:types t) (:predicates (p ?x) (r ?x))
+           (:action act :parameters (?x - t) :precondition (exists (?x - t) (p ?x))
+             :effect (r ?x)))",
+        &problem_with("(p b)", "(r a)", ""),
+    )
+    .unwrap();
+    assert_eq!(effect_values(&file, "act a"), ["Atom r(a)"]);
+    assert_eq!(effect_values(&file, "act b"), ["Atom r(b)"]);
+}
+
+#[test]
+fn sibling_exists_binders_are_independent() {
+    let file = ground_str(
+        "(define (domain d) (:types t) (:predicates (p ?x) (s ?x) (q))
+           (:action act :parameters ()
+             :precondition (and (exists (?y - t) (p ?y)) (exists (?y - t) (s ?y)))
+             :effect (q)))",
+        &problem_with("(p a) (s b)", "(q)", ""),
+    )
+    .unwrap();
+    assert_eq!(effect_values(&file, "act"), ["Atom q()"]);
+}
