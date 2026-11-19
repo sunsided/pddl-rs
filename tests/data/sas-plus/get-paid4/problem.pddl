@@ -1,0 +1,8 @@
+(define (problem get-paid4)
+  (:domain briefcase-world)
+  (:objects home office bank)
+  (:init (place home)
+	 (place office) (place bank)
+	 (object p) (object d) (object b)
+	 (at b home) (at p home) (at d home) (in p))
+  (:goal (and (at b home) (at d office) (at p bank))))

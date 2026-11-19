@@ -146,6 +146,30 @@ fn main() {
 }
 ```
 
+### Grounding to SAS+
+
+The `sas-plus` feature grounds a domain and problem into a
+[`sas-plus`](https://crates.io/crates/sas-plus) task in Fast Downward's
+`output.sas` format, without leaving Rust:
+
+```toml
+[dependencies]
+pddl = { version = "*", features = ["sas-plus"] }
+```
+
+```rust ignore
+let file = pddl::sas_plus::ground(&domain, &problem)?;
+print!("{file}");             // output.sas, ready for Fast Downward's search
+let task = file.to_task();    // a plain sas_plus::Task for heuristics
+```
+
+Every reachable fluent atom becomes a binary variable. Fast Downward's
+translator instead merges mutually exclusive atoms into multi-valued variables.
+The grounder supports STRIPS with typing, negative preconditions, equality,
+universal and existential preconditions, conditional effects and action costs.
+It rejects other constructs with an error instead of dropping them. See the
+[`sas_plus` module docs](https://docs.rs/pddl/latest/pddl/sas_plus/index.html).
+
 ### Caveat Emptor
 
 At this point the parser supports all domain and problem definition
