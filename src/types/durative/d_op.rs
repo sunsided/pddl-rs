@@ -1,5 +1,6 @@
 //! Contains the [`DurationOperator`] type.
 
+use crate::types::keyword_error::UnknownKeyword;
 use std::fmt::{Display, Formatter};
 
 /// ## Usage
@@ -38,24 +39,16 @@ impl Display for DurationOperator {
 }
 
 impl TryFrom<&str> for DurationOperator {
-    type Error = ParseError;
+    type Error = UnknownKeyword;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
             names::EQUAL => Ok(Self::Equal),
             names::GREATER_OR_EQUAL => Ok(Self::GreaterOrEqual),
             names::LESS_THAN_OR_EQUAL => Ok(Self::LessThanOrEqual),
-            _ => Err(ParseError::InvalidOperation),
+            _ => Err(UnknownKeyword::new("duration operator", value)),
         }
     }
-}
-
-/// An error when parsing a [`DurationOperator`] from a string.
-#[derive(Debug, Clone, thiserror::Error)]
-pub enum ParseError {
-    #[error("Invalid operation")]
-    /// The string is not a valid duration operator.
-    InvalidOperation,
 }
 
 /// Alias for [`DurationOperator`]; matches BNF `<d-op>`.

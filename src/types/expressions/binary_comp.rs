@@ -1,5 +1,6 @@
 //! Contains binary comparison operations via the [`BinaryComparison`] type.
 
+use crate::types::keyword_error::UnknownKeyword;
 use std::fmt::{Display, Formatter};
 
 /// A binary comparison operation.
@@ -48,7 +49,7 @@ impl Display for BinaryComparison {
 }
 
 impl TryFrom<&str> for BinaryComparison {
-    type Error = ParseError;
+    type Error = UnknownKeyword;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
@@ -57,17 +58,9 @@ impl TryFrom<&str> for BinaryComparison {
             names::EQUAL => Ok(Self::Equal),
             names::GREATER_THAN_OR_EQUAL => Ok(Self::GreaterOrEqual),
             names::LESS_THAN_OR_EQUAL => Ok(Self::LessThanOrEqual),
-            _ => Err(ParseError::InvalidOperation),
+            _ => Err(UnknownKeyword::new("binary comparison", value)),
         }
     }
-}
-
-/// An error when parsing a [`BinaryComparison`] from a string.
-#[derive(Debug, Clone, thiserror::Error)]
-pub enum ParseError {
-    #[error("Invalid operation")]
-    /// The string is not a valid comparison operator.
-    InvalidOperation,
 }
 
 /// Alias for [`BinaryComparison`].

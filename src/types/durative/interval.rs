@@ -1,5 +1,6 @@
 //! Contains the [`Interval`] type.
 
+use crate::types::keyword_error::UnknownKeyword;
 use std::fmt::{Display, Formatter};
 
 /// An interval used in [`TimedGD::Over`](crate::types::TimedGD::Over).
@@ -27,20 +28,12 @@ impl Display for Interval {
 }
 
 impl TryFrom<&str> for Interval {
-    type Error = ParseError;
+    type Error = UnknownKeyword;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
             names::ALL => Ok(Self::All),
-            _ => Err(ParseError::InvalidInterval),
+            _ => Err(UnknownKeyword::new("interval", value)),
         }
     }
-}
-
-/// An error when parsing an [`Interval`] from a string.
-#[derive(Debug, Clone, thiserror::Error)]
-pub enum ParseError {
-    #[error("Invalid interval")]
-    /// The string is not a valid interval.
-    InvalidInterval,
 }

@@ -1,5 +1,6 @@
 //! Provide assignment operations via the [`AssignOp`] type.
 
+use crate::types::keyword_error::UnknownKeyword;
 use std::borrow::Borrow;
 use std::fmt::{Display, Formatter};
 
@@ -101,7 +102,7 @@ impl AssignOp {
 }
 
 impl TryFrom<&str> for AssignOp {
-    type Error = ParseError;
+    type Error = UnknownKeyword;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
@@ -110,17 +111,9 @@ impl TryFrom<&str> for AssignOp {
             names::SCALE_DOWN => Ok(AssignOp::ScaleDown),
             names::INCREASE => Ok(AssignOp::Increase),
             names::DECREASE => Ok(AssignOp::Decrease),
-            _ => Err(ParseError::InvalidOperation),
+            _ => Err(UnknownKeyword::new("assignment operator", value)),
         }
     }
-}
-
-/// An error when parsing an [`AssignOp`] from a string.
-#[derive(Debug, Clone, thiserror::Error)]
-pub enum ParseError {
-    #[error("Invalid operation")]
-    /// The string is not a valid assignment operator.
-    InvalidOperation,
 }
 
 impl Borrow<str> for AssignOp {

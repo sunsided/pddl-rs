@@ -1,5 +1,6 @@
 //! Contains the [`MultiOp`] type.
 
+use crate::types::keyword_error::UnknownKeyword;
 use std::fmt::{Display, Formatter};
 
 /// An operation with multiple operands.
@@ -33,21 +34,13 @@ impl Display for MultiOp {
 }
 
 impl TryFrom<&str> for MultiOp {
-    type Error = ParseError;
+    type Error = UnknownKeyword;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
             names::MULTIPLICATION => Ok(Self::Multiplication),
             names::ADDITION => Ok(Self::Addition),
-            _ => Err(ParseError::InvalidOperation),
+            _ => Err(UnknownKeyword::new("multi-operand operator", value)),
         }
     }
-}
-
-/// An error when parsing a [`MultiOp`] from a string.
-#[derive(Debug, Clone, thiserror::Error)]
-pub enum ParseError {
-    #[error("Invalid operation")]
-    /// The string is not a valid multi-operand operator.
-    InvalidOperation,
 }

@@ -1,5 +1,6 @@
 //! Contains binary operations via the [`BinaryOp`] type.
 
+use crate::types::keyword_error::{NotAMultiOp, UnknownKeyword};
 use crate::types::MultiOp;
 use std::fmt::{Display, Formatter};
 
@@ -43,7 +44,7 @@ impl Display for BinaryOp {
 }
 
 impl TryFrom<&str> for BinaryOp {
-    type Error = ParseError;
+    type Error = UnknownKeyword;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
@@ -51,7 +52,7 @@ impl TryFrom<&str> for BinaryOp {
             names::ADDITION => Ok(Self::Addition),
             names::SUBTRACTION => Ok(Self::Subtraction),
             names::DIVISION => Ok(Self::Division),
-            _ => Err(ParseError::InvalidOperation),
+            _ => Err(UnknownKeyword::new("binary operator", value)),
         }
     }
 }
@@ -66,29 +67,13 @@ impl From<MultiOp> for BinaryOp {
 }
 
 impl TryFrom<BinaryOp> for MultiOp {
-    type Error = TryFromError;
+    type Error = NotAMultiOp;
 
     fn try_from(value: BinaryOp) -> Result<Self, Self::Error> {
         match value {
             BinaryOp::Multiplication => Ok(MultiOp::Multiplication),
             BinaryOp::Addition => Ok(MultiOp::Addition),
-            _ => Err(TryFromError::NotAMultiOp),
+            op => Err(NotAMultiOp(op)),
         }
     }
-}
-
-/// An error when parsing a [`BinaryOp`] from a string.
-#[derive(Debug, Clone, thiserror::Error)]
-pub enum ParseError {
-    #[error("Invalid operation")]
-    /// The string is not a valid binary operator.
-    InvalidOperation,
-}
-
-/// An error when converting a [`BinaryOp`] into a [`MultiOp`].
-#[derive(Debug, Clone, thiserror::Error)]
-pub enum TryFromError {
-    #[error("Operation is not a MultiOp")]
-    /// The operation is `-` or `/`, which has no [`MultiOp`] equivalent.
-    NotAMultiOp,
 }

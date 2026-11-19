@@ -20,6 +20,14 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The types and the parser moved into a new crate, `pddl-core`, which `pddl`
   re-exports in full, so paths such as `pddl::Domain` stay the same. The split
   lets `pddl-macros` use the parser while `pddl` re-exports the macros.
+- The `TryFrom<&str>` conversions of `AssignOp`, `TimedAssignOperator`,
+  `BinaryComparison`, `BinaryOp`, `MultiOp`, `Optimization`,
+  `DurationOperator`, `Interval`, `TimeSpecifier` and `Requirement` fail with
+  the new, public `UnknownKeyword`, which names the input and the kind of
+  keyword expected (`` `incr` is not a valid assignment operator ``), instead
+  of ten private `ParseError` enums that all printed "Invalid operation".
+  `MultiOp::try_from(BinaryOp)` fails with the new `NotAMultiOp`, and
+  `NumberError` is now exported from the crate root.
 
 ## [0.4.0] - 2026-11-14
 
