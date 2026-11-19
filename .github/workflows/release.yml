@@ -1,8 +1,10 @@
 ---
 name: Release
 
-# Runs when `cargo release` pushes a vX.Y.Z tag (see release.toml). Only plain
-# X.Y.Z versions are released; pre-release tags such as v1.0.0-rc.1 don't match.
+# Runs when `cargo release -p pddl-core -p pddl` pushes a vX.Y.Z tag (see
+# pddl/release.toml). Publishes pddl-core, then pddl, which re-exports it; both
+# carry the same version. Only plain X.Y.Z versions are released; pre-release
+# tags such as v1.0.0-rc.1 don't match.
 on:
   push:
     tags:
@@ -33,11 +35,17 @@ jobs:
         run: |
           rustup toolchain install stable --profile minimal --no-self-update
           rustup default stable
-      - name: Check that the tag matches the crate version and is on main
+      - name: Check that the tag matches the crate versions and is on main
         run: |
-          version=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "pddl") | .version')
+          metadata=$(cargo metadata --no-deps --format-version 1)
+          version=$(jq -r '.packages[] | select(.name == "pddl") | .version' <<< "$metadata")
+          core_version=$(jq -r '.packages[] | select(.name == "pddl-core") | .version' <<< "$metadata")
           if [ "v$version" != "$GITHUB_REF_NAME" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match the version $version in Cargo.toml"
+            echo "::error::Tag $GITHUB_REF_NAME does not match the version $version in pddl/Cargo.toml"
+            exit 1
+          fi
+          if [ "$core_version" != "$version" ]; then
+            echo "::error::pddl-core is at $core_version, but pddl is at $version; release them together"
             exit 1
           fi
           if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
@@ -52,35 +60,46 @@ jobs:
           cargo test --no-default-features
           cargo test --no-default-features --features pretty
           cargo test --no-default-features --features parser
-      - name: Check whether this version is already on crates.io
+          cargo test -p pddl --all-features
+      # Re-runs skip crates whose version is already on crates.io, so a release
+      # that published pddl-core but failed on pddl can be finished.
+      - name: Check which crates are already on crates.io
         id: crates-io
         run: |
-          response="$RUNNER_TEMP/crates-io.json"
-          # --retry covers timeouts, 429 and 5xx; a 404 means "not published yet".
-          status=$(curl -s --max-time 10 --retry 3 -o "$response" -w '%{http_code}' \
-            -A "pddl-rs release workflow (https://github.com/sunsided/pddl-rs)" \
-            "https://crates.io/api/v1/crates/pddl/$VERSION")
-          case "$status" in
-            200)
-              if [ "$(jq -r '.version.yanked' "$response")" != "false" ]; then
-                echo "::error::$VERSION is on crates.io but yanked; it can't be published again"
-                exit 1
-              fi
-              jq -r '"\(.version.num) is already on crates.io (published \(.version.created_at), checksum \(.version.checksum)); skipping publish"' "$response"
-              echo "published=true" >> "$GITHUB_OUTPUT"
-              ;;
-            404) echo "published=false" >> "$GITHUB_OUTPUT" ;;
-            *) echo "::error::Unexpected HTTP $status from crates.io"; exit 1 ;;
-          esac
+          pending=""
+          for crate in pddl-core pddl; do
+            response="$RUNNER_TEMP/crates-io-$crate.json"
+            # --retry covers timeouts, 429 and 5xx; a 404 means "not published yet".
+            status=$(curl -s --max-time 10 --retry 3 -o "$response" -w '%{http_code}' \
+              -A "pddl-rs release workflow (https://github.com/sunsided/pddl-rs)" \
+              "https://crates.io/api/v1/crates/$crate/$VERSION")
+            case "$status" in
+              200)
+                if [ "$(jq -r '.version.yanked' "$response")" != "false" ]; then
+                  echo "::error::$crate $VERSION is on crates.io but yanked; it can't be published again"
+                  exit 1
+                fi
+                jq -r --arg crate "$crate" '"\($crate) \(.version.num) is already on crates.io (published \(.version.created_at), checksum \(.version.checksum)); skipping"' "$response"
+                ;;
+              404) pending="$pending $crate" ;;
+              *) echo "::error::Unexpected HTTP $status from crates.io for $crate"; exit 1 ;;
+            esac
+          done
+          echo "pending=${pending# }" >> "$GITHUB_OUTPUT"
       - name: Authenticate with crates.io
-        if: steps.crates-io.outputs.published == 'false'
+        if: steps.crates-io.outputs.pending != ''
         id: auth
         uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1.0.6
       - name: Publish
-        if: steps.crates-io.outputs.published == 'false'
-        run: cargo publish
+        if: steps.crates-io.outputs.pending != ''
+        # pddl-core comes first: pddl depends on it.
+        run: |
+          for crate in $PENDING; do
+            cargo publish -p "$crate"
+          done
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+          PENDING: ${{ steps.crates-io.outputs.pending }}
 
   github-release:
     name: Create GitHub Release

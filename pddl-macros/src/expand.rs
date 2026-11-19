@@ -10,8 +10,8 @@
 
 use std::path::{Path, PathBuf};
 
-use pddl::parsers::check;
-use pddl::{Domain, Parser, Problem};
+use pddl_core::parsers::check;
+use pddl_core::{Domain, Parser, Problem};
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::parse::{ParseStream, Parser as _};
@@ -233,7 +233,7 @@ fn output(kind: Kind, source: &TokenStream) -> TokenStream {
         ::std::sync::LazyLock::new(|| {
             <#ty as ::pddl::Parser>::from_str(#source).expect(
                 "pddl-macros checked this PDDL at compile time; \
-                 the `pddl` version must match the one `pddl-macros` uses",
+                 the `pddl-core` version must match the one `pddl-macros` uses",
             )
         })
     }

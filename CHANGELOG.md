@@ -9,6 +9,13 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `pddl-macros`, a new crate in this repository, checks PDDL at compile time
   with `domain!`, `problem!`, `pddl!` and `validated!` and their `_file` forms.
+  The new `macros` feature re-exports them, as `pddl::domain!` and so on.
+
+### Changed
+
+- The types and the parser moved into a new crate, `pddl-core`, which `pddl`
+  re-exports in full, so paths such as `pddl::Domain` stay the same. The split
+  lets `pddl-macros` use the parser while `pddl` re-exports the macros.
 
 ## [0.4.0] - 2026-11-14
 

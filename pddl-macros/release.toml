@@ -7,6 +7,7 @@
 # .github/workflows/release-pddl-macros.yml (not set up yet) once the tag is pushed.
 publish = false
 allow-branch = ["main"]
+tag = true
 tag-name = "pddl-macros-v{{version}}"
 pre-release-commit-message = "Release pddl-macros {{version}}"
 pre-release-replacements = [

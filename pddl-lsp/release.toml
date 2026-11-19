@@ -7,6 +7,7 @@
 # .github/workflows/release-pddl-lsp.yml once the tag is pushed.
 publish = false
 allow-branch = ["main"]
+tag = true
 tag-name = "pddl-lsp-v{{version}}"
 pre-release-commit-message = "Release pddl-lsp {{version}}"
 pre-release-replacements = [

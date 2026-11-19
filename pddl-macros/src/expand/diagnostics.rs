@@ -13,7 +13,7 @@
 //!    |    ^~~~~~~~~~
 //! ```
 
-use pddl::ParseError;
+use pddl_core::ParseError;
 
 /// Where the PDDL of a macro call lives, for naming error locations.
 #[derive(Debug, Clone)]
@@ -125,7 +125,7 @@ fn indent(text: &str, column: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pddl::{Domain, Parser};
+    use pddl_core::{Domain, Parser};
 
     /// Parses a broken domain and formats its error.
     fn format(source: &str, origin: &Origin) -> String {

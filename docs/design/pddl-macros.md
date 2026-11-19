@@ -125,6 +125,10 @@ decision and costs the same as (a). **v1 ships (b)**, built so that (a) falls ou
 
 ## 5. Crate layout
 
+> **Update:** the facade split described at the end of this section is done. The types and the parser
+> are now `pddl-core` (the root package), `pddl/` is a facade that re-exports it, and its `macros`
+> feature re-exports `pddl-macros`, which depends on `pddl-core`.
+
 Cycle check: `pddl-macros` must run the parser on the host, so it depends on
 `pddl = { path = "..", default-features = false, features = ["parser"] }`. That mirrors `pddl-lsp/Cargo.toml:20`.
 If `pddl` also re-exported the macros (`macros = ["dep:pddl-macros"]`), the graph

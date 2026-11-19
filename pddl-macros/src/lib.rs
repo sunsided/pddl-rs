@@ -16,8 +16,10 @@
 //! [`include_str!`], is relative to the file that calls the macro. Cargo
 //! rebuilds the crate when the PDDL file changes.
 //!
-//! The expansion refers to `::pddl`, so your crate needs `pddl` as a direct
-//! dependency with its `parser` feature (enabled by default).
+//! The usual way in is the `pddl` crate's `macros` feature, which re-exports
+//! these macros as `pddl::domain!` and so on. The expansion refers to `::pddl`,
+//! so your crate needs `pddl` as a direct dependency with its `parser` feature
+//! (enabled by default), whether you call the macros through `pddl` or here.
 //!
 //! ## Example
 //! ```

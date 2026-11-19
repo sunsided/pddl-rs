@@ -4,18 +4,19 @@ Compile-time checked PDDL for the [`pddl`](https://crates.io/crates/pddl) crate.
 The macros parse your PDDL while the crate compiles, so a syntax error fails
 the build instead of a run. At run time, the PDDL is parsed once, on first use.
 
+Use them through the `pddl` crate's `macros` feature, which re-exports them:
+
 ```toml
 [dependencies]
-pddl = "0.4"
-pddl-macros = "0.1"
+pddl = { version = "0.4", features = ["macros"] }
 ```
 
 ```rust
 use std::sync::LazyLock;
 use pddl::{Domain, Problem};
 
-static DOMAIN: LazyLock<Domain> = pddl_macros::domain_file!("pddl/blocks-domain.pddl");
-static PROBLEM: LazyLock<Problem> = pddl_macros::problem!(r#"
+static DOMAIN: LazyLock<Domain> = pddl::domain_file!("pddl/blocks-domain.pddl");
+static PROBLEM: LazyLock<Problem> = pddl::problem!(r#"
     (define (problem p1) (:domain blocks)
       (:objects a b) (:init (clear a) (clear b)) (:goal (on a b)))
 "#);
@@ -44,8 +45,10 @@ static PROBLEM: LazyLock<Problem> = pddl_macros::problem!(r#"
   ```
 
 - The expansion refers to `::pddl`, so `pddl` must be a direct dependency with
-  its `parser` feature, which is on by default. Use the `pddl` version that
-  `pddl-macros` was released with.
+  its `parser` feature, which is on by default. Depending on `pddl-macros`
+  directly works too, next to `pddl`.
+- `pddl-macros` checks with `pddl-core`, the crate behind `pddl`, pinned to one
+  exact version, so the parser at compile time and at run time are the same.
 
 Requires Rust 1.88 or newer.
 
