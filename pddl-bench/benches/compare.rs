@@ -6,7 +6,10 @@
 
 use std::time::{Duration, Instant};
 
-use pddl_bench::domains::{blocks, bw_large_a_grounded, gripper, gripper_4_grounded};
+use pddl::{Parser, Problem};
+use pddl_bench::domains::{
+    blocks, bw_large_a_grounded, gripper, gripper_4_grounded, logistics, logistics_small_grounded,
+};
 use pddl_bench::{fixture, GroundTask};
 use pddl_runtime::search::{astar, breadth_first, Outcome};
 use pddl_runtime::Task;
@@ -82,5 +85,28 @@ fn main() {
         "A*, goal count",
         "B2 (grounded at compile time)",
         measure(|| astar(&b2, |s| b2.unsatisfied_goals(s))),
+    );
+
+    let (domain, _) = fixture("logistics-e");
+    let problem = Problem::from_str(include_str!("../fixtures/logistics-small.pddl")).unwrap();
+    let grounder = GroundTask::new(&domain, &problem).unwrap();
+    let lifted = logistics::Task::new(&problem).unwrap();
+    row(
+        "logistics-small",
+        "breadth-first",
+        "runtime grounder",
+        measure(|| breadth_first(&grounder)),
+    );
+    row(
+        "logistics-small",
+        "breadth-first",
+        "B1 (generated)",
+        measure(|| breadth_first(&lifted)),
+    );
+    row(
+        "logistics-small",
+        "breadth-first",
+        "B2 (grounded at compile time)",
+        measure(|| breadth_first(&logistics_small_grounded::Task)),
     );
 }

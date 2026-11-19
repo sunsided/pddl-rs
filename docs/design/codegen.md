@@ -226,7 +226,8 @@ of gripper-4 and 3000 states of bw-large-a, the gripper-4 optimum, and replay.
   and `ida_star(task, h)`, generic over `Task`, each returning the plan and the
   number of expanded states; `replay` checks a plan against `successors` and
   `apply`. Reference searches, not a planner.
-- `pddl-bench/tests/cross_check.rs`: on gripper-2 and gripper-4, the runtime
+- `pddl-bench/tests/cross_check.rs`: on gripper-2, gripper-4 and a small
+  logistics problem (`pddl-bench/fixtures/logistics-small.pddl`), the runtime
   grounder, B1 and B2 each find the optimal cost with all three searches, and
   every plan replays. Costs are compared, not lengths, and only for optimal
   searches; A* with the goal count is not admissible and only gets a replay
@@ -238,18 +239,22 @@ Numbers from one run on the development machine (release build, Rust 1.100):
 
 | instance | search | implementation | expanded | time to solve | states/s |
 |---|---|---|---:|---:|---:|
-| gripper-4 | breadth-first | runtime grounder | 218 | 0.113 ms | 1935765 |
-| gripper-4 | breadth-first | B1 (generated) | 218 | 0.423 ms | 515853 |
-| gripper-4 | breadth-first | B2 (grounded at compile time) | 218 | 0.028 ms | 7897406 |
-| bw-large-a | A*, goal count | runtime grounder | 9 | 0.026 ms | 347598 |
-| bw-large-a | A*, goal count | B1 (generated) | 9 | 0.046 ms | 195329 |
-| bw-large-a | A*, goal count | B2 (grounded at compile time) | 9 | 0.014 ms | 664403 |
+| gripper-4 | breadth-first | runtime grounder | 218 | 0.066 ms | 3282490 |
+| gripper-4 | breadth-first | B1 (generated) | 218 | 0.257 ms | 847240 |
+| gripper-4 | breadth-first | B2 (grounded at compile time) | 218 | 0.025 ms | 8806302 |
+| bw-large-a | A*, goal count | runtime grounder | 9 | 0.024 ms | 373506 |
+| bw-large-a | A*, goal count | B1 (generated) | 9 | 0.026 ms | 347195 |
+| bw-large-a | A*, goal count | B2 (grounded at compile time) | 9 | 0.013 ms | 717246 |
+| logistics-small | breadth-first | runtime grounder | 46 | 0.018 ms | 2623325 |
+| logistics-small | breadth-first | B1 (generated) | 46 | 0.071 ms | 648125 |
+| logistics-small | breadth-first | B2 (grounded at compile time) | 46 | 0.004 ms | 10548039 |
 
 Reading them:
 
-- **B2 is the fastest**, 2–4× the runtime grounder: a `[u64; N]` state needs
+- **B2 is the fastest**, 2–4× the runtime grounder on every instance: a `[u64; N]` state needs
   no allocation to clone or hash, and the mask loop has a constant length.
-- **B1 is slower than the runtime grounder here**, about 4× on gripper-4. Its
+- **B1 is slower than the runtime grounder**, about 4× on gripper-4 and on
+  logistics-small. Its
   state has one heap-allocated bit set per predicate, so every successor clones
   several boxes where the grounder clones one, and its loops enumerate every
   object of a parameter's type where the grounder only scans operators that

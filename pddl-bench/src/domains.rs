@@ -138,3 +138,10 @@ pub fn distance(bound: &rovers::Bound, a: rovers::types::Place, b: rovers::types
         2.0
     }
 }
+
+/// `fixtures/logistics-small.pddl`, grounded when the crate compiles (level B2).
+#[pddl::task(
+    domain = "../../tests/data/sas-plus/logistics-e/domain.pddl",
+    problem = "../fixtures/logistics-small.pddl"
+)]
+pub mod logistics_small_grounded {}

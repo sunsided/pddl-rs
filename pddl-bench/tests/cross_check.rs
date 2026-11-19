@@ -2,7 +2,10 @@
 //! (breadth-first, A* and IDA* with `h = 0`) agree on the optimal plan cost,
 //! and every plan replays (#125).
 
-use pddl_bench::domains::{gripper, gripper_2_grounded, gripper_4_grounded};
+use pddl::{Parser, Problem};
+use pddl_bench::domains::{
+    gripper, gripper_2_grounded, gripper_4_grounded, logistics, logistics_small_grounded,
+};
 use pddl_bench::{fixture, GroundTask};
 use pddl_runtime::search::{astar, breadth_first, ida_star, replay};
 use pddl_runtime::Task;
@@ -44,4 +47,24 @@ fn implementations_and_searches_agree() {
         };
         assert_eq!(b2, expected, "{name}: B2");
     }
+
+    // A small logistics problem: trucks, a plane and two cities.
+    let (domain, _) = fixture("logistics-e");
+    let problem = Problem::from_str(include_str!("../fixtures/logistics-small.pddl")).unwrap();
+    let expected = [9; 3];
+    assert_eq!(
+        optimal_costs(&GroundTask::new(&domain, &problem).unwrap()),
+        expected,
+        "logistics: grounder"
+    );
+    assert_eq!(
+        optimal_costs(&logistics::Task::new(&problem).unwrap()),
+        expected,
+        "logistics: B1"
+    );
+    assert_eq!(
+        optimal_costs(&logistics_small_grounded::Task),
+        expected,
+        "logistics: B2"
+    );
 }
