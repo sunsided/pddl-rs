@@ -72,3 +72,17 @@ pub mod fuel {}
 /// The wiring of `wiring`: a derived predicate defined recursively.
 #[pddl::task(domain = "../../tests/data/sas-plus/wiring/domain.pddl")]
 pub mod wiring {}
+
+/// `gripper-4`, grounded when the crate compiles (level B2).
+#[pddl::task(
+    domain = "../../tests/data/sas-plus/gripper-4/domain.pddl",
+    problem = "../../tests/data/sas-plus/gripper-4/problem.pddl"
+)]
+pub mod gripper_4_grounded {}
+
+/// `bw-large-a`, grounded when the crate compiles (level B2).
+#[pddl::task(
+    domain = "../../tests/data/sas-plus/bw-large-a/domain.pddl",
+    problem = "../../tests/data/sas-plus/bw-large-a/problem.pddl"
+)]
+pub mod bw_large_a_grounded {}

@@ -24,3 +24,6 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   depends on its own negation is a compile error), kept in `State` and
   recomputed from the other facts after every action and for the initial
   state.
+- `grounded` grounds a domain and problem with `pddl::sas_plus::ground` and
+  generates the task as constant mask tables over a `[u64; WORDS]` state
+  (level B2), with `Limits` on its size.

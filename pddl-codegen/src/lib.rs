@@ -48,9 +48,10 @@
 
 use std::fmt::{Display, Formatter};
 
-use pddl_core::Domain;
+use pddl_core::{Domain, Problem};
 use proc_macro2::TokenStream;
 
+mod grounded;
 mod lifted;
 mod model;
 
@@ -99,4 +100,41 @@ impl std::error::Error for Error {}
 pub fn lifted(domain: &Domain) -> Result<TokenStream, Error> {
     let model = model::Model::new(domain)?;
     lifted::generate(&model)
+}
+
+/// Limits on the size of a grounded task, so that a large problem fails with
+/// a clear error instead of a very slow build.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Limits {
+    /// The most ground actions; 100 000 by default.
+    pub max_operators: usize,
+    /// The most ground atoms that actions change; 10 000 by default.
+    pub max_facts: usize,
+}
+
+impl Default for Limits {
+    fn default() -> Self {
+        Self {
+            max_operators: 100_000,
+            max_facts: 10_000,
+        }
+    }
+}
+
+/// Grounds `domain` and `problem` with [`pddl_core::sas_plus::ground`] and
+/// generates the items of a module that plans in that one task (level B2):
+/// `State = [u64; WORDS]`, the mask tables `OPERATORS`, `INITIAL`,
+/// `GOAL_TRUE` and `GOAL_FALSE`, the names `NAMES` and `FACTS`, and a unit
+/// struct `Task` implementing `pddl_runtime::Task`.
+///
+/// Compile time grows with the number of ground actions, about linearly:
+/// each one is a row of four masks of `WORDS` words.
+///
+/// # Errors
+/// An [`Error`] if grounding fails, the task has conditional effects (B2 is
+/// STRIPS with negative preconditions), or it exceeds `limits`.
+pub fn grounded(domain: &Domain, problem: &Problem, limits: &Limits) -> Result<TokenStream, Error> {
+    let file = pddl_core::sas_plus::ground(domain, problem)
+        .map_err(|e| Error::new(format!("grounding failed: {e}")))?;
+    grounded::generate(&file, limits)
 }

@@ -1,36 +1,58 @@
 //! The `#[task]` attribute: planning code generated from a domain by
 //! `pddl-codegen`.
 
-use pddl_core::{Domain, Parser};
+use pddl_core::{Domain, Parser, Problem};
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{ItemMod, LitStr};
 
 use crate::expand::{self, CallSite, Form, Kind};
 
-/// Where the attribute takes the domain from.
+/// What the attribute says.
+#[derive(Default)]
 struct Arguments {
-    /// The literal and whether it names a file or is the PDDL.
+    /// The domain literal and whether it names a file or is the PDDL.
     domain: Option<(LitStr, Form)>,
+    /// The same for the problem; given, the task is grounded (level B2).
+    problem: Option<(LitStr, Form)>,
+    /// The size limits of a grounded task.
+    limits: pddl_codegen::Limits,
 }
 
-/// Parses `domain = "file.pddl"` or `domain_source = "(define ...)"`.
+/// What the attribute accepts, for error messages.
+const EXPECTED: &str = "expected `domain = \"file.pddl\"` or `domain_source = \"...\"`, \
+     optionally `problem`/`problem_source`, `max_operators` and `max_facts`";
+
+/// Parses `domain = "file.pddl"` or `domain_source = "(define ...)"`, and the
+/// same for `problem`, plus `max_operators = N` and `max_facts = N`.
 fn arguments(attr: TokenStream) -> syn::Result<Arguments> {
-    let mut args = Arguments { domain: None };
+    let mut args = Arguments::default();
     let parser = syn::meta::parser(|meta| {
-        let form = if meta.path.is_ident("domain") {
-            Form::File
-        } else if meta.path.is_ident("domain_source") {
-            Form::Inline
+        let path = &meta.path;
+        let (slot, form) = if path.is_ident("domain") {
+            (&mut args.domain, Form::File)
+        } else if path.is_ident("domain_source") {
+            (&mut args.domain, Form::Inline)
+        } else if path.is_ident("problem") {
+            (&mut args.problem, Form::File)
+        } else if path.is_ident("problem_source") {
+            (&mut args.problem, Form::Inline)
+        } else if path.is_ident("max_operators") || path.is_ident("max_facts") {
+            let value: syn::LitInt = meta.value()?.parse()?;
+            let value = value.base10_parse()?;
+            if path.is_ident("max_operators") {
+                args.limits.max_operators = value;
+            } else {
+                args.limits.max_facts = value;
+            }
+            return Ok(());
         } else {
-            return Err(
-                meta.error("expected `domain = \"file.pddl\"` or `domain_source = \"...\"`")
-            );
+            return Err(meta.error(EXPECTED));
         };
-        if args.domain.is_some() {
-            return Err(meta.error("the domain is given twice"));
+        if slot.is_some() {
+            return Err(meta.error("given twice"));
         }
-        args.domain = Some((meta.value()?.parse()?, form));
+        *slot = Some((meta.value()?.parse()?, form));
         Ok(())
     });
     syn::parse::Parser::parse2(parser, attr)?;
@@ -62,21 +84,27 @@ pub fn expand_task(
     let args = arguments(attr.clone())?;
     let mut module: ItemMod = syn::parse2(item)?;
     let Some((literal, form)) = args.domain else {
-        return Err(syn::Error::new_spanned(
-            attr,
-            "expected `domain = \"file.pddl\"` or `domain_source = \"...\"`",
-        ));
+        return Err(syn::Error::new_spanned(attr, EXPECTED));
     };
     let source = expand::load(form, &literal, call_site)?;
     expand::validate(Kind::Domain, &source, &literal)?;
     let domain = Domain::from_str(&source.text).expect("validated as a domain");
-    let items = pddl_codegen::lifted(&domain)
-        .map_err(|e| syn::Error::new(literal.span(), e.to_string()))?;
+    let mut tracked = vec![source.expr];
+    let items = match args.problem {
+        None => pddl_codegen::lifted(&domain),
+        Some((problem_literal, form)) => {
+            let problem_source = expand::load(form, &problem_literal, call_site)?;
+            expand::validate(Kind::Problem, &problem_source, &problem_literal)?;
+            let problem = Problem::from_str(&problem_source.text).expect("validated as a problem");
+            tracked.push(problem_source.expr);
+            pddl_codegen::grounded(&domain, &problem, &args.limits)
+        }
+    }
+    .map_err(|e| syn::Error::new(literal.span(), e.to_string()))?;
 
-    let tracked = &source.expr;
     let generated: syn::File = syn::parse2(quote! {
-        // Rebuild when the PDDL file changes.
-        const _: &str = #tracked;
+        // Rebuild when a PDDL file changes.
+        #(const _: &str = #tracked;)*
         #items
     })?;
     let content = &mut module
@@ -118,6 +146,12 @@ mod tests {
         let domain = r#""(define (domain d))""#;
         let error = expand_str("", "mod d {}").unwrap_err();
         assert!(error.to_string().starts_with("expected `domain"), "{error}");
+        let error = expand_str(
+            &format!("domain_source = {domain}, max_operators = x"),
+            "mod d {}",
+        )
+        .unwrap_err();
+        assert_eq!(error.to_string(), "expected integer literal");
         let error = expand_str(&format!("file = {domain}"), "mod d {}").unwrap_err();
         assert!(error.to_string().starts_with("expected `domain"), "{error}");
         let error = expand_str(
@@ -125,8 +159,32 @@ mod tests {
             "mod d {}",
         )
         .unwrap_err();
-        assert_eq!(error.to_string(), "the domain is given twice");
+        assert_eq!(error.to_string(), "given twice");
         assert!(expand_str(&format!("domain_source = {domain}"), "fn d() {}").is_err());
+    }
+
+    #[test]
+    fn grounds_with_a_problem() {
+        let domain = r#""(define (domain d) (:predicates (p ?x)) (:action a :parameters (?x) :precondition () :effect (p ?x)))""#;
+        let problem =
+            r#""(define (problem q) (:domain d) (:objects o1 o2) (:init) (:goal (p o1)))""#;
+        let tokens = expand_str(
+            &format!("domain_source = {domain}, problem_source = {problem}"),
+            "mod d {}",
+        )
+        .unwrap();
+        assert!(tokens.contains("pub static OPERATORS"), "{tokens}");
+        let error = expand_str(
+            &format!("domain_source = {domain}, problem_source = {problem}, max_operators = 1"),
+            "mod d {}",
+        )
+        .unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .starts_with("the grounded task has 2 operators"),
+            "{error}"
+        );
     }
 
     #[test]

@@ -166,6 +166,13 @@ pub fn validated_file(input: TokenStream) -> TokenStream {
 /// itself. Items already in the module stay. Unsupported requirements and
 /// constructs are compile errors. Needs the `codegen` feature.
 ///
+/// With `problem = "p.pddl"` (or `problem_source = "..."`) the task is
+/// grounded while the crate compiles instead (level B2): the module holds
+/// `State = [u64; WORDS]`, the mask tables `OPERATORS`, the names `NAMES`, and
+/// a unit struct `Task`. Only STRIPS with negative preconditions grounds this
+/// way. `max_operators = N` (default 100 000) and `max_facts = N` (default
+/// 10 000) turn a too large task into a compile error rather than a slow build.
+///
 /// ```
 /// #[pddl_macros::task(domain_source = r#"
 ///     (define (domain switches)

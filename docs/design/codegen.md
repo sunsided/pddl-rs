@@ -192,3 +192,30 @@ than costs.
 Checks: `pddl-bench/tests/derived.rs` solves `wiring` (a recursive derived
 predicate) at Fast Downward's optimum of 4 with A* and IDA*, and checks the
 derived facts after single steps; `model.rs` tests the stratum order.
+
+## 7. Level B2: domain and problem fixed (#127)
+
+```rust
+#[pddl::task(domain = "blocks.pddl", problem = "p1.pddl", max_operators = 20_000)]
+mod p1 {}
+let plan = pddl::runtime::search::breadth_first(&p1::Task);
+```
+
+- The attribute grounds the task while the crate compiles, with the same
+  `sas_plus::ground` the runtime baseline uses, so B2 and the baseline have the
+  same operators and facts.
+- Every changing ground atom is one bit; the state is `[u64; WORDS]` with
+  `WORDS` a constant, so it is `Copy`-sized and hashes without a heap pointer.
+- Each operator is one row of `static OPERATORS: [Operator; M]`: four masks and
+  a cost. The successor loop is the same code for every operator, as #127
+  asks: tables, not code per action, so rustc only sees data.
+- STRIPS with negative preconditions only: conditional effects are a compile
+  error (masks can't express them), and so are numeric fluents (the grounder
+  rejects them).
+- **Size.** Compile time grows linearly with the operators: each adds
+  `4 * WORDS` words of constant data. `max_operators` (default 100 000) and
+  `max_facts` (default 10 000) fail with a message that names the count and
+  the limit (`tests/ui/task_too_large.rs`).
+
+Checks (`pddl-bench/tests/grounded.rs`): lockstep against `GroundTask` on all
+of gripper-4 and 3000 states of bw-large-a, the gripper-4 optimum, and replay.
