@@ -13,6 +13,7 @@ on:
       - 'pddl-macros/**'
       - 'pddl-nova-tests/**'
       - 'pddl-runtime/**'
+      - 'pddl-bench/**'
       - 'schema/**'
       - 'editors/vscode/**'
       - '.github/workflows/rust.yml'
@@ -27,6 +28,7 @@ on:
       - 'pddl-macros/**'
       - 'pddl-nova-tests/**'
       - 'pddl-runtime/**'
+      - 'pddl-bench/**'
       - 'schema/**'
       - 'editors/vscode/**'
       - '.github/workflows/rust.yml'
@@ -69,7 +71,7 @@ jobs:
       # pddl-macros, and pddl's `macros` feature that pulls it in, need Rust 1.88.
       - name: Build with MSRV
         run: |
-          cargo build --workspace --all-features --exclude pddl --exclude pddl-macros --exclude pddl-nova-tests
+          cargo build --workspace --all-features --exclude pddl --exclude pddl-macros --exclude pddl-nova-tests --exclude pddl-bench
           cargo build -p pddl --features miette,pretty,serde
       # The NOVA tests are in pddl-nova-tests, because novafile needs Rust 1.90
       # and Cargo builds every dev-dependency for any test. They run on stable
