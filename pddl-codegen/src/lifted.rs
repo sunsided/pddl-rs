@@ -298,24 +298,62 @@ impl Gen<'_> {
                     quote!((#(#parts)&&*))
                 }
             }
+            Cond::Or(parts) => {
+                let parts: Vec<_> = parts.iter().map(|p| self.cond(action, p, state)).collect();
+                if parts.is_empty() {
+                    quote!(false)
+                } else {
+                    quote!((#(#parts)||*))
+                }
+            }
+            Cond::Exists(slots, body) | Cond::Forall(slots, body) => {
+                let exists = matches!(cond, Cond::Exists(..));
+                let mut expr = self.cond(action, body, state);
+                for &slot in slots.iter().rev() {
+                    let v = var(slot);
+                    let ty = action.slots[slot].ty;
+                    let member = Self::member(action, slot);
+                    expr = if exists {
+                        quote!((self.starts[#ty]..self.ends[#ty]).any(|#v| #member && #expr))
+                    } else {
+                        quote!((self.starts[#ty]..self.ends[#ty]).all(|#v| !#member || #expr))
+                    };
+                }
+                expr
+            }
         }
     }
 
-    /// The highest variable slot a condition reads, if any.
-    fn last_slot(cond: &Cond) -> Option<usize> {
+    /// Whether slot `slot`'s object belongs to its `either` type; `true` for
+    /// a plain type, whose range the loop already keeps to.
+    fn member(action: &ActionInfo, slot: usize) -> TokenStream {
+        let v = var(slot);
+        action.slots[slot].either.as_ref().map_or_else(
+            || quote!(true),
+            |members| quote!((#((self.starts[#members]..self.ends[#members]).contains(&#v))||*)),
+        )
+    }
+
+    /// The highest parameter slot below `arity` that a condition reads, if any;
+    /// quantified variables are bound inside the condition.
+    fn last_slot(cond: &Cond, arity: usize) -> Option<usize> {
         let of = |args: &[Arg]| {
             args.iter()
                 .filter_map(|a| match a {
-                    Arg::Var(slot) => Some(*slot),
-                    Arg::Const(_) => None,
+                    Arg::Var(slot) if *slot < arity => Some(*slot),
+                    _ => None,
                 })
                 .max()
         };
         match cond {
             Cond::Atom { args, .. } => of(args),
             Cond::Eq(a, b) => of(&[*a, *b]),
-            Cond::Not(inner) => Self::last_slot(inner),
-            Cond::And(parts) => parts.iter().filter_map(Self::last_slot).max(),
+            Cond::Not(inner) | Cond::Exists(_, inner) | Cond::Forall(_, inner) => {
+                Self::last_slot(inner, arity)
+            }
+            Cond::And(parts) | Cond::Or(parts) => {
+                parts.iter().filter_map(|p| Self::last_slot(p, arity)).max()
+            }
         }
     }
 
@@ -331,7 +369,7 @@ impl Gen<'_> {
         let state = quote!(state);
         let mut checks: Vec<Vec<TokenStream>> = vec![Vec::new(); action.arity + 1];
         for cond in &action.pre {
-            let depth = Self::last_slot(cond).map_or(0, |s| s + 1);
+            let depth = Self::last_slot(cond, action.arity).map_or(0, |s| s + 1);
             checks[depth].push(self.cond(action, cond, &state));
         }
         let all = |checks: &[TokenStream]| {
@@ -364,12 +402,7 @@ impl Gen<'_> {
             let v = var(depth);
             let slot = &action.slots[depth];
             let ty = slot.ty;
-            let member = slot.either.as_ref().map_or_else(
-                || quote!(true),
-                |members| {
-                    quote!((#((self.starts[#members]..self.ends[#members]).contains(&#v))||*))
-                },
-            );
+            let member = Self::member(action, depth);
             let check = all(&checks[depth + 1]);
             body = quote! {
                 for #v in self.starts[#ty]..self.ends[#ty] {
@@ -388,38 +421,69 @@ impl Gen<'_> {
         }
     }
 
+    /// The code for the fact effects of one kind (`add` or delete) among
+    /// `effects`, with conditions read from `state` and changes made to `next`.
+    fn effects(&self, action: &ActionInfo, effects: &[Effect], add: bool) -> TokenStream {
+        let next = quote!(next);
+        let state = quote!(state);
+        let parts = effects.iter().filter(|e| {
+            let mut found = false;
+            e.facts(&mut |_, a| found |= a == add);
+            found
+        });
+        let code = parts.map(|effect| match effect {
+            Effect::Fact {
+                pred,
+                args,
+                add: kind,
+            } => {
+                debug_assert_eq!(*kind, add);
+                let args: Vec<_> = args.iter().map(|&arg| self.arg(action, arg)).collect();
+                let guard = self.type_guard(*pred, &args);
+                let globals: Vec<TokenStream> = args.into_iter().map(|(g, _)| g).collect();
+                let set = self.fact(&next, *pred, &globals, &quote!(self.starts), Some(add));
+                quote!(if #guard { #set; })
+            }
+            Effect::Forall(slots, body) => {
+                let mut code = self.effects(action, body, add);
+                for &slot in slots.iter().rev() {
+                    let v = var(slot);
+                    let ty = action.slots[slot].ty;
+                    let member = Self::member(action, slot);
+                    code = quote! {
+                        for #v in self.starts[#ty]..self.ends[#ty] {
+                            if #member {
+                                #code
+                            }
+                        }
+                    };
+                }
+                code
+            }
+            Effect::When(cond, body) => {
+                let cond = self.cond(action, cond, &state);
+                let body = self.effects(action, body, add);
+                quote!(if #cond { #body })
+            }
+        });
+        quote!(#(#code)*)
+    }
+
     /// The apply method of action `a`: deletes, then adds, so an add wins.
+    /// Conditions read the state before the action.
     fn apply(&self, a: usize) -> TokenStream {
         let action = &self.model.actions[a];
         let name = Self::apply_fn(a);
         let vars: Vec<Ident> = (0..action.arity).map(var).collect();
-        let next = quote!(next);
-        let effect = |effect: &Effect| {
-            let args: Vec<_> = effect
-                .args
-                .iter()
-                .map(|&arg| self.arg(action, arg))
-                .collect();
-            let guard = self.type_guard(effect.pred, &args);
-            let globals: Vec<TokenStream> = args.into_iter().map(|(g, _)| g).collect();
-            let set = self.fact(
-                &next,
-                effect.pred,
-                &globals,
-                &quote!(self.starts),
-                Some(effect.add),
-            );
-            quote!(if #guard { #set; })
-        };
-        let deletes = action.effects.iter().filter(|e| !e.add).map(effect);
-        let adds = action.effects.iter().filter(|e| e.add).map(effect);
+        let deletes = self.effects(action, &action.effects, false);
+        let adds = self.effects(action, &action.effects, true);
         let doc = format!("Applies `{}` to `state`.", action.name);
         quote! {
             #[doc = #doc]
             fn #name(&self, state: &State, #(#vars: u32),*) -> State {
                 let mut next = state.clone();
-                #(#deletes)*
-                #(#adds)*
+                #deletes
+                #adds
                 next
             }
         }

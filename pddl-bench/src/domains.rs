@@ -12,3 +12,32 @@ pub mod blocks {}
 /// The logistics domain of `logistics-e`.
 #[pddl::task(domain = "../../tests/data/sas-plus/logistics-e/domain.pddl")]
 pub mod logistics {}
+
+/// The one-operator blocks world of `sussman-anomaly`, with conditional effects.
+#[pddl::task(domain = "../../tests/data/sas-plus/sussman-anomaly/domain.pddl")]
+pub mod blocks_world {}
+
+/// The briefcase world of `get-paid4`: `forall` and `when` in effects.
+#[pddl::task(domain = "../../tests/data/sas-plus/get-paid4/domain.pddl")]
+pub mod briefcase {}
+
+/// Lights that switches turn on: `exists`, `forall`, `or` and `imply` in
+/// preconditions, and a `forall`/`when` effect. The runtime grounder rejects
+/// `or` and `imply`, so `tests/adl.rs` checks this domain by hand.
+#[pddl::task(domain_source = r"
+(define (domain lights)
+  (:requirements :adl :typing)
+  (:types switch room)
+  (:predicates (on ?s - switch) (in ?s - switch ?r - room) (lit ?r - room) (done))
+  (:action flip :parameters (?s - switch) :precondition (not (on ?s)) :effect (on ?s))
+  (:action light :parameters (?r - room)
+    :precondition (and (not (lit ?r)) (exists (?s - switch) (and (in ?s ?r) (on ?s))))
+    :effect (lit ?r))
+  (:action finish :parameters ()
+    :precondition (forall (?r - room) (imply (exists (?s - switch) (in ?s ?r)) (lit ?r)))
+    :effect (done))
+  (:action reset :parameters ()
+    :precondition (or (done) (and))
+    :effect (forall (?s - switch) (when (on ?s) (not (on ?s))))))
+")]
+pub mod lights {}

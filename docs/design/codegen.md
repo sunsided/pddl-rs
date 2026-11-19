@@ -117,3 +117,22 @@ all states of gripper-2 and gripper-4, and 3000 states each of bw-large-a and
 logistics-e. Actions that lead back to the same state are left out on both
 sides, because the grounder drops them, as Fast Downward does. Breadth-first
 plans have the known optimal costs and replay.
+
+## 4. `:adl` in B1 (#128)
+
+- `exists` and `forall`, in preconditions and goals, become `any` and `all`
+  over the bound variable's object range; a variable of an `either` type
+  checks membership first. Quantified variables get slots of their own after
+  the parameters, so the join order only looks at the parameters a conjunct
+  reads: `(exists (?s) (and (in ?s ?r) (on ?s)))` is checked as soon as `?r` is
+  bound.
+- `or`, `imply` (as `(or (not a) b)`) and `not` over any formula are plain
+  boolean code.
+- `forall` effects are loops and `when` effects branches. Their conditions read
+  `state`, the state before the action, and change `next`; deletes of all
+  effects run before adds.
+
+Checks (`pddl-bench/tests/adl.rs`): lockstep against the grounder on
+sussman-anomaly and get-paid4 (`when`, `forall` effects), and a `lights`
+domain with `exists`, `forall`, `or` and `imply`, which the grounder rejects,
+against hand-computed optima.

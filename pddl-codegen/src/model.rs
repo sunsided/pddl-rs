@@ -4,9 +4,10 @@
 use std::collections::{HashMap, HashSet};
 
 use pddl_core::{
-    ActionDefinition, AtomicFormula, ConditionalEffect, Domain, Effects, GoalDescription, Literal,
-    PreconditionGoalDescription, PreconditionGoalDescriptions, PreferenceGoalDescription,
-    PrimitiveEffect, Requirement, StructureDef, Term, Type, TypedVariables,
+    ActionDefinition, AtomicFormula, ConditionalEffect, Domain, EffectCondition, Effects,
+    GoalDescription, Literal, PreconditionGoalDescription, PreconditionGoalDescriptions,
+    PreferenceGoalDescription, PrimitiveEffect, Requirement, StructureDef, Term, Type,
+    TypedVariables,
 };
 
 use crate::Error;
@@ -58,16 +59,43 @@ pub enum Cond {
     Not(Box<Cond>),
     /// The conjunction.
     And(Vec<Cond>),
+    /// The disjunction.
+    Or(Vec<Cond>),
+    /// Some objects for the variables in these slots satisfy the body.
+    Exists(Vec<usize>, Box<Cond>),
+    /// All objects for the variables in these slots satisfy the body.
+    Forall(Vec<usize>, Box<Cond>),
 }
 
-/// An effect on a fact.
-pub struct Effect {
-    /// The predicate index.
-    pub pred: usize,
-    /// The arguments.
-    pub args: Vec<Arg>,
-    /// Whether the fact is added rather than deleted.
-    pub add: bool,
+/// An effect.
+pub enum Effect {
+    /// Adds (`add`) or deletes a fact.
+    Fact {
+        /// The predicate index.
+        pred: usize,
+        /// The arguments.
+        args: Vec<Arg>,
+        /// Whether the fact is added rather than deleted.
+        add: bool,
+    },
+    /// The effects for every object of the variables in these slots.
+    Forall(Vec<usize>, Vec<Effect>),
+    /// The effects, where the condition holds in the state before the action.
+    When(Cond, Vec<Effect>),
+}
+
+impl Effect {
+    /// Calls `f` with every fact effect: predicate and whether it adds.
+    pub fn facts(&self, f: &mut impl FnMut(usize, bool)) {
+        match self {
+            Self::Fact { pred, add, .. } => f(*pred, *add),
+            Self::Forall(_, body) | Self::When(_, body) => {
+                for effect in body {
+                    effect.facts(f);
+                }
+            }
+        }
+    }
 }
 
 /// A variable slot: an action parameter.
@@ -84,7 +112,8 @@ pub struct Slot {
 pub struct ActionInfo {
     /// The name, lowercase.
     pub name: String,
-    /// The variable slots; the first `arity` are the parameters.
+    /// The variable slots: the first `arity` are the parameters, the others
+    /// are bound by quantifiers.
     pub slots: Vec<Slot>,
     /// The number of parameters.
     pub arity: usize,
@@ -114,6 +143,12 @@ const SUPPORTED: &[Requirement] = &[
     Requirement::Typing,
     Requirement::NegativePreconditions,
     Requirement::Equality,
+    Requirement::DisjunctivePreconditions,
+    Requirement::ExistentialPreconditions,
+    Requirement::UniversalPreconditions,
+    Requirement::QuantifiedPreconditions,
+    Requirement::ConditionalEffects,
+    Requirement::Adl,
 ];
 
 /// Returns an error for an unsupported construct.
@@ -185,11 +220,12 @@ impl Model {
                 StructureDef::Derived(_) => return unsupported("derived predicates"),
             }
         }
-        let changed: HashSet<usize> = model
-            .actions
-            .iter()
-            .flat_map(|a| a.effects.iter().map(|e| e.pred))
-            .collect();
+        let mut changed = HashSet::new();
+        for effect in model.actions.iter().flat_map(|a| &a.effects) {
+            effect.facts(&mut |pred, _| {
+                changed.insert(pred);
+            });
+        }
         for (i, pred) in model.predicates.iter_mut().enumerate() {
             pred.is_static = !changed.contains(&i);
         }
@@ -298,6 +334,9 @@ fn types(domain: &Domain) -> Result<Vec<TypeInfo>, Error> {
     Ok(out)
 }
 
+/// Variables that a quantifier shadows, with the slots they had.
+type Shadowed = Vec<(String, Option<usize>)>;
+
 /// Resolves the formulas of one action.
 struct Scope<'a> {
     /// The domain so far.
@@ -318,15 +357,30 @@ impl<'a> Scope<'a> {
         }
     }
 
-    /// Adds slots for `vars`.
-    fn bind(&mut self, vars: &TypedVariables) -> Result<(), Error> {
+    /// Adds slots for `vars` and brings them into scope. Returns the slots
+    /// and the variables they shadow, for [`unbind`](Self::unbind).
+    fn bind(&mut self, vars: &TypedVariables) -> Result<(Vec<usize>, Shadowed), Error> {
+        let mut slots = Vec::new();
+        let mut shadowed = Vec::new();
         for var in vars.iter() {
             let (ty, either) = resolve_type(&self.model.types, var.type_())?;
             let name = lc(var.value());
-            self.vars.insert(name.clone(), self.slots.len());
+            let slot = self.slots.len();
+            shadowed.push((name.clone(), self.vars.insert(name.clone(), slot)));
             self.slots.push(Slot { name, ty, either });
+            slots.push(slot);
         }
-        Ok(())
+        Ok((slots, shadowed))
+    }
+
+    /// Takes variables out of scope again, restoring the ones they shadowed.
+    fn unbind(&mut self, shadowed: Shadowed) {
+        for (name, old) in shadowed.into_iter().rev() {
+            match old {
+                Some(slot) => self.vars.insert(name, slot),
+                None => self.vars.remove(&name),
+            };
+        }
     }
 
     /// Resolves an action.
@@ -429,7 +483,13 @@ impl<'a> Scope<'a> {
                 PreconditionGoalDescription::Preference(PreferenceGoalDescription::Preference(
                     _,
                 )) => return unsupported("preferences"),
-                PreconditionGoalDescription::Forall(..) => return unsupported("forall"),
+                PreconditionGoalDescription::Forall(vars, inner) => {
+                    let (slots, shadowed) = self.bind(vars)?;
+                    let mut body = Vec::new();
+                    self.preconditions(inner, &mut body)?;
+                    self.unbind(shadowed);
+                    out.push(Cond::Forall(slots, Box::new(Cond::And(body))));
+                }
             }
         }
         Ok(())
@@ -455,22 +515,34 @@ impl<'a> Scope<'a> {
             GoalDescription::Literal(Literal::NotAtomicFormula(formula)) => {
                 Ok(Cond::Not(Box::new(self.literal(formula)?)))
             }
-            GoalDescription::Not(inner) => match inner.as_ref() {
-                GoalDescription::AtomicFormula(_) | GoalDescription::Literal(_) => {
-                    Ok(Cond::Not(Box::new(self.cond(inner)?)))
-                }
-                _ => unsupported("not over a non-atomic formula"),
-            },
+            GoalDescription::Not(inner) => Ok(Cond::Not(Box::new(self.cond(inner)?))),
             GoalDescription::And(parts) => Ok(Cond::And(
                 parts
                     .iter()
                     .map(|p| self.cond(p))
                     .collect::<Result<_, _>>()?,
             )),
-            GoalDescription::Or(_) => unsupported("or"),
-            GoalDescription::Imply(..) => unsupported("imply"),
-            GoalDescription::Exists(..) => unsupported("exists"),
-            GoalDescription::ForAll(..) => unsupported("forall"),
+            GoalDescription::Or(parts) => Ok(Cond::Or(
+                parts
+                    .iter()
+                    .map(|p| self.cond(p))
+                    .collect::<Result<_, _>>()?,
+            )),
+            GoalDescription::Imply(a, b) => Ok(Cond::Or(vec![
+                Cond::Not(Box::new(self.cond(a)?)),
+                self.cond(b)?,
+            ])),
+            GoalDescription::Exists(vars, inner) | GoalDescription::ForAll(vars, inner) => {
+                let (slots, shadowed) = self.bind(vars)?;
+                let body = self.cond(inner);
+                self.unbind(shadowed);
+                let body = Box::new(body?);
+                Ok(if matches!(gd, GoalDescription::Exists(..)) {
+                    Cond::Exists(slots, body)
+                } else {
+                    Cond::Forall(slots, body)
+                })
+            }
             GoalDescription::FluentComparison(_) => unsupported("numeric fluents"),
         }
     }
@@ -480,8 +552,26 @@ impl<'a> Scope<'a> {
         for effect in effects {
             match effect {
                 ConditionalEffect::Effect(primitive) => self.primitive(primitive, out)?,
-                ConditionalEffect::Forall(_) => return unsupported("forall"),
-                ConditionalEffect::When(_) => return unsupported("conditional effects (when)"),
+                ConditionalEffect::Forall(forall) => {
+                    let (slots, shadowed) = self.bind(&forall.variables)?;
+                    let mut body = Vec::new();
+                    let result = self.effects(&forall.effects, &mut body);
+                    self.unbind(shadowed);
+                    result?;
+                    out.push(Effect::Forall(slots, body));
+                }
+                ConditionalEffect::When(when) => {
+                    let cond = self.cond(&when.condition)?;
+                    let mut body = Vec::new();
+                    let primitives = match &when.effect {
+                        EffectCondition::Single(effect) => std::slice::from_ref(effect),
+                        EffectCondition::All(effects) => effects.as_slice(),
+                    };
+                    for primitive in primitives {
+                        self.primitive(primitive, &mut body)?;
+                    }
+                    out.push(Effect::When(cond, body));
+                }
             }
         }
         Ok(())
@@ -493,7 +583,7 @@ impl<'a> Scope<'a> {
             PrimitiveEffect::AtomicFormula(formula)
             | PrimitiveEffect::NotAtomicFormula(formula) => {
                 let (pred, args) = self.atom(formula)?;
-                out.push(Effect {
+                out.push(Effect::Fact {
                     pred,
                     args,
                     add: matches!(effect, PrimitiveEffect::AtomicFormula(_)),

@@ -38,8 +38,9 @@
 //! }
 //! ```
 //!
-//! Supported: STRIPS, `:typing`, `:negative-preconditions` and `:equality`.
-//! Anything else is an [`Error`] that names it.
+//! Supported: STRIPS, `:typing`, `:negative-preconditions`, `:equality` and
+//! `:adl` (`or`, `imply`, `exists`, `forall`, `not` over any formula, and
+//! `forall` and `when` in effects). Anything else is an [`Error`] that names it.
 
 #![forbid(unsafe_code)]
 
