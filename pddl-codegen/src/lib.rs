@@ -40,7 +40,8 @@
 //!
 //! Supported: STRIPS, `:typing`, `:negative-preconditions`, `:equality` and
 //! `:adl` (`or`, `imply`, `exists`, `forall`, `not` over any formula, and
-//! `forall` and `when` in effects). Anything else is an [`Error`] that names it.
+//! `forall` and `when` in effects), and numeric fluents with action costs.
+//! Anything else is an [`Error`] that names it.
 
 #![forbid(unsafe_code)]
 

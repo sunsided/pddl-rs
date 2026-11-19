@@ -4,8 +4,9 @@
 use std::collections::{HashMap, HashSet};
 
 use pddl_core::{
-    ActionDefinition, AtomicFormula, ConditionalEffect, Domain, EffectCondition, Effects,
-    GoalDescription, Literal, PreconditionGoalDescription, PreconditionGoalDescriptions,
+    ActionDefinition, AssignOp, AtomicFormula, BinaryComparison, BinaryOp, ConditionalEffect,
+    Domain, EffectCondition, Effects, FluentExpression, FunctionHead, FunctionTerm,
+    GoalDescription, Literal, MultiOp, PreconditionGoalDescription, PreconditionGoalDescriptions,
     PreferenceGoalDescription, PrimitiveEffect, Requirement, StructureDef, Term, Type,
     TypedVariables,
 };
@@ -35,6 +36,84 @@ pub struct PredicateInfo {
     pub is_static: bool,
 }
 
+/// A numeric function, other than `total-cost`.
+pub struct FunctionInfo {
+    /// The name, lowercase.
+    pub name: String,
+    /// The type of each argument; `either` types are `object` (0).
+    pub args: Vec<usize>,
+    /// Whether no action changes it.
+    pub is_static: bool,
+}
+
+/// A numeric comparison.
+#[derive(Clone, Copy)]
+pub enum Comparison {
+    /// `<`
+    Less,
+    /// `<=`
+    LessOrEqual,
+    /// `=`
+    Equal,
+    /// `>=`
+    GreaterOrEqual,
+    /// `>`
+    Greater,
+}
+
+/// A numeric expression.
+pub enum NumExpr {
+    /// A constant.
+    Number(f64),
+    /// The value of a function.
+    Fluent {
+        /// The function index.
+        func: usize,
+        /// The arguments.
+        args: Vec<Arg>,
+    },
+    /// `a + b`
+    Add(Box<NumExpr>, Box<NumExpr>),
+    /// `a - b`
+    Sub(Box<NumExpr>, Box<NumExpr>),
+    /// `a * b`
+    Mul(Box<NumExpr>, Box<NumExpr>),
+    /// `a / b`
+    Div(Box<NumExpr>, Box<NumExpr>),
+    /// `-a`
+    Neg(Box<NumExpr>),
+}
+
+impl NumExpr {
+    /// Calls `f` with every function the expression reads.
+    pub fn functions(&self, f: &mut impl FnMut(usize)) {
+        match self {
+            Self::Number(_) => {}
+            Self::Fluent { func, .. } => f(*func),
+            Self::Add(a, b) | Self::Sub(a, b) | Self::Mul(a, b) | Self::Div(a, b) => {
+                a.functions(f);
+                b.functions(f);
+            }
+            Self::Neg(a) => a.functions(f),
+        }
+    }
+}
+
+/// How a numeric effect changes its function.
+#[derive(Clone, Copy)]
+pub enum NumericOp {
+    /// `assign`: set to the value.
+    Assign,
+    /// `increase`: add the value.
+    Increase,
+    /// `decrease`: subtract the value.
+    Decrease,
+    /// `scale-up`: multiply by the value.
+    ScaleUp,
+    /// `scale-down`: divide by the value.
+    ScaleDown,
+}
+
 /// A term in a formula: a variable slot or a constant.
 #[derive(Clone, Copy)]
 pub enum Arg {
@@ -61,6 +140,8 @@ pub enum Cond {
     And(Vec<Cond>),
     /// The disjunction.
     Or(Vec<Cond>),
+    /// A numeric comparison.
+    Compare(Comparison, NumExpr, NumExpr),
     /// Some objects for the variables in these slots satisfy the body.
     Exists(Vec<usize>, Box<Cond>),
     /// All objects for the variables in these slots satisfy the body.
@@ -82,6 +163,17 @@ pub enum Effect {
     Forall(Vec<usize>, Vec<Effect>),
     /// The effects, where the condition holds in the state before the action.
     When(Cond, Vec<Effect>),
+    /// Changes the value of a function.
+    Assign {
+        /// How.
+        op: NumericOp,
+        /// The function index.
+        func: usize,
+        /// The arguments.
+        args: Vec<Arg>,
+        /// The value, read in the state before the action.
+        value: NumExpr,
+    },
 }
 
 impl Effect {
@@ -94,7 +186,30 @@ impl Effect {
                     effect.facts(f);
                 }
             }
+            Self::Assign { .. } => {}
         }
+    }
+
+    /// Calls `f` with every function a numeric effect changes.
+    pub fn assigned(&self, f: &mut impl FnMut(usize)) {
+        match self {
+            Self::Fact { .. } => {}
+            Self::Forall(_, body) | Self::When(_, body) => {
+                for effect in body {
+                    effect.assigned(f);
+                }
+            }
+            Self::Assign { func, .. } => f(*func),
+        }
+    }
+
+    /// Whether the effects change any function.
+    pub fn has_assign(effects: &[Effect]) -> bool {
+        let mut found = false;
+        for effect in effects {
+            effect.assigned(&mut |_| found = true);
+        }
+        found
     }
 }
 
@@ -121,6 +236,8 @@ pub struct ActionInfo {
     pub pre: Vec<Cond>,
     /// The effects.
     pub effects: Vec<Effect>,
+    /// The summands of the action's cost, from `(increase (total-cost) ...)`.
+    pub cost: Vec<NumExpr>,
 }
 
 /// A domain, resolved for code generation.
@@ -131,6 +248,8 @@ pub struct Model {
     pub types: Vec<TypeInfo>,
     /// The predicates, in declaration order.
     pub predicates: Vec<PredicateInfo>,
+    /// The numeric functions, in declaration order, without `total-cost`.
+    pub functions: Vec<FunctionInfo>,
     /// The constants with their types.
     pub constants: Vec<(String, usize)>,
     /// The actions, in declaration order.
@@ -149,6 +268,11 @@ const SUPPORTED: &[Requirement] = &[
     Requirement::QuantifiedPreconditions,
     Requirement::ConditionalEffects,
     Requirement::Adl,
+    Requirement::NumericFluents,
+    Requirement::ActionCosts,
+    Requirement::Fluents,
+    // Allowed so that `:fluents` works; using an object fluent is an error.
+    Requirement::ObjectFluents,
 ];
 
 /// Returns an error for an unsupported construct.
@@ -168,9 +292,6 @@ impl Model {
         }
         if !domain.timeless().is_empty() {
             return unsupported("timeless literals");
-        }
-        if !domain.functions().values().is_empty() {
-            return unsupported("numeric fluents");
         }
 
         let types = types(domain)?;
@@ -203,10 +324,13 @@ impl Model {
             constants.push((lc(typed.value()), ty));
         }
 
+        let functions = functions(domain, &types)?;
+
         let mut model = Self {
             name: lc(domain.name()),
             types,
             predicates,
+            functions,
             constants,
             actions: Vec::new(),
         };
@@ -229,7 +353,41 @@ impl Model {
         for (i, pred) in model.predicates.iter_mut().enumerate() {
             pred.is_static = !changed.contains(&i);
         }
+        let mut assigned = HashSet::new();
+        for effect in model.actions.iter().flat_map(|a| &a.effects) {
+            effect.assigned(&mut |func| {
+                assigned.insert(func);
+            });
+        }
+        for (i, func) in model.functions.iter_mut().enumerate() {
+            func.is_static = !assigned.contains(&i);
+        }
+        for action in &model.actions {
+            for term in &action.cost {
+                model
+                    .check_cost(term)
+                    .map_err(|e| e.context(&action.name))?;
+            }
+        }
         Ok(model)
+    }
+
+    /// Checks that a summand of an action cost is a non-negative integer for
+    /// every binding: a sum or product of such numbers and static functions,
+    /// whose values the loader checks.
+    fn check_cost(&self, term: &NumExpr) -> Result<(), Error> {
+        match term {
+            NumExpr::Number(n) if *n >= 0.0 && n.fract() == 0.0 => Ok(()),
+            NumExpr::Fluent { func, .. } if self.functions[*func].is_static => Ok(()),
+            NumExpr::Add(a, b) | NumExpr::Mul(a, b) => {
+                self.check_cost(a)?;
+                self.check_cost(b)
+            }
+            _ => unsupported(
+                "action costs other than sums and products of non-negative integers \
+                 and static functions",
+            ),
+        }
     }
 
     /// Whether type `sub` is `sup` or one of its subtypes.
@@ -268,6 +426,43 @@ fn resolve_type(types: &[TypeInfo], ty: &Type) -> Result<(usize, Option<Vec<usiz
                 _ => Ok((0, Some(members))),
             }
         }
+    }
+}
+
+/// The numeric functions, without `total-cost`.
+fn functions(domain: &Domain, types: &[TypeInfo]) -> Result<Vec<FunctionInfo>, Error> {
+    let mut functions = Vec::new();
+    for typed in domain.functions().values().iter() {
+        let skeleton = typed.value_ref();
+        let name = lc(skeleton.symbol());
+        if **typed.type_ref() != Type::NUMBER {
+            return unsupported("object fluents");
+        }
+        if name == "total-cost" && skeleton.variables().is_empty() {
+            continue;
+        }
+        if functions.iter().any(|f: &FunctionInfo| f.name == name) {
+            return Err(Error::new(format!("function `{name}` is declared twice")));
+        }
+        let args = skeleton
+            .variables()
+            .iter()
+            .map(|v| resolve_type(types, v.type_()).map(|(t, _)| t))
+            .collect::<Result<_, _>>()?;
+        functions.push(FunctionInfo {
+            name,
+            args,
+            is_static: true,
+        });
+    }
+    Ok(functions)
+}
+
+/// The symbol and arguments of a function head.
+fn head_parts(head: &FunctionHead) -> (&str, &[Term]) {
+    match head {
+        FunctionHead::Simple(symbol) => (symbol, &[]),
+        FunctionHead::WithTerms(symbol, terms) => (symbol, terms),
     }
 }
 
@@ -345,6 +540,10 @@ struct Scope<'a> {
     slots: Vec<Slot>,
     /// The slot of each variable in scope.
     vars: HashMap<String, usize>,
+    /// Whether effects are inside a `forall` or `when`.
+    nested: bool,
+    /// The summands of the action's cost.
+    cost: Vec<NumExpr>,
 }
 
 impl<'a> Scope<'a> {
@@ -354,6 +553,8 @@ impl<'a> Scope<'a> {
             model,
             slots: Vec::new(),
             vars: HashMap::new(),
+            nested: false,
+            cost: Vec::new(),
         }
     }
 
@@ -403,6 +604,7 @@ impl<'a> Scope<'a> {
             arity,
             pre,
             effects,
+            cost: self.cost,
         })
     }
 
@@ -456,12 +658,84 @@ impl<'a> Scope<'a> {
         Ok((pred, args))
     }
 
+    /// Resolves a function and its arguments.
+    fn function(&self, symbol: &str, terms: &[Term]) -> Result<(usize, Vec<Arg>), Error> {
+        let name = lc(symbol);
+        if name == "total-cost" && terms.is_empty() {
+            return unsupported("total-cost outside an action cost");
+        }
+        let func = self
+            .model
+            .functions
+            .iter()
+            .position(|f| f.name == name)
+            .ok_or_else(|| Error::new(format!("unknown function `{name}`")))?;
+        if self.model.functions[func].args.len() != terms.len() {
+            return Err(Error::new(format!(
+                "`{name}` takes {} arguments, not {}",
+                self.model.functions[func].args.len(),
+                terms.len()
+            )));
+        }
+        let args = terms
+            .iter()
+            .map(|t| self.arg(t))
+            .collect::<Result<_, _>>()?;
+        Ok((func, args))
+    }
+
+    /// Resolves a function term as a numeric expression.
+    fn function_term(&self, term: &FunctionTerm) -> Result<NumExpr, Error> {
+        let (func, args) = self.function(term.symbol(), term.terms())?;
+        Ok(NumExpr::Fluent { func, args })
+    }
+
+    /// Resolves a numeric expression.
+    fn num(&self, expr: &FluentExpression) -> Result<NumExpr, Error> {
+        let boxed = |e: &FluentExpression| self.num(e).map(Box::new);
+        Ok(match expr {
+            FluentExpression::Number(n) => NumExpr::Number(**n),
+            FluentExpression::Function(head) => {
+                let (symbol, terms) = head_parts(head);
+                let (func, args) = self.function(symbol, terms)?;
+                NumExpr::Fluent { func, args }
+            }
+            FluentExpression::Negative(a) => NumExpr::Neg(boxed(a)?),
+            FluentExpression::BinaryOp(op, a, b) => {
+                let (a, b) = (boxed(a)?, boxed(b)?);
+                match op {
+                    BinaryOp::Addition => NumExpr::Add(a, b),
+                    BinaryOp::Subtraction => NumExpr::Sub(a, b),
+                    BinaryOp::Multiplication => NumExpr::Mul(a, b),
+                    BinaryOp::Division => NumExpr::Div(a, b),
+                }
+            }
+            FluentExpression::MultiOp(op, first, rest) => {
+                let mut acc = self.num(first)?;
+                for e in rest {
+                    let e = boxed(e)?;
+                    acc = match op {
+                        MultiOp::Addition => NumExpr::Add(Box::new(acc), e),
+                        MultiOp::Multiplication => NumExpr::Mul(Box::new(acc), e),
+                    };
+                }
+                acc
+            }
+        })
+    }
+
     /// Resolves an atom or equality as a condition.
     fn literal(&self, formula: &AtomicFormula<Term>) -> Result<Cond, Error> {
         match formula {
-            AtomicFormula::Equality(eq) => {
-                Ok(Cond::Eq(self.arg(eq.first())?, self.arg(eq.second())?))
-            }
+            // The parser reads `(= (f) (g))` as an equality of terms; it is numeric.
+            AtomicFormula::Equality(eq) => match (eq.first(), eq.second()) {
+                (Term::Function(a), Term::Function(b)) => Ok(Cond::Compare(
+                    Comparison::Equal,
+                    self.function_term(a)?,
+                    self.function_term(b)?,
+                )),
+                (first, second) => Ok(Cond::Eq(self.arg(first)?, self.arg(second)?)),
+            },
             AtomicFormula::Predicate(_) => {
                 let (pred, args) = self.atom(formula)?;
                 Ok(Cond::Atom { pred, args })
@@ -543,7 +817,17 @@ impl<'a> Scope<'a> {
                     Cond::Forall(slots, body)
                 })
             }
-            GoalDescription::FluentComparison(_) => unsupported("numeric fluents"),
+            GoalDescription::FluentComparison(comparison) => Ok(Cond::Compare(
+                match comparison.comparison() {
+                    BinaryComparison::LessThan => Comparison::Less,
+                    BinaryComparison::LessThanOrEqual => Comparison::LessOrEqual,
+                    BinaryComparison::Equal => Comparison::Equal,
+                    BinaryComparison::GreaterOrEqual => Comparison::GreaterOrEqual,
+                    BinaryComparison::GreaterThan => Comparison::Greater,
+                },
+                self.num(comparison.first())?,
+                self.num(comparison.second())?,
+            )),
         }
     }
 
@@ -555,7 +839,9 @@ impl<'a> Scope<'a> {
                 ConditionalEffect::Forall(forall) => {
                     let (slots, shadowed) = self.bind(&forall.variables)?;
                     let mut body = Vec::new();
+                    let nested = std::mem::replace(&mut self.nested, true);
                     let result = self.effects(&forall.effects, &mut body);
+                    self.nested = nested;
                     self.unbind(shadowed);
                     result?;
                     out.push(Effect::Forall(slots, body));
@@ -567,9 +853,12 @@ impl<'a> Scope<'a> {
                         EffectCondition::Single(effect) => std::slice::from_ref(effect),
                         EffectCondition::All(effects) => effects.as_slice(),
                     };
-                    for primitive in primitives {
-                        self.primitive(primitive, &mut body)?;
-                    }
+                    let nested = std::mem::replace(&mut self.nested, true);
+                    let result = primitives
+                        .iter()
+                        .try_for_each(|primitive| self.primitive(primitive, &mut body));
+                    self.nested = nested;
+                    result?;
                     out.push(Effect::When(cond, body));
                 }
             }
@@ -590,7 +879,51 @@ impl<'a> Scope<'a> {
                 });
                 Ok(())
             }
-            PrimitiveEffect::AssignNumericFluent(..) => unsupported("numeric fluents"),
+            PrimitiveEffect::AssignNumericFluent(op, head, value) => {
+                let (symbol, terms) = head_parts(head);
+                if lc(symbol) == "total-cost" && terms.is_empty() {
+                    if !matches!(op, AssignOp::Increase) {
+                        return unsupported("changing total-cost other than with increase");
+                    }
+                    if self.nested {
+                        return unsupported("action costs inside forall or when");
+                    }
+                    self.cost.push(self.num(value)?);
+                    return Ok(());
+                }
+                let (func, args) = self.function(symbol, terms)?;
+                out.push(Effect::Assign {
+                    op: match op {
+                        AssignOp::Assign => NumericOp::Assign,
+                        AssignOp::Increase => NumericOp::Increase,
+                        AssignOp::Decrease => NumericOp::Decrease,
+                        AssignOp::ScaleUp => NumericOp::ScaleUp,
+                        AssignOp::ScaleDown => NumericOp::ScaleDown,
+                    },
+                    func,
+                    args,
+                    value: self.num(value)?,
+                });
+                Ok(())
+            }
+            // The parser reads `(assign (f) (g))` as an object assignment; for a
+            // numeric `f` it is a numeric one.
+            PrimitiveEffect::AssignObjectFluent(target, Some(Term::Function(value)))
+                if self
+                    .model
+                    .functions
+                    .iter()
+                    .any(|f| f.name == lc(target.symbol())) =>
+            {
+                let (func, args) = self.function(target.symbol(), target.terms())?;
+                out.push(Effect::Assign {
+                    op: NumericOp::Assign,
+                    func,
+                    args,
+                    value: self.function_term(value)?,
+                });
+                Ok(())
+            }
             PrimitiveEffect::AssignObjectFluent(..) => unsupported("object fluents"),
         }
     }

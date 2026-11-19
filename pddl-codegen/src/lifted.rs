@@ -1,11 +1,9 @@
 //! Level B1: typed planning code for a lifted domain.
 
-use std::collections::HashSet;
-
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 
-use crate::model::{ActionInfo, Arg, Cond, Effect, Model};
+use crate::model::{ActionInfo, Arg, Comparison, Cond, Effect, Model, NumExpr, NumericOp};
 use crate::Error;
 
 /// Rust keywords, which can't be identifiers.
@@ -64,14 +62,14 @@ fn camel(name: &str) -> String {
 /// Makes identifiers for `names` with `case`, failing if two PDDL names map
 /// to the same identifier.
 fn idents(kind: &str, names: &[&str], case: fn(&str) -> String) -> Result<Vec<Ident>, Error> {
-    let mut seen = HashSet::new();
+    let mut seen = std::collections::HashMap::new();
     names
         .iter()
         .map(|name| {
             let ident = case(name);
-            if !seen.insert(ident.clone()) {
+            if let Some(other) = seen.insert(ident.clone(), *name) {
                 return Err(Error::new(format!(
-                    "two {kind}s map to the Rust name `{ident}`; rename `{name}`"
+                    "the {kind} names `{other}` and `{name}` both map to the Rust name `{ident}`; rename one"
                 )));
             }
             Ok(Ident::new(&ident, Span::call_site()))
@@ -85,6 +83,8 @@ struct Names {
     types: Vec<Ident>,
     /// One `State` or `Statics` field per predicate.
     predicates: Vec<Ident>,
+    /// One `State` or `Statics` field per function.
+    functions: Vec<Ident>,
     /// One `Action` variant per action.
     actions: Vec<Ident>,
     /// The fields of each action variant, one per parameter.
@@ -94,7 +94,20 @@ struct Names {
 impl Names {
     /// Names every item, failing on collisions.
     fn new(model: &Model) -> Result<Self, Error> {
+        // Predicates and functions share the fields of `State` and `Statics`.
+        let mut fields = idents(
+            "predicate and function",
+            &model
+                .predicates
+                .iter()
+                .map(|p| p.name.as_str())
+                .chain(model.functions.iter().map(|f| f.name.as_str()))
+                .collect::<Vec<_>>(),
+            snake,
+        )?;
+        let functions = fields.split_off(model.predicates.len());
         Ok(Self {
+            functions,
             types: idents(
                 "type",
                 &model
@@ -104,15 +117,7 @@ impl Names {
                     .collect::<Vec<_>>(),
                 camel,
             )?,
-            predicates: idents(
-                "predicate",
-                &model
-                    .predicates
-                    .iter()
-                    .map(|p| p.name.as_str())
-                    .collect::<Vec<_>>(),
-                snake,
-            )?,
+            predicates: fields,
             actions: idents(
                 "action",
                 &model
@@ -242,8 +247,13 @@ impl Gen<'_> {
     /// Checks that the arguments fit predicate `p`'s argument types where their
     /// own types don't guarantee it; `true` if nothing needs checking.
     fn type_guard(&self, p: usize, args: &[(TokenStream, usize)]) -> TokenStream {
-        let checks: Vec<TokenStream> = self.model.predicates[p]
-            .args
+        self.guard(&self.model.predicates[p].args, args)
+    }
+
+    /// Checks that the arguments fit the types `want` where their own types
+    /// don't guarantee it; `true` if nothing needs checking.
+    fn guard(&self, want: &[usize], args: &[(TokenStream, usize)]) -> TokenStream {
+        let checks: Vec<TokenStream> = want
             .iter()
             .zip(args)
             .filter(|(&want, (_, have))| !self.model.is_subtype(*have, want))
@@ -254,6 +264,82 @@ impl Gen<'_> {
         } else {
             quote!((#(#checks)&&*))
         }
+    }
+
+    /// The value of function `func` at `args` in `state` (or the static
+    /// facts), as an `Option<f64>`: `None` where undefined or where an argument
+    /// has the wrong type.
+    fn fluent(
+        &self,
+        action: &ActionInfo,
+        func: usize,
+        args: &[Arg],
+        state: &TokenStream,
+    ) -> TokenStream {
+        let info = &self.model.functions[func];
+        let field = &self.names.functions[func];
+        let store = if info.is_static {
+            quote!(self.statics)
+        } else {
+            state.clone()
+        };
+        let args: Vec<_> = args.iter().map(|&a| self.arg(action, a)).collect();
+        let guard = self.guard(&info.args, &args);
+        let index = Self::index(&info.args, &args);
+        quote!((if #guard { #store.#field.get(&#index) } else { ::core::option::Option::None }))
+    }
+
+    /// The index array of a `Values` entry for arguments of the types `types`.
+    fn index(types: &[usize], args: &[(TokenStream, usize)]) -> TokenStream {
+        let parts = types
+            .iter()
+            .zip(args)
+            .map(|(t, (g, _))| quote!((#g - self.starts[#t]) as usize));
+        quote!([#(#parts),*])
+    }
+
+    /// A numeric expression over `state`, as an `Option<f64>`.
+    fn num(&self, action: &ActionInfo, expr: &NumExpr, state: &TokenStream) -> TokenStream {
+        let pair =
+            |a: &NumExpr, b: &NumExpr| (self.num(action, a, state), self.num(action, b, state));
+        match expr {
+            NumExpr::Number(n) => {
+                let n = proc_macro2::Literal::f64_suffixed(*n);
+                quote!(::core::option::Option::Some(#n))
+            }
+            NumExpr::Fluent { func, args } => self.fluent(action, *func, args, state),
+            NumExpr::Add(a, b) => {
+                let (a, b) = pair(a, b);
+                quote!(#a.zip(#b).map(|(a, b)| a + b))
+            }
+            NumExpr::Sub(a, b) => {
+                let (a, b) = pair(a, b);
+                quote!(#a.zip(#b).map(|(a, b)| a - b))
+            }
+            NumExpr::Mul(a, b) => {
+                let (a, b) = pair(a, b);
+                quote!(#a.zip(#b).map(|(a, b)| a * b))
+            }
+            NumExpr::Div(a, b) => {
+                let (a, b) = pair(a, b);
+                quote!(#a.zip(#b).and_then(|(a, b)| (b != 0.0).then(|| a / b)))
+            }
+            NumExpr::Neg(a) => {
+                let a = self.num(action, a, state);
+                quote!(#a.map(|a| -a))
+            }
+        }
+    }
+
+    /// A condition that fails if a comparison in it reads an undefined value,
+    /// also under a negation. `undefined` must be in scope.
+    fn checked(&self, action: &ActionInfo, cond: &Cond, state: &TokenStream) -> TokenStream {
+        let cond = self.cond(action, cond, state);
+        quote!({
+            undefined.set(false);
+            let holds = #cond;
+            holds && !undefined.get()
+        })
     }
 
     /// Where predicate `p`'s facts are: the state, or the static facts.
@@ -321,6 +407,23 @@ impl Gen<'_> {
                 }
                 expr
             }
+            Cond::Compare(op, a, b) => {
+                let (a, b) = (self.num(action, a, state), self.num(action, b, state));
+                let op = match op {
+                    Comparison::Less => quote!(<),
+                    Comparison::LessOrEqual => quote!(<=),
+                    Comparison::Equal => quote!(==),
+                    Comparison::GreaterOrEqual => quote!(>=),
+                    Comparison::Greater => quote!(>),
+                };
+                quote!(match (#a, #b) {
+                    (::core::option::Option::Some(a), ::core::option::Option::Some(b)) => a #op b,
+                    _ => {
+                        undefined.set(true);
+                        false
+                    }
+                })
+            }
         }
     }
 
@@ -354,7 +457,36 @@ impl Gen<'_> {
             Cond::And(parts) | Cond::Or(parts) => {
                 parts.iter().filter_map(|p| Self::last_slot(p, arity)).max()
             }
+            Cond::Compare(_, a, b) => Self::num_slot(a, arity).max(Self::num_slot(b, arity)),
         }
+    }
+
+    /// The highest parameter slot below `arity` that an expression reads.
+    fn num_slot(expr: &NumExpr, arity: usize) -> Option<usize> {
+        match expr {
+            NumExpr::Number(_) => None,
+            NumExpr::Fluent { args, .. } => args
+                .iter()
+                .filter_map(|a| match a {
+                    Arg::Var(slot) if *slot < arity => Some(*slot),
+                    _ => None,
+                })
+                .max(),
+            NumExpr::Add(a, b) | NumExpr::Sub(a, b) | NumExpr::Mul(a, b) | NumExpr::Div(a, b) => {
+                Self::num_slot(a, arity).max(Self::num_slot(b, arity))
+            }
+            NumExpr::Neg(a) => Self::num_slot(a, arity),
+        }
+    }
+
+    /// The action's cost under the bound parameters, as an `Option<f64>`;
+    /// `Some(0.0)` without cost effects. Costs read only static functions.
+    fn cost_expr(&self, action: &ActionInfo) -> TokenStream {
+        let terms = action
+            .cost
+            .iter()
+            .map(|t| self.num(action, t, &quote!(self.statics)));
+        quote!(::core::option::Option::Some(0.0f64) #(.zip(#terms).map(|(a, b)| a + b))*)
     }
 
     /// The name of action `a`'s apply method.
@@ -370,7 +502,7 @@ impl Gen<'_> {
         let mut checks: Vec<Vec<TokenStream>> = vec![Vec::new(); action.arity + 1];
         for cond in &action.pre {
             let depth = Self::last_slot(cond, action.arity).map_or(0, |s| s + 1);
-            checks[depth].push(self.cond(action, cond, &state));
+            checks[depth].push(self.checked(action, cond, &state));
         }
         let all = |checks: &[TokenStream]| {
             if checks.is_empty() {
@@ -392,11 +524,19 @@ impl Gen<'_> {
             .collect();
         let vars: Vec<Ident> = (0..action.arity).map(var).collect();
         let apply = Self::apply_fn(a);
+        let cost = if action.cost.is_empty() {
+            quote!(true)
+        } else {
+            let cost = self.cost_expr(action);
+            quote!((!self.use_costs || #cost.is_some()))
+        };
+        // An action whose effects or cost read an undefined value is not applicable.
         let mut body = quote! {
-            out.push((
-                Action::#variant { #(#fields: #values),* },
-                self.#apply(state, #(#vars),*),
-            ));
+            if let ::core::option::Option::Some(next) = self.#apply(state, #(#vars),*) {
+                if #cost {
+                    out.push((Action::#variant { #(#fields: #values),* }, next));
+                }
+            }
         };
         for depth in (0..action.arity).rev() {
             let v = var(depth);
@@ -461,11 +601,78 @@ impl Gen<'_> {
                 code
             }
             Effect::When(cond, body) => {
-                let cond = self.cond(action, cond, &state);
+                let cond = self.checked(action, cond, &state);
                 let body = self.effects(action, body, add);
                 quote!(if #cond { #body })
             }
+            Effect::Assign { .. } => unreachable!("filtered out: no fact effects"),
         });
+        quote!(#(#code)*)
+    }
+
+    /// The code for the numeric effects among `effects`: values read `state`,
+    /// changes go to `next`, so `increase` and `decrease` add up. Returns
+    /// `None` from the apply method where a value is undefined.
+    fn assigns(&self, action: &ActionInfo, effects: &[Effect]) -> TokenStream {
+        let state = quote!(state);
+        let code = effects
+            .iter()
+            .filter(|e| Effect::has_assign(std::slice::from_ref(e)))
+            .map(|effect| match effect {
+                Effect::Assign {
+                    op,
+                    func,
+                    args,
+                    value,
+                } => {
+                    let info = &self.model.functions[*func];
+                    let field = &self.names.functions[*func];
+                    let args: Vec<_> = args.iter().map(|&a| self.arg(action, a)).collect();
+                    let guard = self.guard(&info.args, &args);
+                    let index = Self::index(&info.args, &args);
+                    let value = self.num(action, value, &state);
+                    let new = match op {
+                        NumericOp::Assign => quote!(value),
+                        NumericOp::Increase => quote!(next.#field.get(&index)? + value),
+                        NumericOp::Decrease => quote!(next.#field.get(&index)? - value),
+                        NumericOp::ScaleUp => quote!(next.#field.get(&index)? * value),
+                        NumericOp::ScaleDown => quote!({
+                            if value == 0.0 {
+                                return ::core::option::Option::None;
+                            }
+                            next.#field.get(&index)? / value
+                        }),
+                    };
+                    quote!(if #guard {
+                        let index = #index;
+                        let value = #value?;
+                        let new = #new;
+                        next.#field.set(&index, ::core::option::Option::Some(new));
+                    })
+                }
+                Effect::Forall(slots, body) => {
+                    let mut code = self.assigns(action, body);
+                    for &slot in slots.iter().rev() {
+                        let v = var(slot);
+                        let ty = action.slots[slot].ty;
+                        let member = Self::member(action, slot);
+                        code = quote! {
+                            for #v in self.starts[#ty]..self.ends[#ty] {
+                                if #member {
+                                    #code
+                                }
+                            }
+                        };
+                    }
+                    code
+                }
+                Effect::When(cond, body) => {
+                    let cond = self.checked(action, cond, &state);
+                    let body = self.assigns(action, body);
+                    quote!(if #cond { #body })
+                }
+                Effect::Fact { .. } => unreachable!("filtered out: no numeric effects"),
+            });
         quote!(#(#code)*)
     }
 
@@ -475,16 +682,22 @@ impl Gen<'_> {
         let action = &self.model.actions[a];
         let name = Self::apply_fn(a);
         let vars: Vec<Ident> = (0..action.arity).map(var).collect();
+        let assigns = self.assigns(action, &action.effects);
         let deletes = self.effects(action, &action.effects, false);
         let adds = self.effects(action, &action.effects, true);
-        let doc = format!("Applies `{}` to `state`.", action.name);
+        let doc = format!(
+            "Applies `{}` to `state`; `None` if an effect reads an undefined value.",
+            action.name
+        );
         quote! {
             #[doc = #doc]
-            fn #name(&self, state: &State, #(#vars: u32),*) -> State {
+            fn #name(&self, state: &State, #(#vars: u32),*) -> ::core::option::Option<State> {
+                let undefined = ::core::cell::Cell::new(false);
                 let mut next = state.clone();
+                #assigns
                 #deletes
                 #adds
-                next
+                ::core::option::Option::Some(next)
             }
         }
     }
@@ -505,6 +718,11 @@ impl Gen<'_> {
             let args = &p.args;
             quote!(::pddl::codegen::Symbol { name: #name, args: &[#(#args),*] })
         });
+        let functions = self.model.functions.iter().map(|f| {
+            let name = &f.name;
+            let args = &f.args;
+            quote!(::pddl::codegen::Symbol { name: #name, args: &[#(#args),*] })
+        });
         let constants = self
             .model
             .constants
@@ -516,7 +734,7 @@ impl Gen<'_> {
                 domain: #name,
                 types: &[#(#types),*],
                 predicates: &[#(#predicates),*],
-                functions: &[],
+                functions: &[#(#functions),*],
                 constants: &[#(#constants),*],
             };
         }
@@ -564,8 +782,23 @@ impl Gen<'_> {
                 })
                 .collect::<Vec<_>>()
         };
-        let state_fields = field(false);
-        let static_fields = field(true);
+        let function_field = |static_: bool| {
+            model
+                .functions
+                .iter()
+                .enumerate()
+                .filter(move |(_, f)| f.is_static == static_)
+                .map(|(i, f)| {
+                    let ident = &self.names.functions[i];
+                    let doc = format!("The values of `{}`.", f.name);
+                    quote!(#[doc = #doc] pub #ident: ::pddl::runtime::Values)
+                })
+                .collect::<Vec<_>>()
+        };
+        let mut state_fields = field(false);
+        state_fields.extend(function_field(false));
+        let mut static_fields = field(true);
+        static_fields.extend(function_field(true));
         let new_fields = |static_: bool| {
             model
                 .predicates
@@ -579,8 +812,83 @@ impl Gen<'_> {
                 })
                 .collect::<Vec<_>>()
         };
-        let new_state = new_fields(false);
-        let new_statics = new_fields(true);
+        let new_function = |static_: bool| {
+            model
+                .functions
+                .iter()
+                .enumerate()
+                .filter(move |(_, f)| f.is_static == static_)
+                .map(|(i, f)| {
+                    let ident = &self.names.functions[i];
+                    let args = &f.args;
+                    quote!(#ident: ::pddl::runtime::Values::new(&[#(count(#args)),*]))
+                })
+                .collect::<Vec<_>>()
+        };
+        let mut new_state = new_fields(false);
+        new_state.extend(new_function(false));
+        let mut new_statics = new_fields(true);
+        new_statics.extend(new_function(true));
+
+        let set_values = model.functions.iter().enumerate().map(|(i, f)| {
+            let store = if f.is_static {
+                quote!(statics)
+            } else {
+                quote!(state)
+            };
+            let field = &self.names.functions[i];
+            let index = f
+                .args
+                .iter()
+                .enumerate()
+                .map(|(k, t)| quote!((args[#k] - loaded.starts[#t]) as usize));
+            quote!(#i => #store.#field.set(&[#(#index),*], ::core::option::Option::Some(*value)),)
+        });
+        let read_value = model.functions.iter().enumerate().map(|(i, f)| {
+            let store = if f.is_static {
+                quote!(self.statics)
+            } else {
+                quote!(state)
+            };
+            let field = &self.names.functions[i];
+            let index = f
+                .args
+                .iter()
+                .enumerate()
+                .map(|(k, t)| quote!((args[#k] - self.starts[#t]) as usize));
+            quote!(#i => #store.#field.get(&[#(#index),*]),)
+        });
+        let mut cost_functions = Vec::new();
+        for action in &model.actions {
+            for term in &action.cost {
+                term.functions(&mut |func| {
+                    if !cost_functions.contains(&func) {
+                        cost_functions.push(func);
+                    }
+                });
+            }
+        }
+        cost_functions.sort_unstable();
+        let cost_arms = (0..model.actions.len()).map(|a| {
+            let action = &model.actions[a];
+            let variant = &self.names.actions[a];
+            let fields = &self.names.params[a];
+            let binds = action.slots[..action.arity]
+                .iter()
+                .zip(fields)
+                .enumerate()
+                .map(|(i, (slot, field))| {
+                    let v = var(i);
+                    let t = slot.ty;
+                    quote!(let #v = #field.0 + self.starts[#t];)
+                });
+            let cost = self.cost_expr(action);
+            quote!(Action::#variant { #(#fields),* } => {
+                #(#binds)*
+                // The loader checked that cost functions are non-negative integers.
+                #cost.map_or(u32::MAX, |cost| cost.min(f64::from(u32::MAX)) as u32)
+            })
+        });
 
         let variants = model.actions.iter().enumerate().map(|(a, action)| {
             let variant = &self.names.actions[a];
@@ -701,6 +1009,8 @@ impl Gen<'_> {
                 initial: State,
                 /// The goal.
                 goal: ::pddl::runtime::Formula,
+                /// Whether the problem minimizes `total-cost`, so actions cost what they say.
+                use_costs: bool,
             }
 
             #allow
@@ -721,6 +1031,20 @@ impl Gen<'_> {
                             _ => unreachable!("the loader checks predicate indices"),
                         }
                     }
+                    for (func, args, value) in &loaded.values {
+                        if [#(#cost_functions),*].contains(func)
+                            && !(*value >= 0.0 && value.fract() == 0.0 && *value <= f64::from(u32::MAX))
+                        {
+                            return ::core::result::Result::Err(::pddl::codegen::LoadError::InvalidCost {
+                                function: SIGNATURE.functions[*func].name.to_string(),
+                                value: *value,
+                            });
+                        }
+                        match *func {
+                            #(#set_values)*
+                            _ => unreachable!("the loader checks function indices"),
+                        }
+                    }
                     Ok(Self {
                         names: loaded.names,
                         starts: loaded.starts,
@@ -729,6 +1053,7 @@ impl Gen<'_> {
                         statics,
                         initial: state,
                         goal: loaded.goal,
+                        use_costs: loaded.minimize_total_cost,
                     })
                 }
 
@@ -757,6 +1082,14 @@ impl Gen<'_> {
                     }
                 }
 
+                /// The value of the fluent `func(args)`, by function index and object numbers.
+                pub fn value(&self, state: &State, func: usize, args: &[u32]) -> ::core::option::Option<f64> {
+                    match func {
+                        #(#read_value)*
+                        _ => ::core::option::Option::None,
+                    }
+                }
+
                 #(#applies)*
             }
 
@@ -770,6 +1103,7 @@ impl Gen<'_> {
                 }
 
                 fn successors(&self, state: &State, out: &mut ::std::vec::Vec<(Action, State)>) {
+                    let undefined = ::core::cell::Cell::new(false);
                     #(#successors)*
                 }
 
@@ -777,14 +1111,30 @@ impl Gen<'_> {
                     match action {
                         #(#apply_arms)*
                     }
+                    .expect("the action is applicable in the state")
                 }
 
                 fn is_goal(&self, state: &State) -> bool {
-                    self.goal.holds(&|pred, args| self.fact(state, pred, args), &|_, _| None)
+                    self.goal.holds(
+                        &|pred, args| self.fact(state, pred, args),
+                        &|func, args| self.value(state, func, args),
+                    )
                 }
 
                 fn unsatisfied_goals(&self, state: &State) -> u32 {
-                    self.goal.unsatisfied(&|pred, args| self.fact(state, pred, args), &|_, _| None)
+                    self.goal.unsatisfied(
+                        &|pred, args| self.fact(state, pred, args),
+                        &|func, args| self.value(state, func, args),
+                    )
+                }
+
+                fn cost(&self, action: Action) -> u32 {
+                    if !self.use_costs {
+                        return 1;
+                    }
+                    match action {
+                        #(#cost_arms)*
+                    }
                 }
             }
         }

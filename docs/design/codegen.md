@@ -136,3 +136,36 @@ Checks (`pddl-bench/tests/adl.rs`): lockstep against the grounder on
 sussman-anomaly and get-paid4 (`when`, `forall` effects), and a `lights`
 domain with `exists`, `forall`, `or` and `imply`, which the grounder rejects,
 against hand-computed optima.
+
+## 5. Numeric fluents in B1 (#129)
+
+- Every function except `total-cost` is a `pddl_runtime::Values` field: in
+  `State` if an effect changes it, in `Statics` otherwise. `Values` hashes
+  canonical bits (`-0.0` is `0.0`; undefined is one NaN), so states with
+  fluents still deduplicate.
+- **Undefined values** follow PDDL 2.1. A comparison that reads an undefined
+  value makes the whole precondition or `when` condition fail, also under
+  `not` (a `Cell` flag, set by the comparison, checked after each conjunct).
+  An action whose numeric effect reads an undefined value is not applicable:
+  `apply_<n>` returns `None`, and successors skip it.
+- `assign` evaluates its value in the state before the action; `increase`,
+  `decrease`, `scale-up` and `scale-down` apply to the state being built, so
+  several increases of one fluent add up. A `scale-down` by 0 is undefined.
+- **Costs.** `(increase (total-cost) e)` is not a state fluent: it becomes
+  `Task::cost`, used when the problem has `(:metric minimize (total-cost))`
+  and 1 otherwise. `e` must be a sum or product of non-negative integer
+  literals and static functions, at the top level of the effect; the loader
+  rejects initial values of those functions that are not non-negative
+  integers (`LoadError::InvalidCost`), and an undefined cost makes the action
+  inapplicable. Actions without a cost effect cost 0 under the metric, as in
+  the grounder.
+- The parser reads `(= (f) (g))` as an equality of terms and
+  `(assign (f) (g))` as an object assignment; for numeric functions the model
+  turns both into their numeric meaning.
+
+Checks (`pddl-bench/tests/numeric.rs`): lockstep and per-operator costs
+against the grounder on gripper-costs and courier, optima 7 and 16; a `fuel`
+domain with numeric preconditions and effects against a hand-computed optimum;
+undefined values; invalid costs. No reference planner for general numeric
+domains was run (none installed): the grounder rejects numeric fluents other
+than costs.

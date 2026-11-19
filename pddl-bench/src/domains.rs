@@ -41,3 +41,30 @@ pub mod briefcase {}
     :effect (forall (?s - switch) (when (on ?s) (not (on ?s))))))
 ")]
 pub mod lights {}
+
+/// Gripper with action costs.
+#[pddl::task(domain = "../../tests/data/sas-plus/gripper-costs/domain.pddl")]
+pub mod gripper_costs {}
+
+/// The courier of `courier`: conditional effects and costs from static functions.
+#[pddl::task(domain = "../../tests/data/sas-plus/courier/domain.pddl")]
+pub mod courier {}
+
+/// A truck that burns fuel per road and refuels at stations: numeric
+/// preconditions and effects. The runtime grounder rejects numeric fluents,
+/// so `tests/numeric.rs` checks this domain by hand.
+#[pddl::task(domain_source = r"
+(define (domain fuel)
+  (:requirements :typing :numeric-fluents :action-costs)
+  (:types place)
+  (:predicates (at ?p - place) (road ?a ?b - place) (station ?p - place))
+  (:functions (fuel) (capacity) (need ?a ?b - place) (total-cost))
+  (:action drive :parameters (?a ?b - place)
+    :precondition (and (at ?a) (road ?a ?b) (>= (fuel) (need ?a ?b)))
+    :effect (and (not (at ?a)) (at ?b) (decrease (fuel) (need ?a ?b))
+                 (increase (total-cost) (need ?a ?b))))
+  (:action refuel :parameters (?p - place)
+    :precondition (and (at ?p) (station ?p) (not (= (fuel) (capacity))))
+    :effect (and (assign (fuel) (capacity)) (increase (total-cost) 1))))
+")]
+pub mod fuel {}

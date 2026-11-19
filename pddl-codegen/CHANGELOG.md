@@ -16,3 +16,7 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   bound variable's objects, `or`, `imply` and `not` plain boolean code, and
   `forall` and `when` effects loops and branches whose conditions read the
   state before the action.
+- Numeric fluents: functions are `Values` fields of `State` (or `Statics`),
+  comparisons and `assign`, `increase`, `decrease`, `scale-up`, `scale-down`
+  are generated arithmetic, and `(increase (total-cost) ...)` over static
+  functions becomes `Task::cost` when the problem minimizes `total-cost`.

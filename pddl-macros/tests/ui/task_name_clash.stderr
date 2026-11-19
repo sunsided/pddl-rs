@@ -1,4 +1,4 @@
-error: two predicates map to the Rust name `on_table`; rename `on_table`
+error: the predicate and function names `on-table` and `on_table` both map to the Rust name `on_table`; rename one
  --> tests/ui/task_name_clash.rs:1:37
   |
 1 |   #[pddl_macros::task(domain_source = r#"

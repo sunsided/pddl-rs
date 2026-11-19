@@ -84,7 +84,7 @@ pub struct Loaded {
 }
 
 /// Why a problem doesn't fit a generated domain.
-#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum LoadError {
     /// The problem names another domain.
     #[error("the problem is for domain `{found}`, not `{expected}`")]
@@ -125,6 +125,15 @@ pub enum LoadError {
     /// A construct the generated code does not support.
     #[error("unsupported in a problem: {0}")]
     Unsupported(&'static str),
+    /// A function that action costs read has a value that is not a
+    /// non-negative integer.
+    #[error("`{function}` is {value}, but action costs must be non-negative integers")]
+    InvalidCost {
+        /// The function.
+        function: String,
+        /// Its value in the initial state.
+        value: f64,
+    },
 }
 
 /// Lowercases a name.
