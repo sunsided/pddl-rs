@@ -22,6 +22,12 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `pddl-codegen` crate and builds on the new `pddl-runtime` crate, which
   `pddl::runtime` re-exports. `pddl::codegen` loads problems for it.
 
+- The `sas-plus` feature grounds a domain and problem into a Fast Downward
+  SAS+ task with `pddl::sas_plus::ground`. It computes relaxed reachability
+  while it binds parameters, so groundings that can never apply are never
+  built, and it fails with `GroundError::ConflictingEffects` instead of
+  splitting a delete into more than `MAX_DELETE_PIECES` conditional effects.
+
 ### Changed
 
 - The types and the parser moved into a new crate, `pddl-core`, which `pddl`
