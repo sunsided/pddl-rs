@@ -3,7 +3,7 @@ version: "3"
 vars:
   YARN: yarn
   CARGO: cargo
-  WASM_TARGET: wasm32-wasip1-threads
+  WASM_TARGET: wasm32-wasip1
   VSIX:
     sh: node -p "require('./package.json').name + '-' + require('./package.json').version + '.vsix'"
 
@@ -27,7 +27,7 @@ tasks:
       - "{{.YARN}} install --frozen-lockfile --ignore-scripts"
 
   build:
-    desc: Compile the extension to out/
+    desc: Bundle the extension into dist/
     deps: [deps]
     cmds:
       - "{{.YARN}} run compile"
@@ -94,4 +94,4 @@ tasks:
   clean:
     desc: Remove the compiled extension, server, packages and dependencies
     cmds:
-      - rm -rf out server node_modules .vscode-test *.vsix
+      - rm -rf out dist server node_modules .vscode-test *.vsix

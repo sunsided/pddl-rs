@@ -1,21 +1,38 @@
 // Starts the pddl-lsp language server for PDDL files: the WebAssembly build
 // bundled with the extension, or a native binary from `pddl.server.path`.
+// Shared by the desktop entry point (extension.ts) and the web one (browser.ts).
 
 import * as vscode from "vscode";
 import { Wasm, type ProcessOptions } from "@vscode/wasm-wasi/v1";
 import { createStdioOptions, createUriConverters, startServer } from "@vscode/wasm-wasi-lsp";
-import {
-  LanguageClient,
-  type LanguageClientOptions,
-  type ServerOptions,
-} from "vscode-languageclient/node";
+import type {
+  BaseLanguageClient,
+  LanguageClientOptions,
+  MessageTransports,
+} from "vscode-languageclient";
 
 // The bundled server, built by `task server`.
 const WASM_SERVER = ["server", "pddl-lsp.wasm"];
 
-let client: LanguageClient | undefined;
+/** Creates the language client for a native server's path, or for the bundled one. */
+export type CreateClient = (
+  native: string | undefined,
+  wasm: () => Promise<MessageTransports>,
+  options: LanguageClientOptions,
+) => BaseLanguageClient;
 
-export async function activate(context: vscode.ExtensionContext): Promise<void> {
+let client: BaseLanguageClient | undefined;
+let createClient: CreateClient;
+let nativeAllowed: boolean;
+
+/** Activates the extension. Without `native`, `pddl.server.path` is ignored. */
+export async function activateWith(
+  context: vscode.ExtensionContext,
+  create: CreateClient,
+  { native }: { native: boolean },
+): Promise<void> {
+  createClient = create;
+  nativeAllowed = native;
   const output = vscode.window.createOutputChannel("PDDL Language Server", { log: true });
   context.subscriptions.push(
     output,
@@ -50,7 +67,7 @@ async function start(
     return;
   }
   const path = vscode.workspace.getConfiguration("pddl").get<string>("server.path", "").trim();
-  const native = path !== "";
+  const native = nativeAllowed && path !== "";
   const clientOptions: LanguageClientOptions = {
     documentSelector: [{ language: "pddl" }],
     outputChannel: output,
@@ -61,10 +78,8 @@ async function start(
     // The WebAssembly server sees the workspace folders mounted under `/workspace`.
     uriConverters: native ? undefined : createUriConverters(),
   };
-  const serverOptions: ServerOptions = native
-    ? { command: path, args: [] }
-    : () => startWasmServer(context, output);
-  client = new LanguageClient("pddl", "PDDL Language Server", serverOptions, clientOptions);
+  const wasm = () => startWasmServer(context, output);
+  client = createClient(native ? path : undefined, wasm, clientOptions);
   try {
     await client.start();
   } catch (error) {
@@ -89,10 +104,9 @@ async function startWasmServer(context: vscode.ExtensionContext, output: vscode.
     stdio: createStdioOptions(),
     mountPoints: [{ kind: "workspaceFolder" }],
   };
-  // The module imports a shared memory of at most 1 GiB (16384 pages of 64 KiB);
-  // the server starts with 10 MiB.
-  const memory = { initial: 160, maximum: 16384, shared: true };
-  const process = await wasm.createProcess("pddl-lsp", module, memory, options);
+  // The server is built for `wasm32-wasip1`, without threads, so it needs no
+  // shared memory, which VS Code for the Web doesn't always allow.
+  const process = await wasm.createProcess("pddl-lsp", module, options);
   const decoder = new TextDecoder("utf-8");
   process.stderr?.onData((data) => output.append(decoder.decode(data)));
   return startServer(process);

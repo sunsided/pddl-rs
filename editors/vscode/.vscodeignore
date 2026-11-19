@@ -9,3 +9,6 @@ Taskfile.dist.yaml
 test/**
 .vscode-test/**
 CONTRIBUTING.md
+node_modules/**
+esbuild.mjs
+out/**

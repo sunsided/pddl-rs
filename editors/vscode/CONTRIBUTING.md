@@ -8,7 +8,7 @@ shows. This file covers building, testing and publishing.
 
 - Node.js 22 or later
 - [Yarn](https://classic.yarnpkg.com/) 1; run `corepack enable` if `yarn` is missing
-- Rust with the WebAssembly target: `rustup target add wasm32-wasip1-threads`
+- Rust with the WebAssembly target: `rustup target add wasm32-wasip1`
 - [Task](https://taskfile.dev)
 
 ## Building and installing
@@ -28,21 +28,21 @@ repository root, put `vscode:` in front of each name, as in `task vscode:package
 | Task           | What it does |
 |----------------|--------------|
 | `task deps`    | Installs the dependencies with `yarn install --frozen-lockfile` |
-| `task build`   | Compiles `src/` to `out/` |
-| `task watch`   | Recompiles on every change (alias: `task dev`) |
+| `task build`   | Bundles `src/` into `dist/extension.js` (desktop) and `dist/browser.js` (web) |
+| `task watch`   | Rebundles on every change (alias: `task dev`) |
 | `task server`  | Builds the server as WebAssembly into `server/pddl-lsp.wasm` |
 | `task test`    | Runs the extension and its server in a downloaded VS Code |
 | `task package` | Packages the extension and the server as `pddl-lsp-<version>.vsix` |
 | `task install` | Packages the extension and installs it into VS Code |
 | `task publish` | Publishes the extension on `main` to the Marketplace, via GitHub Actions |
-| `task clean`   | Removes `out/`, `server/`, `node_modules/`, `.vsix` files and the downloaded VS Code |
+| `task clean`   | Removes `dist/`, `server/`, `node_modules/`, `.vsix` files and the downloaded VS Code |
 
 Without Task, run the same steps by hand:
 
 ```shell
-cargo build --release -p pddl-lsp --target wasm32-wasip1-threads
+cargo build --release -p pddl-lsp --target wasm32-wasip1
 mkdir -p server
-cp ../../target/wasm32-wasip1-threads/release/pddl-lsp.wasm server/
+cp ../../target/wasm32-wasip1/release/pddl-lsp.wasm server/
 yarn install --frozen-lockfile
 yarn run compile
 yarn run package
@@ -51,14 +51,24 @@ code --install-extension pddl-lsp-<version>.vsix
 
 ## How the extension runs the server
 
-By default, [`src/extension.ts`](src/extension.ts) runs `server/pddl-lsp.wasm`
+The extension has two entry points: [`src/extension.ts`](src/extension.ts)
+for the desktop and [`src/browser.ts`](src/browser.ts) for VS Code for the
+Web, such as vscode.dev. Both start the server through
+[`src/client.ts`](src/client.ts). esbuild bundles each into a single file,
+because the web can't load `node_modules`.
+
+By default, the extension runs `server/pddl-lsp.wasm`
 with `@vscode/wasm-wasi-lsp`, in the WASI runtime of the
 `ms-vscode.wasm-wasi-core` extension. The runtime mounts the workspace folders
 under `/workspace` inside the server. The client's URI converters translate
 between those paths and the real ones, so the server's workspace scan matches
 the open documents, and the locations it returns lead to the real files. If
-`pddl.server.path` is set, the extension starts that binary instead, without
-URI conversion.
+`pddl.server.path` is set, the desktop extension starts that binary instead,
+without URI conversion. The web ignores it.
+
+The server is built for `wasm32-wasip1`, without threads, and reads its
+messages on a single thread. A threaded build would need shared memory, which
+the web only allows on cross-origin isolated pages.
 
 ## Testing
 
