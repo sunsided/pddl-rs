@@ -9,7 +9,7 @@ keywords = ["pddl", "planning", "parser"]
 repository = "https://github.com/sunsided/pddl-rs"
 readme = "README.md"
 # Third-party test inputs under their own licences; not part of the published crate.
-exclude = ["tests/data/", "tests/example_files.rs", "tests/corpus_snapshots.rs", "benches/"]
+exclude = ["tests/data/", "tests/example_files.rs", "tests/corpus_snapshots.rs", "tests/sas_plus.rs", "benches/"]
 authors = ["Markus Mayer <widemeadows@gmail.com>"]
 edition = "2021"
 rust-version = "1.86.0"
@@ -31,6 +31,9 @@ pretty = ["dep:pretty"]
 ## Implements `serde::Serialize` and `serde::Deserialize` for the PDDL types, using a
 ## JSON-friendly schema that mirrors PDDL (see the `serde` module docs).
 serde = ["parser", "dep:serde"]
+## Grounds a domain and problem into a Fast Downward SAS+ task (`sas_plus::fdr::SasFile`),
+## see the `sas_plus` module.
+sas-plus = ["dep:sas-plus"]
 
 [workspace]
 members = ["pddl", "pddl-lsp", "pddl-macros"]
@@ -49,6 +52,7 @@ workspace = true
 miette = { version = "7", optional = true, default-features = false }
 pretty = { version = "0.12.1", optional = true }
 serde = { version = "1", optional = true }
+sas-plus = { version = "0.2", optional = true }
 thiserror = "2.0.18"
 
 [[test]]
@@ -66,6 +70,10 @@ required-features = ["pretty", "parser"]
 [[test]]
 name = "serde"
 required-features = ["serde", "parser"]
+
+[[test]]
+name = "sas_plus"
+required-features = ["sas-plus", "parser"]
 
 [[test]]
 name = "pddl_file"

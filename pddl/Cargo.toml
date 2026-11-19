@@ -33,6 +33,9 @@ pretty = ["pddl-core/pretty"]
 ## Implements `serde::Serialize` and `serde::Deserialize` for the PDDL types, using a
 ## JSON-friendly schema that mirrors PDDL (see the `serde` module docs).
 serde = ["parser", "pddl-core/serde"]
+## Grounds a domain and problem into a Fast Downward SAS+ task (`sas_plus::fdr::SasFile`),
+## see the `sas_plus` module.
+sas-plus = ["pddl-core/sas-plus"]
 ## Re-exports the compile-time checked `domain!`, `problem!`, `pddl!` and `validated!`
 ## macros from `pddl-macros`, with their `_file` forms. Needs Rust 1.88.
 macros = ["parser", "dep:pddl-macros"]
