@@ -379,18 +379,17 @@ impl Workspace {
     /// literals can still change it within a problem.
     #[must_use]
     pub fn is_static(&self, target: &Target) -> bool {
-        let Some(document) = self.documents.get(&target.uri) else {
-            return false;
-        };
-        document
-            .analysis
-            .definitions
-            .get(target.index)
-            .is_some_and(|d| {
-                d.kind == Kind::Predicate
-                    && !(document.analysis.changed)
-                        .contains(&(d.context, d.name.to_ascii_lowercase()))
-            })
+        self.static_predicate(target).is_some()
+    }
+
+    /// The static predicate `target` names, with the analysis of its file,
+    /// or `None` if it isn't one.
+    fn static_predicate(&self, target: &Target) -> Option<(&Analysis, &Definition)> {
+        let analysis = &self.documents.get(&target.uri)?.analysis;
+        let definition = analysis.definitions.get(target.index)?;
+        let key = (definition.context, definition.name.to_ascii_lowercase());
+        (definition.kind == Kind::Predicate && !analysis.changed.contains(&key))
+            .then_some((analysis, definition))
     }
 
     /// Literals of a problem's `:goal` that can never hold: their predicate is
@@ -441,11 +440,12 @@ impl Workspace {
             let timed = analysis
                 .changed
                 .contains(&(fact.context, lowercase.clone()));
-            let Some(target) = targets[index].as_ref().filter(|t| self.is_static(t)) else {
+            let found = targets[index]
+                .as_ref()
+                .and_then(|t| self.static_predicate(t));
+            let Some((owner, definition)) = found else {
                 continue;
             };
-            let owner = &self.documents[&target.uri].analysis;
-            let definition = &owner.definitions[target.index];
             // `:timeless` facts hold in every problem; they aren't in `:init`.
             let timeless = owner.timeless.contains(&(definition.context, lowercase));
             // Unknown arguments and a wrong count already have their own error.
