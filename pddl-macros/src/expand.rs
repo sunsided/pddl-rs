@@ -363,8 +363,11 @@ mod tests {
         )
         .unwrap();
 
-        let path =
-            Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/switches-domain.pddl");
+        // `absolute` turns the `/` of the joined path into `\` on Windows, as in `load_file`.
+        let path = std::path::absolute(
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/switches-domain.pddl"),
+        )
+        .unwrap();
         let path = LitStr::new(path.to_str().unwrap(), proc_macro2::Span::call_site());
         let text = std::fs::read_to_string("tests/fixtures/switches-domain.pddl").unwrap();
         let text = LitStr::new(&text, proc_macro2::Span::call_site());
