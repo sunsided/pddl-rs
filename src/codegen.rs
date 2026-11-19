@@ -663,7 +663,7 @@ mod tests {
     fn numbers_subtypes_inside_their_supertypes() {
         let loaded = load_str(
             "(define (problem p) (:domain d)
-               (:objects t1 - truck v1 - vehicle shop - place t2 - truck)
+               (:objects t1 - truck v1 - vehicle shop - place t2 - truck depot - place)
                (:init (at t1 depot) (= (fuel t2) 3) (= (total-cost) 0))
                (:goal (and (at t2 shop) (forall (?v - vehicle) (>= (fuel ?v) 1))))
                (:metric minimize (total-cost)))",
@@ -737,6 +737,62 @@ mod tests {
             load_str("(define (problem p) (:domain d) (:init) (:goal (and)) (:metric maximize (total-cost)))")
                 .unwrap_err(),
             LoadError::Unsupported("metrics other than minimizing total-cost")
+        );
+    }
+
+    #[test]
+    fn reads_every_init_and_goal_form() {
+        let loaded = load_str(
+            "(define (problem p) (:domain d) (:objects t - truck depot - place)
+               (:init (at t depot) (not (at t depot)) (= (fuel t) 2))
+               (:goal (and (not (at t depot))
+                           (forall (?v - vehicle) (exists (?p - place) (at ?v ?p)))
+                           (<= (- (fuel t)) (* (fuel t) 2 3))
+                           (= (+ (fuel t) 1 1) 4)
+                           (> (/ (fuel t) 2) 0))))",
+        )
+        .unwrap();
+        // The redeclared constant `depot` keeps one number.
+        assert_eq!(loaded.names, ["t", "depot"]);
+        let fact = |_: usize, _: &[u32]| true;
+        let value = |_: usize, _: &[u32]| Some(2.0);
+        let Formula::And(goal) = &loaded.goal else {
+            panic!("{:?}", loaded.goal)
+        };
+        assert!(!goal[0].holds(&fact, &value));
+        assert!(goal[1..].iter().all(|g| g.holds(&fact, &value)), "{goal:?}");
+    }
+
+    #[test]
+    fn rejects_unsupported_problem_constructs() {
+        let problem = |rest: &str| {
+            load_str(&format!(
+                "(define (problem p) (:domain d) (:objects t - truck) {rest})"
+            ))
+        };
+        assert_eq!(
+            problem("(:init) (:goal (and)) (:constraints (always (at t depot)))").unwrap_err(),
+            LoadError::Unsupported("constraints")
+        );
+        assert_eq!(
+            problem("(:init (= (owner t) depot)) (:goal (and))").unwrap_err(),
+            LoadError::Unsupported("object fluents")
+        );
+        assert_eq!(
+            problem("(:init) (:goal (preference g (at t depot)))").unwrap_err(),
+            LoadError::Unsupported("preferences")
+        );
+        assert_eq!(
+            problem("(:init) (:goal (exists (?x - robot) (at t ?x)))").unwrap_err(),
+            LoadError::UnknownType("robot".into())
+        );
+        assert_eq!(
+            problem("(:init) (:goal (at t nowhere))").unwrap_err(),
+            LoadError::UnknownObject("nowhere".into())
+        );
+        assert_eq!(
+            problem("(:init (= (speed t) 1)) (:goal (and))").unwrap_err(),
+            LoadError::UnknownSymbol("speed".into())
         );
     }
 

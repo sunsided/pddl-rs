@@ -142,3 +142,20 @@ impl Id for u32 {
         u32::try_from(index).expect("an id fits in a u32")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn integer_ids_are_their_own_index() {
+        assert_eq!(u32::from_index(7).index(), 7);
+        assert_eq!(usize::from_index(7).index(), 7);
+    }
+
+    #[test]
+    #[should_panic(expected = "an id fits in a u32")]
+    fn u32_ids_reject_large_indices() {
+        let _ = u32::from_index(usize::MAX);
+    }
+}

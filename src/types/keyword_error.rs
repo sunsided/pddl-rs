@@ -82,6 +82,7 @@ mod tests {
                 let error = <$ty>::try_from("incr").unwrap_err();
                 check!(error == UnknownKeyword::new($expected, "incr"));
                 check!(error.to_string() == format!("`incr` is not a valid {}", $expected));
+                check!(error.found() == "incr" && error.expected() == $expected);
             }};
         }
         unknown!(AssignOp, "assignment operator");
@@ -101,5 +102,6 @@ mod tests {
     fn subtraction_is_not_a_multi_op() {
         check!(MultiOp::try_from(BinaryOp::Subtraction) == Err(NotAMultiOp(BinaryOp::Subtraction)));
         check!(MultiOp::try_from(BinaryOp::Addition) == Ok(MultiOp::Addition));
+        check!(NotAMultiOp(BinaryOp::Division).op() == BinaryOp::Division);
     }
 }

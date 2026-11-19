@@ -1079,6 +1079,81 @@ mod tests {
         assert_eq!(strata(domain).unwrap(), [vec!["q"], vec!["r", "p"]]);
     }
 
+    /// Every domain the generator rejects names what it rejects.
+    #[test]
+    fn rejections_name_the_problem() {
+        let act = |pre: &str, eff: &str| {
+            format!(
+                "(define (domain d) (:requirements :adl :numeric-fluents :action-costs)
+                   (:types t) (:constants c - t) (:predicates (p ?x - t) (q))
+                   (:functions (f ?x - t) (g) (total-cost))
+                   (:action a :parameters (?x - t) :precondition {pre} :effect {eff}))"
+            )
+        };
+        let cases: Vec<(String, &str)> = vec![
+            ("(define (domain d) (:extends base))".into(), "unsupported: domain extension"),
+            ("(define (domain d) (:predicates (p)) (:constraints (always (p))))".into(), "unsupported: constraints"),
+            ("(define (domain d) (:requirements :foo))".into(), "unknown requirement: :foo"),
+            ("(define (domain d) (:requirements :durative-actions))".into(), "unsupported requirement: :durative-actions"),
+            ("(define (domain d) (:predicates (p) (p)))".into(), "predicate `p` is declared twice"),
+            ("(define (domain d) (:predicates (p ?x - nothing)))".into(), "unknown type `nothing`"),
+            ("(define (domain d) (:types a b) (:constants c - (either a b)))".into(), "constants with an `either` type"),
+            ("(define (domain d) (:requirements :fluents :typing) (:types t) (:functions (f) - t))".into(), "unsupported: object fluents"),
+            ("(define (domain d) (:requirements :numeric-fluents) (:functions (f) (f)))".into(), "function `f` is declared twice"),
+            ("(define (domain d) (:types a a))".into(), "type `a` is declared twice"),
+            ("(define (domain d) (:types a - nothing))".into(), "unknown type `nothing`"),
+            ("(define (domain d) (:types a - b b - a))".into(), "the type hierarchy has a cycle"),
+            ("(define (domain d) (:requirements :derived-predicates) (:predicates (p)) (:derived (q) (p)))".into(), "it is not declared in :predicates"),
+            ("(define (domain d) (:requirements :derived-predicates) (:predicates (p ?x)) (:derived (p) (p ?y)))".into(), "wrong number of arguments"),
+            (act("(p ?y)", "(q)"), "unknown variable `?y`"),
+            (act("(p nobody)", "(q)"), "unknown constant `nobody`"),
+            (act("(r ?x)", "(q)"), "unknown predicate `r`"),
+            (act("(p ?x c)", "(q)"), "`p` takes 1 arguments, not 2"),
+            (act("(> (h) 1)", "(q)"), "unknown function `h`"),
+            (act("(> (f ?x ?x) 1)", "(q)"), "`f` takes 1 arguments, not 2"),
+            (act("(> (total-cost) 1)", "(q)"), "total-cost outside an action cost"),
+            (act("(q)", "(= ?x c)"), "equality outside a condition"),
+            (act("(q)", "(decrease (total-cost) 1)"), "changing total-cost other than with increase"),
+            (act("(q)", "(when (q) (increase (total-cost) 1))"), "action costs inside forall or when"),
+            (act("(q)", "(increase (total-cost) (- 2 1))"), "action costs other than sums and products"),
+            (act("(q)", "(and (increase (g) 1) (increase (total-cost) (g)))"), "action costs other than sums and products"),
+            (
+                "(define (domain d) (:requirements :durative-actions) (:predicates (p))
+                   (:durative-action a :parameters () :duration (= ?duration 1)
+                     :condition (at start (p)) :effect (at end (p))))"
+                    .into(),
+                "unsupported requirement",
+            ),
+        ];
+        for (domain, expected) in cases {
+            let error =
+                Model::new(&Domain::from_str(&domain).unwrap_or_else(|e| panic!("{domain}: {e}")))
+                    .err()
+                    .unwrap_or_else(|| panic!("accepted: {domain}"));
+            assert!(
+                error.message().contains(expected),
+                "{domain}\n{}",
+                error.message()
+            );
+        }
+    }
+
+    /// Numeric expressions of every shape resolve, and sums and products of
+    /// static functions are valid costs.
+    #[test]
+    fn numeric_expressions_resolve() {
+        let domain = "(define (domain d) (:requirements :adl :numeric-fluents :action-costs)
+          (:types t) (:predicates (p ?x - t))
+          (:functions (f ?x - t) (g) (total-cost))
+          (:action a :parameters (?x - t)
+            :precondition (and (>= (- (* 2 (f ?x)) (/ (g) 2)) (- (g))) (= (f ?x) (g)) (p ?x))
+            :effect (and (scale-up (g) 2) (scale-down (g) 2) (assign (g) (+ 1 2 3))
+                         (increase (total-cost) (* 2 (f ?x))))))";
+        let model = Model::new(&Domain::from_str(domain).unwrap()).unwrap();
+        assert!(model.functions[0].is_static && !model.functions[1].is_static);
+        assert_eq!(model.actions[0].cost.len(), 1);
+    }
+
     #[test]
     fn derived_predicates_must_not_be_changed_by_actions() {
         let domain = "(define (domain d) (:requirements :derived-predicates)
