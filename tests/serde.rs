@@ -1,4 +1,4 @@
-//! PDDL survives a round trip through JSON, YAML and TOML with the `serde` feature.
+//! PDDL survives a round trip through JSON, YAML, TOML and NOVA with the `serde` feature.
 
 use assert2::check;
 
@@ -7,12 +7,32 @@ use serde_json::json;
 use std::fs;
 use std::path::Path;
 
-/// Every corpus file the parser accepts serializes to JSON, YAML and TOML and
-/// deserializes back to a value that serializes to the same JSON. Problems also
+/// The NOVA schema in `schema/pddl.novs`.
+fn nova_schema() -> novafile::schema::Schema {
+    novafile::schema::parse_schema(include_str!("../schema/pddl.novs"))
+        .expect("schema/pddl.novs is a valid NOVA schema")
+}
+
+/// `schema/pddl.novs` rejects a section that doesn't belong to the definition.
+#[test]
+fn nova_schema_checks_sections() {
+    let schema = nova_schema();
+    let problem_type = novafile::schema::parse_type("Problem").unwrap();
+    let problem = "problem: p\ndomain: d\ninit: []\ngoal: [on, a]\n";
+    let value = novafile::text::parse(problem).unwrap();
+    check!(schema.resolve_as(&value, &problem_type).is_ok());
+
+    let value = novafile::text::parse(&format!("{problem}actions: {{}}\n")).unwrap();
+    check!(schema.resolve_as(&value, &problem_type).is_err());
+}
+
+/// Every corpus file the parser accepts serializes to JSON, YAML, TOML and NOVA
+/// and deserializes back to a value that serializes to the same JSON. Problems also
 /// compare equal; domains may come back with their actions, durative actions and
 /// derived predicates regrouped, which the schema doesn't distinguish.
 #[test]
-fn corpus_round_trips_through_json_yaml_and_toml() {
+fn corpus_round_trips_through_json_yaml_toml_and_nova() {
+    let schema = nova_schema();
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/data");
     let mut checked = 0;
     for folder in ["vhpop", "potoroo"] {
@@ -51,6 +71,22 @@ fn corpus_round_trips_through_json_yaml_and_toml() {
                 "{}: TOML",
                 path.display()
             );
+
+            let nova = novafile::serde::to_string(&file).unwrap();
+            let back: PddlFile = novafile::serde::from_str(&nova)
+                .unwrap_or_else(|e| panic!("{}: {e}\n{nova}", path.display()));
+            check!(
+                serde_json::to_string(&back).unwrap() == json,
+                "{}: NOVA",
+                path.display()
+            );
+            let value = novafile::serde::to_value(&file).unwrap();
+            if let Err(issues) = schema.validate(&value) {
+                panic!(
+                    "{}: not valid under schema/pddl.novs: {issues:?}",
+                    path.display()
+                );
+            }
             checked += 1;
         }
     }

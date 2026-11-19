@@ -1,0 +1,80 @@
+# SPDX-License-Identifier: EUPL-1.2
+# PDDL domains and problems in NOVA, as the pddl crate's `serde` feature writes
+# and reads them. The `pddl::serde` module documents the mapping; this schema
+# checks its outline. tests/serde.rs validates the whole test corpus against it.
+#
+# The root is a whole PDDL file. `Domain` and `Problem` also validate a single
+# definition (`novafile::schema::Schema::resolve_as`).
+@schema pddl@0.1.0
+@root PddlFile
+
+# A PDDL name: a symbol such as `truck`, or a variable with its `?`, such as `?t`.
+type Name = string @len(1..)
+
+# Names mapped to their types, in order: `{"?t": truck, "?l": location}`. A type
+# is a name, or a list of names for `either`, which NOVA schemas can't express
+# without unions.
+type TypedList = map<Name, any>
+
+# A goal, condition, effect or expression: an atom as a list, symbol first
+# (`[at, "?t", depot]`), or `{keyword: arguments}`. Keywords such as `=` and
+# `at start` aren't NOVA names, so the forms can't be enum variants, and an
+# atom isn't a record; without unions, a formula is `any`.
+type Formula = any
+
+record PddlFile:
+  domains?: Domain[]
+  problems?: Problem[]
+
+record Domain:
+  domain: Name
+  extends?: Name[]
+  # Without the colon. Requirements the crate doesn't know are kept, so this
+  # is not an enum.
+  requirements?: string[]
+  types?: TypedList
+  constants?: TypedList
+  predicates?: map<Name, TypedList>
+  # A function maps to its parameters (a `TypedList`) when its type is
+  # `number`, and to `{parameters, type}` otherwise.
+  functions?: map<Name, any>
+  constraints?: Formula
+  timeless?: Formula[]
+  actions?: map<Name, Action>
+  # PDDL's spelling, not snake_case: `nvf lint` warns about it (field-case).
+  durative-actions?: map<Name, DurativeAction>
+  derived?: Derived[]
+
+record Action:
+  parameters?: TypedList
+  precondition?: Formula
+  effect?: Formula
+
+record DurativeAction:
+  parameters?: TypedList
+  duration?: Formula
+  condition?: Formula
+  effect?: Formula
+
+record Derived:
+  predicate: Name
+  parameters?: TypedList
+  condition: Formula
+
+record Problem:
+  problem: Name
+  domain: Name
+  requirements?: string[]
+  objects?: TypedList
+  init: Formula[]
+  goal: Formula
+  constraints?: Formula
+  metric?: Metric
+  length?: Length
+
+# `{minimize: expression}` or `{maximize: expression}`.
+enum Metric = minimize(Formula) | maximize(Formula)
+
+record Length:
+  serial?: u64
+  parallel?: u64

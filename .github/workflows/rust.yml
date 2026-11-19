@@ -65,9 +65,12 @@ jobs:
         run: |
           cargo build --workspace --all-features --exclude pddl --exclude pddl-macros
           cargo build -p pddl --features miette,pretty,serde
+      # pddl-core's tests are left out: novafile, which its NOVA tests use, needs
+      # a newer Rust, and Cargo builds every dev-dependency for any test. They
+      # run on stable in "Build and Test"; the library builds on 1.86 above.
       - name: Test with MSRV
         run: |
-          cargo test --workspace --all-features --exclude pddl --exclude pddl-macros
+          cargo test -p pddl-lsp --all-features
           cargo test -p pddl --features miette,pretty,serde
       # `proc_macro::Span::local_file` and `line` are stable since 1.88. The
       # compile-fail tests are left out: their `.stderr` files follow stable rustc.

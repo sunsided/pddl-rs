@@ -10,6 +10,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `pddl-macros`, a new crate in this repository, checks PDDL at compile time
   with `domain!`, `problem!`, `pddl!` and `validated!` and their `_file` forms.
   The new `macros` feature re-exports them, as `pddl::domain!` and so on.
+- The `serde` feature works with NOVA (`novafile::serde`), and
+  `schema/pddl.novs` is a NOVA schema for it, which the test corpus validates
+  against. The `as_nova` example converts a domain and reads a hand-written
+  problem.
 
 ### Changed
 
