@@ -1,0 +1,8 @@
+error: two predicates map to the Rust name `on_table`; rename `on_table`
+ --> tests/ui/task_name_clash.rs:1:37
+  |
+1 |   #[pddl_macros::task(domain_source = r#"
+  |  _____________________________________^
+2 | |     (define (domain d) (:predicates (on-table ?x) (on_table ?x)))
+3 | | "#)]
+  | |__^

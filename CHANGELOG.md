@@ -15,6 +15,13 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   goals, effects and expressions, which the test corpus validates against. The `as_nova` example in
   `pddl-nova-tests` converts a domain and reads a hand-written problem.
 
+- The `codegen` feature adds `#[pddl::task(domain = "blocks.pddl")] mod blocks {}`,
+  which generates typed planning code for a domain into the module: an id type
+  per PDDL type, a `State` with a field per predicate, an `Action` enum and a
+  `Task` that loads problems at run time. The code comes from the new
+  `pddl-codegen` crate and builds on the new `pddl-runtime` crate, which
+  `pddl::runtime` re-exports. `pddl::codegen` loads problems for it.
+
 ### Changed
 
 - The types and the parser moved into a new crate, `pddl-core`, which `pddl`

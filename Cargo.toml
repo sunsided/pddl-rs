@@ -34,9 +34,12 @@ serde = ["parser", "dep:serde"]
 ## Grounds a domain and problem into a Fast Downward SAS+ task (`sas_plus::fdr::SasFile`),
 ## see the `sas_plus` module.
 sas-plus = ["dep:sas-plus"]
+## Loads problems for planning code that `pddl-codegen` generates from a domain
+## (the `codegen` module); used by the code that `pddl`'s `codegen` feature generates.
+codegen = ["dep:pddl-runtime"]
 
 [workspace]
-members = ["pddl", "pddl-lsp", "pddl-macros", "pddl-nova-tests", "pddl-runtime", "pddl-bench"]
+members = ["pddl", "pddl-lsp", "pddl-macros", "pddl-nova-tests", "pddl-runtime", "pddl-bench", "pddl-codegen"]
 
 [workspace.lints.rust]
 missing_docs = "warn"
@@ -53,6 +56,7 @@ miette = { version = "7", optional = true, default-features = false }
 pretty = { version = "0.12.1", optional = true }
 serde = { version = "1", optional = true }
 sas-plus = { version = "0.2", optional = true }
+pddl-runtime = { version = "0.1.0", path = "pddl-runtime", optional = true }
 thiserror = "2.0.18"
 
 [[test]]

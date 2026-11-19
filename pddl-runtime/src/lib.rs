@@ -10,6 +10,8 @@
 //!   clone and hash, as states in a search must be.
 //! - The `search` feature adds reference searches over any [`Task`]: blind
 //!   breadth-first search, A* and IDA*, and plan replay.
+//! - [`Formula`] and [`Expr`] are ground goals that a task evaluates at run
+//!   time, since a problem's goal is only known when the problem loads.
 //!
 //! This crate does not depend on the PDDL parser.
 //!
@@ -58,11 +60,13 @@ use std::fmt::Debug;
 use std::hash::Hash;
 
 mod bits;
+mod formula;
 #[cfg(feature = "search")]
 pub mod search;
 mod values;
 
 pub use bits::{BitRelation, BitSet, BitTable};
+pub use formula::{Comparison, Expr, Formula};
 pub use values::Values;
 
 /// A planning task: states, actions that lead from one state to the next, and

@@ -1,0 +1,21 @@
+[package]
+name = "pddl-codegen"
+version = "0.1.0"
+description = "Generates typed Rust planning code from PDDL domains, for pddl's #[task] attribute and build scripts"
+license = "EUPL-1.2"
+categories = ["science", "simulation", "development-tools::build-utils"]
+keywords = ["pddl", "planning", "codegen"]
+repository = "https://github.com/sunsided/pddl-rs"
+readme = "README.md"
+exclude = ["release.toml"]
+authors = ["Markus Mayer <widemeadows@gmail.com>"]
+edition = "2021"
+rust-version = "1.86.0"
+
+[lints]
+workspace = true
+
+[dependencies]
+pddl-core = { version = "0.4.0", path = "..", default-features = false, features = ["parser"] }
+proc-macro2 = "1.0.107"
+quote = "1.0.47"

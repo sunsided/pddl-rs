@@ -38,6 +38,10 @@ pub mod serde;
 #[cfg(feature = "sas-plus")]
 pub mod sas_plus;
 
+#[cfg_attr(docsrs, doc(cfg(feature = "codegen")))]
+#[cfg(feature = "codegen")]
+pub mod codegen;
+
 #[cfg_attr(docsrs, doc(cfg(feature = "pretty")))]
 #[cfg(feature = "pretty")]
 pub use pretty_print::{Pretty, PrettyPrinted, PrettyRenderer};

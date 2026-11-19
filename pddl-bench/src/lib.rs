@@ -4,10 +4,13 @@
 //! against: [`pddl::sas_plus::ground`] grounds a domain and problem the way
 //! Fast Downward's translator does, and `GroundTask` runs the result on
 //! bit-packed states with precomputed masks. [`fixture`] loads the shared
-//! test inputs.
+//! test inputs, and [`domains`] holds the fixture domains as generated code.
 //!
 //! This crate is not published. See `docs/design/codegen.md` for why the
 //! baseline lives here and not in `miniplan`.
+
+pub mod check;
+pub mod domains;
 
 use pddl::sas_plus::fdr::SasFile;
 use pddl::sas_plus::{ground, GroundError};

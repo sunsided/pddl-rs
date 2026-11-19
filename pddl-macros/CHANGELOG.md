@@ -7,6 +7,8 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- With the `codegen` feature, `#[task(domain = "...")]` fills a module with
+  typed planning code that `pddl-codegen` generates from the domain.
 - `domain!`, `problem!` and `pddl!` check PDDL at compile time and expand to a
   `LazyLock` of `pddl::Domain`, `pddl::Problem` or `pddl::PddlFile`.
   `validated!` expands to the checked source text. Each has a `_file` form
