@@ -45,3 +45,24 @@ exports.run = async function () {
   const text = hovers.flatMap((h) => h.contents.map((c) => c.value ?? String(c))).join("\n");
   assert.ok(text.includes("(at ?t - truck ?p - place)"), text);
 };
+
+// `PDDL: Solve with planutils` runs the configured planner on the problem and
+// the domain its `(:domain ...)` names, in the problem's folder.
+exports.run = ((checks) => async function () {
+  await checks();
+  const root = vscode.workspace.workspaceFolders[0].uri;
+  const problem = vscode.Uri.joinPath(root, "problems", "deliver.pddl");
+  await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(problem));
+  const terminal = await vscode.commands.executeCommand("pddl.solveWithPlanutils");
+  assert.ok(terminal, "no terminal");
+  const options = terminal.creationOptions;
+  assert.strictEqual(options.shellPath, "planutils");
+  assert.deepStrictEqual(options.shellArgs, [
+    "run",
+    "lama-first",
+    vscode.Uri.joinPath(root, "domain.pddl").fsPath,
+    problem.fsPath,
+  ]);
+  assert.strictEqual(options.cwd, vscode.Uri.joinPath(root, "problems").fsPath);
+  terminal.dispose();
+})(exports.run);

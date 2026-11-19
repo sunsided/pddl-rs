@@ -64,6 +64,15 @@ that corrects it.
   `:keyword value` pair on its own line, and keeps short lists on one line.
   It keeps your comments and blank lines.
 
+### Planning
+
+**PDDL: Solve with planutils** runs a [planutils](https://pypi.org/project/planutils)
+planner on the open problem and the domain its `(:domain ...)` names, in a
+terminal in the problem's folder: `planutils run <planner> <domain> <problem>`.
+Planners such as `lama-first` write the plan to `sas_plan` there. Install
+planutils with `pip install planutils` and a planner with
+`planutils install lama-first`. Desktop only, in a trusted folder.
+
 ### Highlighting
 
 Syntax highlighting for keywords, variables, numbers and comments. Semantic
@@ -94,6 +103,7 @@ the other features above don't cover embedded PDDL.
 | Setting             | Default | Description |
 |---------------------|---------|-------------|
 | `pddl.server.path`  | (empty) | Path to a native `pddl-lsp` binary. If empty, the extension uses the server it comes with. Ignored on the web. |
+| `pddl.planner`      | `lama-first` | The planutils planner that **PDDL: Solve with planutils** runs. |
 | `pddl.trace.server` | `off`   | Logs the messages between VS Code and the server to the "PDDL Language Server" output panel. |
 
 The **PDDL: Restart Language Server** command restarts the server.

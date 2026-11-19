@@ -32,7 +32,8 @@
       "supported": "limited",
       "description": "In Restricted Mode, only syntax highlighting is available. The language server starts once you trust the folder, so an untrusted folder can't choose a program through `pddl.server.path`.",
       "restrictedConfigurations": [
-        "pddl.server.path"
+        "pddl.server.path",
+        "pddl.planner"
       ]
     }
   },
@@ -133,6 +134,11 @@
           ],
           "default": "off",
           "description": "Logs the messages between VS Code and the language server to the output panel."
+        },
+        "pddl.planner": {
+          "type": "string",
+          "default": "lama-first",
+          "markdownDescription": "The [planutils](https://pypi.org/project/planutils) planner that **PDDL: Solve with planutils** runs, such as `lama-first`, `lama` or `enhsp`. Install it with `planutils install <planner>`."
         }
       }
     },
@@ -140,6 +146,11 @@
       {
         "command": "pddl.restartServer",
         "title": "PDDL: Restart Language Server"
+      },
+      {
+        "command": "pddl.solveWithPlanutils",
+        "title": "PDDL: Solve with planutils",
+        "enablement": "!isWeb"
       }
     ],
     "snippets": [
@@ -147,7 +158,15 @@
         "language": "pddl",
         "path": "./snippets/pddl.json"
       }
-    ]
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "pddl.solveWithPlanutils",
+          "when": "!isWeb && editorLangId == pddl"
+        }
+      ]
+    }
   },
   "scripts": {
     "typecheck": "tsc -p .",
