@@ -1,0 +1,27 @@
+[package]
+name = "pddl-runtime"
+version = "0.1.0"
+description = "The planning-task trait, fact storage and reference searches that code generated from PDDL builds on"
+license = "EUPL-1.2"
+categories = ["science", "simulation", "data-structures"]
+keywords = ["pddl", "planning", "bitset", "search"]
+repository = "https://github.com/sunsided/pddl-rs"
+readme = "README.md"
+exclude = ["release.toml"]
+authors = ["Markus Mayer <widemeadows@gmail.com>"]
+edition = "2021"
+rust-version = "1.86.0"
+
+[lints]
+workspace = true
+
+[features]
+## Blind breadth-first search, A* and IDA* over any `Task`, and plan replay.
+## Reference searches for tests and benchmarks, not a production planner.
+search = []
+
+[dependencies]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

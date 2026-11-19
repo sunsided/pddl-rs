@@ -36,7 +36,7 @@ serde = ["parser", "dep:serde"]
 sas-plus = ["dep:sas-plus"]
 
 [workspace]
-members = ["pddl", "pddl-lsp", "pddl-macros", "pddl-nova-tests"]
+members = ["pddl", "pddl-lsp", "pddl-macros", "pddl-nova-tests", "pddl-runtime"]
 
 [workspace.lints.rust]
 missing_docs = "warn"
