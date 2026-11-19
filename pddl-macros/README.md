@@ -47,8 +47,9 @@ static PROBLEM: LazyLock<Problem> = pddl::problem!(r#"
 - The expansion refers to `::pddl`, so `pddl` must be a direct dependency with
   its `parser` feature, which is on by default. Depending on `pddl-macros`
   directly works too, next to `pddl`.
-- `pddl-macros` checks with `pddl-core`, the crate behind `pddl`, pinned to one
-  exact version, so the parser at compile time and at run time are the same.
+- `pddl-macros` checks with `pddl-core`, the crate behind `pddl`. Cargo builds
+  one `pddl-core` for the macros and your program, so the parser that checks at
+  compile time is the one that parses at run time.
 
 Requires Rust 1.88 or newer.
 

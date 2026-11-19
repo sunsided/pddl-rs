@@ -23,9 +23,11 @@ workspace = true
 [dependencies]
 # Validates on the host with the same parser the expansion runs on the target.
 # `pddl-core`, not `pddl`: `pddl` re-exports these macros, so depending on it would be a cycle.
-# Pinned exactly: the parser that checks at compile time must accept the same
-# input as the one that parses at run time.
-pddl-core = { version = "=0.4.0", path = "..", default-features = false, features = ["parser"] }
+# Not pinned exactly: Cargo builds one pddl-core 0.4.x for both the macros and
+# the program, so the parser that checks and the one that parses are the same.
+# An exact pin would make every pddl-core release break `pddl`'s `macros`
+# feature until pddl-macros is re-released.
+pddl-core = { version = "0.4.0", path = "..", default-features = false, features = ["parser"] }
 proc-macro2 = "1.0.107"
 quote = "1.0.47"
 syn = { version = "3.0.10", default-features = false, features = ["parsing", "printing", "proc-macro"] }

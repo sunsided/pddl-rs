@@ -149,8 +149,10 @@ pddl-macros   proc-macro = true; deps: pddl[parser], syn (parsing, proc-macro, p
 
 - Users add both crates: `pddl` and `pddl-macros`. The expansion names `::pddl::...`. A renamed `pddl` dependency is
   unsupported in v1. See the open questions.
-- Version skew: the host `pddl` that validates can differ from the target `pddl` that parses at runtime.
-  Release both crates together and pin `pddl = "=0.4.x"` in `pddl-macros`.
+- Version skew: none in practice. Cargo picks one version per semver-compatible range for the whole build,
+  host dependencies included, so the macro validates with the same `pddl-core` the program parses with.
+  An exact pin (`=0.4.x`) would only break `pddl`'s `macros` feature on every `pddl-core` release that
+  skips `pddl-macros`, so `pddl-macros` uses a plain `0.4` requirement.
   Resolver 2/3 builds host `pddl` separately from target `pddl`, so the macro's features don't leak.
 - Wait with `pddl-codegen` until B1. Level A has no AST to convert. A `build.rs` user can already call
   `pddl::parsers::check` and `include_str!` the file without a new crate.
@@ -202,7 +204,7 @@ Expansion of `domain_file!("domains/blocks.pddl")`:
 
 The closure captures nothing, so it coerces to `fn() -> Domain` and `LazyLock::new` works in a `static`.
 `Domain: Sync` holds because the AST uses `Arc`, not `Rc`, and no `Cell` types.
-The `expect` can fire only on version skew (section 5).
+The `expect` can fire only if the host and target `pddl-core` differ, which one build never has (section 5).
 
 Implementation: one `fn expand(kind: Kind, input: proc_macro2::TokenStream) -> syn::Result<TokenStream2>`
 behind eight one-line `#[proc_macro]` shims (`domain`, `problem`, `pddl`, `validated`, each with a `_file` form). The input grammar is exactly one string literal, plus an optional
