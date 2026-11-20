@@ -133,13 +133,17 @@ impl Visitor<StructureDef, RcDoc<'static>> for PrettyRenderer {
             StructureDef::Derived(d) => d.accept(self),
             StructureDef::Process(p) => p.as_ref().accept(self),
             StructureDef::Event(e) => {
-                let effect = e.effect().as_ref().map(|effect| effect.accept(self));
+                // `()` parses back to no effect; `(and)` would be an empty one.
+                let effect = e
+                    .effect()
+                    .as_ref()
+                    .map_or_else(|| RcDoc::text("()"), |effect| effect.accept(self));
                 self.action_like(
                     "(:event ",
                     e.symbol(),
                     e.parameters(),
                     e.precondition(),
-                    effect,
+                    Some(effect),
                 )
             }
         }

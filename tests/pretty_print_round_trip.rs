@@ -116,6 +116,7 @@ const PDDL_PLUS_DOMAIN: &str = "(define (domain ball)
   (:process fall :parameters (?b - ball) :precondition (falling ?b)
     :effect (and (increase (height ?b) (* #t (velocity ?b))) (decrease (velocity ?b) (* #t 9.8))))
   (:process rest :parameters ())
+  (:event noop :parameters ())
   (:event land :parameters (?b - ball) :precondition (and (falling ?b) (<= (height ?b) 0))
     :effect (not (falling ?b))))";
 
