@@ -22,7 +22,7 @@ exports.run = async function () {
       if (found.length !== 1 || found[0] !== expected) {
         throw new Error(`expected [${expected}], got ${JSON.stringify(found)}`);
       }
-      return;
+      return checkPlan(root);
     }
     await sleep(500);
   }
@@ -32,3 +32,13 @@ exports.run = async function () {
   });
   throw new Error(`the server published no diagnostics within 60 seconds (${state.join(", ")})`);
 };
+
+/** Validates trip.plan with the built-in validator, which runs in the browser too. */
+async function checkPlan(root) {
+  const plan = vscode.Uri.joinPath(root, "trip", "trip.plan");
+  await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(plan));
+  const verdict = await vscode.commands.executeCommand("pddl.checkPlan");
+  if (verdict?.status !== "invalid" || verdict.line !== 2) {
+    throw new Error(`expected an invalid plan at line 2, got ${JSON.stringify(verdict)}`);
+  }
+}

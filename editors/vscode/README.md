@@ -74,6 +74,16 @@ Planners such as `lama-first` write the plan to `sas_plan` there. Install
 planutils with `pip install planutils` and a planner with
 `planutils install lama-first`. Desktop only, in a trusted folder.
 
+**PDDL: Validate Plan** checks the open plan (a `.plan`, `sas_plan` or
+`sas_plan.N` file) against its problem and domain with the built-in
+validator, [`pddl-validate`](../../pddl-validate), which the language server
+runs. It marks the failing step with the validator's message and repair
+hint, the last step if the goal isn't reached, and reports the metric of a
+valid plan. It reads the open text of all three files, so unsaved edits and
+untitled plans count, and it works on the desktop and on the web. A task
+whose constructs the validator does not interpret gets a warning instead of
+a verdict.
+
 **PDDL: Validate Plan with VAL** checks the open plan (a `.plan`, `sas_plan`
 or `sas_plan.N` file) with [VAL](https://github.com/KCL-Planning/VAL) against
 its problem and domain, and marks the step whose precondition fails, or the
