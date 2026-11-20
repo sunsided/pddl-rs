@@ -197,11 +197,9 @@ fn agrees_with_val_on_the_extension_fixture() {
     assert!(report.trace()[0].added.is_empty() && report.trace()[0].deleted.is_empty());
 }
 
-/// Reads a domain and a problem from one file of the VHPOP corpus. The parser requires
-/// `:init`, which VHPOP's problems may leave out, so an empty one is added.
+/// Reads a domain and a problem from one file of the VHPOP corpus.
 fn vhpop_file(name: &str) -> (Domain, Problem) {
     let text = read(&format!("tests/data/vhpop/{name}"));
-    let text = text.replace("(:goal", "(:init) (:goal");
     let mut file = pddl::PddlFile::from_str(&text).unwrap();
     (file.domains.remove(0), file.problems.remove(0))
 }

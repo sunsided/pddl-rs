@@ -70,6 +70,8 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- A problem may leave out `:init`, which the grammar requires but VHPOP's
+  `durative.pddl` and other files omit; it parses with an empty initial state.
 - A durative action may leave out `:condition`, which the grammar requires
   but many domains omit; it parses as no condition.
 - `parsers::check` is no longer quadratic in the number of errors: a file of

@@ -7,7 +7,7 @@ use crate::parsers::{
     parse_problem_length_spec, parse_problem_metric_spec, parse_problem_objects_declaration,
     parse_require_def, prefix, set_once,
 };
-use crate::types::Problem;
+use crate::types::{InitElements, Problem};
 
 /// The section keywords of a problem, for suggestions.
 const SECTIONS: &[&str] = &[
@@ -23,8 +23,9 @@ const SECTIONS: &[&str] = &[
 
 /// Parses a problem definition (`<problem>`), i.e. `(define (problem <name>) <section>*)`.
 ///
-/// The sections may appear in any order, each at most once; `:domain`, `:init`
-/// and `:goal` are required.
+/// The sections may appear in any order, each at most once; `:domain` and `:goal`
+/// are required. The grammar requires `:init` too, but a problem without one parses
+/// with an empty initial state.
 pub(crate) fn parse_problem(node: &Node) -> R<Problem> {
     // Without `errors`, a failing section returns its error, so the problem is never `None`.
     parse_problem_recovering(node, None).map(|problem| problem.expect("no recovery"))
@@ -107,12 +108,12 @@ pub(crate) fn parse_problem_recovering(
                 Err(args.error_at_close().reason(reason).fatal())
             }
         };
-        let (domain, init, goal) = match (domain, init, goal) {
-            (Some(domain), Some(init), Some(goal)) => (domain, init, goal),
-            (None, _, _) => return missing("missing `:domain`"),
-            (_, None, _) => return missing("missing `:init`"),
-            (_, _, None) => return missing("missing `:goal`"),
+        let (domain, goal) = match (domain, goal) {
+            (Some(domain), Some(goal)) => (domain, goal),
+            (None, _) => return missing("missing `:domain`"),
+            (_, None) => return missing("missing `:goal`"),
         };
+        let init = init.unwrap_or_else(|| InitElements::new(Vec::new()));
         Ok(Some(Problem::new(
             name,
             domain,
@@ -218,5 +219,11 @@ mod tests {
         check!(problem.requirements().is_empty());
         check!(problem.init().len() == 9);
         check!(problem.goals().len() == 3);
+    }
+
+    #[test]
+    fn init_may_be_left_out() {
+        let problem = Problem::from_str("(define (problem p) (:domain d) (:goal (and)))").unwrap();
+        check!(problem.init().is_empty());
     }
 }

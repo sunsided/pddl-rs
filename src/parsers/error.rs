@@ -538,10 +538,6 @@ mod tests {
                 "missing `:domain`",
             ),
             (
-                "(define (problem p) (:domain d) (:goal (and)))",
-                "missing `:init`",
-            ),
-            (
                 "(define (problem p) (:domain d) (:init))",
                 "missing `:goal`",
             ),

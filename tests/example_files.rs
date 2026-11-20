@@ -8,10 +8,7 @@ use std::fs;
 use std::path::Path;
 
 /// Files that are not valid PDDL and must be rejected, with the expected error reason.
-const INVALID: &[(&str, &str)] = &[
-    // The problem has no `(:init ...)` section, which the grammar requires.
-    ("vhpop/durative.pddl", "missing `:init`"),
-];
+const INVALID: &[(&str, &str)] = &[];
 
 /// Counts `(define (<kind>` headers, ignoring case and whitespace; no file mentions one in a comment.
 fn count_headers(source: &str, kind: &str) -> usize {

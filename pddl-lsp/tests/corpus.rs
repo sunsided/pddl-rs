@@ -14,8 +14,6 @@ use pddl_lsp::workspace::{Document, Workspace};
 
 /// Problems in the corpus that are real mistakes, by file and message.
 const EXPECTED: &[(&str, &str)] = &[
-    // The problem has no `(:init ...)` section.
-    ("durative.pddl", "missing `:init`: unexpected `) `"),
     // These problems declare objects `key2` and `key3` they never use.
     ("simple-grid1.pddl", "is never used"),
     ("simple-grid2.pddl", "is never used"),
