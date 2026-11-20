@@ -1,7 +1,7 @@
 //! Malformed domains and problems fail [`Validator::new`] before any plan runs.
 
 use pddl::{Domain, Parser, Problem};
-use pddl_validate::{ModelError, ModelErrorKind, ValidationStatus, Validator};
+use pddl_validate::{Construct, ModelError, ModelErrorKind, ValidationStatus, Validator};
 
 /// Builds a validator for a domain and problem that must not be well-formed.
 fn model_error(domain: &str, problem: &str) -> ModelError {
@@ -191,6 +191,95 @@ fn contradictory_timed_literals() {
             report.status(),
             ValidationStatus::Valid,
             "{timed}: {report:?}"
+        );
+    }
+}
+
+#[test]
+fn unknown_functions_inside_numeric_expressions() {
+    let domain = |body: &str| {
+        format!(
+            "(define (domain n) (:requirements :numeric-fluents) (:predicates (p))
+               (:functions (x)) {body})"
+        )
+    };
+    let problem = |metric: &str| {
+        format!("(define (problem q) (:domain n) (:init (= (x) 0)) (:goal (p)) {metric})")
+    };
+    for precondition in ["(> (- (zz)) 0)", "(> (+ (x) 1 (zz)) 0)"] {
+        let action = format!("(:action a :parameters () :precondition {precondition} :effect (p))");
+        let error = model_error(&domain(&action), &problem(""));
+        assert_eq!(error.location, "action `a`", "{precondition}");
+        assert_eq!(error.kind, ModelErrorKind::UnknownFunction("zz".into()));
+    }
+
+    let error = model_error(&domain(""), &problem("(:metric minimize (- (zz)))"));
+    assert_eq!(error.location, "metric");
+    assert_eq!(error.kind, ModelErrorKind::UnknownFunction("zz".into()));
+}
+
+#[test]
+fn processes_and_events_check_their_preconditions() {
+    let domain = |items: &str| {
+        format!(
+            "(define (domain h) (:requirements :time) (:predicates (on)) (:functions (x)) {items})"
+        )
+    };
+    let problem = "(define (problem q) (:domain h) (:init (= (x) 0)) (:goal (on)))";
+    let error = model_error(
+        &domain("(:process p :parameters () :precondition (off))"),
+        problem,
+    );
+    assert_eq!(error.location, "process `p`");
+    assert_eq!(error.kind, ModelErrorKind::UnknownPredicate("off".into()));
+
+    let error = model_error(
+        &domain("(:event e :parameters () :precondition (on) :effect (increase (zz) 1))"),
+        problem,
+    );
+    assert_eq!(error.location, "event `e`");
+    assert_eq!(error.kind, ModelErrorKind::UnknownFunction("zz".into()));
+}
+
+#[test]
+fn setting_equality_in_the_initial_state() {
+    let error = model_error(
+        &domain(""),
+        &problem("(clear a)").replace("(:init (clear a))", "(:init (= a b))"),
+    );
+    assert_eq!(error.location, "init");
+    assert_eq!(error.kind, ModelErrorKind::EqualitySet);
+}
+
+#[test]
+fn object_fluents_in_formulas_are_unsupported_not_malformed() {
+    let functions = "(:functions (holder))";
+    let cases = [
+        (
+            "(:action a :parameters () :precondition (clear (holder)) :effect (clear a))",
+            "(:init (clear a))",
+        ),
+        (
+            "(:action a :parameters () :effect (assign (holder) table))",
+            "(:init (clear a))",
+        ),
+        ("", "(:init (clear a) (= (holder) a))"),
+    ];
+    for (action, init) in cases {
+        let domain =
+            Domain::from_str(&domain(&format!("{functions} {action}"))).expect("the domain parses");
+        let problem = Problem::from_str(&problem("(clear a)").replace("(:init (clear a))", init))
+            .expect("the problem parses");
+        let validator = Validator::new(&domain, &problem).expect("the task is well-formed");
+        let report = validator.validate_text("");
+        assert_eq!(
+            report.status(),
+            ValidationStatus::Unsupported,
+            "{action} {init}"
+        );
+        assert_eq!(
+            report.unsupported().unwrap().construct,
+            Construct::ObjectFluents
         );
     }
 }

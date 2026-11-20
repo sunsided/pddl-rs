@@ -497,3 +497,149 @@ fn an_event_fires_before_the_events_its_effects_prevent() {
         .collect();
     assert_eq!(fired, ["event (reset)"], "{report:?}");
 }
+
+/// A task in which `x` grows at rate 1 from 0 and `y` starts at 1, with `extra` domain
+/// items and `goal`.
+fn rising(extra: &str, goal: &str) -> Task {
+    Task::new(
+        &format!(
+            "(define (domain rising) (:requirements :time :durative-actions)
+               (:predicates (done) (on))
+               (:functions (x) (y) (z))
+               (:action wait :parameters ())
+               (:process grow :parameters () :precondition (>= (x) 0)
+                 :effect (increase (x) (* #t 1)))
+               {extra})"
+        ),
+        &format!(
+            "(define (problem p) (:domain rising) (:init (= (x) 0) (= (y) 1)) (:goal {goal}))"
+        ),
+    )
+}
+
+/// Asserts that `plan` for `task` is unsupported because of `construct`.
+fn assert_unsupported(task: &Task, plan: &str, construct: &Construct) {
+    let report = task.run(plan);
+    assert_eq!(report.status(), ValidationStatus::Unsupported, "{report:?}");
+    assert_eq!(report.unsupported().unwrap().construct, *construct);
+}
+
+#[test]
+fn a_process_without_an_effect_changes_nothing() {
+    let idle = "(:process idle :parameters () :precondition (>= (x) 0))";
+    let report = rising(idle, "(>= (x) 5)").run("5: (wait)");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+}
+
+#[test]
+fn an_event_without_an_effect_cascades_where_it_triggers() {
+    // Nothing the event does disables it, so it fires again and again at x = 3.
+    let stuck = "(:event stuck :parameters () :precondition (>= (x) 3))";
+    let violation = rising(stuck, "(>= (x) 5)").violation("5: (wait)");
+    assert_eq!(violation.step, None);
+    assert!(
+        matches!(violation.kind, ViolationKind::EventCascade { time, .. } if (time - 3.0).abs() < 1e-9),
+        "{violation:?}"
+    );
+}
+
+#[test]
+fn a_process_precondition_that_divides_by_zero_fails() {
+    let odd = "(:process odd :parameters () :precondition (> (/ 1 (- (y) 1)) 0)
+                 :effect (increase (z) (* #t 1)))";
+    let violation = rising(odd, "(>= (x) 1)").violation("1: (wait)");
+    assert!(
+        matches!(violation.kind, ViolationKind::DivisionByZero(_)),
+        "{violation:?}"
+    );
+}
+
+#[test]
+fn an_event_effect_on_an_undefined_fluent_fails_when_it_fires() {
+    let tick = "(:event tick :parameters () :precondition (and (>= (x) 2) (not (done)))
+                  :effect (and (done) (increase (z) 1)))";
+    let violation = rising(tick, "(done)").violation("5: (wait)");
+    assert_eq!(violation.step, None);
+    assert!(
+        matches!(&violation.kind, ViolationKind::Undefined(fluent) if fluent.to_string() == "(z)"),
+        "{violation:?}"
+    );
+}
+
+#[test]
+fn chattering_processes_are_zeno() {
+    // Each process, once running, switches itself off and the other one on at once.
+    let chatter = "(define (domain chatter) (:requirements :time)
+      (:functions (x))
+      (:action wait :parameters ())
+      (:process up :parameters () :precondition (<= (x) 0) :effect (increase (x) (* #t 1)))
+      (:process down :parameters () :precondition (> (x) 0) :effect (decrease (x) (* #t 1))))";
+    let task = Task::new(
+        chatter,
+        "(define (problem p) (:domain chatter) (:init (= (x) 0)) (:goal (<= (x) 1)))",
+    );
+    assert_unsupported(&task, "1: (wait)", &Construct::ZenoDynamics);
+}
+
+#[test]
+fn a_nonlinear_switching_condition_is_unsupported() {
+    let square = "(:event square :parameters () :precondition (and (>= (* (x) (x)) 4) (not (done)))
+                    :effect (done))";
+    assert_unsupported(
+        &rising(square, "(done)"),
+        "5: (wait)",
+        &Construct::NonlinearDynamics,
+    );
+}
+
+#[test]
+fn a_running_action_without_a_condition_lets_events_fire() {
+    let nap = "(:durative-action nap :parameters () :duration (= ?duration 10) :effect ())
+               (:event mark :parameters () :precondition (and (>= (x) 4) (not (on)))
+                 :effect (on))";
+    let report = rising(nap, "(on)").run("0: (nap) [10]");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+}
+
+#[test]
+fn an_invariant_that_divides_by_zero_after_an_event_fails() {
+    // The event at x = 4 sets y to 0, and the running action's invariant divides by it.
+    let hold = "(:durative-action hold :parameters () :duration (= ?duration 10)
+                  :condition (over all (> (/ 1 (y)) 0)) :effect (at end (done)))
+                (:event cut :parameters () :precondition (and (>= (x) 4) (not (on)))
+                  :effect (and (on) (assign (y) 0)))";
+    let kind = rising(hold, "(done)").step_failure("0: (hold) [10]", 1);
+    assert!(matches!(kind, ViolationKind::DivisionByZero(_)), "{kind:?}");
+}
+
+#[test]
+fn a_rate_on_an_undefined_fluent_is_undefined() {
+    let leak = "(:process leak :parameters () :precondition (>= (x) 0)
+                  :effect (increase (z) (* #t 1)))";
+    let violation = rising(leak, "(>= (z) 0)").violation("2: (wait)");
+    assert_eq!(violation.step, None);
+    assert!(
+        matches!(&violation.kind, ViolationKind::Undefined(fluent) if fluent.to_string() == "(z)"),
+        "{violation:?}"
+    );
+}
+
+#[test]
+fn a_process_drains_every_tank_under_forall() {
+    let domain = "(define (domain tanks) (:requirements :typing :time)
+      (:types tank)
+      (:predicates (open))
+      (:functions (level ?t - tank))
+      (:action wait :parameters ())
+      (:process drain :parameters () :precondition (open)
+        :effect (forall (?t - tank) (decrease (level ?t) (* #t 1)))))";
+    let task = Task::new(
+        domain,
+        "(define (problem p) (:domain tanks) (:objects a b - tank)
+           (:init (open) (= (level a) 5) (= (level b) 3))
+           (:goal (and (= (level a) 3) (= (level b) 1))))",
+    );
+    let report = task.run("2: (wait)");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+    assert!(task.violation("3: (wait)").step.is_none());
+}

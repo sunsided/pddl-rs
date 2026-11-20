@@ -647,3 +647,157 @@ fn epsilon_separation_holds_at_large_times() {
         "{kind:?}"
     );
 }
+
+/// A lab whose durative actions are `actions`, over the items a and b.
+fn lab(actions: &str, init: &str, goal: &str) -> Task {
+    Task::new(
+        &format!(
+            "(define (domain lab)
+               (:requirements :typing :durative-actions :numeric-fluents :conditional-effects
+                              :universal-preconditions :preferences)
+               (:types item)
+               (:predicates (p) (q) (r) (s) (done ?i - item))
+               (:functions (x) (y))
+               {actions})"
+        ),
+        &format!(
+            "(define (problem p) (:domain lab) (:objects a b - item)
+               (:init (= (x) 0) {init}) (:goal {goal}))"
+        ),
+    )
+}
+
+/// Asserts that every plan for `task` is unsupported because of `construct`.
+fn assert_unsupported(task: &Task, plan: &str, construct: &Construct) {
+    let report = task.run(plan);
+    assert_eq!(report.status(), ValidationStatus::Unsupported, "{report:?}");
+    assert_eq!(report.unsupported().unwrap().construct, *construct);
+}
+
+#[test]
+fn an_at_end_duration_bound_reads_the_state_at_the_end() {
+    // At the start x is 0, so the bound would fail there; at the end x is 2.
+    let work = "(:durative-action work :parameters ()
+                  :duration (and (>= ?duration 1) (at end (<= ?duration (x))))
+                  :effect (and (at start (assign (x) 2)) (at end (p))))";
+    let task = lab(work, "", "(p)");
+    let report = task.run("0: (work) [2]");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+
+    let kind = task.step_failure("0: (work) [3]", 1);
+    assert_eq!(
+        kind,
+        ViolationKind::DurationConstraint(Unmet::Comparison {
+            condition: "(<= ?duration (x))".into(),
+            left: 3.0,
+            right: 2.0,
+            expected: true
+        })
+    );
+}
+
+#[test]
+fn a_durative_action_needs_neither_a_duration_constraint_nor_an_effect() {
+    let idle = "(:durative-action idle :parameters () :duration ()
+                  :condition (at start (q)) :effect ())";
+    let task = lab(idle, "(q)", "(q)");
+    let report = task.run("0: (idle) [7]");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+    assert_eq!(report.trace().len(), 2);
+    assert!(report.trace().iter().all(|h| h.added.is_empty()));
+
+    let task = lab(idle, "", "(q)");
+    let kind = task.step_failure("0: (idle) [7]", 1);
+    assert!(
+        matches!(kind, ViolationKind::StartConditionUnsatisfied(_)),
+        "{kind:?}"
+    );
+}
+
+#[test]
+fn effects_compute_with_the_duration() {
+    // With d = 2: at the start x = 0 - (-d) = 2, at the end x = 2 + 2d = 6, y = d + 1 + 2.
+    let measure = "(:durative-action measure :parameters () :duration (>= ?duration 1)
+                     :effect (and (at start (decrease (x) (- ?duration)))
+                                  (at end (increase (x) (* 2 ?duration)))
+                                  (at end (assign (y) (+ ?duration 1 2)))))";
+    let task = lab(measure, "", "(and (= (x) 6) (= (y) 5))");
+    let report = task.run("0: (measure) [2]");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+    assert_eq!(task.violation("0: (measure) [3]").step, None);
+}
+
+#[test]
+fn a_duration_expression_divides_by_zero() {
+    let split = "(:durative-action split :parameters () :duration (>= ?duration 1)
+                   :effect (at end (assign (x) (/ 1 (- ?duration 2)))))";
+    let task = lab(split, "", "(>= (x) 0)");
+    assert_eq!(
+        task.step_failure("0: (split) [2]", 1),
+        ViolationKind::DivisionByZero("?duration expression".into())
+    );
+    assert_eq!(task.run("0: (split) [3]").status(), ValidationStatus::Valid);
+}
+
+#[test]
+fn conditional_effects_of_durative_actions() {
+    // An `at start` effect under an `at start` condition, and an `at end` effect under
+    // a conjunction with a `forall` over the end state.
+    let mark = "(:durative-action mark :parameters () :duration (= ?duration 1)
+                  :effect (and (when (at start (q)) (at start (and (p) (r))))
+                               (when (and (at start (q))
+                                          (forall (?i - item) (at end (not (done ?i)))))
+                                     (at end (s)))))";
+    let goal = "(and (p) (r) (s))";
+    let report = lab(mark, "(q)", goal).run("0: (mark) [1]");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+    assert_eq!(report.trace()[0].added.len(), 2, "{report:?}");
+
+    let violation = lab(mark, "", goal).violation("0: (mark) [1]");
+    assert!(
+        matches!(violation.kind, ViolationKind::GoalUnsatisfied(_)),
+        "{violation:?}"
+    );
+
+    let violation = lab(mark, "(q) (done a)", "(s)").violation("0: (mark) [1]");
+    assert!(
+        matches!(violation.kind, ViolationKind::GoalUnsatisfied(_)),
+        "{violation:?}"
+    );
+}
+
+#[test]
+fn unsupported_durative_constructs() {
+    // A condition on continuous change has no single moment to be checked at.
+    let flow = "(:durative-action flow :parameters () :duration (= ?duration 1)
+                  :effect (when (at start (q)) (increase (x) (* #t 1))))";
+    assert_unsupported(
+        &lab(flow, "", "(q)"),
+        "0: (flow) [1]",
+        &Construct::TimedEffectConditions,
+    );
+
+    let wish = "(:durative-action wish :parameters () :duration (= ?duration 1)
+                  :condition (preference early (at start (q))) :effect (at end (p)))";
+    assert_unsupported(
+        &lab(wish, "", "(p)"),
+        "0: (wish) [1]",
+        &Construct::Preferences,
+    );
+}
+
+#[test]
+fn an_end_effect_on_an_undefined_fluent_fails_at_the_end() {
+    let count = "(:durative-action count :parameters () :duration (= ?duration 1)
+                   :effect (and (at start (p)) (at end (increase (y) 1))))";
+    let task = lab(count, "", "(p)");
+    let violation = task.violation("0: (count) [1]");
+    assert!(
+        matches!(&violation.kind, ViolationKind::Undefined(fluent) if fluent.to_string() == "(y)"),
+        "{violation:?}"
+    );
+    assert_eq!(violation.step.unwrap().number, 1);
+
+    let report = lab(count, "(= (y) 0)", "(= (y) 1)").run("0: (count) [1]");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+}

@@ -210,11 +210,9 @@ impl Interval<'_> {
         points.dedup();
 
         let mut samples: Vec<f64> = points
-            .windows(2)
-            .filter_map(|pair| match pair {
-                [a, b] => Some(a.midpoint(*b)),
-                _ => None,
-            })
+            .iter()
+            .zip(points.iter().skip(1))
+            .map(|(a, b)| a.midpoint(*b))
             .collect();
         samples.extend(
             points

@@ -182,9 +182,7 @@ mod tests {
         check!(process.symbol() == &ActionSymbol::string("fall"));
         check!(process.parameters().len() == 1);
         check!(process.precondition().len() == 1);
-        let Some(DurativeActionEffect::All(effects)) = process.effect() else {
-            panic!("{process:?}");
-        };
+        assert2::assert!(let Some(DurativeActionEffect::All(effects)) = process.effect());
         check!(effects.len() == 2);
         check!(let DurativeActionEffect::Timed(TimedEffect::ContinuousEffect(..)) = &effects[0]);
 
@@ -196,14 +194,19 @@ mod tests {
         check!(let Ok(StructureDef::Event(_)) = event);
 
         let without_effect = StructureDef::from_str("(:process idle :parameters ())").unwrap();
-        let StructureDef::Process(process) = without_effect else {
-            panic!("{without_effect:?}");
-        };
-        check!(process.effect().is_none());
-        check!(process.precondition().is_empty());
+        assert2::assert!(let StructureDef::Process(idle) = without_effect.clone());
+        let idle = *idle;
+        check!(idle.effect().is_none());
+        check!(idle.precondition().is_empty());
+        let symbol: &ActionSymbol = idle.as_ref();
+        check!(symbol == &ActionSymbol::string("idle"));
+        check!(StructureDef::from(idle) == without_effect);
 
         check!(ProcessDefinition::from_str("(:action a :parameters ())").is_err());
     }
+    /// The parse error of a discrete effect in a process.
+    const ONLY_CONTINUOUS: &str = "a process allows only continuous effects";
+
     /// A process has only continuous effects, so a timed `at` effect anywhere in it,
     /// also inside `and`, `forall` or `when`, is a parse error at that effect.
     #[test]
@@ -215,10 +218,7 @@ mod tests {
         ];
         for input in cases {
             let error = ProcessDefinition::from_str(input).unwrap_err();
-            check!(
-                error.reason() == Some("a process allows only continuous effects"),
-                "{input}"
-            );
+            check!(error.reason() == Some(ONLY_CONTINUOUS), "{input}");
             check!(input[error.offset()..].starts_with("(at "), "{input}");
         }
 
@@ -233,10 +233,7 @@ mod tests {
         ];
         for input in conditional {
             let error = ProcessDefinition::from_str(input).unwrap_err();
-            check!(
-                error.reason() == Some("a process allows only continuous effects"),
-                "{input}"
-            );
+            check!(error.reason() == Some(ONLY_CONTINUOUS), "{input}");
             check!(input[error.offset()..].starts_with("(when "), "{input}");
         }
 

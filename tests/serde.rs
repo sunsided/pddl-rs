@@ -193,6 +193,10 @@ fn pddl_plus_processes_and_events() {
     check!(serde_json::from_value::<Domain>(expected).unwrap() == domain);
     round_trip::<pddl::ProcessDefinition>("(:process idle :parameters ())");
     round_trip::<pddl::StructureDef>("(:event e :parameters () :precondition (p) :effect (q))");
+    round_trip::<pddl::StructureDef>(
+        "(:process fill :parameters (?t) :precondition (open ?t)
+           :effect (increase (level ?t) (* #t 2)))",
+    );
 }
 
 #[test]
