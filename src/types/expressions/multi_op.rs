@@ -37,10 +37,13 @@ impl TryFrom<&str> for MultiOp {
     type Error = UnknownKeyword;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value {
-            names::MULTIPLICATION => Ok(Self::Multiplication),
-            names::ADDITION => Ok(Self::Addition),
-            _ => Err(UnknownKeyword::new("multi-operand operator", value)),
-        }
+        UnknownKeyword::lookup(
+            "multi-operand operator",
+            value,
+            &[
+                (names::MULTIPLICATION, Self::Multiplication),
+                (names::ADDITION, Self::Addition),
+            ],
+        )
     }
 }

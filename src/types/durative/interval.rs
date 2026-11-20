@@ -31,9 +31,6 @@ impl TryFrom<&str> for Interval {
     type Error = UnknownKeyword;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value {
-            names::ALL => Ok(Self::All),
-            _ => Err(UnknownKeyword::new("interval", value)),
-        }
+        UnknownKeyword::lookup("interval", value, &[(names::ALL, Self::All)])
     }
 }

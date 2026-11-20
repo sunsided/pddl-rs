@@ -5,7 +5,8 @@ use crate::BinaryOp;
 /// A string that is not one of the keywords of a PDDL type, e.g. `"incr"` for an
 /// [`AssignOp`](crate::AssignOp).
 ///
-/// The error of every keyword type's `TryFrom<&str>`.
+/// The error of every keyword type's `TryFrom<&str>`, which ignores ASCII case
+/// like the parser.
 ///
 /// ## Example
 /// ```
@@ -31,6 +32,24 @@ impl UnknownKeyword {
             expected,
             found: found.to_string(),
         }
+    }
+
+    /// Looks up the value of the keyword `found` in `table`, ignoring ASCII case
+    /// as the parser does.
+    ///
+    /// # Errors
+    /// Returns the error for `found`, which is not a valid `expected`, if no
+    /// keyword in `table` matches.
+    pub(crate) fn lookup<T: Clone>(
+        expected: &'static str,
+        found: &str,
+        table: &[(&str, T)],
+    ) -> Result<T, Self> {
+        table
+            .iter()
+            .find(|(keyword, _)| keyword.eq_ignore_ascii_case(found))
+            .map(|(_, value)| value.clone())
+            .ok_or_else(|| Self::new(expected, found))
     }
 
     /// Returns what kind of keyword was expected, e.g. `"assignment operator"`.

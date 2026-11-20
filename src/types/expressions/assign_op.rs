@@ -105,14 +105,18 @@ impl TryFrom<&str> for AssignOp {
     type Error = UnknownKeyword;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value {
-            names::CHANGE | names::ASSIGN => Ok(AssignOp::Assign),
-            names::SCALE_UP => Ok(AssignOp::ScaleUp),
-            names::SCALE_DOWN => Ok(AssignOp::ScaleDown),
-            names::INCREASE => Ok(AssignOp::Increase),
-            names::DECREASE => Ok(AssignOp::Decrease),
-            _ => Err(UnknownKeyword::new("assignment operator", value)),
-        }
+        UnknownKeyword::lookup(
+            "assignment operator",
+            value,
+            &[
+                (names::CHANGE, AssignOp::Assign),
+                (names::ASSIGN, AssignOp::Assign),
+                (names::SCALE_UP, AssignOp::ScaleUp),
+                (names::SCALE_DOWN, AssignOp::ScaleDown),
+                (names::INCREASE, AssignOp::Increase),
+                (names::DECREASE, AssignOp::Decrease),
+            ],
+        )
     }
 }
 
