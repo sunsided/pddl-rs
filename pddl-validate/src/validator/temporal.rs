@@ -64,6 +64,9 @@ pub struct Timeline<'v, 'a> {
     pub tolerance: f64,
     /// The least time between interfering events.
     pub epsilon: f64,
+    /// The absolute tolerance of duration constraints; see
+    /// [`Validator::with_duration_tolerance`](crate::Validator::with_duration_tolerance).
+    pub duration_tolerance: f64,
 }
 
 /// A durative action of the plan, between its start and its end.
@@ -80,6 +83,32 @@ struct Instance<'v> {
     memo: Memo,
     /// Its continuous effects, ground when it starts.
     flows: Vec<Flow<'v>>,
+}
+
+/// When a durative step of the plan runs, to reject a ground action overlapping itself.
+struct Span {
+    /// The step; its `action` text names the ground action.
+    step: StepRef,
+    /// The start time.
+    start: f64,
+    /// The end time, later than `start`.
+    end: f64,
+}
+
+impl Span {
+    /// The number of a step in `earlier` that runs the same ground action while this one
+    /// runs, if any. Spans that only touch, one ending where the other starts, do not
+    /// overlap; the interference check judges their shared happening.
+    fn overlapping(&self, earlier: &[Span]) -> Option<usize> {
+        earlier
+            .iter()
+            .find(|other| {
+                other.step.action.eq_ignore_ascii_case(&self.step.action)
+                    && self.start < other.end - SAME_TIME
+                    && other.start < self.end - SAME_TIME
+            })
+            .map(|other| other.step.number)
+    }
 }
 
 /// What happens at an event.
@@ -178,6 +207,7 @@ impl<'v> Timeline<'v, '_> {
         let timed = plan.steps().iter().any(|step| step.time().is_some());
         let mut instances = Vec::new();
         let mut events = Vec::new();
+        let mut spans: Vec<Span> = Vec::new();
         for (index, step) in plan.steps().iter().enumerate() {
             let at = step_ref(index, step);
             let fail = |kind| Err(failure(Some(at.clone()), Stop::Invalid(kind)));
@@ -208,6 +238,16 @@ impl<'v> Timeline<'v, '_> {
                     return fail(ViolationKind::NonPositiveDuration(end - time));
                 }
 
+                let span = Span {
+                    step: at.clone(),
+                    start: time,
+                    end,
+                };
+                if let Some(other) = span.overlapping(&spans) {
+                    return fail(ViolationKind::SelfOverlap { other });
+                }
+
+                spans.push(span);
                 let number = instances.len();
                 events.push(event(
                     time,
@@ -454,7 +494,7 @@ impl<'v> Timeline<'v, '_> {
             let evaluator = self.evaluator(state, Some(&observer));
             // A failed condition still records what it read, and interference is the
             // better diagnostic: the condition may fail only because of the order.
-            let result = run_event(&evaluator, event, instances);
+            let result = run_event(&evaluator, event, instances, self.duration_tolerance);
             let footprint = Footprint::new(
                 &observer.borrow(),
                 result.as_ref().unwrap_or(&Changes::default()),
@@ -512,11 +552,13 @@ fn event<'v>(time: f64, kind: Kind<'v>, step: &StepRef, label: String) -> Event<
     }
 }
 
-/// Checks the conditions of one event and collects its effects.
+/// Checks the conditions of one event and collects its effects; durations compare
+/// within `duration_tolerance`.
 fn run_event<'v>(
     evaluator: &Evaluator<'_, '_>,
     event: &Event<'v>,
     instances: &mut [Instance<'v>],
+    duration_tolerance: f64,
 ) -> Result<Changes, Stop> {
     let mut changes = Changes::default();
     match &event.kind {
@@ -537,7 +579,13 @@ fn run_event<'v>(
                 Moment::End
             };
             if let Some(instance) = instances.get_mut(*index) {
-                durative_event(evaluator, instance, moment, &mut changes)?;
+                durative_event(
+                    evaluator,
+                    instance,
+                    moment,
+                    duration_tolerance,
+                    &mut changes,
+                )?;
             }
         }
         Kind::Literal(atom, true) => {
@@ -552,17 +600,26 @@ fn run_event<'v>(
 }
 
 /// Checks the duration and the conditions of a durative action at `moment` and
-/// collects its effects then; at the start, also grounds its continuous effects.
+/// collects its effects then; at the start, also grounds its continuous effects. The
+/// duration compares within `duration_tolerance`.
 fn durative_event(
     evaluator: &Evaluator<'_, '_>,
     instance: &mut Instance<'_>,
     moment: Moment,
+    duration_tolerance: f64,
     changes: &mut Changes,
 ) -> Result<(), Stop> {
     let action = instance.action;
     let mut scope = instance.scope.clone();
     if let Some(constraint) = action.duration() {
-        let unmet = timed::duration(evaluator, constraint, &scope, instance.duration, moment)?;
+        let unmet = timed::duration(
+            evaluator,
+            constraint,
+            &scope,
+            instance.duration,
+            duration_tolerance,
+            moment,
+        )?;
         if let Some(unmet) = unmet {
             return Err(Stop::Invalid(ViolationKind::DurationConstraint(unmet)));
         }

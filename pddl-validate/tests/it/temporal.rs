@@ -548,3 +548,68 @@ fn a_start_time_too_large_to_hold_the_duration_fails() {
         ViolationKind::NonPositiveDuration(0.0)
     );
 }
+
+/// A domain whose `go` lasts a third of `(dist)`, and whose `loop` lasts 2.
+const ROUNDED: &str = "(define (domain d) (:requirements :durative-actions :numeric-fluents)
+    (:predicates (done)) (:functions (dist))
+    (:durative-action go :parameters () :duration (= ?duration (/ (dist) 3))
+      :effect (at end (done)))
+    (:durative-action loop :parameters (?x) :duration (= ?duration 2)
+      :effect (at end (done))))";
+
+/// A problem for [`ROUNDED`] with `(dist)` 10 and objects `a` and `b`.
+const ROUNDED_PROBLEM: &str =
+    "(define (problem p) (:domain d) (:objects a b) (:init (= (dist) 10)) (:goal (done)))";
+
+#[test]
+fn durations_rounded_by_the_planner_satisfy_their_constraint() {
+    // 10 / 3 printed with three decimals is 0.00033 below the exact duration.
+    let task = Task::new(ROUNDED, ROUNDED_PROBLEM);
+    assert_eq!(
+        task.run("0: (go) [3.333]").status(),
+        ValidationStatus::Valid
+    );
+    assert_eq!(
+        task.run("0: (go) [3.3333333]").status(),
+        ValidationStatus::Valid
+    );
+    // 3.334 is not 10 / 3 rounded to three decimals.
+    assert!(matches!(
+        task.step_failure("0: (go) [3.334]", 1),
+        ViolationKind::DurationConstraint(_)
+    ));
+
+    let exact = task.validator().with_duration_tolerance(0.0);
+    assert_eq!(
+        exact.validate_text("0: (go) [3.333]").status(),
+        ValidationStatus::Invalid
+    );
+}
+
+#[test]
+fn a_ground_durative_action_must_not_overlap_itself() {
+    let task = Task::new(ROUNDED, ROUNDED_PROBLEM);
+    assert_eq!(
+        task.step_failure("0: (loop a) [2]\n1: (loop a) [2]", 2),
+        ViolationKind::SelfOverlap { other: 1 }
+    );
+    assert_eq!(
+        task.step_failure("0: (loop a) [2]\n0: (LOOP A) [2]", 2),
+        ViolationKind::SelfOverlap { other: 1 }
+    );
+    // Plan order does not matter: the later step in the file starts first.
+    assert_eq!(
+        task.step_failure("1: (loop a) [2]\n0: (loop a) [2]", 2),
+        ViolationKind::SelfOverlap { other: 1 }
+    );
+
+    // Different arguments, or one instance ending where the next starts, are fine.
+    assert_eq!(
+        task.run("0: (loop a) [2]\n1: (loop b) [2]").status(),
+        ValidationStatus::Valid
+    );
+    assert_eq!(
+        task.run("0: (loop a) [2]\n2: (loop a) [2]").status(),
+        ValidationStatus::Valid
+    );
+}

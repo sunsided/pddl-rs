@@ -3,6 +3,7 @@
 use alloc::collections::VecDeque;
 use alloc::format;
 use alloc::string::String;
+use core::cmp::Ordering;
 
 use pddl::{
     DurationConstraint, DurationOperator, DurationValue, DurativeActionEffect,
@@ -88,6 +89,7 @@ pub fn duration(
     constraint: &DurationConstraint,
     scope: &Scope,
     duration: f64,
+    tolerance: f64,
     moment: Moment,
 ) -> Verdict {
     let simple = match constraint {
@@ -99,8 +101,11 @@ pub fn duration(
         let unmet = simple_duration(
             evaluator,
             constraint,
-            scope,
-            duration,
+            &Checked {
+                scope,
+                duration,
+                tolerance,
+            },
             moment,
             Moment::Start,
         )?;
@@ -110,18 +115,30 @@ pub fn duration(
     Ok(first)
 }
 
+/// The duration a constraint checks, and how it compares.
+struct Checked<'s> {
+    /// The action's parameters, bound.
+    scope: &'s Scope,
+    /// The plan's duration for the step.
+    duration: f64,
+    /// The absolute tolerance of the comparison, on top of the numeric one.
+    tolerance: f64,
+}
+
 /// Checks one duration constraint, which applies at `at` unless it says otherwise.
 fn simple_duration(
     evaluator: &Evaluator<'_, '_>,
     constraint: &SimpleDurationConstraint,
-    scope: &Scope,
-    duration: f64,
+    checked: &Checked<'_>,
     moment: Moment,
     at: Moment,
 ) -> Verdict {
+    let Checked {
+        scope, duration, ..
+    } = *checked;
     match constraint {
         SimpleDurationConstraint::At(time, inner) => {
-            simple_duration(evaluator, inner, scope, duration, moment, Moment::of(*time))
+            simple_duration(evaluator, inner, checked, moment, Moment::of(*time))
         }
         SimpleDurationConstraint::Op(_, _) if at != moment => Ok(None),
         SimpleDurationConstraint::Op(op, value) => {
@@ -131,7 +148,7 @@ fn simple_duration(
                     (evaluator.value(exp, scope)?, render::expression(exp, scope))
                 }
             };
-            let order = compare(duration, bound, evaluator.tolerance);
+            let order = duration_order(duration, bound, checked.tolerance, evaluator.tolerance);
             let (holds, keyword) = match op {
                 DurationOperator::Equal => (order.is_eq(), "="),
                 DurationOperator::GreaterOrEqual => (order.is_ge(), ">="),
@@ -295,5 +312,16 @@ pub const fn effect_moment(effect: &TimedEffect) -> Option<Moment> {
             Some(Moment::of(*time))
         }
         TimedEffect::ContinuousEffect(..) => None,
+    }
+}
+
+/// Orders the plan's `duration` against a constraint's `bound`: equal within the absolute
+/// `absolute` (planners round durations they print), otherwise as numbers within the
+/// relative `relative`.
+fn duration_order(duration: f64, bound: f64, absolute: f64, relative: f64) -> Ordering {
+    if (duration - bound).abs() <= absolute {
+        Ordering::Equal
+    } else {
+        compare(duration, bound, relative)
     }
 }

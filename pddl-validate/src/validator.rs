@@ -72,6 +72,9 @@ pub struct Validator<'a> {
     tolerance: f64,
     /// The least time between interfering events; see [`Validator::with_epsilon`].
     epsilon: f64,
+    /// The absolute tolerance of duration constraints; see
+    /// [`Validator::with_duration_tolerance`].
+    duration_tolerance: f64,
 }
 
 /// The default relative tolerance of numeric comparisons, `1e-12`.
@@ -85,6 +88,17 @@ pub const DEFAULT_TOLERANCE: f64 = 1e-12;
 
 /// The default least time between interfering events of a temporal plan, VAL's default.
 pub const DEFAULT_EPSILON: f64 = 0.01;
+
+/// The default absolute tolerance of duration constraints, `0.0005`.
+///
+/// Planners print durations with three decimals: `(= ?duration (/ (dist) 3))` with
+/// `(dist)` 10 comes out as `[3.333]`, 0.00033 below the exact value. Rounding to three
+/// decimals is off by at most 0.0005, so a duration within 0.0005 of the bound satisfies
+/// `=`, `<=` and `>=`; it also accepts a duration up to 0.0005 beyond a `<=` or `>=`
+/// bound. Shorter durations need a smaller tolerance:
+/// [`Validator::with_duration_tolerance(0.0)`](Validator::with_duration_tolerance) leaves
+/// only the relative numeric tolerance.
+pub const DEFAULT_DURATION_TOLERANCE: f64 = 0.0005;
 
 /// What [`Validator::new`] found.
 #[derive(Debug)]
@@ -170,6 +184,7 @@ impl<'a> Validator<'a> {
             },
             tolerance: DEFAULT_TOLERANCE,
             epsilon: DEFAULT_EPSILON,
+            duration_tolerance: DEFAULT_DURATION_TOLERANCE,
         })
     }
 
@@ -179,6 +194,7 @@ impl<'a> Validator<'a> {
             inner: Inner::Unsupported(unsupported),
             tolerance: DEFAULT_TOLERANCE,
             epsilon: DEFAULT_EPSILON,
+            duration_tolerance: DEFAULT_DURATION_TOLERANCE,
         }
     }
 
@@ -224,6 +240,18 @@ impl<'a> Validator<'a> {
     #[must_use]
     pub fn with_epsilon(mut self, epsilon: f64) -> Self {
         self.epsilon = if epsilon > 0.0 { epsilon } else { 0.0 };
+        self
+    }
+
+    /// Sets the absolute tolerance of a temporal plan's durations against the actions'
+    /// `:duration` constraints, [`DEFAULT_DURATION_TOLERANCE`] unless set.
+    ///
+    /// A duration `d` satisfies a constraint with bound `b` when `|d - b| <= tolerance`,
+    /// and otherwise compares as a number under [`Validator::with_tolerance`]. A negative
+    /// or NaN tolerance counts as 0.
+    #[must_use]
+    pub fn with_duration_tolerance(mut self, tolerance: f64) -> Self {
+        self.duration_tolerance = if tolerance > 0.0 { tolerance } else { 0.0 };
         self
     }
 
@@ -276,6 +304,7 @@ impl<'a> Validator<'a> {
                 problem,
                 tolerance,
                 epsilon: self.epsilon,
+                duration_tolerance: self.duration_tolerance,
             };
             return timeline.run(initial, plan);
         }

@@ -30,7 +30,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   effects on `at start` or `at end` conditions, linear continuous effects,
   timed initial literals, PDDL 2.1 interference with an epsilon separation
   (`Validator::with_epsilon`, 0.01 by default) and `total-time` as the
-  makespan. `Plan` reads `t: (action args) [d]` steps. Nonlinear dynamics and
+  makespan. Durations meet their constraints within an absolute tolerance
+  (`Validator::with_duration_tolerance`, 0.0005 by default, so durations
+  rounded to three decimals pass), and a ground durative action overlapping
+  itself is `SelfOverlap`. `Plan` reads `t: (action args) [d]` steps. Nonlinear dynamics and
   derived predicates in temporal plans are `Unsupported`.
 - PDDL+: processes and events on the temporal timeline. Processes add linear
   rates while their precondition holds; events fire when theirs holds, in

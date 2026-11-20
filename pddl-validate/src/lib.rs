@@ -85,7 +85,9 @@
 //! - Temporal plans follow PDDL 2.1 and VAL. Events at one time form a happening whose
 //!   conditions are checked in the state before it and whose effects apply at once.
 //!   `over all` conditions must hold strictly between an action's start and end, and
-//!   interfering events must be at least epsilon apart.
+//!   interfering events must be at least epsilon apart. Durations satisfy their
+//!   constraints within an absolute tolerance ([`Validator::with_duration_tolerance`],
+//!   [`DEFAULT_DURATION_TOLERANCE`]), and a ground durative action must not overlap itself.
 //! - Validation stops at the first violation. Steps count from 1, as in VAL.
 //!
 //! The crate is `no_std` with `alloc`. That is nominal for now: the `pddl` crate it reads
@@ -122,7 +124,7 @@ pub use report::{
     Construct, FluentChange, Metric, Outcome, Report, StepRef, StepTrace, Unmet, Unsupported,
     Violation, ViolationKind, MAX_ALTERNATIVES,
 };
-pub use validator::{Validator, DEFAULT_EPSILON, DEFAULT_TOLERANCE};
+pub use validator::{Validator, DEFAULT_DURATION_TOLERANCE, DEFAULT_EPSILON, DEFAULT_TOLERANCE};
 
 /// The overall result of validating a plan.
 ///

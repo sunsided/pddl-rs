@@ -173,6 +173,9 @@ impl Violation {
             (ViolationKind::DurationConstraint(unmet), Some(step)) => {
                 format!("Choose a duration for {} that satisfies {unmet}", at(step))
             }
+            (ViolationKind::SelfOverlap { other }, Some(step)) => {
+                format!("Start {} after step {other} ends", at(step))
+            }
             (ViolationKind::Interference { other, .. }, Some(step)) => format!(
                 "Move {} at least epsilon away from {other}, or reorder them",
                 at(step)
@@ -291,6 +294,14 @@ pub enum ViolationKind {
     InvalidTime(f64),
     /// The duration violates the action's `:duration` constraint; `left` is the duration.
     DurationConstraint(Unmet),
+    /// The step runs while an earlier step of the same action with the same arguments
+    /// still runs. Following the formal semantics of PDDL 2.1 the validator is built on
+    /// (Abdulaziz and Koller, 2022), a ground durative action must not overlap itself:
+    /// its end could belong to either start.
+    SelfOverlap {
+        /// The 1-based number of the other step, as [`StepRef::number`].
+        other: usize,
+    },
     /// An `at start` condition does not hold when the action starts.
     StartConditionUnsatisfied(Unmet),
     /// An `at end` condition does not hold when the action ends.
@@ -368,6 +379,12 @@ impl fmt::Display for ViolationKind {
             Self::InvalidTime(t) => write!(f, "the time {t} is not a non-negative, finite number"),
             Self::DurationConstraint(unmet) => {
                 write!(f, "the duration violates {unmet}")
+            }
+            Self::SelfOverlap { other } => {
+                write!(
+                    f,
+                    "overlaps step {other}, the same action with the same arguments"
+                )
             }
             Self::StartConditionUnsatisfied(unmet) => {
                 write!(f, "unsatisfied condition at start: {unmet}")
