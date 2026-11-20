@@ -16,7 +16,8 @@ pub enum DurativeActionFluentExpression {
         Box<DurativeActionFluentExpression>,
         Box<DurativeActionFluentExpression>,
     ),
-    /// An operation over two or more operands, `(<multi-op> <f-exp-da> <f-exp-da>+)`.
+    /// An operation over two or more operands, `(<multi-op> <f-exp-da> <f-exp-da>+)`,
+    /// with at least two in the `Vec`; see [`multi_op`](Self::multi_op) for fewer.
     MultiOp(
         MultiOp,
         Box<DurativeActionFluentExpression>,
@@ -67,6 +68,10 @@ impl DurativeActionFluentExpression {
     }
 
     /// Creates an operation over two or more operands, `(<multi-op> <f-exp-da> <f-exp-da>+)`.
+    ///
+    /// `(<multi-op> a b)` is a binary operation and `(<multi-op> a)` isn't PDDL, so
+    /// with one operand in `rhs` this returns the equal `BinaryOp`, and with none
+    /// it returns `lhs`. The result then prints and parses back to an equal value.
     #[doc(alias = "new_multi_op")]
     #[must_use]
     pub fn multi_op<I: IntoIterator<Item = DurativeActionFluentExpression>>(
@@ -74,7 +79,12 @@ impl DurativeActionFluentExpression {
         lhs: DurativeActionFluentExpression,
         rhs: I,
     ) -> Self {
-        Self::MultiOp(op, Box::new(lhs), rhs.into_iter().collect())
+        let mut rhs: Vec<_> = rhs.into_iter().collect();
+        match rhs.len() {
+            0 => lhs,
+            1 => Self::binary_op(op.into(), lhs, rhs.remove(0)),
+            _ => Self::MultiOp(op, Box::new(lhs), rhs),
+        }
     }
 
     /// Creates an operation over two or more operands, `(<multi-op> <f-exp-da> <f-exp-da>+)`.

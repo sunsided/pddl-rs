@@ -9,7 +9,8 @@ impl sealed::Sealed for Number {}
 
 impl Visitor<Number, RcDoc<'static>> for PrettyRenderer {
     fn visit(&self, value: &Number) -> RcDoc<'static> {
-        RcDoc::text(format!("{}", **value))
+        // Adding `0.0` turns `-0` into `0`, which is the same number but parses.
+        RcDoc::text(format!("{}", **value + 0.0))
     }
 }
 
