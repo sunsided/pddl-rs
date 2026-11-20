@@ -102,3 +102,15 @@ fn pddl_1_2_sections() {
     let timeless = domain("").replace("(:action", "(:timeless (q)) (:action");
     assert_unsupported(&timeless, &problem(""), "(a)", &Construct::Timeless);
 }
+
+#[test]
+fn over_all_conditions_of_conditional_effects() {
+    let action = "(:durative-action go :parameters () :duration (= ?duration 1)
+                    :effect (when (over all (q)) (at end (p))))";
+    assert_unsupported(
+        &domain(action),
+        &problem(""),
+        "0: (go) [1]",
+        &Construct::TimedEffectConditions,
+    );
+}
