@@ -39,7 +39,7 @@ sas-plus = ["dep:sas-plus"]
 codegen = ["dep:pddl-runtime"]
 
 [workspace]
-members = ["pddl", "pddl-lsp", "pddl-macros", "pddl-nova-tests", "pddl-runtime", "pddl-bench", "pddl-codegen"]
+members = ["pddl", "pddl-lsp", "pddl-macros", "pddl-nova-tests", "pddl-runtime", "pddl-bench", "pddl-codegen", "pddl-validate"]
 
 [workspace.lints.rust]
 missing_docs = "warn"

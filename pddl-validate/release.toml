@@ -1,0 +1,15 @@
+# Configuration for cargo-release: https://github.com/crate-ci/cargo-release
+#
+# `cargo release <patch|minor|major> -p pddl-validate --execute` bumps the
+# version, turns the "## Unreleased" section of this crate's CHANGELOG.md into
+# the release's section, commits, tags pddl-validate-vX.Y.Z and pushes. The tag
+# triggers no workflow, and .github/workflows/release.yml does not publish this
+# crate yet.
+publish = false
+allow-branch = ["main"]
+tag = true
+tag-name = "pddl-validate-v{{version}}"
+pre-release-commit-message = "Release pddl-validate {{version}}"
+pre-release-replacements = [
+  { file = "CHANGELOG.md", search = "## Unreleased", replace = "## Unreleased\n\n## [{{version}}] - {{date}}\n\n[{{version}}]: https://github.com/sunsided/pddl-rs/releases/tag/pddl-validate-v{{version}}", exactly = 1 },
+]

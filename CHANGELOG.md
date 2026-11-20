@@ -22,6 +22,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `pddl-codegen` crate and builds on the new `pddl-runtime` crate, which
   `pddl::runtime` re-exports. `pddl::codegen` loads problems for it.
 
+- `pddl-validate`, a new crate in this repository, validates sequential
+  plans against a domain and problem, independently of any planner, and
+  reports the first failing step, condition and a VAL-style repair hint.
+  See its own changelog.
 - The `sas-plus` feature grounds a domain and problem into a Fast Downward
   SAS+ task with `pddl::sas_plus::ground`. It computes relaxed reachability
   while it binds parameters, so groundings that can never apply are never
