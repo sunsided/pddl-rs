@@ -179,6 +179,9 @@ impl<'v> Timeline<'v, '_> {
             let at = step_ref(index, step);
             let fail = |kind| Err(failure(Some(at.clone()), Stop::Invalid(kind)));
             let time = match step.time() {
+                Some(time) if !(time.is_finite() && time >= 0.0) => {
+                    return fail(ViolationKind::InvalidTime(time));
+                }
                 Some(time) => time,
                 None if timed => return fail(ViolationKind::MissingTimestamp),
                 #[expect(
@@ -192,6 +195,10 @@ impl<'v> Timeline<'v, '_> {
                 let instance = self.instance(action, step, &at)?;
                 let label = at.action.clone();
                 let end = time + instance.duration;
+                if !end.is_finite() {
+                    return fail(ViolationKind::InvalidTime(end));
+                }
+
                 let number = instances.len();
                 events.push(event(
                     time,
@@ -230,7 +237,9 @@ impl<'v> Timeline<'v, '_> {
             return fail(ViolationKind::MissingDuration);
         };
 
-        if duration <= 0.0 {
+        // A duration within SAME_TIME would put start and end in one happening and skip
+        // the over all conditions, so it counts as zero; NaN fails the test too.
+        if !(duration > SAME_TIME && duration.is_finite()) {
             return fail(ViolationKind::NonPositiveDuration(duration));
         }
 
@@ -299,10 +308,12 @@ impl<'v> Timeline<'v, '_> {
         let mut clock = 0.0;
         let mut rest = events;
         while let Some(first) = rest.first() {
+            // At least one event, so the loop ends whatever the times.
             let size = rest
                 .iter()
                 .take_while(|event| event.time - first.time <= SAME_TIME)
-                .count();
+                .count()
+                .max(1);
             let (happening, later) = rest.split_at(size);
             rest = later;
 

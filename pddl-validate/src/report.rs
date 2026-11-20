@@ -94,8 +94,9 @@ impl Report {
 
     /// Returns what each step changed, for the steps that were applied.
     ///
-    /// A valid plan has one entry per step. An invalid one has an entry for each step
-    /// before the failing one. An unsupported one has none.
+    /// A valid sequential plan has one entry per step, a valid temporal plan one per
+    /// happening. An invalid plan has entries up to the failing step or happening. An
+    /// unsupported one has none.
     #[must_use]
     pub fn trace(&self) -> &[StepTrace] {
         &self.trace
@@ -283,8 +284,10 @@ pub enum ViolationKind {
     MissingDuration,
     /// An instantaneous action has a `[duration]`.
     UnexpectedDuration,
-    /// The duration is not positive.
+    /// The duration is not positive (at most 1e-9) or not finite.
     NonPositiveDuration(f64),
+    /// A start or end time that is negative or not finite.
+    InvalidTime(f64),
     /// The duration violates the action's `:duration` constraint; `left` is the duration.
     DurationConstraint(Unmet),
     /// An `at start` condition does not hold when the action starts.
@@ -349,7 +352,10 @@ impl fmt::Display for ViolationKind {
             Self::UnexpectedDuration => {
                 f.write_str("an instantaneous action cannot have a [duration]")
             }
-            Self::NonPositiveDuration(d) => write!(f, "the duration {d} is not positive"),
+            Self::NonPositiveDuration(d) => {
+                write!(f, "the duration {d} is not a positive, finite number")
+            }
+            Self::InvalidTime(t) => write!(f, "the time {t} is not a non-negative, finite number"),
             Self::DurationConstraint(unmet) => {
                 write!(f, "the duration violates {unmet}")
             }

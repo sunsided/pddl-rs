@@ -1,5 +1,7 @@
 //! Level 3: temporal plans, and every temporal way to fail.
 
+use std::fmt::Write;
+
 use pddl_validate::{Construct, Unmet, ValidationStatus, ViolationKind};
 
 use crate::Task;
@@ -341,4 +343,192 @@ fn mutations_of_a_temporal_plan() {
         }
     }
     assert!(invalid > 0);
+}
+
+/// A tank with continuous filling and draining, an at end duration bound, `forall`
+/// in conditions and effects, and costs.
+const TANK: &str = "
+(define (domain tank) (:requirements :durative-actions :continuous-effects :numeric-fluents)
+  (:predicates (done) (item ?x))
+  (:functions (level) (total-cost))
+  (:durative-action fill :parameters ()
+    :duration (and (>= ?duration 0.5) (at end (<= ?duration 10)))
+    :condition (over all (or (<= (level) 2) (>= (level) 4)))
+    :effect (and (increase (level) #t) (at end (done)) (at start (increase (total-cost) 1))))
+  (:durative-action drain :parameters ()
+    :duration (>= ?duration 1)
+    :condition (over all (> (level) 0))
+    :effect (and (decrease (level) (* 2 #t)) (decrease (level) #t) (at end (done))))
+  (:durative-action tag :parameters ()
+    :duration (= ?duration 1)
+    :condition (forall (?x) (at start (item ?x)))
+    :effect (and (forall (?x) (at end (not (item ?x)))) (at end (done))
+                 (at start (increase (total-cost) 2)))))";
+
+/// The tank at `level`, with items a and b unless `items` says otherwise.
+fn tank(level: &str, items: &str) -> Task {
+    Task::new(
+        TANK,
+        &format!(
+            "(define (problem p) (:domain tank) (:objects a b)
+               (:init (= (level) {level}) (= (total-cost) 0) {items})
+               (:goal (done)) (:metric minimize (total-cost)))"
+        ),
+    )
+}
+
+#[test]
+fn disjunctive_invariant_under_continuous_change() {
+    let task = tank("1", "(item a) (item b)");
+    assert_eq!(task.run("0: (fill) [1]").status(), ValidationStatus::Valid);
+
+    // From 1 to 4 the level passes through (2, 4), where neither side holds.
+    let kind = task.step_failure("0: (fill) [3]", 1);
+    let ViolationKind::InvariantViolated { time, .. } = kind else {
+        panic!("{kind:?}");
+    };
+    assert!(time > 1.0 && time < 3.0, "{time}");
+
+    // Above 4 the invariant holds throughout, so the at end bound decides.
+    let kind = tank("5", "").step_failure("0: (fill) [11]", 1);
+    assert!(
+        matches!(&kind, ViolationKind::DurationConstraint(Unmet::Comparison { condition, .. }) if condition == "(<= ?duration 10)"),
+        "{kind:?}"
+    );
+}
+
+#[test]
+fn strict_invariant_reaching_its_bound_at_the_end() {
+    // Two flows drain 3 per time unit: from 3 to exactly 0 at the end.
+    assert_eq!(
+        tank("3", "").run("0: (drain) [1]").status(),
+        ValidationStatus::Valid
+    );
+    let kind = tank("2", "").step_failure("0: (drain) [1]", 1);
+    assert!(
+        matches!(kind, ViolationKind::InvariantViolated { .. }),
+        "{kind:?}"
+    );
+}
+
+#[test]
+fn simultaneous_additive_updates_combine() {
+    let report = tank("1", "(item a) (item b)").run("0: (fill) [1]\n0: (tag) [1]");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+    assert_eq!(report.metric().unwrap().value, 3.0);
+}
+
+#[test]
+fn forall_in_durative_conditions_and_effects() {
+    let kind = tank("1", "(item a)").step_failure("0: (tag) [1]", 1);
+    assert!(
+        matches!(
+            kind,
+            ViolationKind::StartConditionUnsatisfied(Unmet::Atom { .. })
+        ),
+        "{kind:?}"
+    );
+
+    let report = tank("1", "(item a) (item b)").run("0: (tag) [1]");
+    let end = report.trace().last().unwrap();
+    assert_eq!(end.deleted.len(), 2);
+}
+
+#[test]
+fn degenerate_times_and_durations() {
+    let task = tank("3", "");
+    let validator = task.validator();
+    let run =
+        |step: pddl_validate::PlanStep| validator.validate(&pddl_validate::Plan::new(vec![step]));
+    let drain = || pddl_validate::PlanStep::new("drain", Vec::<String>::new());
+
+    let kind = |report: pddl_validate::Report| report.violation().unwrap().kind.clone();
+    assert!(matches!(
+        kind(run(drain().at(f64::NAN).lasting(1.0))),
+        ViolationKind::InvalidTime(_)
+    ));
+    assert!(matches!(
+        kind(run(drain().at(f64::INFINITY).lasting(1.0))),
+        ViolationKind::InvalidTime(_)
+    ));
+    assert!(matches!(
+        kind(run(drain().at(0.0).lasting(f64::NAN))),
+        ViolationKind::NonPositiveDuration(_)
+    ));
+    assert!(matches!(
+        kind(run(drain().at(0.0).lasting(1e-10))),
+        ViolationKind::NonPositiveDuration(_)
+    ));
+    assert!(matches!(
+        task.step_failure("1e308: (drain) [1e308]", 1),
+        ViolationKind::InvalidTime(_)
+    ));
+}
+
+/// Two instantaneous actions, where `light` reads what `flip` adds.
+const SWITCH: &str = "
+(define (domain switch) (:predicates (on) (lit))
+  (:action flip :parameters () :precondition (not (on)) :effect (on))
+  (:action light :parameters () :precondition (on) :effect (lit)))";
+
+#[test]
+fn timed_plans_for_classical_domains() {
+    let task = Task::new(
+        SWITCH,
+        "(define (problem p) (:domain switch) (:init) (:goal (lit)))",
+    );
+    let report = task.run("0: (flip)\n1: (light)");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+    for plan in ["0: (flip)\n0: (light)", "0: (flip)\n0.005: (light)"] {
+        let kind = task.step_failure(plan, 2);
+        assert!(
+            matches!(kind, ViolationKind::Interference { .. }),
+            "{plan}: {kind:?}"
+        );
+    }
+
+    assert_eq!(
+        task.step_failure("(flip) [1]", 1),
+        ViolationKind::UnexpectedDuration
+    );
+}
+
+/// A tiny deterministic generator (64-bit LCG).
+struct Lcg(u64);
+
+impl Lcg {
+    /// Returns the next pseudo-random number below `bound`.
+    fn below(&mut self, bound: usize) -> usize {
+        self.0 = self
+            .0
+            .wrapping_mul(6_364_136_223_846_793_005)
+            .wrapping_add(1_442_695_040_888_963_407);
+        usize::try_from(self.0 >> 33).unwrap() % bound
+    }
+}
+
+#[test]
+fn random_temporal_plans_never_panic_or_hang() {
+    const STEPS: &[&str] = &["(fill)", "(drain)", "(tag)", "(fill x)", "(nope)", "(tag"];
+    const NUMBERS: &[&str] = &[
+        "0", "0.5", "1", "1.005", "2", "3", "1e308", "1e-12", "10", "0.01",
+    ];
+    let task = tank("3", "(item a) (item b)");
+    let validator = task.validator();
+    let mut random = Lcg(11);
+    for _ in 0..1500 {
+        let mut text = String::new();
+        for _ in 0..random.below(5) {
+            let time = NUMBERS[random.below(NUMBERS.len())];
+            let step = STEPS[random.below(STEPS.len())];
+            let duration = NUMBERS[random.below(NUMBERS.len())];
+            match random.below(3) {
+                0 => writeln!(text, "{time}: {step} [{duration}]").unwrap(),
+                1 => writeln!(text, "{time}: {step}").unwrap(),
+                _ => writeln!(text, "{step} [{duration}]").unwrap(),
+            }
+        }
+
+        let _ = validator.validate_text(&text);
+    }
 }
