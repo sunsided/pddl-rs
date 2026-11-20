@@ -6,6 +6,7 @@ mod mutation;
 mod numeric;
 mod pddl_plus;
 mod plan_file;
+mod rounding;
 mod temporal;
 mod unsupported;
 

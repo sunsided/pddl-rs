@@ -97,17 +97,21 @@ impl Evaluator<'_, '_> {
     ///
     /// # Errors
     ///
-    /// [`EvalError::Undefined`] if it has none.
+    /// [`EvalError::Undefined`] if it has none, and [`EvalError::NonFinite`] if its value
+    /// is not finite, as continuous change can leave it.
     pub fn fluent(&self, atom: &Atom) -> Result<f64, EvalError> {
         if let Some(observer) = self.observer {
             observer.borrow_mut().fluents.insert(atom.clone());
         }
 
-        self.state
+        let value = self
+            .state
             .fluents
             .get(atom)
             .copied()
-            .ok_or_else(|| EvalError::Undefined(atom.clone()))
+            .ok_or_else(|| EvalError::Undefined(atom.clone()))?;
+
+        finite(value, || alloc::format!("{atom}"))
     }
 
     /// Evaluates a metric expression in the final state of a plan whose `total-time` is

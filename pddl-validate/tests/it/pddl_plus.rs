@@ -643,3 +643,20 @@ fn a_process_drains_every_tank_under_forall() {
     assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
     assert!(task.violation("3: (wait)").step.is_none());
 }
+
+#[test]
+fn an_invariant_holds_at_the_instant_of_an_interior_step() {
+    // At 10, before `reset` applies, x = 10 breaks `(< (x) 10)`, inside `hold`'s interval.
+    let reset = "(:action reset :parameters () :effect (assign (x) 0))";
+    let task = grow(&format!("{} {reset}", hold("(< (x) 10)")), "(done)");
+    let kind = task.step_failure("0: (hold) [20]\n10: (reset)", 1);
+    let ViolationKind::InvariantViolated { time, .. } = kind else {
+        panic!("{kind:?}");
+    };
+    assert!((time - 10.0).abs() < 1e-9, "{time}");
+
+    // An action ending at the step is outside its own open interval there.
+    let task = grow(&format!("{} {reset}", hold("(< (x) 20)")), "(done)");
+    let report = task.run("0: (hold) [20]\n20: (reset)");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+}

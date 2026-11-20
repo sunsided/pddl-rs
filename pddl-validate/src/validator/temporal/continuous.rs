@@ -13,6 +13,7 @@
 //! product of two changing fluents, a division by one) is unsupported.
 
 use alloc::collections::{BTreeMap, BTreeSet};
+use alloc::format;
 use alloc::vec::Vec;
 use core::cell::RefCell;
 
@@ -21,9 +22,10 @@ use pddl::{
     TimedEffect, TimedFluentExpression,
 };
 
+use super::rounding_slack;
 use super::timed::{condition, Moment};
 use crate::atom::Atom;
-use crate::eval::numeric::{degree, fluent_atom};
+use crate::eval::numeric::{degree, finite, fluent_atom};
 use crate::eval::{EvalError, Evaluator, Observer, Scope};
 use crate::model::Model;
 use crate::report::{Construct, Unmet};
@@ -106,15 +108,19 @@ pub fn rates(evaluator: &Evaluator<'_, '_>, flows: &[&Flow<'_>]) -> Result<Rates
 }
 
 /// Returns `state` advanced by `elapsed` time units at `rates`.
-pub fn advance(state: &State, rates: &Rates, elapsed: f64) -> State {
+///
+/// # Errors
+///
+/// [`EvalError::NonFinite`] naming the first fluent that leaves the finite range.
+pub fn advance(state: &State, rates: &Rates, elapsed: f64) -> Result<State, EvalError> {
     let mut next = state.clone();
     for (fluent, rate) in rates {
         if let Some(value) = next.fluents.get_mut(fluent) {
-            *value += rate * elapsed;
+            *value = finite(*value + rate * elapsed, || format!("{fluent}"))?;
         }
     }
 
-    next
+    Ok(next)
 }
 
 /// An open interval of time with the state at its start and the rates within it.
@@ -145,7 +151,7 @@ impl Interval<'_> {
         scope: &mut Scope,
     ) -> Result<Option<(f64, Unmet)>, EvalError> {
         let at = |time: f64, observer: Option<&RefCell<Observer>>, scope: &mut Scope| {
-            let state = advance(self.state, self.rates, time - self.start);
+            let state = advance(self.state, self.rates, time - self.start)?;
             let evaluator = Evaluator {
                 model,
                 state: &state,
@@ -202,7 +208,7 @@ impl Interval<'_> {
             .zip(&last)
             .filter(|(a, b)| *a - *b != 0.0)
             .map(|(a, b)| self.start + length * a / (a - b))
-            .filter(|time| *time > self.start && *time < self.end)
+            .filter(|time| self.is_inside(*time))
             .collect();
         points.push(self.start);
         points.push(self.end);
@@ -222,5 +228,12 @@ impl Interval<'_> {
         );
         samples.sort_by(f64::total_cmp);
         Ok(samples)
+    }
+
+    /// Returns `true` if `time` lies inside the interval by more than the rounding slack
+    /// at either end. A root closer to an end than that is rounding noise of a crossing
+    /// at the end itself, where the comparison is not checked, so it is not sampled.
+    fn is_inside(&self, time: f64) -> bool {
+        time > self.start + rounding_slack(self.start) && time < self.end - rounding_slack(self.end)
     }
 }

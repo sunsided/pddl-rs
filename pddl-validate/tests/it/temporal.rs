@@ -801,3 +801,49 @@ fn an_end_effect_on_an_undefined_fluent_fails_at_the_end() {
     let report = lab(count, "(= (y) 0)", "(= (y) 1)").run("0: (count) [1]");
     assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
 }
+
+#[test]
+fn an_invariant_holds_at_the_instant_of_an_interior_step() {
+    // At 10, before `reset` applies, x = 10 breaks `(< (x) 10)`; the point lies in the
+    // open interval of `hold`.
+    let actions = "(:durative-action hold :parameters () :duration (= ?duration 20)
+                     :condition (over all (< (x) 10))
+                     :effect (and (at end (p)) (increase (x) (* #t 1))))
+                   (:action reset :parameters () :effect (assign (x) 0))";
+    let task = lab(actions, "", "(p)");
+    let kind = task.step_failure("0: (hold) [20]\n10: (reset)", 1);
+    let ViolationKind::InvariantViolated { time, .. } = kind else {
+        panic!("{kind:?}");
+    };
+    assert!((time - 10.0).abs() < 1e-9, "{time}");
+
+    // Resets before x reaches 10 keep it below 10 throughout.
+    let report = task.run("0: (hold) [20]\n9.9: (reset)\n19: (reset)");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+}
+
+#[test]
+fn continuous_change_interferes_with_a_discrete_update() {
+    let ramp = "(:durative-action ramp :parameters () :duration (= ?duration 5)
+                  :effect (and (at end (p)) (increase (y) (* 2 #t))))
+                (:durative-action climb :parameters () :duration (= ?duration 5)
+                  :effect (increase (y) (* 1 #t)))";
+    let other = |effect: &str| {
+        format!(
+            "{ramp} (:durative-action jump :parameters () :duration (= ?duration 1)
+                       :effect (at start ({effect} (y) 10)))"
+        )
+    };
+
+    let task = lab(&other("assign"), "(= (y) 0)", "(p)");
+    let kind = task.step_failure("0: (ramp) [5]\n0: (jump) [1]", 2);
+    assert!(
+        matches!(kind, ViolationKind::Interference { ref other, .. } if other == "start (ramp)"),
+        "{kind:?}"
+    );
+
+    // Additive changes commute, continuous or discrete.
+    let task = lab(&other("increase"), "(= (y) 0)", "(p)");
+    let report = task.run("0: (ramp) [5]\n0: (jump) [1]\n0: (climb) [5]");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+}

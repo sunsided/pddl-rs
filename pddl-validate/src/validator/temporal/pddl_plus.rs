@@ -40,8 +40,7 @@ use core::cell::RefCell;
 use pddl::{ActionDefinition, PreconditionGoalDescriptions, ProcessDefinition};
 
 use super::continuous::{self, Flow, Rates};
-use super::timed::{condition, Moment};
-use super::{failure, Failure, Instance, Timeline, SAME_TIME};
+use super::{failure, rounding_slack, Failure, Instance, Timeline, SAME_TIME};
 use crate::effects::Changes;
 use crate::eval::{EvalError, Evaluator, Observer, Scope};
 use crate::report::{Construct, StepTrace, ViolationKind};
@@ -187,6 +186,15 @@ struct Segment<'s> {
     rates: Rates,
 }
 
+impl Segment<'_> {
+    /// Returns `true` if `time` lies inside the segment by more than the rounding slack
+    /// at either end. A root closer to an end than that is rounding noise of a crossing
+    /// at the end itself, which the end handles, so it is no breakpoint.
+    fn is_inside(&self, time: f64) -> bool {
+        time > self.start + rounding_slack(self.start) && time < self.end - rounding_slack(self.end)
+    }
+}
+
 impl<'v> Timeline<'v, '_> {
     /// Fires the events enabled in `state` at `time`, round after round, until none is.
     pub(super) fn cascade(
@@ -249,12 +257,13 @@ impl<'v> Timeline<'v, '_> {
     }
 
     /// Runs processes and events from `start` to `end`, checking the `over all`
-    /// conditions of the `running` durative actions. Returns the state at `end`.
+    /// conditions of the `running` durative actions, and at `end` those of the actions
+    /// running `through` it. Returns the state at `end`.
     pub(super) fn hybrid_interval(
         &self,
         dynamics: &Dynamics<'v>,
         state: &State,
-        running: &[&Instance<'v>],
+        (running, through): (&[&Instance<'v>], &[&Instance<'v>]),
         start: f64,
         end: f64,
         trace: &mut Vec<StepTrace>,
@@ -266,6 +275,7 @@ impl<'v> Timeline<'v, '_> {
         for _ in 0..SEGMENT_LIMIT {
             if end - time <= SAME_TIME {
                 // At the next plan happening: what triggers now fires before it.
+                self.check_invariants_at(through, &state, end)?;
                 self.cascade(dynamics, &mut state, end, trace)?;
                 return Ok(state);
             }
@@ -298,8 +308,9 @@ impl<'v> Timeline<'v, '_> {
                 .map_err(stop)?;
             let until = switch.unwrap_or(end);
             self.check_invariants(running, &state, &segment.rates, time, until)?;
-            state = continuous::advance(&state, &segment.rates, until - time);
+            state = continuous::advance(&state, &segment.rates, until - time).map_err(stop)?;
             if switch.is_none() {
+                self.check_invariants_at(through, &state, end)?;
                 return Ok(state);
             }
 
@@ -335,35 +346,6 @@ impl<'v> Timeline<'v, '_> {
 
         let after = self.switches_at(dynamics, segment, segment.start.midpoint(first))?;
         Ok(after.any_event().then_some(after.events))
-    }
-
-    /// Checks the `over all` conditions of the `running` durative actions in `state`
-    /// at the single point `time`.
-    fn check_invariants_at(
-        &self,
-        running: &[&Instance<'v>],
-        state: &State,
-        time: f64,
-    ) -> Result<(), Failure> {
-        let evaluator = self.evaluator(state, None);
-        for instance in running {
-            let Some(invariant) = instance.action.condition() else {
-                continue;
-            };
-
-            let at = || Some(instance.step.clone());
-            let mut scope = instance.scope.clone();
-            match condition(&evaluator, invariant, &mut scope, Moment::Over) {
-                Ok(None) => {}
-                Ok(Some(unmet)) => {
-                    let kind = ViolationKind::InvariantViolated { time, unmet };
-                    return Err(failure(at(), Stop::Invalid(kind)));
-                }
-                Err(error) => return Err(failure(at(), Stop::from(error))),
-            }
-        }
-
-        Ok(())
     }
 
     /// Finds the processes that run just after `start`: those whose precondition holds
@@ -438,7 +420,7 @@ impl<'v> Timeline<'v, '_> {
         segment: &Segment<'_>,
         time: f64,
     ) -> Result<Switches, EvalError> {
-        let state = continuous::advance(segment.state, &segment.rates, time - segment.start);
+        let state = continuous::advance(segment.state, &segment.rates, time - segment.start)?;
         dynamics.switches(&self.evaluator(&state, None))
     }
 
@@ -454,7 +436,7 @@ impl<'v> Timeline<'v, '_> {
         segment: &Segment<'_>,
     ) -> Result<Vec<f64>, EvalError> {
         let differences = |time: f64| {
-            let state = continuous::advance(segment.state, &segment.rates, time - segment.start);
+            let state = continuous::advance(segment.state, &segment.rates, time - segment.start)?;
             let observer = RefCell::new(Observer {
                 moving: segment.rates.keys().cloned().collect(),
                 ..Observer::default()
@@ -479,7 +461,7 @@ impl<'v> Timeline<'v, '_> {
             .zip(&last)
             .filter(|(a, b)| *a - *b != 0.0)
             .map(|(a, b)| segment.start + length * a / (a - b))
-            .filter(|t| *t > segment.start + SAME_TIME && *t < segment.end)
+            .filter(|t| segment.is_inside(*t))
             .collect();
         points.sort_by(f64::total_cmp);
         points.dedup_by(|a, b| *a - *b <= SAME_TIME);

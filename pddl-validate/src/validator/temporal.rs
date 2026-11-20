@@ -384,7 +384,7 @@ impl<'v> Timeline<'v, '_> {
                 let next = self.interval(
                     dynamics,
                     &state,
-                    (instances, &active),
+                    (instances, &active, &ends(happening)),
                     (clock, first.time),
                     &mut trace,
                 );
@@ -424,19 +424,28 @@ impl<'v> Timeline<'v, '_> {
     }
 
     /// Advances continuous change from `start` to `end`, with processes and events if
-    /// the task has any, and checks the `over all` conditions of the actions running
+    /// the task has any, and checks the `over all` conditions of the `active` actions
     /// throughout. Returns the state at `end`.
+    ///
+    /// The happening at `end` lies inside the open interval of every active action that
+    /// does not end there, so their conditions must also hold at `end`, in the state
+    /// before the happening; the actions in `ending` are exempt.
     fn interval(
         &self,
         dynamics: &Dynamics<'v>,
         state: &State,
-        (instances, active): (&[Instance<'v>], &BTreeSet<usize>),
+        (instances, active, ending): (&[Instance<'v>], &BTreeSet<usize>, &BTreeSet<usize>),
         (start, end): (f64, f64),
         trace: &mut Vec<StepTrace>,
     ) -> Result<State, Failure> {
         let running: Vec<&Instance<'v>> = active.iter().filter_map(|&i| instances.get(i)).collect();
+        let through: Vec<&Instance<'v>> = active
+            .difference(ending)
+            .filter_map(|&i| instances.get(i))
+            .collect();
         if !dynamics.is_empty() {
-            return self.hybrid_interval(dynamics, state, &running, start, end, trace);
+            let running = (running.as_slice(), through.as_slice());
+            return self.hybrid_interval(dynamics, state, running, start, end, trace);
         }
 
         let Some(first) = running.first() else {
@@ -444,11 +453,13 @@ impl<'v> Timeline<'v, '_> {
         };
 
         let flows: Vec<&Flow<'v>> = running.iter().flat_map(|i| &i.flows).collect();
-        let rates = continuous::rates(&self.evaluator(state, None), &flows)
-            .map_err(|error| failure(Some(first.step.clone()), Stop::from(error)))?;
+        let stop = |error| failure(Some(first.step.clone()), Stop::from(error));
+        let rates = continuous::rates(&self.evaluator(state, None), &flows).map_err(stop)?;
         self.check_invariants(&running, state, &rates, start, end)?;
+        let next = continuous::advance(state, &rates, end - start).map_err(stop)?;
+        self.check_invariants_at(&through, &next, end)?;
 
-        Ok(continuous::advance(state, &rates, end - start))
+        Ok(next)
     }
 
     /// Checks the `over all` conditions of the `running` actions on the open interval
@@ -477,6 +488,35 @@ impl<'v> Timeline<'v, '_> {
             match interval.check(self.model, self.tolerance, invariant, &mut scope) {
                 Ok(None) => {}
                 Ok(Some((time, unmet))) => {
+                    let kind = ViolationKind::InvariantViolated { time, unmet };
+                    return Err(failure(at(), Stop::Invalid(kind)));
+                }
+                Err(error) => return Err(failure(at(), Stop::from(error))),
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Checks the `over all` conditions of the `running` durative actions in `state`
+    /// at the single point `time`.
+    fn check_invariants_at(
+        &self,
+        running: &[&Instance<'v>],
+        state: &State,
+        time: f64,
+    ) -> Result<(), Failure> {
+        let evaluator = self.evaluator(state, None);
+        for instance in running {
+            let Some(invariant) = instance.action.condition() else {
+                continue;
+            };
+
+            let at = || Some(instance.step.clone());
+            let mut scope = instance.scope.clone();
+            match timed::condition(&evaluator, invariant, &mut scope, Moment::Over) {
+                Ok(None) => {}
+                Ok(Some(unmet)) => {
                     let kind = ViolationKind::InvariantViolated { time, unmet };
                     return Err(failure(at(), Stop::Invalid(kind)));
                 }
@@ -542,6 +582,17 @@ impl<'v> Timeline<'v, '_> {
 
         Ok(step)
     }
+}
+
+/// Returns the durative instances that end in `happening`.
+fn ends(happening: &[Event<'_>]) -> BTreeSet<usize> {
+    happening
+        .iter()
+        .filter_map(|event| match event.kind {
+            Kind::End(index) => Some(index),
+            Kind::Start(_) | Kind::Instant(..) | Kind::Literal(..) => None,
+        })
+        .collect()
 }
 
 /// Returns the durative instance an event starts or ends.
