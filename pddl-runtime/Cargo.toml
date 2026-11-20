@@ -2,7 +2,7 @@
 name = "pddl-runtime"
 version = "0.1.0"
 description = "The planning-task trait, fact storage and reference searches that code generated from PDDL builds on"
-license = "EUPL-1.2"
+license = "EUPL-1.2 OR MPL-2.0"
 categories = ["science", "simulation", "data-structures"]
 keywords = ["pddl", "planning", "bitset", "search"]
 repository = "https://github.com/sunsided/pddl-rs"

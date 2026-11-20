@@ -151,7 +151,7 @@ jobs:
         run: |
           name="pddl-lsp-${GITHUB_REF_NAME#pddl-lsp-v}-$TARGET"
           mkdir "$name"
-          cp pddl-lsp/README.md LICENSE.md "$name/"
+          cp pddl-lsp/README.md LICENSE-EUPL-1.2.md LICENSE-MPL-2.0.txt "$name/"
           if [ "$RUNNER_OS" = "Windows" ]; then
             cp "target/$TARGET/release/pddl-lsp.exe" "$name/"
             archive="$name.zip"

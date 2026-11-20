@@ -271,3 +271,12 @@ set up for a crate that already exists. Before the first release, publish
 once by hand (`cargo publish -p pddl-lsp`). Then, in the crate's settings on
 crates.io, add a trusted publisher for the repository `sunsided/pddl-rs`,
 workflow `release-pddl-lsp.yml` and environment `release`.
+
+## License
+
+Licensed under either of
+
+- the European Union Public Licence 1.2 ([LICENSE-EUPL-1.2.md](../LICENSE-EUPL-1.2.md)), or
+- the Mozilla Public License 2.0 ([LICENSE-MPL-2.0.txt](../LICENSE-MPL-2.0.txt)),
+
+at your option.

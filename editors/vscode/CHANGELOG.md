@@ -4,6 +4,11 @@ All notable changes to the PDDL (pddl-lsp) extension are documented in this file
 
 ## Unreleased
 
+### Changed
+
+- Licensed under `EUPL-1.2 OR MPL-2.0`, at your option, instead of `EUPL-1.2`
+  alone. Versions already published keep the licence they were published under.
+
 ### Added
 
 - **PDDL: Solve with Planning-as-a-Service** solves the open problem on the

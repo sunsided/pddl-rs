@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: EUPL-1.2
+# SPDX-License-Identifier: EUPL-1.2 OR MPL-2.0
 # PDDL domains and problems in NOVA, as the pddl crate's `serde` feature writes
 # and reads them. The `pddl::serde` module documents the mapping; this schema
 # follows the PDDL 3.1 grammar through it. tests/serde.rs validates the whole

@@ -2,7 +2,7 @@
 name = "pddl-codegen"
 version = "0.1.0"
 description = "Generates typed Rust planning code from PDDL domains, for pddl's #[task] attribute and build scripts"
-license = "EUPL-1.2"
+license = "EUPL-1.2 OR MPL-2.0"
 categories = ["science", "simulation", "development-tools::build-utils"]
 keywords = ["pddl", "planning", "codegen"]
 repository = "https://github.com/sunsided/pddl-rs"

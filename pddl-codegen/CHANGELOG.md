@@ -5,6 +5,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+### Changed
+
+- Licensed under `EUPL-1.2 OR MPL-2.0`, at your option.
+
 ### Added
 
 - `lifted` turns a PDDL domain into typed Rust planning code (level B1): an

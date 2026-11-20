@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "publisher": "sunsided",
   "preview": true,
-  "license": "EUPL-1.2",
+  "license": "(EUPL-1.2 OR MPL-2.0)",
   "icon": "images/icon.png",
   "repository": {
     "type": "git",

@@ -55,4 +55,9 @@ Requires Rust 1.88 or newer.
 
 ## License
 
-Licensed under the [European Union Public Licence 1.2](../LICENSE.md).
+Licensed under either of
+
+- the European Union Public Licence 1.2 ([LICENSE-EUPL-1.2.md](../LICENSE-EUPL-1.2.md)), or
+- the Mozilla Public License 2.0 ([LICENSE-MPL-2.0.txt](../LICENSE-MPL-2.0.txt)),
+
+at your option.
