@@ -192,4 +192,4 @@ To build, test or publish the extension yourself, see
 ## License
 
 Licensed under either the European Union Public Licence 1.2 or the Mozilla
-Public License 2.0, at your option; see [LICENSE.md](LICENSE.md).
+Public License 2.0, at your option; see [LICENSE.md](https://github.com/sunsided/pddl-rs/blob/main/editors/vscode/LICENSE.md).
