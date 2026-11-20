@@ -30,7 +30,6 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `ActionDefinition`). They pretty-print and round-trip through `serde`, as a
   domain's `processes` and `events`, and the NOVA schema has them. The
   `sas-plus` grounder and code generation reject them as unsupported.
-  `StructureDef` gains two variants, so exhaustive matches on it need new arms.
 - `pddl-validate`, a new crate in this repository, validates sequential
   plans against a domain and problem, independently of any planner, and
   reports the first failing step, condition and a VAL-style repair hint.
@@ -48,6 +47,8 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Licensed under `EUPL-1.2 OR MPL-2.0`, at your option, instead of `EUPL-1.2`
   alone. Versions already published keep the licence they were published under.
+- **Breaking:** `StructureDef` gains the variants `Process` and `Event` for
+  PDDL+ (see Added), so exhaustive matches on it need new arms.
 - The types and the parser moved into a new crate, `pddl-core`, which `pddl`
   re-exports in full, so paths such as `pddl::Domain` stay the same. The split
   lets `pddl-macros` use the parser while `pddl` re-exports the macros.
