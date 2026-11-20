@@ -16,9 +16,9 @@
 //! ```mermaid
 //! flowchart TD
 //!     settle["fix the running processes just after t"] --> fire{"event enabled at t or just after?"}
-//!     fire -- yes --> cascade["fire them at t"] --> settle
+//!     fire -- yes --> cascade["fire them at t, those enabled at t first"] --> settle
 //!     fire -- no --> next["find the first switch after t, or the next happening"]
-//!     next --> invariants["check over all conditions on (t, switch)"]
+//!     next --> invariants["check over all conditions on (t, switch) and at the switch"]
 //!     invariants --> advance["advance to the switch"] --> settle
 //! ```
 //!
@@ -33,6 +33,7 @@ use core::cell::RefCell;
 use pddl::{ActionDefinition, PreconditionGoalDescriptions, ProcessDefinition};
 
 use super::continuous::{self, Flow, Rates};
+use super::timed::{condition, Moment};
 use super::{failure, Failure, Instance, Timeline, SAME_TIME};
 use crate::effects::Changes;
 use crate::eval::{EvalError, Evaluator, Observer, Scope};
@@ -263,14 +264,10 @@ impl<'v> Timeline<'v, '_> {
             let points = self.breakpoints(dynamics, &segment).map_err(stop)?;
             let first = points.first().copied().unwrap_or(end);
 
-            // Events enabled at the start or just after it fire at the start.
-            let now = dynamics
-                .switches(&self.evaluator(&state, None))
-                .map_err(stop)?;
-            let after = self
-                .switches_at(dynamics, &segment, time.midpoint(first))
-                .map_err(stop)?;
-            if now.any_event() || after.any_event() {
+            if let Some(enabled) = self
+                .events_to_fire(dynamics, &segment, first)
+                .map_err(stop)?
+            {
                 rounds_here += 1;
                 if rounds_here > CASCADE_LIMIT {
                     let kind = ViolationKind::EventCascade {
@@ -280,12 +277,6 @@ impl<'v> Timeline<'v, '_> {
                     return Err(failure(None, Stop::Invalid(kind)));
                 }
 
-                let enabled: Vec<bool> = now
-                    .events
-                    .iter()
-                    .zip(&after.events)
-                    .map(|(a, b)| *a || *b)
-                    .collect();
                 self.fire(dynamics, &mut state, &enabled, time, trace)?;
                 continue;
             }
@@ -300,11 +291,67 @@ impl<'v> Timeline<'v, '_> {
                 return Ok(state);
             }
 
+            // The switch point lies inside the actions' open interval, so their
+            // invariants must hold there too, before any event fires.
+            if end - until > SAME_TIME {
+                self.check_invariants_at(running, &state, until)?;
+            }
+
             time = until;
             rounds_here = 0;
         }
 
         Err(failure(None, Stop::Unsupported(Construct::ZenoDynamics)))
+    }
+
+    /// Returns the events to fire at the start of `segment`, or `None` if none is
+    /// enabled there or just after it, before `first`, its first breakpoint.
+    ///
+    /// Events enabled now fire alone; the next round re-checks what is enabled just
+    /// after in the state they leave. Events enabled only just after the start fire at
+    /// the start.
+    fn events_to_fire(
+        &self,
+        dynamics: &Dynamics<'v>,
+        segment: &Segment<'_>,
+        first: f64,
+    ) -> Result<Option<Vec<bool>>, EvalError> {
+        let now = dynamics.switches(&self.evaluator(segment.state, None))?;
+        if now.any_event() {
+            return Ok(Some(now.events));
+        }
+
+        let after = self.switches_at(dynamics, segment, segment.start.midpoint(first))?;
+        Ok(after.any_event().then_some(after.events))
+    }
+
+    /// Checks the `over all` conditions of the `running` durative actions in `state`
+    /// at the single point `time`.
+    fn check_invariants_at(
+        &self,
+        running: &[&Instance<'v>],
+        state: &State,
+        time: f64,
+    ) -> Result<(), Failure> {
+        let evaluator = self.evaluator(state, None);
+        for instance in running {
+            let Some(invariant) = instance.action.condition() else {
+                continue;
+            };
+
+            let at = || Some(instance.step.clone());
+            let mut scope = instance.scope.clone();
+            match condition(&evaluator, invariant, &mut scope, Moment::Over) {
+                Ok(None) => {}
+                Ok(Some(unmet)) => {
+                    let kind = ViolationKind::InvariantViolated { time, unmet };
+                    return Err(failure(at(), Stop::Invalid(kind)));
+                }
+                Err(error) => return Err(failure(at(), Stop::from(error))),
+            }
+        }
+
+        Ok(())
     }
 
     /// Finds the processes that run just after `start`: those whose precondition holds

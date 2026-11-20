@@ -184,14 +184,32 @@ fn nonlinear_processes_are_unsupported() {
     );
 }
 
+/// A domain with the process `p` whose effect is `effect`.
+fn process_domain(effect: &str) -> String {
+    format!(
+        "(define (domain d) (:requirements :time) (:predicates (on) (q)) (:functions (x))
+           (:action wait :parameters ())
+           (:process p :parameters () :precondition (on) :effect {effect}))"
+    )
+}
+
 #[test]
-fn discrete_process_effects_are_unsupported() {
-    let domain = "(define (domain d) (:requirements :time) (:predicates (on) (q))
-        (:action wait :parameters ())
-        (:process p :parameters () :precondition (on) :effect (at start (q))))";
-    let report = Task::new(domain, "(define (problem x) (:domain d) (:goal (q)))").run("1: (wait)");
+fn discrete_process_effects_are_never_accepted() {
+    // The parser rejects a timed effect in a process.
+    let error = pddl::Domain::from_str(&process_domain("(at start (q))")).unwrap_err();
+    assert!(
+        error.to_string().contains("only continuous effects"),
+        "{error}"
+    );
+
+    // A conditional continuous effect parses, but the validator does not support it.
+    let effect = "(when (at start (q)) (increase (x) (* #t 1)))";
+    let task = Task::new(
+        &process_domain(effect),
+        "(define (problem x) (:domain d) (:init (= (x) 0)) (:goal (q)))",
+    );
     assert_eq!(
-        report.unsupported().unwrap().construct,
+        task.run("1: (wait)").unsupported().unwrap().construct,
         Construct::DiscreteProcessEffects
     );
 }
@@ -402,4 +420,78 @@ fn random_hybrid_plans_never_panic() {
         let report = validator.validate_text(&text);
         assert_eq!(report, validator.validate_text(&text), "deterministic");
     }
+}
+
+/// A task in which `x` grows at rate 1 from 0, with `extra` domain items and `goal`.
+fn grow(extra: &str, goal: &str) -> Task {
+    Task::new(
+        &format!(
+            "(define (domain grow)
+               (:requirements :time :durative-actions :negative-preconditions
+                              :disjunctive-preconditions)
+               (:predicates (done) (broken))
+               (:functions (x))
+               (:action wait :parameters ())
+               (:process grow :parameters () :precondition (>= (x) 0)
+                 :effect (increase (x) (* #t 1)))
+               {extra})"
+        ),
+        &format!("(define (problem p) (:domain grow) (:init (= (x) 0)) (:goal {goal}))"),
+    )
+}
+
+/// A durative action `hold` of duration 20 with the `over all` condition `invariant`.
+fn hold(invariant: &str) -> String {
+    format!(
+        "(:durative-action hold :parameters () :duration (= ?duration 20)
+           :condition (over all {invariant}) :effect (at end (done)))"
+    )
+}
+
+#[test]
+fn an_invariant_is_checked_at_an_unrelated_event() {
+    let invariant = hold("(or (< (x) 10) (> (x) 10))");
+    let kind = grow(&invariant, "(done)").step_failure("0: (hold) [20]", 1);
+    let ViolationKind::InvariantViolated { time, .. } = kind else {
+        panic!("{kind:?}");
+    };
+    assert!((time - 10.0).abs() < 1e-9, "{time}");
+
+    // The event splits time at 10, where x = 10 breaks the invariant all the same.
+    let mark = "(:event mark :parameters () :precondition (and (>= (x) 10) (not (done)))
+                  :effect (done))";
+    let task = grow(&format!("{invariant} {mark}"), "(done)");
+    let kind = task.step_failure("0: (hold) [20]", 1);
+    let ViolationKind::InvariantViolated { time, .. } = kind else {
+        panic!("{kind:?}");
+    };
+    assert!((time - 10.0).abs() < 1e-9, "{time}");
+}
+
+#[test]
+fn an_invariant_holds_at_the_instant_before_an_event() {
+    // PDDL 2.1 and PDDL+ require an invariant at every point of the action's open
+    // interval. At 10, before `reset` fires, x = 10 breaks `(< (x) 10)`.
+    let reset = "(:event reset :parameters () :precondition (>= (x) 10) :effect (assign (x) 0))";
+    let task = grow(&format!("{} {reset}", hold("(< (x) 10)")), "(done)");
+    let kind = task.step_failure("0: (hold) [20]", 1);
+    let ViolationKind::InvariantViolated { time, .. } = kind else {
+        panic!("{kind:?}");
+    };
+    assert!((time - 10.0).abs() < 1e-9, "{time}");
+}
+
+#[test]
+fn an_event_fires_before_the_events_its_effects_prevent() {
+    let events = "(:event reset :parameters () :precondition (>= (x) 10) :effect (assign (x) 0))
+                  (:event bad :parameters () :precondition (> (x) 10) :effect (broken))";
+    let report = grow(events, "(not (broken))").run("15: (wait)");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+    let fired: Vec<_> = report
+        .trace()
+        .iter()
+        .flat_map(|h| &h.events)
+        .filter(|label| label.starts_with("event"))
+        .collect();
+    assert_eq!(fired, ["event (reset)"], "{report:?}");
 }
