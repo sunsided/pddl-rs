@@ -73,6 +73,9 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- An action without an effect pretty-prints as `:effect ()`, which parses
+  back to no effect, instead of `:effect (and)`, which parsed back to an empty
+  effect list, as events and processes already did.
 - A problem may leave out `:init`, which the grammar requires but VHPOP's
   `durative.pddl` and other files omit; it parses with an empty initial state.
 - A durative action may leave out `:condition`, which the grammar requires

@@ -593,3 +593,15 @@ fn short_multi_ops_round_trip() {
         );
     }
 }
+
+#[test]
+fn actions_and_events_without_effect_round_trip() {
+    let domain = r"(define (domain no-effect)
+  (:requirements :strips :time)
+  (:predicates (p))
+  (:action noop :parameters ())
+  (:event tick :parameters () :precondition (p)))";
+    for width in [40, 80, 200] {
+        round_trip_domain(domain, width, "no-effect");
+    }
+}

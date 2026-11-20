@@ -33,13 +33,7 @@ impl Visitor<ActionDefinition, RcDoc<'static>> for PrettyRenderer {
 
 impl Visitor<ProcessDefinition, RcDoc<'static>> for PrettyRenderer {
     fn visit(&self, value: &ProcessDefinition) -> RcDoc<'static> {
-        // `()` parses back to no effect; a durative effect `(and)` would not.
-        let effect = Some(
-            value
-                .effect()
-                .as_ref()
-                .map_or_else(|| RcDoc::text("()"), |e| e.accept(self)),
-        );
+        let effect = value.effect().as_ref().map(|e| e.accept(self));
         self.action_like(
             "(:process ",
             value.symbol(),
@@ -52,7 +46,7 @@ impl Visitor<ProcessDefinition, RcDoc<'static>> for PrettyRenderer {
 
 impl PrettyRenderer {
     /// Renders the form that actions, events and processes share; a missing effect as
-    /// `(and)`.
+    /// `()`, which parses back to no effect, where `(and)` would be an empty one.
     fn action_like(
         &self,
         opening: &'static str,
@@ -75,7 +69,7 @@ impl PrettyRenderer {
             .append(RcDoc::hardline())
             .append(self.keyword_line("effect"))
             .append(RcDoc::text(" "))
-            .append(effect.unwrap_or_else(|| RcDoc::text("(and)")))
+            .append(effect.unwrap_or_else(|| RcDoc::text("()")))
             .append(")")
     }
 }
@@ -132,20 +126,13 @@ impl Visitor<StructureDef, RcDoc<'static>> for PrettyRenderer {
             StructureDef::DurativeAction(da) => da.as_ref().accept(self),
             StructureDef::Derived(d) => d.accept(self),
             StructureDef::Process(p) => p.as_ref().accept(self),
-            StructureDef::Event(e) => {
-                // `()` parses back to no effect; `(and)` would be an empty one.
-                let effect = e
-                    .effect()
-                    .as_ref()
-                    .map_or_else(|| RcDoc::text("()"), |effect| effect.accept(self));
-                self.action_like(
-                    "(:event ",
-                    e.symbol(),
-                    e.parameters(),
-                    e.precondition(),
-                    Some(effect),
-                )
-            }
+            StructureDef::Event(e) => self.action_like(
+                "(:event ",
+                e.symbol(),
+                e.parameters(),
+                e.precondition(),
+                e.effect().as_ref().map(|effect| effect.accept(self)),
+            ),
         }
     }
 }
@@ -195,7 +182,7 @@ mod tests {
 )";
         let domain = crate::Domain::from_str(input).unwrap();
         let output = domain.pretty(80).to_string();
-        check!(output.contains(":effect (and)"));
+        check!(output.contains(":effect ()"));
     }
 
     #[test]
