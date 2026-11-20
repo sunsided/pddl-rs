@@ -99,3 +99,22 @@ fn derived_predicates_through_their_own_negation() {
         &Construct::UnstratifiedDerivedPredicates,
     );
 }
+
+#[test]
+fn unknown_requirements() {
+    let domain = domain("").replace(":strips", ":strips :teleportation");
+    let report = Task::new(&domain, &problem("")).run("(a)");
+    assert_eq!(
+        report.unsupported().unwrap().construct,
+        Construct::UnknownRequirement(":teleportation".into())
+    );
+}
+
+#[test]
+fn pddl_1_2_sections() {
+    let extended = domain("").replace("(:requirements", "(:extends base) (:requirements");
+    assert_unsupported(&extended, &problem(""), "(a)", &Construct::DomainExtension);
+
+    let timeless = domain("").replace("(:action", "(:timeless (q)) (:action");
+    assert_unsupported(&timeless, &problem(""), "(a)", &Construct::Timeless);
+}

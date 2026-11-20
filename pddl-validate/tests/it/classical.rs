@@ -413,3 +413,74 @@ fn derived_predicates_are_recomputed_after_deletes() {
         })
     );
 }
+
+#[test]
+fn unsatisfied_equality() {
+    let domain = "(define (domain d) (:predicates (done))
+        (:action same :parameters (?x ?y) :precondition (= ?x ?y) :effect (done)))";
+    let task = Task::new(
+        domain,
+        "(define (problem p) (:domain d) (:objects a b) (:init) (:goal (done)))",
+    );
+    assert_eq!(task.run("(same a a)").status(), ValidationStatus::Valid);
+    let kind = task.step_failure("(same a b)", 1);
+    assert_eq!(
+        kind,
+        ViolationKind::PreconditionUnsatisfied(Unmet::Equality {
+            left: "a".into(),
+            right: "b".into(),
+            expected: true
+        })
+    );
+}
+
+#[test]
+fn exists_over_a_type_without_objects() {
+    let domain = "(define (domain d) (:requirements :typing :existential-preconditions)
+        (:types tool) (:predicates (has ?t - tool) (done))
+        (:action work :parameters () :precondition (exists (?t - tool) (has ?t)) :effect (done)))";
+    let task = Task::new(
+        domain,
+        "(define (problem p) (:domain d) (:init) (:goal (done)))",
+    );
+    let kind = task.step_failure("(work)", 1);
+    let ViolationKind::PreconditionUnsatisfied(unmet) = kind else {
+        panic!("{kind:?}");
+    };
+    assert_eq!(
+        unmet,
+        Unmet::NoneOf {
+            condition: "(exists (?t - tool) (has ?t))".into(),
+            alternatives: Vec::new(),
+            omitted: 0
+        }
+    );
+    assert_eq!(
+        unmet.advice(),
+        "(No binding exists; declare a matching object)"
+    );
+}
+
+#[test]
+fn cyclic_types_terminate() {
+    let domain = "(define (domain d) (:requirements :typing) (:types a - b b - a)
+        (:predicates (done))
+        (:action go :parameters (?x - b) :effect (done)))";
+    let task = Task::new(
+        domain,
+        "(define (problem p) (:domain d) (:objects x - a) (:init) (:goal (done)))",
+    );
+    assert_eq!(task.run("(go x)").status(), ValidationStatus::Valid);
+}
+
+#[test]
+fn recursive_derived_predicates_over_a_cycle_terminate() {
+    // An unpowered loop of cables derives nothing until the loop is connected.
+    let lamp = LAMP.replace(
+        "(duct junction lamp))",
+        "(duct junction lamp) (cable junction lamp) (cable lamp junction))",
+    );
+    let task = Task::new(WIRING, &lamp);
+    let report = task.run("(lay plant junction)");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+}

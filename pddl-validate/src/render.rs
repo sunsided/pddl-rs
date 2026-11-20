@@ -5,8 +5,8 @@ use alloc::string::String;
 use alloc::vec::Vec;
 
 use pddl::{
-    AtomicFormula, BinaryComparison, BinaryOp, FluentExpression, FunctionHead, GoalDescription,
-    Literal, MultiOp, Term, TypedVariables,
+    AtomicFormula, BinaryComparison, BinaryOp, FluentComparison, FluentExpression, FunctionHead,
+    GoalDescription, Literal, MultiOp, Term, TypedVariables,
 };
 
 use crate::atom::lower;
@@ -31,13 +31,18 @@ pub fn goal(gd: &GoalDescription, scope: &Scope) -> String {
         ),
         GoalDescription::Exists(variables, inner) => quantified("exists", variables, inner, scope),
         GoalDescription::ForAll(variables, inner) => quantified("forall", variables, inner, scope),
-        GoalDescription::FluentComparison(comparison) => format!(
-            "({} {} {})",
-            comparison_text(*comparison.comparison()),
-            expression(comparison.first(), scope),
-            expression(comparison.second(), scope)
-        ),
+        GoalDescription::FluentComparison(comparison) => self::comparison(comparison, scope),
     }
+}
+
+/// Renders a numeric comparison.
+pub fn comparison(comparison: &FluentComparison, scope: &Scope) -> String {
+    format!(
+        "({} {} {})",
+        comparison_text(*comparison.comparison()),
+        expression(comparison.first(), scope),
+        expression(comparison.second(), scope)
+    )
 }
 
 /// Renders an atomic formula.

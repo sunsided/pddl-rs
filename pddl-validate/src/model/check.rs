@@ -19,7 +19,7 @@ use pddl::{
 use super::Model;
 use crate::atom::lower;
 use crate::error::{ModelError, ModelErrorKind};
-use crate::eval::numeric::numeric_assignment;
+use crate::eval::numeric::{numeric_assignment, numeric_equality};
 use crate::report::{Construct, Unsupported};
 
 /// What the static check found.
@@ -188,6 +188,11 @@ impl<'m, 'a> Checker<'m, 'a> {
     fn atomic(&self, formula: &AtomicFormula<Term>) -> Result<(), Issue> {
         match formula {
             AtomicFormula::Equality(equality) => {
+                if let Some(comparison) = numeric_equality(equality) {
+                    self.expression(comparison.first())?;
+                    return self.expression(comparison.second());
+                }
+
                 self.term(equality.first())?;
                 self.term(equality.second())
             }

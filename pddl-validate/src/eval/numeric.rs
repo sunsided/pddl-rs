@@ -15,8 +15,8 @@ use alloc::string::String;
 use core::cmp::Ordering;
 
 use pddl::{
-    BinaryComparison, BinaryOp, FluentComparison, FluentExpression, FunctionHead, FunctionTerm,
-    GoalDescription, MetricFluentExpression, MultiOp, PrimitiveEffect, Term,
+    BinaryComparison, BinaryOp, EqualityAtomicFormula, FluentComparison, FluentExpression,
+    FunctionHead, FunctionTerm, MetricFluentExpression, MultiOp, PrimitiveEffect, Term,
 };
 
 use super::{EvalError, Evaluator, Scope, Verdict};
@@ -28,7 +28,6 @@ impl Evaluator<'_, '_> {
     /// Checks a numeric comparison against `want`.
     pub(super) fn comparison(
         &self,
-        gd: &GoalDescription,
         comparison: &FluentComparison,
         scope: &Scope,
         want: bool,
@@ -45,7 +44,7 @@ impl Evaluator<'_, '_> {
         };
 
         Ok((holds != want).then(|| Unmet::Comparison {
-            condition: render::goal(gd, scope),
+            condition: render::comparison(comparison, scope),
             left,
             right,
             expected: want,
@@ -151,22 +150,13 @@ const fn total_time(steps: usize) -> f64 {
 ///
 /// Both values are finite: evaluation rejects every other value.
 pub fn compare(left: f64, right: f64, tolerance: f64) -> Ordering {
-    let scale = 1.0_f64.max(abs(left)).max(abs(right));
-    if abs(left - right) <= tolerance * scale {
+    let scale = 1.0_f64.max(left.abs()).max(right.abs());
+    if (left - right).abs() <= tolerance * scale {
         Ordering::Equal
     } else if left < right {
         Ordering::Less
     } else {
         Ordering::Greater
-    }
-}
-
-/// Returns `|value|`. `f64::abs` needs `std` on this crate's MSRV.
-fn abs(value: f64) -> f64 {
-    if value < 0.0 {
-        -value
-    } else {
-        value
     }
 }
 
@@ -204,6 +194,28 @@ fn division(exp: &FluentExpression, scope: &Scope) -> EvalError {
     EvalError::DivisionByZero(render::expression(exp, scope))
 }
 
+/// Reads `(= (f ...) (g ...))` as the numeric comparison it is.
+///
+/// As with [`numeric_assignment`], the parser reads an equality of two function terms as
+/// an equality of objects. Returns `None` unless both sides are function terms.
+pub fn numeric_equality(equality: &EqualityAtomicFormula<Term>) -> Option<FluentComparison> {
+    let (Term::Function(left), Term::Function(right)) = (equality.first(), equality.second())
+    else {
+        return None;
+    };
+
+    Some(FluentComparison::new(
+        BinaryComparison::Equal,
+        FluentExpression::Function(head(left)),
+        FluentExpression::Function(head(right)),
+    ))
+}
+
+/// Returns a function term as the head of a numeric fluent.
+fn head(term: &FunctionTerm) -> FunctionHead {
+    FunctionHead::WithTerms(term.symbol().clone(), term.terms().to_vec())
+}
+
 /// Reads `(assign (f ...) (g ...))` as the numeric assignment it is.
 ///
 /// The parser cannot tell `(g ...)` from an object-valued function term without the
@@ -215,9 +227,6 @@ pub fn numeric_assignment(effect: &PrimitiveEffect) -> Option<(FunctionHead, Flu
     let PrimitiveEffect::AssignObjectFluent(target, Some(Term::Function(source))) = effect else {
         return None;
     };
-
-    let head =
-        |term: &FunctionTerm| FunctionHead::WithTerms(term.symbol().clone(), term.terms().to_vec());
 
     Some((head(target), FluentExpression::Function(head(source))))
 }

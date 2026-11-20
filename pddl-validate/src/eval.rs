@@ -99,10 +99,10 @@ impl Evaluator<'_, '_> {
         match gd {
             GoalDescription::AtomicFormula(formula)
             | GoalDescription::Literal(Literal::AtomicFormula(formula)) => {
-                Ok(self.atomic(formula, scope, want))
+                self.atomic(formula, scope, want)
             }
             GoalDescription::Literal(Literal::NotAtomicFormula(formula)) => {
-                Ok(self.atomic(formula, scope, !want))
+                self.atomic(formula, scope, !want)
             }
             GoalDescription::Not(inner) => self.holds(inner, scope, !want),
             GoalDescription::And(items) if want => self.every(items, scope, true),
@@ -119,7 +119,7 @@ impl Evaluator<'_, '_> {
                 self.quantified(gd, variables, inner, scope, want, want)
             }
             GoalDescription::FluentComparison(comparison) => {
-                self.comparison(gd, comparison, scope, want)
+                self.comparison(comparison, scope, want)
             }
         }
     }
@@ -242,9 +242,13 @@ impl Evaluator<'_, '_> {
     }
 
     /// Checks an atomic formula against `want`.
-    fn atomic(&self, formula: &AtomicFormula<Term>, scope: &Scope, want: bool) -> Option<Unmet> {
-        match formula {
+    fn atomic(&self, formula: &AtomicFormula<Term>, scope: &Scope, want: bool) -> Verdict {
+        Ok(match formula {
             AtomicFormula::Equality(equality) => {
+                if let Some(comparison) = numeric::numeric_equality(equality) {
+                    return self.comparison(&comparison, scope, want);
+                }
+
                 let left = resolve(equality.first(), scope);
                 let right = resolve(equality.second(), scope);
                 ((left == right) != want).then_some(Unmet::Equality {
@@ -267,7 +271,7 @@ impl Evaluator<'_, '_> {
                     derived,
                 })
             }
-        }
+        })
     }
 }
 

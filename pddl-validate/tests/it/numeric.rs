@@ -241,3 +241,106 @@ fn numeric_goals() {
     );
     assert_eq!(task.run(VALID).status(), ValidationStatus::Valid);
 }
+
+/// Compares two fluents with each of `<`, `=` and `>`.
+const COMPARE: &str = "
+(define (domain compare) (:predicates (done)) (:functions (x) (y))
+  (:action lt :parameters () :precondition (< (x) (y)) :effect (done))
+  (:action eq :parameters () :precondition (= (x) (y)) :effect (done))
+  (:action gt :parameters () :precondition (> (x) (y)) :effect (done))
+  (:action same :parameters () :precondition (and (= (x) (y)) (>= (x) (y)) (<= (x) (y))) :effect (done))
+  (:action differ :parameters () :precondition (not (= (x) (y))) :effect (done)))";
+
+#[test]
+fn exactly_one_of_less_equal_greater_holds() {
+    let pairs = [
+        ("0", "0"),
+        ("1", "2"),
+        ("2", "1"),
+        ("0.30000000000000004", "0.3"),
+        ("0.000000000001", "0"),
+        ("1000000", "1000000.0000001"),
+        ("123456789", "123456789.5"),
+    ];
+    for (x, y) in pairs {
+        let problem = format!(
+            "(define (problem p) (:domain compare) (:init (= (x) {x}) (= (y) {y})) (:goal (done)))"
+        );
+        let task = Task::new(COMPARE, &problem);
+        for tolerance in [pddl_validate::DEFAULT_TOLERANCE, 0.0] {
+            let validator = task.validator().with_tolerance(tolerance);
+            let holds =
+                |plan: &str| validator.validate_text(plan).status() == ValidationStatus::Valid;
+            let count = ["(lt)", "(eq)", "(gt)"]
+                .into_iter()
+                .filter(|plan| holds(plan))
+                .count();
+            assert_eq!(count, 1, "{x} vs {y} at {tolerance}");
+            assert_eq!(holds("(eq)"), holds("(same)"), "{x} vs {y} at {tolerance}");
+            assert_ne!(
+                holds("(eq)"),
+                holds("(differ)"),
+                "{x} vs {y} at {tolerance}"
+            );
+        }
+    }
+}
+
+#[test]
+fn negated_comparison() {
+    let problem =
+        "(define (problem p) (:domain compare) (:init (= (x) 1) (= (y) 1)) (:goal (done)))";
+    let kind = Task::new(COMPARE, problem).step_failure("(differ)", 1);
+    let unmet = Unmet::Comparison {
+        condition: "(= (x) (y))".into(),
+        left: 1.0,
+        right: 1.0,
+        expected: false,
+    };
+    assert_eq!(unmet.to_string(), "(not (= (x) (y)))");
+    assert_eq!(kind, ViolationKind::PreconditionUnsatisfied(unmet));
+}
+
+#[test]
+fn equality_of_two_fluents_is_numeric() {
+    let domain = "(define (domain d) (:predicates (done) (marked)) (:functions (f ?o) (g ?o))
+        (:action same :parameters (?o) :precondition (= (f ?o) (g ?o))
+          :effect (and (done) (when (not (= (f ?o) (g ?o))) (marked))))
+        (:action bump :parameters (?o) :effect (increase (f ?o) 1)))";
+    let problem = "(define (problem p) (:domain d) (:objects a) (:init (= (f a) 2) (= (g a) 2))
+        (:goal (and (done) (not (marked)) (= (f a) (g a)))))";
+    let task = Task::new(domain, problem);
+    assert_eq!(task.run("(same a)").status(), ValidationStatus::Valid);
+
+    let kind = task.step_failure("(bump a) (same a)", 2);
+    let unmet = Unmet::Comparison {
+        condition: "(= (f a) (g a))".into(),
+        left: 3.0,
+        right: 2.0,
+        expected: true,
+    };
+    assert_eq!(kind, ViolationKind::PreconditionUnsatisfied(unmet));
+}
+
+#[test]
+fn comparisons_in_derived_predicates() {
+    let domain = "(define (domain d) (:requirements :derived-predicates :numeric-fluents)
+        (:predicates (full) (done)) (:functions (fuel))
+        (:derived (full) (>= (fuel) 3))
+        (:action fill :parameters () :effect (increase (fuel) 1))
+        (:action go :parameters () :precondition (full) :effect (done)))";
+    let problem = "(define (problem p) (:domain d) (:init (= (fuel) 1)) (:goal (done)))";
+    let task = Task::new(domain, problem);
+    assert_eq!(
+        task.run("(fill) (fill) (go)").status(),
+        ValidationStatus::Valid
+    );
+    assert_eq!(
+        task.step_failure("(fill) (go)", 2),
+        ViolationKind::PreconditionUnsatisfied(Unmet::Atom {
+            atom: fluent("full", &[]),
+            expected: true,
+            derived: true
+        })
+    );
+}
