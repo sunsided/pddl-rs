@@ -51,9 +51,14 @@ and derived predicates that depend on their own negation.
 Values are `f64`, as the `pddl` parser stores them. Comparisons treat `a` and
 `b` as equal when `|a - b| <= t * max(1, |a|, |b|)`, with a relative tolerance
 `t` of `1e-9` by default (`Validator::with_tolerance`), so exactly one of `<`,
-`=` and `>` holds for any pair. Reading a fluent without a value, dividing by
-zero and overflowing make the plan invalid, wherever they occur in a
-condition. A nullary `total-cost` without an initial value starts at 0, as in
+`=` and `>` holds for any pair. A comparison that reads a fluent without a
+value, divides by zero or overflows is unknown, and conditions follow
+three-valued (Kleene) logic: `(or (p) (> (f) 0))` holds when `(p)` does, and
+`(and (q) (> (f) 0))` fails on `(q)` when `(q)` is false. A precondition or goal
+that stays unknown makes the plan invalid, as does an effect or `when`
+condition that reads an undefined value. A derived predicate whose rule is
+unknown is not derived; a metric whose value is undefined leaves the plan
+valid, without a value. A nullary `total-cost` without an initial value starts at 0, as in
 Fast Downward. Updates of one fluent in one step add up when all are
 `increase` or `decrease`; any other combination is a conflict. In a metric,
 `total-time` is the number of steps. `Report::metric` returns the metric's

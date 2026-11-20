@@ -259,14 +259,21 @@ fn an_event_at_the_time_of_a_plan_step_fires_first() {
 }
 
 #[test]
-fn an_undefined_fluent_in_any_grounding_is_invalid() {
-    let task = Task::new(
-        BALL,
-        "(define (problem p) (:domain ball) (:objects b1 b2 - ball)
-           (:init (held b1) (= (height b1) 10) (= (speed b1) 2) (= (bounces) 0))
-           (:goal (landed b1)))",
-    );
-    let violation = task.violation("0: (drop b1)\n6: (wait)");
+fn an_undefined_fluent_matters_only_where_the_precondition_depends_on_it() {
+    let problem = |init: &str| {
+        format!(
+            "(define (problem p) (:domain ball) (:objects b1 b2 - ball)
+               (:init (held b1) (= (height b1) 10) (= (speed b1) 2) (= (bounces) 0) {init})
+               (:goal (landed b1)))"
+        )
+    };
+    let plan = "0: (drop b1)\n6: (wait)";
+
+    // `(falling b2)` is false, so `(land b2)` is not enabled whatever `(height b2)` is.
+    let report = Task::new(BALL, &problem("")).run(plan);
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+
+    let violation = Task::new(BALL, &problem("(falling b2)")).violation(plan);
     assert!(
         matches!(violation.kind, ViolationKind::Undefined(_)),
         "{violation:?}"

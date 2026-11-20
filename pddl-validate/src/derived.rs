@@ -20,7 +20,7 @@ use alloc::vec::Vec;
 use pddl::{AtomicFormula, GoalDescription, Literal};
 
 use crate::atom::{lower, Atom};
-use crate::eval::{EvalError, Evaluator, Scope};
+use crate::eval::{EvalError, Evaluator, Scope, Verdict};
 use crate::model::Model;
 use crate::report::{Construct, Unsupported};
 use crate::state::State;
@@ -125,11 +125,13 @@ fn predicate<T>(formula: &AtomicFormula<T>, negated: bool, out: &mut Vec<(String
 /// every rule for every binding of its parameters, so a rule of arity `k` over `n`
 /// objects costs `n^k` evaluations per round.
 ///
-/// Numeric comparisons in rule bodies use `tolerance`.
+/// Numeric comparisons in rule bodies use `tolerance`. A body whose truth value is
+/// unknown, because it reads a fluent without a value, does not derive its atom.
 ///
 /// # Errors
 ///
-/// The first [`EvalError`] of a rule body.
+/// The first fatal [`EvalError`] of a rule body, one for which
+/// [`EvalError::is_unknown`] is false.
 pub fn close(model: &Model<'_>, state: &mut State, tolerance: f64) -> Result<(), EvalError> {
     state.derived.clear();
     let mut rest = model.rules.as_slice();
@@ -175,7 +177,7 @@ fn round(
             let atom = Atom::lowered(rule.predicate.clone(), arguments);
             if !state.derived.contains(&atom)
                 && !new.contains(&atom)
-                && evaluator.holds(rule.body, scope, true)?.is_none()
+                && definitely_holds(evaluator.holds(rule.body, scope, true))?
             {
                 new.insert(atom);
             }
@@ -185,4 +187,18 @@ fn round(
     }
 
     Ok(new)
+}
+
+/// Returns `true` if a rule body definitely holds. An unknown body does not derive its
+/// atom: under the closed world assumption only what definitely holds is derived.
+///
+/// # Errors
+///
+/// A fatal [`EvalError`] of the body, one for which [`EvalError::is_unknown`] is false.
+fn definitely_holds(verdict: Verdict) -> Result<bool, EvalError> {
+    match verdict {
+        Ok(unmet) => Ok(unmet.is_none()),
+        Err(error) if error.is_unknown() => Ok(false),
+        Err(error) => Err(error),
+    }
 }

@@ -24,6 +24,13 @@
 //!
 //! An event that is enabled only just after a root, such as `(< (h) 0)` when `h`
 //! reaches 0, fires at the root. Nonlinear dynamics stay unsupported.
+//!
+//! The work is bounded. Each interval between two plan happenings may hold at most
+//! [`SEGMENT_LIMIT`] segments, that is process switches and event firings, and each
+//! time at most [`CASCADE_LIMIT`] rounds of events. A model that goes past a bound is
+//! reported [`Construct::ZenoDynamics`] as unsupported, never valid or invalid, even if
+//! it is legal but only very busy, such as an event that fires every 0.001 time units
+//! between happenings 1000 apart.
 
 use alloc::format;
 use alloc::string::String;
@@ -45,6 +52,11 @@ use crate::validator::Stop;
 pub const CASCADE_LIMIT: usize = 1000;
 
 /// The most segments between two plan happenings before the dynamics count as Zeno.
+///
+/// A segment ends wherever a process switches on or off or an event fires, so this
+/// bounds the switches and firings per interval between plan happenings. Past it, the
+/// validator stops with [`Construct::ZenoDynamics`]: the plan is reported unsupported,
+/// not validated, even when the model is legal and only very busy.
 const SEGMENT_LIMIT: usize = 100_000;
 
 /// A process or event with its parameters bound.

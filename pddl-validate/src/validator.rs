@@ -346,7 +346,8 @@ impl<'a> Validator<'a> {
 }
 
 /// Checks the goal in the final state and evaluates the metric, with `total-time` set
-/// to `total_time`.
+/// to `total_time`. A metric whose value is undefined leaves the plan valid, without a
+/// metric value.
 fn finish(
     evaluator: &Evaluator<'_, '_>,
     problem: &Problem,
@@ -371,6 +372,7 @@ fn finish(
             optimization: spec.optimization(),
             value,
         }),
+        Err(error) if error.is_unknown() => Report::new(Outcome::Valid, trace),
         Err(error) => stopped(Stop::from(error), None, String::from("metric"), trace),
     }
 }

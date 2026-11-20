@@ -1,9 +1,10 @@
 //! Numeric expressions and comparisons.
 //!
 //! Values are `f64`, as the `pddl` parser stores numbers. A fluent without a value is
-//! undefined: reading it is an [`EvalError::Undefined`], whatever the surrounding
-//! condition, so `(or (p) (> (f) 0))` and `(or (> (f) 0) (p))` fail alike. So does
-//! arithmetic that divides by zero or leaves the finite range.
+//! undefined: a comparison that reads it is an [`EvalError::Undefined`], and so is unknown
+//! rather than false. So is one with arithmetic that divides by zero or leaves the finite
+//! range. The surrounding condition decides whether an unknown part matters: see the
+//! [three-valued rule](super).
 //!
 //! Comparisons use a relative tolerance `t` (see [`Validator::with_tolerance`]): `a` and
 //! `b` are equal if `|a - b| <= t * max(1, |a|, |b|)`, and otherwise ordered as numbers.

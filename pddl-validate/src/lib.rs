@@ -75,9 +75,15 @@
 //! - Derived predicates are the least fixpoint of their rules, stratum by stratum, and are
 //!   recomputed after every step.
 //! - Numbers are `f64`. Comparisons allow a relative tolerance
-//!   ([`Validator::with_tolerance`], [`DEFAULT_TOLERANCE`]). Reading a fluent without a
-//!   value, dividing by zero or leaving the finite range makes the plan invalid. A
-//!   nullary `total-cost` without an initial value starts at 0.
+//!   ([`Validator::with_tolerance`], [`DEFAULT_TOLERANCE`]). A comparison that reads a
+//!   fluent without a value, divides by zero or leaves the finite range is unknown, and
+//!   conditions follow three-valued (Kleene) logic: `(or (p) (> (f) 0))` holds if `(p)`
+//!   holds, and `(and (q) (> (f) 0))` fails on `(q)` if `(q)` is false. A precondition
+//!   or goal that is still unknown makes the plan invalid, and so does an effect or
+//!   `when` condition that reads an undefined value. A derived predicate whose rule is
+//!   unknown is not derived. A metric with an undefined value leaves the plan valid,
+//!   without a [`Report::metric`]. A nullary `total-cost` without an initial value
+//!   starts at 0.
 //! - Updates of one fluent in one step combine if all are `increase` or `decrease`;
 //!   any other combination is a [`ViolationKind::ConflictingUpdates`].
 //! - In a metric, `total-time` is the number of steps of a sequential plan and the
@@ -88,6 +94,10 @@
 //!   interfering events must be at least epsilon apart. Durations satisfy their
 //!   constraints within an absolute tolerance ([`Validator::with_duration_tolerance`],
 //!   [`DEFAULT_DURATION_TOLERANCE`]), and a ground durative action must not overlap itself.
+//! - PDDL+ work is bounded: at most 100 000 segments (process switches and event
+//!   firings) between two plan happenings and 1000 event rounds at one time. A model past
+//!   either bound, even a legal but very busy one, is reported unsupported as
+//!   [`Construct::ZenoDynamics`], never valid.
 //! - Validation stops at the first violation. Steps count from 1, as in VAL.
 //!
 //! The crate is `no_std` with `alloc`. That is nominal for now: the `pddl` crate it reads

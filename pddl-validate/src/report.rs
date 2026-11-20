@@ -15,7 +15,8 @@ pub struct Report {
     outcome: Outcome,
     /// What each executed step changed, in order.
     trace: Vec<StepTrace>,
-    /// The value of the problem's metric in the final state of a valid plan.
+    /// The value of the problem's metric in the final state of a valid plan; `None` if the
+    /// problem has none or its value is undefined.
     metric: Option<Metric>,
 }
 
@@ -37,6 +38,10 @@ impl Report {
 
     /// Returns the value of the problem's `:metric` in the final state, for a valid plan
     /// of a problem that has one.
+    ///
+    /// `None` if the plan is not valid, if the problem has no metric, or if its value is
+    /// undefined in the final state (it reads a fluent without a value, divides by zero
+    /// or leaves the finite range); an undefined metric does not make the plan invalid.
     ///
     /// # Examples
     ///
@@ -272,7 +277,8 @@ pub enum ViolationKind {
     PreconditionUnsatisfied(Unmet),
     /// The final state does not satisfy the goal.
     GoalUnsatisfied(Unmet),
-    /// A condition, effect or the metric reads a numeric fluent that has no value.
+    /// An effect, or a condition whose truth value depends on it, reads a numeric fluent
+    /// that has no value.
     Undefined(Atom),
     /// The rendered expression divides by zero.
     DivisionByZero(String),
@@ -626,6 +632,9 @@ pub enum Construct {
     DiscreteProcessEffects,
     /// PDDL+ dynamics that switch processes or fire events without end, such as a
     /// process that turns itself off and on again at one instant (Zeno behaviour).
+    /// Also reported when legal dynamics need more than the validator's segment limit
+    /// (100 000 process switches or event firings between two plan happenings), so a
+    /// very busy model is unsupported rather than validated.
     ZenoDynamics,
     /// State-trajectory constraints.
     Constraints,

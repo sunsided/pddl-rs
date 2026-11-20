@@ -128,19 +128,114 @@ fn reading_an_undefined_fluent() {
     assert_eq!(kind, ViolationKind::Undefined(fluent("fuel", &["t1"])));
 }
 
+/// Conditions over the undefined fluent `f` and the partially defined `h`, to pin the
+/// three-valued (Kleene) logic of conditions. `(p)` and `(has a)` are true, `(q)` is
+/// false, and `(h ?x)` and `(ok ?x)` hold only for `a`.
+const KLEENE: &str = "
+(define (domain kleene)
+  (:requirements :adl :derived-predicates :numeric-fluents)
+  (:types t)
+  (:predicates (p) (q) (done) (has ?x - t) (ok ?x - t))
+  (:functions (f) (g) (h ?x - t))
+  (:derived (ok ?x - t) (> (h ?x) 0))
+  (:action or-pf :parameters () :precondition (or (p) (> (f) 0)) :effect (done))
+  (:action or-fp :parameters () :precondition (or (> (f) 0) (p)) :effect (done))
+  (:action or-qf :parameters () :precondition (or (q) (> (f) 0)) :effect (done))
+  (:action and-qf :parameters () :precondition (and (q) (> (f) 0)) :effect (done))
+  (:action and-fq :parameters () :precondition (and (> (f) 0) (q)) :effect (done))
+  (:action not-f :parameters () :precondition (not (> (f) 0)) :effect (done))
+  (:action guarded :parameters ()
+    :precondition (forall (?x - t) (imply (has ?x) (> (h ?x) 0))) :effect (done))
+  (:action ok-a :parameters () :precondition (ok a) :effect (done))
+  (:action ok-b :parameters () :precondition (ok b) :effect (done))
+  (:action read :parameters () :effect (and (done) (increase (g) (f))))
+  (:action when-f :parameters () :effect (when (> (f) 0) (done))))";
+
+/// The [`KLEENE`] task, with `metric` as its `:metric`.
+fn kleene(metric: &str) -> Task {
+    Task::new(
+        KLEENE,
+        &format!(
+            "(define (problem k) (:domain kleene) (:objects a b - t)
+               (:init (p) (has a) (= (h a) 1) (= (g) 0)) (:goal (done)) {metric})"
+        ),
+    )
+}
+
 #[test]
-fn undefined_fails_a_disjunction_in_either_order() {
-    let domain = "(define (domain d) (:predicates (p) (done)) (:functions (f))
-        (:action a :parameters () :precondition (or (p) (> (f) 0)) :effect (done))
-        (:action b :parameters () :precondition (or (> (f) 0) (p)) :effect (done)))";
-    let task = Task::new(
-        domain,
-        "(define (problem x) (:domain d) (:init (p)) (:goal (done)))",
+fn a_disjunction_holds_with_an_undefined_alternative_in_either_order() {
+    let task = kleene("");
+    for plan in ["(or-pf)", "(or-fp)"] {
+        assert_eq!(task.run(plan).status(), ValidationStatus::Valid, "{plan}");
+    }
+}
+
+#[test]
+fn a_disjunction_without_a_true_alternative_is_undefined() {
+    let kind = kleene("").step_failure("(or-qf)", 1);
+    assert_eq!(kind, ViolationKind::Undefined(fluent("f", &[])));
+}
+
+#[test]
+fn a_conjunction_blames_its_false_part_over_an_undefined_one_in_either_order() {
+    let task = kleene("");
+    let q = Unmet::Atom {
+        atom: fluent("q", &[]),
+        expected: true,
+        derived: false,
+    };
+    for plan in ["(and-qf)", "(and-fq)"] {
+        let kind = task.step_failure(plan, 1);
+        assert_eq!(
+            kind,
+            ViolationKind::PreconditionUnsatisfied(q.clone()),
+            "{plan}"
+        );
+    }
+}
+
+#[test]
+fn the_negation_of_an_undefined_comparison_is_undefined() {
+    let kind = kleene("").step_failure("(not-f)", 1);
+    assert_eq!(kind, ViolationKind::Undefined(fluent("f", &[])));
+}
+
+#[test]
+fn a_guarded_universal_skips_undefined_instances() {
+    assert_eq!(
+        kleene("").run("(guarded)").status(),
+        ValidationStatus::Valid
     );
-    for plan in ["(a)", "(b)"] {
+}
+
+#[test]
+fn an_undefined_rule_body_does_not_derive() {
+    let task = kleene("");
+    assert_eq!(task.run("(ok-a)").status(), ValidationStatus::Valid);
+
+    let kind = task.step_failure("(ok-b)", 1);
+    let unmet = Unmet::Atom {
+        atom: fluent("ok", &["b"]),
+        expected: true,
+        derived: true,
+    };
+    assert_eq!(kind, ViolationKind::PreconditionUnsatisfied(unmet));
+}
+
+#[test]
+fn effects_that_read_an_undefined_fluent_are_invalid() {
+    let task = kleene("");
+    for plan in ["(read)", "(when-f)"] {
         let kind = task.step_failure(plan, 1);
         assert_eq!(kind, ViolationKind::Undefined(fluent("f", &[])), "{plan}");
     }
+}
+
+#[test]
+fn an_undefined_metric_leaves_the_plan_valid() {
+    let report = kleene("(:metric minimize (f))").run("(or-pf)");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+    assert_eq!(report.metric(), None);
 }
 
 #[test]
@@ -203,13 +298,10 @@ fn metrics() {
     assert_eq!(metric.optimization, pddl::Optimization::Maximize);
     assert_eq!(metric.value, 2.0 * 1.0 + 3.0);
 
-    let task = task_with_undefined_metric();
-    let violation = task.violation(VALID);
-    assert_eq!(violation.step, None);
-    assert_eq!(
-        violation.kind,
-        ViolationKind::Undefined(fluent("load", &["shop"]))
-    );
+    // An undefined metric value leaves the plan valid, without a metric.
+    let report = task_with_undefined_metric().run(VALID);
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+    assert_eq!(report.metric(), None);
 }
 
 /// A fuel task whose metric reads `(load shop)`, which no step defines.

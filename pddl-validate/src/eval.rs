@@ -5,9 +5,20 @@
 //! Negation flips the wanted value instead of evaluating and inverting, so a failing
 //! `(not (or a b))` blames `a` or `b` rather than the whole disjunction.
 //!
-//! Evaluation never short-circuits: every part of a condition is evaluated, so whether
-//! it fails with an [`EvalError`] does not depend on the order of its parts.
-//! [`numeric`] evaluates numeric expressions and comparisons.
+//! Conditions are three-valued (Kleene logic). A part whose value is not defined, because
+//! it reads a fluent without a value, divides by zero or leaves the finite range, is
+//! unknown ([`EvalError::is_unknown`]). A conjunction-like condition (`and`, `forall`, a
+//! precondition list) fails if a part definitely fails, and is otherwise unknown if a part
+//! is unknown. A disjunction-like condition (`or`, `exists`, `imply`) holds if a part
+//! definitely holds, and is otherwise unknown if a part is unknown. Negation keeps an
+//! unknown unknown. So `(or (p) (> (f) 0))` holds when `(p)` does, whatever `f`. An
+//! unknown condition is reported as its first unknown part's [`EvalError`]. Any other
+//! [`EvalError`], such as [`EvalError::Unsupported`], is fatal and wins over every
+//! verdict.
+//!
+//! Evaluation never short-circuits: every part of a condition is evaluated, so the
+//! verdict does not depend on the order of its parts. [`numeric`] evaluates numeric
+//! expressions and comparisons.
 
 pub mod numeric;
 
@@ -55,7 +66,21 @@ pub enum EvalError {
     ConflictingUpdates(Atom),
 }
 
-/// The result of checking a condition: `None` if it has the wanted truth value.
+impl EvalError {
+    /// Returns `true` for an error that only says a value is undefined: an
+    /// [`Self::Undefined`] fluent, a [`Self::DivisionByZero`] or a [`Self::NonFinite`]
+    /// result. A condition with such a part is unknown rather than broken, see the
+    /// [module documentation](self).
+    pub const fn is_unknown(&self) -> bool {
+        matches!(
+            self,
+            Self::Undefined(_) | Self::DivisionByZero(_) | Self::NonFinite(_)
+        )
+    }
+}
+
+/// The result of checking a condition: `None` if it has the wanted truth value, and an
+/// error for which [`EvalError::is_unknown`] holds if its truth value is unknown.
 pub type Verdict = Result<Option<Unmet>, EvalError>;
 
 /// Evaluates conditions in one state.
@@ -88,29 +113,27 @@ pub struct Observer {
 impl Evaluator<'_, '_> {
     /// Checks that every item of a precondition or goal list holds.
     pub fn preconditions(&self, list: &PreconditionGoalDescriptions, scope: &mut Scope) -> Verdict {
-        let mut first = None;
+        let mut all = All::default();
         for item in list {
-            let unmet = match item {
+            let verdict = match item {
                 PreconditionGoalDescription::Preference(PreferenceGoalDescription::Goal(gd)) => {
-                    self.holds(gd, scope, true)?
+                    self.holds(gd, scope, true)
                 }
                 PreconditionGoalDescription::Preference(PreferenceGoalDescription::Preference(
                     _,
                 )) => return Err(EvalError::Unsupported(Construct::Preferences)),
                 PreconditionGoalDescription::Forall(variables, inner) => {
-                    let mut failure = None;
+                    let mut instances = All::default();
                     self.each_binding(variables, scope, |scope| {
-                        let unmet = self.preconditions(inner, scope)?;
-                        failure = failure.take().or(unmet);
-                        Ok(())
+                        instances.record(self.preconditions(inner, scope))
                     })?;
-                    failure
+                    instances.into_verdict()
                 }
             };
-            first = first.or(unmet);
+            all.record(verdict)?;
         }
 
-        Ok(first)
+        all.into_verdict()
     }
 
     /// Checks that `gd` has the truth value `want`.
@@ -145,13 +168,12 @@ impl Evaluator<'_, '_> {
 
     /// Checks that every item has the truth value `want`; blames the first that does not.
     fn every(&self, items: &[GoalDescription], scope: &mut Scope, want: bool) -> Verdict {
-        let mut first = None;
+        let mut all = All::default();
         for item in items {
-            let unmet = self.holds(item, scope, want)?;
-            first = first.or(unmet);
+            all.record(self.holds(item, scope, want))?;
         }
 
-        Ok(first)
+        all.into_verdict()
     }
 
     /// Checks that some item has the truth value `want`; blames all of them if none does.
@@ -164,10 +186,10 @@ impl Evaluator<'_, '_> {
     ) -> Verdict {
         let mut failures = Failures::default();
         for item in items {
-            failures.record(self.holds(item, scope, want)?);
+            failures.record(self.holds(item, scope, want))?;
         }
 
-        Ok(failures.into_unmet(|| condition(gd, scope, want)))
+        failures.into_verdict(|| condition(gd, scope, want))
     }
 
     /// Checks `(imply premise conclusion)`, which is `(or (not premise) conclusion)`.
@@ -181,16 +203,17 @@ impl Evaluator<'_, '_> {
     ) -> Verdict {
         if !want {
             // False only if the premise holds and the conclusion does not.
-            let premise = self.holds(premise, scope, true)?;
-            let conclusion = self.holds(conclusion, scope, false)?;
-            return Ok(premise.or(conclusion));
+            let mut all = All::default();
+            all.record(self.holds(premise, scope, true))?;
+            all.record(self.holds(conclusion, scope, false))?;
+            return all.into_verdict();
         }
 
         let mut failures = Failures::default();
-        failures.record(self.holds(premise, scope, false)?);
-        failures.record(self.holds(conclusion, scope, true)?);
+        failures.record(self.holds(premise, scope, false))?;
+        failures.record(self.holds(conclusion, scope, true))?;
 
-        Ok(failures.into_unmet(|| condition(gd, scope, want)))
+        failures.into_verdict(|| condition(gd, scope, want))
     }
 
     /// Checks a quantified formula. With `every`, each binding of `variables` must give
@@ -204,24 +227,20 @@ impl Evaluator<'_, '_> {
         want: bool,
         every: bool,
     ) -> Verdict {
-        let mut first = None;
+        if every {
+            let mut all = All::default();
+            self.each_binding(variables, scope, |scope| {
+                all.record(self.holds(inner, scope, want))
+            })?;
+            return all.into_verdict();
+        }
+
         let mut failures = Failures::default();
         self.each_binding(variables, scope, |scope| {
-            let unmet = self.holds(inner, scope, want)?;
-            if every {
-                first = first.take().or(unmet);
-            } else {
-                failures.record(unmet);
-            }
-
-            Ok(())
+            failures.record(self.holds(inner, scope, want))
         })?;
 
-        if every {
-            Ok(first)
-        } else {
-            Ok(failures.into_unmet(|| condition(gd, scope, want)))
-        }
+        failures.into_verdict(|| condition(gd, scope, want))
     }
 
     /// Calls `f` once per binding of `variables` to objects of their types, with the
@@ -308,11 +327,52 @@ fn condition(gd: &GoalDescription, scope: &Scope, want: bool) -> String {
     }
 }
 
-/// Collects the failing alternatives of a disjunction-like condition.
+/// Combines the verdicts of the parts of a conjunction-like condition: the first
+/// definite failure, else the first unknown part, else success.
+#[derive(Default)]
+struct All {
+    /// The first part that definitely fails.
+    failure: Option<Unmet>,
+    /// The first part whose truth value is unknown.
+    unknown: Option<EvalError>,
+}
+
+impl All {
+    /// Records the verdict of one part.
+    ///
+    /// # Errors
+    ///
+    /// A fatal [`EvalError`] of the part, one for which [`EvalError::is_unknown`] is false.
+    fn record(&mut self, verdict: Verdict) -> Result<(), EvalError> {
+        match verdict {
+            Ok(None) => {}
+            Ok(Some(unmet)) => {
+                self.failure.get_or_insert(unmet);
+            }
+            Err(error) => record_unknown(&mut self.unknown, error)?,
+        }
+
+        Ok(())
+    }
+
+    /// Returns the verdict of the whole condition.
+    fn into_verdict(self) -> Verdict {
+        match (self.failure, self.unknown) {
+            (Some(unmet), _) => Ok(Some(unmet)),
+            (None, Some(error)) => Err(error),
+            (None, None) => Ok(None),
+        }
+    }
+}
+
+/// Collects the failing alternatives of a disjunction-like condition: success if one
+/// definitely holds, else the first unknown alternative, else all failures.
 #[derive(Default)]
 struct Failures {
     /// `true` once an alternative holds.
     satisfied: bool,
+    /// The first alternative whose truth value is unknown.
+    unknown: Option<EvalError>,
     /// The first [`MAX_ALTERNATIVES`] failures.
     kept: Vec<Unmet>,
     /// The number of failures beyond those kept.
@@ -321,23 +381,54 @@ struct Failures {
 
 impl Failures {
     /// Records the verdict of one alternative.
-    fn record(&mut self, unmet: Option<Unmet>) {
-        match unmet {
-            None => self.satisfied = true,
-            Some(unmet) if self.kept.len() < MAX_ALTERNATIVES => self.kept.push(unmet),
-            Some(_) => self.omitted += 1,
+    ///
+    /// # Errors
+    ///
+    /// A fatal [`EvalError`] of the alternative, one for which [`EvalError::is_unknown`]
+    /// is false.
+    fn record(&mut self, verdict: Verdict) -> Result<(), EvalError> {
+        match verdict {
+            Ok(None) => self.satisfied = true,
+            Ok(Some(unmet)) if self.kept.len() < MAX_ALTERNATIVES => self.kept.push(unmet),
+            Ok(Some(_)) => self.omitted += 1,
+            Err(error) => record_unknown(&mut self.unknown, error)?,
         }
+
+        Ok(())
     }
 
-    /// Returns `None` if an alternative held, and else a [`Unmet::NoneOf`] over the
-    /// failures, with the condition text that `condition` renders.
-    fn into_unmet(self, condition: impl FnOnce() -> String) -> Option<Unmet> {
-        (!self.satisfied).then(|| Unmet::NoneOf {
+    /// Returns `None` if an alternative held, else the first unknown alternative's error,
+    /// and else a [`Unmet::NoneOf`] over the failures, with the condition text that
+    /// `condition` renders.
+    fn into_verdict(self, condition: impl FnOnce() -> String) -> Verdict {
+        if self.satisfied {
+            return Ok(None);
+        }
+
+        if let Some(error) = self.unknown {
+            return Err(error);
+        }
+
+        Ok(Some(Unmet::NoneOf {
             condition: condition(),
             alternatives: self.kept,
             omitted: self.omitted,
-        })
+        }))
     }
+}
+
+/// Keeps `error` in `unknown` unless an earlier unknown part is already there.
+///
+/// # Errors
+///
+/// `error` itself if it is fatal, that is, if [`EvalError::is_unknown`] is false.
+fn record_unknown(unknown: &mut Option<EvalError>, error: EvalError) -> Result<(), EvalError> {
+    if !error.is_unknown() {
+        return Err(error);
+    }
+
+    unknown.get_or_insert(error);
+    Ok(())
 }
 
 /// Moves `odometer` to the next combination of candidate indices. Returns `false` after
