@@ -28,7 +28,7 @@ pub enum Kind {
     Predicate,
     /// A numeric or object fluent in a domain's `:functions`.
     Function,
-    /// An action, durative action.
+    /// An action, durative action, or PDDL+ process or event.
     Action,
     /// A parameter or quantified variable, such as `?x`.
     Variable,
@@ -731,7 +731,8 @@ impl Walker<'_> {
                 }
                 self.in_mode(Mode::Init, |w| w.formulas(args));
             }
-            Some(":action") => self.action(section, args),
+            // A PDDL+ process or event has the form of an action.
+            Some(":action" | ":process" | ":event") => self.action(section, args),
             Some(":durative-action") => {
                 self.need(&[Requirement::DurativeActions], head);
                 self.action(section, args);
@@ -792,7 +793,8 @@ impl Walker<'_> {
         self.set_parameters(index, params);
     }
 
-    /// An action or durative action, `(:action <name> :parameters (...) ...)`.
+    /// An action, durative action, or PDDL+ process or event,
+    /// `(:action <name> :parameters (...) ...)`.
     fn action(&mut self, section: &Node, args: &[Node]) {
         let range = node_range(section);
         let scope_start = self.scope.len();
