@@ -125,10 +125,12 @@ fn predicate<T>(formula: &AtomicFormula<T>, negated: bool, out: &mut Vec<(String
 /// every rule for every binding of its parameters, so a rule of arity `k` over `n`
 /// objects costs `n^k` evaluations per round.
 ///
+/// Numeric comparisons in rule bodies use `tolerance`.
+///
 /// # Errors
 ///
 /// The first [`EvalError`] of a rule body.
-pub fn close(model: &Model<'_>, state: &mut State) -> Result<(), EvalError> {
+pub fn close(model: &Model<'_>, state: &mut State, tolerance: f64) -> Result<(), EvalError> {
     state.derived.clear();
     let mut rest = model.rules.as_slice();
     while let Some(first) = rest.first() {
@@ -138,7 +140,7 @@ pub fn close(model: &Model<'_>, state: &mut State) -> Result<(), EvalError> {
             .count();
         let (stratum, later) = rest.split_at(size);
         loop {
-            let new = round(model, state, stratum)?;
+            let new = round(model, state, stratum, tolerance)?;
             if new.is_empty() {
                 break;
             }
@@ -157,8 +159,13 @@ fn round(
     model: &Model<'_>,
     state: &State,
     rules: &[crate::model::Rule<'_>],
+    tolerance: f64,
 ) -> Result<BTreeSet<Atom>, EvalError> {
-    let evaluator = Evaluator { model, state };
+    let evaluator = Evaluator {
+        model,
+        state,
+        tolerance,
+    };
     let mut new = BTreeSet::new();
     for rule in rules {
         let mut scope = Scope::new();

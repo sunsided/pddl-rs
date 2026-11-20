@@ -31,7 +31,7 @@ use crate::model::universe::type_text;
 use crate::model::{self as model, Model};
 use crate::plan::{Plan, PlanErrorKind, PlanStep};
 use crate::report::{
-    Construct, Outcome, Report, StepRef, StepTrace, Unsupported, Violation, ViolationKind,
+    Construct, Metric, Outcome, Report, StepRef, StepTrace, Unsupported, Violation, ViolationKind,
 };
 use crate::state::State;
 
@@ -66,7 +66,13 @@ use crate::state::State;
 pub struct Validator<'a> {
     /// The checked task, or why the validator cannot interpret it.
     inner: Inner<'a>,
+    /// The relative tolerance of numeric comparisons; see [`Validator::with_tolerance`].
+    tolerance: f64,
 }
+
+/// The default relative tolerance of numeric comparisons: wide enough to absorb the
+/// rounding of a few thousand `f64` additions, far below any meaningful difference.
+pub const DEFAULT_TOLERANCE: f64 = 1e-9;
 
 /// What [`Validator::new`] found.
 #[derive(Debug)]
@@ -96,6 +102,12 @@ impl From<EvalError> for Stop {
     fn from(error: EvalError) -> Self {
         match error {
             EvalError::Unsupported(construct) => Self::Unsupported(construct),
+            EvalError::Undefined(fluent) => Self::Invalid(ViolationKind::Undefined(fluent)),
+            EvalError::DivisionByZero(exp) => Self::Invalid(ViolationKind::DivisionByZero(exp)),
+            EvalError::NonFinite(exp) => Self::Invalid(ViolationKind::NonFinite(exp)),
+            EvalError::ConflictingUpdates(fluent) => {
+                Self::Invalid(ViolationKind::ConflictingUpdates(fluent))
+            }
         }
     }
 }
@@ -132,7 +144,7 @@ impl<'a> Validator<'a> {
             return Ok(Self::unsupported(unsupported));
         }
 
-        let initial = initial_state(problem);
+        let initial = initial_state(&model, problem);
 
         Ok(Self {
             inner: Inner::Ready {
@@ -140,6 +152,7 @@ impl<'a> Validator<'a> {
                 problem,
                 initial,
             },
+            tolerance: DEFAULT_TOLERANCE,
         })
     }
 
@@ -147,7 +160,39 @@ impl<'a> Validator<'a> {
     const fn unsupported(unsupported: Unsupported) -> Self {
         Self {
             inner: Inner::Unsupported(unsupported),
+            tolerance: DEFAULT_TOLERANCE,
         }
+    }
+
+    /// Sets the relative tolerance of numeric comparisons, [`DEFAULT_TOLERANCE`] unless
+    /// set.
+    ///
+    /// Two values `a` and `b` are equal if `|a - b| <= tolerance * max(1, |a|, |b|)`;
+    /// otherwise they compare as numbers. So `(= (x) 0.3)` holds after `(x)` was set to
+    /// 0.1 and increased by 0.2, and exactly one of `<`, `=` and `>` holds for any pair.
+    /// A tolerance of 0 compares exactly; a negative or NaN tolerance counts as 0.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use pddl::{Domain, Parser, Problem};
+    /// use pddl_validate::{ValidationStatus, Validator};
+    ///
+    /// let domain = Domain::from_str("(define (domain d) (:predicates (done)) (:functions (x))
+    ///     (:action add :parameters () :effect (increase (x) 0.2))
+    ///     (:action check :parameters () :precondition (= (x) 0.3) :effect (done)))").unwrap();
+    /// let problem = Problem::from_str("(define (problem p) (:domain d)
+    ///     (:init (= (x) 0.1)) (:goal (done)))").unwrap();
+    /// let validator = Validator::new(&domain, &problem).unwrap();
+    /// assert_eq!(validator.validate_text("(add) (check)").status(), ValidationStatus::Valid);
+    ///
+    /// let exact = validator.with_tolerance(0.0);
+    /// assert_eq!(exact.validate_text("(add) (check)").status(), ValidationStatus::Invalid);
+    /// ```
+    #[must_use]
+    pub fn with_tolerance(mut self, tolerance: f64) -> Self {
+        self.tolerance = if tolerance > 0.0 { tolerance } else { 0.0 };
+        self
     }
 
     /// Parses `text` as a plan file and validates it.
@@ -192,9 +237,10 @@ impl<'a> Validator<'a> {
             }
         };
 
+        let tolerance = self.tolerance;
         let mut state = initial.clone();
         let mut trace = Vec::new();
-        if let Err(error) = derived::close(model, &mut state) {
+        if let Err(error) = derived::close(model, &mut state, tolerance) {
             return stopped(Stop::from(error), None, String::from("init"), trace);
         }
 
@@ -204,7 +250,7 @@ impl<'a> Validator<'a> {
                 line: step.line(),
                 action: alloc::string::ToString::to_string(step),
             };
-            match run_step(model, &mut state, step) {
+            match run_step(model, &mut state, step, tolerance) {
                 Ok(mut changes) => {
                     changes.step = Some(at);
                     trace.push(changes);
@@ -219,14 +265,27 @@ impl<'a> Validator<'a> {
         let evaluator = Evaluator {
             model,
             state: &state,
+            tolerance,
         };
         match evaluator.preconditions(problem.goals(), &mut Scope::new()) {
-            Ok(None) => Report::new(Outcome::Valid, trace),
+            Ok(None) => {}
             Ok(Some(unmet)) => {
                 let kind = ViolationKind::GoalUnsatisfied(unmet);
-                stopped(Stop::Invalid(kind), None, String::from("goal"), trace)
+                return stopped(Stop::Invalid(kind), None, String::from("goal"), trace);
             }
-            Err(error) => stopped(Stop::from(error), None, String::from("goal"), trace),
+            Err(error) => return stopped(Stop::from(error), None, String::from("goal"), trace),
+        }
+
+        let Some(spec) = problem.metric_spec() else {
+            return Report::new(Outcome::Valid, trace);
+        };
+
+        match evaluator.metric(spec.expression(), plan.len()) {
+            Ok(value) => Report::new(Outcome::Valid, trace).with_metric(Metric {
+                optimization: spec.optimization(),
+                value,
+            }),
+            Err(error) => stopped(Stop::from(error), None, String::from("metric"), trace),
         }
     }
 }
@@ -243,11 +302,17 @@ fn stopped(reason: Stop, step: Option<StepRef>, location: String, trace: Vec<Ste
 }
 
 /// Applies one step to `state` and returns what it changed.
-fn run_step(model: &Model<'_>, state: &mut State, step: &PlanStep) -> Result<StepTrace, Stop> {
+fn run_step(
+    model: &Model<'_>,
+    state: &mut State,
+    step: &PlanStep,
+    tolerance: f64,
+) -> Result<StepTrace, Stop> {
     let (action, mut scope) = bind(model, step)?;
     let evaluator = Evaluator {
         model,
         state: &*state,
+        tolerance,
     };
     if let Some(unmet) = evaluator.preconditions(action.precondition(), &mut scope)? {
         return Err(Stop::Invalid(ViolationKind::PreconditionUnsatisfied(unmet)));
@@ -258,8 +323,8 @@ fn run_step(model: &Model<'_>, state: &mut State, step: &PlanStep) -> Result<Ste
         changes.collect(&evaluator, effects, &mut scope)?;
     }
 
-    let trace = changes.apply(state);
-    derived::close(model, state)?;
+    let trace = changes.apply(state)?;
+    derived::close(model, state, tolerance)?;
 
     Ok(trace)
 }
@@ -309,18 +374,34 @@ fn bind<'m>(
 /// Builds the initial state from the problem's `:init`.
 ///
 /// Negative literals are skipped: under the closed-world assumption they hold anyway.
-/// The static check has rejected every other element this validator cannot interpret.
-fn initial_state(problem: &Problem) -> State {
+/// A nullary `total-cost` function that `:init` gives no value starts at 0, as Fast
+/// Downward assumes. The static check has rejected every element this validator cannot
+/// interpret.
+fn initial_state(model: &Model<'_>, problem: &Problem) -> State {
     let mut state = State::default();
+    if model.functions.get(TOTAL_COST) == Some(&0) {
+        let total_cost = Atom::lowered(String::from(TOTAL_COST), Vec::new());
+        state.fluents.insert(total_cost, 0.0);
+    }
+
     for element in problem.init().iter() {
-        if let InitElement::Literal(Literal::AtomicFormula(AtomicFormula::Predicate(atom))) =
-            element
-        {
-            let arguments = atom.values().iter().map(|name| lower(name)).collect();
-            let atom = Atom::lowered(lower(atom.predicate()), arguments);
-            state.facts.insert(atom);
+        match element {
+            InitElement::Literal(Literal::AtomicFormula(AtomicFormula::Predicate(atom))) => {
+                let arguments = atom.values().iter().map(|name| lower(name)).collect();
+                let atom = Atom::lowered(lower(atom.predicate()), arguments);
+                state.facts.insert(atom);
+            }
+            InitElement::IsValue(term, value) => {
+                let arguments = term.names().iter().map(|name| lower(name)).collect();
+                let fluent = Atom::lowered(lower(term.symbol()), arguments);
+                state.fluents.insert(fluent, **value);
+            }
+            InitElement::Literal(_) | InitElement::At(..) | InitElement::IsObject(..) => {}
         }
     }
 
     state
 }
+
+/// The function that action costs accumulate in.
+const TOTAL_COST: &str = "total-cost";

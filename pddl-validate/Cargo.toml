@@ -9,7 +9,7 @@ keywords = ["pddl", "planning", "validation", "val", "ai-planning"]
 repository = "https://github.com/sunsided/pddl-rs"
 readme = "README.md"
 # Reads the pddl crate's test corpus, which is not part of this crate.
-exclude = ["tests/corpus.rs", "release.toml"]
+exclude = ["tests/corpus.rs", "release.toml", "benches/"]
 authors = ["Markus Mayer <widemeadows@gmail.com>"]
 edition = "2021"
 rust-version = "1.86.0"
@@ -24,6 +24,11 @@ pddl = { version = "0.4.0", path = "../pddl", default-features = false }
 # Tests and doctests parse PDDL text. Path-only, so the published manifest
 # carries no versioned dev-dependency on pddl.
 pddl = { path = "../pddl", features = ["parser"] }
+criterion = { version = "0.8", default-features = false, features = ["cargo_bench_support"] }
+
+[[bench]]
+name = "validate"
+harness = false
 
 [package.metadata.docs.rs]
 all-features = true

@@ -26,6 +26,8 @@ pub struct Model<'a> {
     pub universe: Universe,
     /// Every predicate, derived ones included, with its number of parameters.
     pub predicates: BTreeMap<String, usize>,
+    /// Every function with its number of parameters.
+    pub functions: BTreeMap<String, usize>,
     /// The actions by name.
     pub actions: BTreeMap<String, &'a ActionDefinition>,
     /// The derived-predicate rules, sorted by stratum once [`crate::derived::stratify`] ran.
@@ -62,6 +64,11 @@ impl<'a> Model<'a> {
             .iter()
             .map(|p| (lower(p.name()), p.variables().len()))
             .collect();
+        let functions = domain
+            .functions()
+            .iter()
+            .map(|f| (lower(f.symbol()), f.variables().len()))
+            .collect();
         let mut actions = BTreeMap::new();
         let mut rules = Vec::new();
         for def in domain.structure().iter() {
@@ -94,10 +101,23 @@ impl<'a> Model<'a> {
         Ok(Self {
             universe,
             predicates,
+            functions,
             actions,
             rules,
             derived,
         })
+    }
+}
+
+impl Model<'_> {
+    /// Returns `true` if a metric's `(symbol)` with `arity` arguments means `total-time`.
+    ///
+    /// The parser reads `(total-time)` as a function application; it means the plan's
+    /// duration unless the domain declares a function of that name.
+    pub fn is_total_time(&self, symbol: &str, arity: usize) -> bool {
+        arity == 0
+            && symbol.eq_ignore_ascii_case("total-time")
+            && !self.functions.contains_key("total-time")
     }
 }
 

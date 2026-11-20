@@ -18,5 +18,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   specific as it allows (`Unmet`) and a VAL-style repair hint (`advice`).
   Constructs outside the supported scope make the report `Unsupported`, never
   valid. The report traces the atoms each step adds and deletes.
+- Numeric fluents: comparisons in conditions and goals, `assign`, `increase`,
+  `decrease`, `scale-up` and `scale-down`, action costs and the problem's
+  `:metric` (`Report::metric`). Comparisons allow a relative tolerance
+  (`Validator::with_tolerance`). Undefined fluents, division by zero,
+  overflow and conflicting updates of one fluent make a plan invalid.
 - `Plan`, which reads plan files as planners write them: one `(action args)`
   per step, `;` comments and cost lines, CRLF line ends and a byte order mark.

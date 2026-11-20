@@ -84,14 +84,9 @@ fn object_fluents() {
 }
 
 #[test]
-fn numeric_fluents() {
-    let domain = domain("")
-        .replace(
-            "(:predicates (p) (q))",
-            "(:predicates (p) (q)) (:functions (total-cost))",
-        )
-        .replace(":effect (p)", ":effect (and (p) (increase (total-cost) 1))");
-    assert_unsupported(&domain, &problem(""), "(a)", &Construct::NumericFluents);
+fn is_violated_in_a_metric() {
+    let problem = problem("(:metric minimize (is-violated want))");
+    assert_unsupported(&domain(""), &problem, "(a)", &Construct::Preferences);
 }
 
 #[test]

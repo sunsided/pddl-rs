@@ -3,6 +3,7 @@
 mod classical;
 mod model_errors;
 mod mutation;
+mod numeric;
 mod plan_file;
 mod unsupported;
 

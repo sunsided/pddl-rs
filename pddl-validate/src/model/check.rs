@@ -10,14 +10,16 @@ use alloc::string::String;
 use alloc::vec::Vec;
 
 use pddl::{
-    AtomicFormula, ConditionalEffect, Domain, EffectCondition, Effects, GoalDescription,
-    InitElement, Literal, PreconditionGoalDescription, PreconditionGoalDescriptions,
-    PreferenceGoalDescription, PrimitiveEffect, Problem, Term, TypedVariables,
+    AtomicFormula, ConditionalEffect, Domain, EffectCondition, Effects, FluentExpression,
+    FunctionHead, GoalDescription, InitElement, Literal, MetricFluentExpression,
+    PreconditionGoalDescription, PreconditionGoalDescriptions, PreferenceGoalDescription,
+    PrimitiveEffect, Problem, Term, TypedVariables,
 };
 
 use super::Model;
 use crate::atom::lower;
 use crate::error::{ModelError, ModelErrorKind};
+use crate::eval::numeric::numeric_assignment;
 use crate::report::{Construct, Unsupported};
 
 /// What the static check found.
@@ -57,8 +59,8 @@ pub fn check(model: &Model<'_>, problem: &Problem) -> Result<(), Issue> {
 
     let mut checker = Checker::new(model, String::from("goal"));
     checker.preconditions(problem.goals())?;
-    if problem.metric_spec().is_some() {
-        return Err(checker.unsupported_at("metric", Construct::NumericFluents));
+    if let Some(metric) = problem.metric_spec() {
+        Checker::new(model, String::from("metric")).metric(metric.expression())?;
     }
 
     Ok(())
@@ -109,16 +111,7 @@ impl<'m, 'a> Checker<'m, 'a> {
 
     /// Builds an unsupported finding at the current location.
     fn unsupported(&self, construct: Construct) -> Issue {
-        self.unsupported_at(&self.location, construct)
-    }
-
-    /// Builds an unsupported finding at `location`.
-    #[expect(
-        clippy::unused_self,
-        reason = "a method, so callers read like the other builders"
-    )]
-    fn unsupported_at(&self, location: &str, construct: Construct) -> Issue {
-        Issue::Unsupported(Unsupported::new(construct, location))
+        Issue::Unsupported(Unsupported::new(construct, self.location.clone()))
     }
 
     /// Brings `variables` into scope and checks their types. Returns how many were added,
@@ -184,8 +177,9 @@ impl<'m, 'a> Checker<'m, 'a> {
                 self.unbind(count);
                 Ok(())
             }
-            GoalDescription::FluentComparison(_) => {
-                Err(self.unsupported(Construct::NumericFluents))
+            GoalDescription::FluentComparison(comparison) => {
+                self.expression(comparison.first())?;
+                self.expression(comparison.second())
             }
         }
     }
@@ -287,12 +281,17 @@ impl<'m, 'a> Checker<'m, 'a> {
         match effect {
             PrimitiveEffect::AtomicFormula(formula)
             | PrimitiveEffect::NotAtomicFormula(formula) => self.settable(formula),
-            PrimitiveEffect::AssignNumericFluent(..) => {
-                Err(self.unsupported(Construct::NumericFluents))
+            PrimitiveEffect::AssignNumericFluent(_, head, value) => {
+                self.function(head)?;
+                self.expression(value)
             }
-            PrimitiveEffect::AssignObjectFluent(..) => {
-                Err(self.unsupported(Construct::ObjectFluents))
-            }
+            PrimitiveEffect::AssignObjectFluent(..) => match numeric_assignment(effect) {
+                Some((head, value)) => {
+                    self.function(&head)?;
+                    self.expression(&value)
+                }
+                None => Err(self.unsupported(Construct::ObjectFluents)),
+            },
         }
     }
 
@@ -310,6 +309,62 @@ impl<'m, 'a> Checker<'m, 'a> {
         }
     }
 
+    /// Checks a numeric expression.
+    fn expression(&self, exp: &FluentExpression) -> Result<(), Issue> {
+        match exp {
+            FluentExpression::Number(_) => Ok(()),
+            FluentExpression::Function(head) => self.function(head),
+            FluentExpression::Negative(inner) => self.expression(inner),
+            FluentExpression::BinaryOp(_, left, right) => {
+                self.expression(left)?;
+                self.expression(right)
+            }
+            FluentExpression::MultiOp(_, first, rest) => {
+                self.expression(first)?;
+                rest.iter().try_for_each(|item| self.expression(item))
+            }
+        }
+    }
+
+    /// Checks a function application: a declared function with the right arity.
+    fn function(&self, head: &FunctionHead) -> Result<(), Issue> {
+        let unknown = ModelErrorKind::UnknownFunction;
+        match head {
+            FunctionHead::Simple(symbol) => self.symbol(&self.model.functions, symbol, 0, unknown),
+            FunctionHead::WithTerms(symbol, terms) => {
+                self.symbol(&self.model.functions, symbol, terms.len(), unknown)?;
+                terms.iter().try_for_each(|term| self.term(term))
+            }
+        }
+    }
+
+    /// Checks a metric expression.
+    fn metric(&self, exp: &MetricFluentExpression) -> Result<(), Issue> {
+        match exp {
+            MetricFluentExpression::Number(_) | MetricFluentExpression::TotalTime => Ok(()),
+            MetricFluentExpression::Function(symbol, names)
+                if self.model.is_total_time(symbol, names.len()) =>
+            {
+                Ok(())
+            }
+            MetricFluentExpression::Function(symbol, names) => {
+                let unknown = ModelErrorKind::UnknownFunction;
+                self.symbol(&self.model.functions, symbol, names.len(), unknown)?;
+                names.iter().try_for_each(|name| self.object(name))
+            }
+            MetricFluentExpression::Negative(inner) => self.metric(inner),
+            MetricFluentExpression::BinaryOp(_, left, right) => {
+                self.metric(left)?;
+                self.metric(right)
+            }
+            MetricFluentExpression::MultiOp(_, first, rest) => {
+                self.metric(first)?;
+                rest.iter().try_for_each(|item| self.metric(item))
+            }
+            MetricFluentExpression::IsViolated(_) => Err(self.unsupported(Construct::Preferences)),
+        }
+    }
+
     /// Checks an element of the initial state.
     fn init(&self, element: &InitElement) -> Result<(), Issue> {
         match element {
@@ -317,7 +372,12 @@ impl<'m, 'a> Checker<'m, 'a> {
                 Literal::AtomicFormula(formula) | Literal::NotAtomicFormula(formula),
             ) => self.settable(&name_formula(formula)),
             InitElement::At(..) => Err(self.unsupported(Construct::TimedInitialLiterals)),
-            InitElement::IsValue(..) => Err(self.unsupported(Construct::NumericFluents)),
+            InitElement::IsValue(term, _) => {
+                let found = term.names().len();
+                let unknown = ModelErrorKind::UnknownFunction;
+                self.symbol(&self.model.functions, term.symbol(), found, unknown)?;
+                term.names().iter().try_for_each(|name| self.object(name))
+            }
             InitElement::IsObject(..) => Err(self.unsupported(Construct::ObjectFluents)),
         }
     }

@@ -7,6 +7,9 @@
 //!
 //! Evaluation never short-circuits: every part of a condition is evaluated, so whether
 //! it fails with an [`EvalError`] does not depend on the order of its parts.
+//! [`numeric`] evaluates numeric expressions and comparisons.
+
+pub mod numeric;
 
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
@@ -35,11 +38,19 @@ pub fn lookup<'s>(scope: &'s Scope, variable: &str) -> Option<&'s str> {
         .map(|(_, object)| object.as_str())
 }
 
-/// Why a condition could not be evaluated at all.
+/// Why a condition or effect could not be evaluated at all.
 #[derive(Debug, Clone, PartialEq)]
 pub enum EvalError {
     /// The condition uses a construct the validator does not interpret.
     Unsupported(Construct),
+    /// A fluent without a value is read.
+    Undefined(Atom),
+    /// The rendered expression divides by zero.
+    DivisionByZero(String),
+    /// The rendered expression has no finite value.
+    NonFinite(String),
+    /// One step updates a fluent with `assign` or a scaling together with another update.
+    ConflictingUpdates(Atom),
 }
 
 /// The result of checking a condition: `None` if it has the wanted truth value.
@@ -51,6 +62,8 @@ pub struct Evaluator<'s, 'a> {
     pub model: &'s Model<'a>,
     /// The state to evaluate in.
     pub state: &'s State,
+    /// The relative tolerance of numeric comparisons; see [`numeric`].
+    pub tolerance: f64,
 }
 
 impl Evaluator<'_, '_> {
@@ -105,8 +118,8 @@ impl Evaluator<'_, '_> {
             GoalDescription::ForAll(variables, inner) => {
                 self.quantified(gd, variables, inner, scope, want, want)
             }
-            GoalDescription::FluentComparison(_) => {
-                Err(EvalError::Unsupported(Construct::NumericFluents))
+            GoalDescription::FluentComparison(comparison) => {
+                self.comparison(gd, comparison, scope, want)
             }
         }
     }

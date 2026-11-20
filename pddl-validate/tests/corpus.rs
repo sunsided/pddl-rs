@@ -121,12 +121,41 @@ fn bw_large_a() {
     Fixture::sas_plus("bw-large-a").assert_valid(plan, false);
 }
 
+/// Checks that `plan` is valid for the fixture `name`, optimal (dropping a step breaks it,
+/// since every action costs more than 0), and that its metric is `optimum`.
+fn assert_optimal_cost(name: &str, plan: &str, optimum: f64) {
+    let fixture = Fixture::sas_plus(name);
+    fixture.assert_valid(plan, true);
+    assert_eq!(fixture.run(plan).metric().unwrap().value, optimum, "{name}");
+}
+
 #[test]
-fn action_costs_are_level_two() {
-    for name in ["gripper-costs", "courier", "wiring"] {
-        let report = Fixture::sas_plus(name).run("");
-        assert_eq!(report.status(), ValidationStatus::Unsupported, "{name}");
-    }
+fn gripper_costs() {
+    let plan = "(pick ball1 rooma left) (pick ball2 rooma right) (move rooma roomb)
+                (drop ball1 roomb left) (drop ball2 roomb right)";
+    assert_optimal_cost("gripper-costs", plan, 7.0);
+}
+
+#[test]
+fn courier_with_conditional_effects_and_costs() {
+    let plan = "(load parcel1 depot) (drive depot north) (load parcel2 north)
+                (drive north south) (unload parcel1 south) (drive south north)
+                (drive north depot) (unload parcel2 depot)";
+    assert_optimal_cost("courier", plan, 16.0);
+}
+
+#[test]
+fn wiring_with_derived_predicates_and_costs() {
+    assert_optimal_cost(
+        "wiring",
+        "(lay-cable plant junction) (lay-cable junction lamp)",
+        4.0,
+    );
+
+    // Laying a cable into a powered node breaks the derived precondition.
+    let report =
+        Fixture::sas_plus("wiring").run("(lay-cable plant lamp) (lay-cable junction lamp)");
+    assert_eq!(report.violation().unwrap().step.as_ref().unwrap().number, 2);
 }
 
 /// The plan of the VS Code extension's VAL test and the verdict of the real VAL on it

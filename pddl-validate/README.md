@@ -35,7 +35,7 @@ assert_eq!(
 | Level | Constructs | Status |
 | --- | --- | --- |
 | 1. Classical | STRIPS, typing, negative and disjunctive preconditions, equality, `exists`, `forall`, `imply`, conditional effects, derived predicates | Supported |
-| 2. Numeric | numeric fluents, `assign`, `increase`, `decrease`, `scale-up`, `scale-down`, metrics | Not yet |
+| 2. Numeric | numeric fluents, `assign`, `increase`, `decrease`, `scale-up`, `scale-down`, action costs, metrics | Supported |
 | 3. Temporal | durative actions, timestamped plans, timed initial literals | Out of scope for now |
 | 4. PDDL+ | processes, events, continuous effects | Out of scope for now |
 
@@ -44,16 +44,34 @@ A plan that uses a construct outside the supported levels is reported as
 PDDL 1.2 `:extends` and `:timeless`, requirement flags the parser does not know,
 and derived predicates that depend on their own negation.
 
+## Numbers
+
+Values are `f64`, as the `pddl` parser stores them. Comparisons treat `a` and
+`b` as equal when `|a - b| <= t * max(1, |a|, |b|)`, with a relative tolerance
+`t` of `1e-9` by default (`Validator::with_tolerance`), so exactly one of `<`,
+`=` and `>` holds for any pair. Reading a fluent without a value, dividing by
+zero and overflowing make the plan invalid, wherever they occur in a
+condition. A nullary `total-cost` without an initial value starts at 0, as in
+Fast Downward. Updates of one fluent in one step add up when all are
+`increase` or `decrease`; any other combination is a conflict. In a metric,
+`total-time` is the number of steps. `Report::metric` returns the metric's
+value for a valid plan.
+
 ## Diagnostics
 
 Validation stops at the first violation, as VAL's does. The `Violation` names:
 
 - the step, numbered from 1 as VAL counts, with its line in the plan file;
 - what fails: an unknown action or object, a wrong number of arguments, an
-  object of the wrong type, an unsatisfied precondition or an unmet goal;
+  object of the wrong type, an unsatisfied precondition or an unmet goal, an
+  undefined fluent, a division by zero, an overflow, or conflicting updates;
 - for a condition, the most specific part to blame (`Unmet`): the first failing
-  conjunct or `forall` instance, or every alternative of an `or` or `exists`;
+  conjunct or `forall` instance, every alternative of an `or` or `exists`, or a
+  comparison with the values of both sides;
 - a repair hint in the style of VAL's "Plan Repair Advice".
+
+The report also traces each step's added and deleted atoms and updated
+fluents, with their values before and after.
 
 A domain or problem with an undeclared type, predicate, object or variable, or a
 symbol applied to the wrong number of arguments, is rejected with a

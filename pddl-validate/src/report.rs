@@ -15,12 +15,47 @@ pub struct Report {
     outcome: Outcome,
     /// What each executed step changed, in order.
     trace: Vec<StepTrace>,
+    /// The value of the problem's metric in the final state of a valid plan.
+    metric: Option<Metric>,
 }
 
 impl Report {
-    /// Builds a report.
+    /// Builds a report without a metric value.
     pub(crate) const fn new(outcome: Outcome, trace: Vec<StepTrace>) -> Self {
-        Self { outcome, trace }
+        Self {
+            outcome,
+            trace,
+            metric: None,
+        }
+    }
+
+    /// Adds the metric value.
+    pub(crate) const fn with_metric(mut self, metric: Metric) -> Self {
+        self.metric = Some(metric);
+        self
+    }
+
+    /// Returns the value of the problem's `:metric` in the final state, for a valid plan
+    /// of a problem that has one.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use pddl::{Domain, Optimization, Parser, Problem};
+    /// use pddl_validate::Validator;
+    ///
+    /// let domain = Domain::from_str("(define (domain d) (:requirements :action-costs)
+    ///     (:predicates (done)) (:functions (total-cost) - number)
+    ///     (:action work :parameters () :effect (and (done) (increase (total-cost) 2.5))))").unwrap();
+    /// let problem = Problem::from_str("(define (problem p) (:domain d)
+    ///     (:init (= (total-cost) 0)) (:goal (done)) (:metric minimize (total-cost)))").unwrap();
+    /// let report = Validator::new(&domain, &problem).unwrap().validate_text("(work) (work)");
+    /// let metric = report.metric().unwrap();
+    /// assert_eq!((metric.optimization, metric.value), (Optimization::Minimize, 5.0));
+    /// ```
+    #[must_use]
+    pub const fn metric(&self) -> Option<&Metric> {
+        self.metric.as_ref()
     }
 
     /// Returns the verdict.
@@ -140,6 +175,10 @@ impl Violation {
                 at(step)
             ),
             (ViolationKind::PlanSyntax(_), _) => "Fix the plan file".to_string(),
+            (ViolationKind::Undefined(fluent), _) => {
+                format!("(Give {fluent} a value in :init or an earlier step)")
+            }
+            (kind, Some(step)) => format!("{kind} in {}", at(step)),
             (kind, None) => kind.to_string(),
         }
     }
@@ -202,6 +241,15 @@ pub enum ViolationKind {
     PreconditionUnsatisfied(Unmet),
     /// The final state does not satisfy the goal.
     GoalUnsatisfied(Unmet),
+    /// A condition, effect or the metric reads a numeric fluent that has no value.
+    Undefined(Atom),
+    /// The rendered expression divides by zero.
+    DivisionByZero(String),
+    /// The rendered expression has no finite value.
+    NonFinite(String),
+    /// The step updates the fluent with `assign`, `scale-up` or `scale-down` together
+    /// with another update, so the result would depend on their order.
+    ConflictingUpdates(Atom),
 }
 
 impl fmt::Display for ViolationKind {
@@ -227,6 +275,12 @@ impl fmt::Display for ViolationKind {
                 write!(f, "unsatisfied precondition: {unmet}")
             }
             Self::GoalUnsatisfied(unmet) => write!(f, "goal not satisfied: {unmet}"),
+            Self::Undefined(fluent) => write!(f, "{fluent} is undefined"),
+            Self::DivisionByZero(exp) => write!(f, "{exp} divides by zero"),
+            Self::NonFinite(exp) => write!(f, "{exp} has no finite value"),
+            Self::ConflictingUpdates(fluent) => {
+                write!(f, "{fluent} is updated twice in incompatible ways")
+            }
         }
     }
 }
@@ -255,6 +309,17 @@ pub enum Unmet {
         /// The right object.
         right: String,
         /// `true` if the condition needs the objects to be the same.
+        expected: bool,
+    },
+    /// A numeric comparison has the wrong truth value.
+    Comparison {
+        /// The comparison, ground, such as `(>= (fuel t1) 5)`.
+        condition: String,
+        /// The value of the left side.
+        left: f64,
+        /// The value of the right side.
+        right: f64,
+        /// The truth value the condition needs.
         expected: bool,
     },
     /// No alternative of a disjunction, existential quantifier or implication holds.
@@ -297,6 +362,12 @@ impl Unmet {
                 expected: false,
                 ..
             } => format!("(Use different objects instead of {left} twice)"),
+            Self::Comparison {
+                condition,
+                left,
+                right,
+                expected,
+            } => format!("(Make {condition} {expected}: the sides are {left} and {right})"),
             Self::NoneOf { alternatives, .. } if alternatives.is_empty() => {
                 String::from("(No binding exists; declare a matching object)")
             }
@@ -323,7 +394,13 @@ impl fmt::Display for Unmet {
                 expected: true,
             } => write!(f, "(= {left} {right})"),
             Self::Equality { left, right, .. } => write!(f, "(not (= {left} {right}))"),
-            Self::NoneOf { condition, .. } => write!(f, "{condition}"),
+            Self::Comparison {
+                condition,
+                expected: true,
+                ..
+            }
+            | Self::NoneOf { condition, .. } => write!(f, "{condition}"),
+            Self::Comparison { condition, .. } => write!(f, "(not {condition})"),
         }
     }
 }
@@ -338,6 +415,30 @@ pub struct StepTrace {
     pub added: Vec<Atom>,
     /// Atoms that were true and are false after the step, sorted.
     pub deleted: Vec<Atom>,
+    /// The numeric fluents the step updated, sorted.
+    pub numeric: Vec<FluentChange>,
+}
+
+/// A numeric fluent a step updated.
+#[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
+pub struct FluentChange {
+    /// The fluent, such as `(total-cost)`.
+    pub fluent: Atom,
+    /// The value before the step; `None` if it was undefined.
+    pub before: Option<f64>,
+    /// The value after the step.
+    pub after: f64,
+}
+
+/// The value of the problem's `:metric` for a valid plan.
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
+pub struct Metric {
+    /// Whether the problem minimizes or maximizes the metric.
+    pub optimization: pddl::Optimization,
+    /// The value in the final state.
+    pub value: f64,
 }
 
 /// A construct the validator does not interpret, and where it is.
@@ -388,8 +489,6 @@ pub enum Construct {
     Preferences,
     /// Object-valued fluents.
     ObjectFluents,
-    /// Numeric fluents and action costs (level 2).
-    NumericFluents,
     /// Derived predicates that depend on their own negation, so no stratification exists.
     UnstratifiedDerivedPredicates,
     /// Effects on `=`. The static check rejects them as malformed, so validation never
@@ -409,7 +508,6 @@ impl fmt::Display for Construct {
             Self::Constraints => f.write_str("constraints"),
             Self::Preferences => f.write_str("preferences"),
             Self::ObjectFluents => f.write_str("object fluents"),
-            Self::NumericFluents => f.write_str("numeric fluents"),
             Self::UnstratifiedDerivedPredicates => {
                 f.write_str("derived predicates that depend on their own negation")
             }

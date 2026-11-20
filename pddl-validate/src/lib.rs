@@ -42,11 +42,14 @@
 //! - **Classical plans** (level 1): STRIPS, typing, negative and disjunctive
 //!   preconditions, equality, `exists`, `forall`, `imply`, conditional effects and
 //!   stratified derived predicates.
+//! - **Numeric plans** (level 2): numeric fluents in conditions and effects (`assign`,
+//!   `increase`, `decrease`, `scale-up`, `scale-down`), action costs and the problem's
+//!   `:metric`, which [`Report::metric`] returns for a valid plan.
 //!
 //! Every construct outside this scope makes the report
-//! [`ValidationStatus::Unsupported`], never valid: durative actions and temporal plans,
-//! timed initial literals, preferences, constraints, object fluents and, for now,
-//! numeric fluents.
+//! [`ValidationStatus::Unsupported`], never valid: durative actions and temporal plans
+//! (level 3), processes and events (level 4), timed initial literals, preferences,
+//! constraints and object fluents.
 //!
 //! ## Semantics
 //!
@@ -57,6 +60,13 @@
 //!   ones, so an atom that a step both deletes and adds stays true.
 //! - Derived predicates are the least fixpoint of their rules, stratum by stratum, and are
 //!   recomputed after every step.
+//! - Numbers are `f64`. Comparisons allow a relative tolerance
+//!   ([`Validator::with_tolerance`], [`DEFAULT_TOLERANCE`]). Reading a fluent without a
+//!   value, dividing by zero or leaving the finite range makes the plan invalid. A
+//!   nullary `total-cost` without an initial value starts at 0.
+//! - Updates of one fluent in one step combine if all are `increase` or `decrease`;
+//!   any other combination is a [`ViolationKind::ConflictingUpdates`].
+//! - In a metric, `total-time` is the number of steps.
 //! - Validation stops at the first violation. Steps count from 1, as in VAL.
 //!
 //! The crate is `no_std` with `alloc`. That is nominal for now: the `pddl` crate it reads
@@ -90,10 +100,10 @@ pub use atom::Atom;
 pub use error::{ModelError, ModelErrorKind};
 pub use plan::{Plan, PlanError, PlanErrorKind, PlanStep};
 pub use report::{
-    Construct, Outcome, Report, StepRef, StepTrace, Unmet, Unsupported, Violation, ViolationKind,
-    MAX_ALTERNATIVES,
+    Construct, FluentChange, Metric, Outcome, Report, StepRef, StepTrace, Unmet, Unsupported,
+    Violation, ViolationKind, MAX_ALTERNATIVES,
 };
-pub use validator::Validator;
+pub use validator::{Validator, DEFAULT_TOLERANCE};
 
 /// The overall result of validating a plan.
 ///
