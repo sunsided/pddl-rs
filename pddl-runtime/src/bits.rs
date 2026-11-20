@@ -459,6 +459,7 @@ mod tests {
         assert!(!set.contains(64) && set.contains(129));
         set.set(5, true);
         assert_eq!(format!("{set:?}"), "{0, 5, 129}");
+        assert_eq!(set.capacity(), 130);
         set.clear();
         assert!(set.is_empty());
     }
@@ -493,6 +494,7 @@ mod tests {
         assert!(!on.contains(2, 1) && on.contains(1, 4));
         on.set(2, 0, true);
         assert_eq!(on.iter().collect::<Vec<_>>(), [(1, 4), (2, 0)]);
+        assert_eq!(format!("{on:?}"), "{(1, 4), (2, 0)}");
         assert_eq!(on.count(), 2);
         let copy = on.clone();
         assert_eq!(hash(&copy), hash(&on));
@@ -518,6 +520,7 @@ mod tests {
             table.iter().collect::<Vec<_>>(),
             [vec![0, 0, 1], vec![1, 2, 3]]
         );
+        assert_eq!(format!("{table:?}"), "{[0, 0, 1], [1, 2, 3]}");
         let copy = table.clone();
         assert_eq!(hash(&copy), hash(&table));
         assert!(table.remove(&[0, 0, 1]));

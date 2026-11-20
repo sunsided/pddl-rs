@@ -145,3 +145,7 @@ pub fn distance(bound: &rovers::Bound, a: rovers::types::Place, b: rovers::types
     problem = "../fixtures/logistics-small.pddl"
 )]
 pub mod logistics_small_grounded {}
+
+/// The generator's less common paths, from `pddl-codegen/tests/fixtures`.
+#[pddl::task(domain = "../../pddl-codegen/tests/fixtures/kitchen-sink.pddl")]
+pub mod kitchen_sink {}

@@ -147,6 +147,39 @@ impl Id for u32 {
 mod tests {
     use super::*;
 
+    /// One switch to turn on; nothing overrides the defaults.
+    struct OneSwitch;
+
+    impl Task for OneSwitch {
+        type State = bool;
+        type Action = ();
+
+        fn initial_state(&self) -> bool {
+            false
+        }
+
+        fn successors(&self, state: &bool, out: &mut Vec<((), bool)>) {
+            if !state {
+                out.push(((), true));
+            }
+        }
+
+        fn apply(&self, _: &bool, (): ()) -> bool {
+            true
+        }
+
+        fn is_goal(&self, state: &bool) -> bool {
+            *state
+        }
+    }
+
+    #[test]
+    fn defaults_cost_one_and_count_the_goal_once() {
+        assert_eq!(OneSwitch.cost(()), 1);
+        assert_eq!(OneSwitch.unsatisfied_goals(&false), 1);
+        assert_eq!(OneSwitch.unsatisfied_goals(&true), 0);
+    }
+
     #[test]
     fn integer_ids_are_their_own_index() {
         assert_eq!(u32::from_index(7).index(), 7);
