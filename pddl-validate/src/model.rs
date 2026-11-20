@@ -21,6 +21,9 @@ use crate::error::{ModelError, ModelErrorKind};
 use crate::report::{Construct, Unsupported};
 use universe::Universe;
 
+/// Events closer in time than this belong to one happening.
+pub const SAME_TIME: f64 = 1e-9;
+
 /// The indexed domain and problem. All names are lowercased.
 #[derive(Debug)]
 pub struct Model<'a> {

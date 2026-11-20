@@ -65,6 +65,14 @@ pub enum ModelErrorKind {
     DerivedPredicateSet(String),
     /// An effect or the initial state sets an equality `(= a b)`.
     EqualitySet,
+    /// Two timed initial literals at the same time make one atom both true and false,
+    /// such as `(at 1 (q))` and `(at 1 (not (q)))`.
+    ContradictoryTimedLiterals {
+        /// The ground atom, such as `(at r1 base)`.
+        atom: String,
+        /// The time of the first of the two literals, formatted as a decimal number.
+        time: String,
+    },
 }
 
 impl fmt::Display for ModelError {
@@ -102,6 +110,12 @@ impl fmt::Display for ModelErrorKind {
                 write!(f, "derived predicate `{name}` cannot be set directly")
             }
             Self::EqualitySet => f.write_str("`=` cannot be set"),
+            Self::ContradictoryTimedLiterals { atom, time } => {
+                write!(
+                    f,
+                    "timed literals make `{atom}` both true and false at {time}"
+                )
+            }
         }
     }
 }

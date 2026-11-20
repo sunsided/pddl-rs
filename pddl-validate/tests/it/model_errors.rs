@@ -1,7 +1,7 @@
 //! Malformed domains and problems fail [`Validator::new`] before any plan runs.
 
 use pddl::{Domain, Parser, Problem};
-use pddl_validate::{ModelError, ModelErrorKind, Validator};
+use pddl_validate::{ModelError, ModelErrorKind, ValidationStatus, Validator};
 
 /// Builds a validator for a domain and problem that must not be well-formed.
 fn model_error(domain: &str, problem: &str) -> ModelError {
@@ -157,4 +157,40 @@ fn shadowing_across_lists_is_allowed() {
     let domain = Domain::from_str(&domain(action)).expect("the domain parses");
     let problem = Problem::from_str(&problem("(clear a)")).expect("the problem parses");
     Validator::new(&domain, &problem).expect("shadowing is allowed");
+}
+
+/// A domain with one predicate set by timed initial literals.
+const TIMED: &str = "(define (domain t) (:requirements :timed-initial-literals)
+  (:predicates (q) (done))
+  (:action finish :parameters () :precondition (q) :effect (done)))";
+
+/// A problem for [`TIMED`] with the timed literals `timed`.
+fn timed_problem(timed: &str) -> String {
+    format!("(define (problem p) (:domain t) (:init {timed}) (:goal (done)))")
+}
+
+#[test]
+fn contradictory_timed_literals() {
+    let error = model_error(TIMED, &timed_problem("(at 1 (q)) (at 1 (not (q)))"));
+    assert_eq!(error.location, "init");
+    assert_eq!(
+        error.kind,
+        ModelErrorKind::ContradictoryTimedLiterals {
+            atom: "(q)".into(),
+            time: "1".into()
+        }
+    );
+
+    // The same literal twice, or opposite literals at different times, are fine.
+    for timed in ["(at 1 (q)) (at 1 (q))", "(at 1 (q)) (at 2 (not (q)))"] {
+        let domain = Domain::from_str(TIMED).expect("the domain parses");
+        let problem = Problem::from_str(&timed_problem(timed)).expect("the problem parses");
+        let validator = Validator::new(&domain, &problem).expect("the literals agree");
+        let report = validator.validate_text("1.5: (finish)");
+        assert_eq!(
+            report.status(),
+            ValidationStatus::Valid,
+            "{timed}: {report:?}"
+        );
+    }
 }

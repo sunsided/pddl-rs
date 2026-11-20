@@ -3,9 +3,11 @@
 //! It finds undeclared names, wrong arities and unbound variables, so evaluation never
 //! meets them, and it finds every construct the validator does not interpret, so no plan
 //! that uses one is ever accepted. Formulas inside an unsupported construct are not
-//! checked further. [`durative`] checks durative actions.
+//! checked further. [`durative`] checks durative actions, and [`timed`] checks that the
+//! timed initial literals agree.
 
 mod durative;
+mod timed;
 
 use alloc::format;
 use alloc::string::String;
@@ -37,7 +39,8 @@ pub enum Issue {
 ///
 /// # Errors
 ///
-/// The first [`Issue`] found, in the order actions, rules, initial state, goal, metric.
+/// The first [`Issue`] found, in the order actions, rules, initial state, timed initial
+/// literals, goal, metric.
 pub fn check(model: &Model<'_>, problem: &Problem) -> Result<(), Issue> {
     for (name, action) in &model.actions {
         let mut checker = Checker::new(model, format!("action `{name}`"));
@@ -81,6 +84,7 @@ pub fn check(model: &Model<'_>, problem: &Problem) -> Result<(), Issue> {
     for element in problem.init().iter() {
         checker.init(element)?;
     }
+    timed::contradictions(problem).map_err(Issue::Model)?;
 
     let mut checker = Checker::new(model, String::from("goal"));
     checker.preconditions(problem.goals())?;
