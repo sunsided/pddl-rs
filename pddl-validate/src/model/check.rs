@@ -139,15 +139,26 @@ impl<'m, 'a> Checker<'m, 'a> {
         Issue::Unsupported(Unsupported::new(construct, self.location.clone()))
     }
 
-    /// Brings `variables` into scope and checks their types. Returns how many were added,
-    /// for [`Self::unbind`].
+    /// Brings `variables` into scope and checks their types and that no name repeats
+    /// within the list. Returns how many were added, for [`Self::unbind`].
     fn bind(&mut self, variables: &TypedVariables) -> Result<usize, Issue> {
+        let outer = self.variables.len();
         for variable in variables.iter() {
             if let Some(name) = self.model.universe.unknown_type(variable.type_()) {
                 return Err(self.error(ModelErrorKind::UnknownType(name)));
             }
 
-            self.variables.push(lower(variable.value()));
+            let name = lower(variable.value());
+            if self
+                .variables
+                .iter()
+                .skip(outer)
+                .any(|bound| *bound == name)
+            {
+                return Err(self.error(ModelErrorKind::DuplicateVariable(name)));
+            }
+
+            self.variables.push(name);
         }
 
         Ok(variables.len())

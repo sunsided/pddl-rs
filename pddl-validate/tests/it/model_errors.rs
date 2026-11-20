@@ -128,3 +128,33 @@ fn setting_equality() {
     let error = model_error(&domain(action), &problem("(clear a)"));
     assert_eq!(error.kind, ModelErrorKind::EqualitySet);
 }
+
+#[test]
+fn repeated_variable_in_one_list() {
+    let action =
+        "(:action a :parameters (?x ?X - block) :precondition (on ?x ?x) :effect (clear ?x))";
+    let error = model_error(&domain(action), &problem("(clear a)"));
+    assert_eq!(error.location, "action `a`");
+    assert_eq!(error.kind, ModelErrorKind::DuplicateVariable("x".into()));
+
+    let body = "(:derived (clear ?x ?x - block) (on ?x table))";
+    let error = model_error(
+        &domain(body),
+        &problem("(clear a)").replace("(:init (clear a))", "(:init)"),
+    );
+    assert_eq!(error.kind, ModelErrorKind::DuplicateVariable("x".into()));
+
+    let action = "(:action a :parameters () :precondition (forall (?y ?y - block) (clear ?y))
+                    :effect (clear table))";
+    let error = model_error(&domain(action), &problem("(clear a)"));
+    assert_eq!(error.kind, ModelErrorKind::DuplicateVariable("y".into()));
+}
+
+#[test]
+fn shadowing_across_lists_is_allowed() {
+    let action = "(:action a :parameters (?x - block)
+                    :precondition (forall (?x - block) (clear ?x)) :effect (clear ?x))";
+    let domain = Domain::from_str(&domain(action)).expect("the domain parses");
+    let problem = Problem::from_str(&problem("(clear a)")).expect("the problem parses");
+    Validator::new(&domain, &problem).expect("shadowing is allowed");
+}

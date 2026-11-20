@@ -58,6 +58,8 @@ pub enum ModelErrorKind {
     },
     /// Two actions share a name.
     DuplicateAction(String),
+    /// One parameter or quantifier list declares a variable twice, such as `(?x ?x)`.
+    DuplicateVariable(String),
     /// An action effect or the initial state sets a derived predicate, which only its
     /// rule may define.
     DerivedPredicateSet(String),
@@ -95,6 +97,7 @@ impl fmt::Display for ModelErrorKind {
                 "`{symbol}` takes {expected} arguments but is given {found}"
             ),
             Self::DuplicateAction(name) => write!(f, "action `{name}` is defined twice"),
+            Self::DuplicateVariable(name) => write!(f, "variable `?{name}` is declared twice"),
             Self::DerivedPredicateSet(name) => {
                 write!(f, "derived predicate `{name}` cannot be set directly")
             }
