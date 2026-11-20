@@ -53,6 +53,24 @@ pub fn check(model: &Model<'_>, problem: &Problem) -> Result<(), Issue> {
         checker.durative(action)?;
     }
 
+    for (name, event) in &model.events {
+        let mut checker = Checker::new(model, format!("event `{name}`"));
+        checker.bind(event.parameters())?;
+        checker.preconditions(event.precondition())?;
+        if let Some(effects) = event.effect() {
+            checker.effects(effects)?;
+        }
+    }
+
+    for (name, process) in &model.processes {
+        let mut checker = Checker::new(model, format!("process `{name}`"));
+        checker.bind(process.parameters())?;
+        checker.preconditions(process.precondition())?;
+        if let Some(effect) = process.effect() {
+            checker.process_effect(effect)?;
+        }
+    }
+
     for rule in &model.rules {
         let mut checker = Checker::new(model, format!("derived predicate `{}`", rule.predicate));
         checker.bind(rule.parameters)?;

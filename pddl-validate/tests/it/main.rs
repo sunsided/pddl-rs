@@ -4,6 +4,7 @@ mod classical;
 mod model_errors;
 mod mutation;
 mod numeric;
+mod pddl_plus;
 mod plan_file;
 mod temporal;
 mod unsupported;

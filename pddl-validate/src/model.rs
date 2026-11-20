@@ -13,7 +13,7 @@ use alloc::vec::Vec;
 
 use pddl::{
     ActionDefinition, Domain, DurativeActionDefinition, GoalDescription, InitElement, Problem,
-    StructureDef, TypedVariables,
+    ProcessDefinition, StructureDef, TypedVariables,
 };
 
 use crate::atom::lower;
@@ -32,8 +32,13 @@ pub struct Model<'a> {
     pub functions: BTreeMap<String, usize>,
     /// The actions by name.
     pub actions: BTreeMap<String, &'a ActionDefinition>,
-    /// The durative actions by name. No name is both an action and a durative action.
+    /// The durative actions by name. Actions, durative actions, processes and events
+    /// have distinct names.
     pub durative: BTreeMap<String, &'a DurativeActionDefinition>,
+    /// The PDDL+ processes by name.
+    pub processes: BTreeMap<String, &'a ProcessDefinition>,
+    /// The PDDL+ events by name.
+    pub events: BTreeMap<String, &'a ActionDefinition>,
     /// The derived-predicate rules, sorted by stratum once [`crate::derived::stratify`] ran.
     pub rules: Vec<Rule<'a>>,
     /// The names of the derived predicates.
@@ -75,27 +80,39 @@ impl<'a> Model<'a> {
             .collect();
         let mut actions = BTreeMap::new();
         let mut durative = BTreeMap::new();
+        let mut processes = BTreeMap::new();
+        let mut events = BTreeMap::new();
+        let mut names = BTreeSet::new();
         let mut rules = Vec::new();
         for def in domain.structure().iter() {
+            // Rules of one derived predicate add up, so only they share names.
+            let symbol: Option<&str> = match def {
+                StructureDef::Action(action) | StructureDef::Event(action) => Some(action.symbol()),
+                StructureDef::DurativeAction(action) => Some(action.symbol()),
+                StructureDef::Process(process) => Some(process.symbol()),
+                StructureDef::Derived(_) => None,
+            };
+            let name = symbol.map(lower).unwrap_or_default();
+            if symbol.is_some() && !names.insert(name.clone()) {
+                return Err(ModelError::new(
+                    "domain",
+                    ModelErrorKind::DuplicateAction(name),
+                ));
+            }
+
             match def {
                 StructureDef::Action(action) => {
-                    let name = lower(action.symbol());
-                    let taken = durative.contains_key(&name);
-                    if actions.insert(name.clone(), action).is_some() || taken {
-                        let kind = ModelErrorKind::DuplicateAction(name);
-                        return Err(ModelError::new("domain", kind));
-                    }
+                    actions.insert(name, action);
+                }
+                StructureDef::Event(event) => {
+                    events.insert(name, event);
                 }
                 StructureDef::DurativeAction(action) => {
-                    let name = lower(action.symbol());
-                    let taken = actions.contains_key(&name);
-                    if durative.insert(name.clone(), &**action).is_some() || taken {
-                        let kind = ModelErrorKind::DuplicateAction(name);
-                        return Err(ModelError::new("domain", kind));
-                    }
+                    durative.insert(name, &**action);
                 }
-                // `unsupported_sections` reports these before a model is built.
-                StructureDef::Process(_) | StructureDef::Event(_) => {}
+                StructureDef::Process(process) => {
+                    processes.insert(name, &**process);
+                }
                 StructureDef::Derived(rule) => {
                     let head: &pddl::AtomicFormulaSkeleton = rule.as_ref();
                     let predicate = lower(head.name());
@@ -118,6 +135,8 @@ impl<'a> Model<'a> {
             functions,
             actions,
             durative,
+            processes,
+            events,
             rules,
             derived,
         })
@@ -126,9 +145,12 @@ impl<'a> Model<'a> {
 
 impl Model<'_> {
     /// Returns `true` if plans for this task run on the temporal timeline whatever their
-    /// form: the domain has durative actions or the problem timed initial literals.
+    /// form: the domain has durative actions, processes or events, or the problem timed
+    /// initial literals.
     pub fn is_temporal(&self, problem: &Problem) -> bool {
         !self.durative.is_empty()
+            || !self.processes.is_empty()
+            || !self.events.is_empty()
             || problem
                 .init()
                 .iter()
@@ -169,8 +191,9 @@ pub fn check_domain_name(domain: &Domain, problem: &Problem) -> Result<(), Model
 /// declared requirements: `:fluents`, for one, also declares object fluents.
 pub fn unsupported_sections(domain: &Domain, problem: &Problem) -> Option<Unsupported> {
     let requirements = domain.requirements().unknown().iter();
-    let unknown = requirements.chain(problem.requirements().unknown());
-    if let Some(name) = unknown.into_iter().next() {
+    let mut unknown = requirements.chain(problem.requirements().unknown());
+    // PDDL+'s `:time`, which the parser does not know, is interpreted.
+    if let Some(name) = unknown.find(|name| !name.eq_ignore_ascii_case(":time")) {
         let construct = Construct::UnknownRequirement(lower(name));
         return Some(Unsupported::new(construct, "requirements"));
     }
@@ -181,13 +204,8 @@ pub fn unsupported_sections(domain: &Domain, problem: &Problem) -> Option<Unsupp
         (!domain.constraints().is_empty(), Construct::Constraints),
         (!problem.constraints().is_empty(), Construct::Constraints),
     ];
-    let pddl_plus = domain
-        .structure()
-        .iter()
-        .any(|def| matches!(def, StructureDef::Process(_) | StructureDef::Event(_)));
     found
         .into_iter()
-        .chain([(pddl_plus, Construct::ProcessesAndEvents)])
         .find(|(present, _)| *present)
         .map(|(_, construct)| Unsupported::new(construct, "domain or problem"))
 }

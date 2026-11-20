@@ -37,7 +37,7 @@ assert_eq!(
 | 1. Classical | STRIPS, typing, negative and disjunctive preconditions, equality, `exists`, `forall`, `imply`, conditional effects, derived predicates | Supported |
 | 2. Numeric | numeric fluents, `assign`, `increase`, `decrease`, `scale-up`, `scale-down`, action costs, metrics | Supported |
 | 3. Temporal | durative actions, timestamped plans, duration inequalities, linear continuous effects, timed initial literals, epsilon separation, makespan | Supported |
-| 4. PDDL+ | processes, events | Not yet: the `pddl` parser does not read them |
+| 4. PDDL+ | processes and events with linear dynamics, event cascades | Supported |
 
 A plan that uses a construct outside the supported levels is reported as
 `Unsupported`, never as valid. So are continuous change whose rate reads a
@@ -75,6 +75,19 @@ epsilon apart, 0.01 by default as in VAL (`Validator::with_epsilon`); an
 action's own start and end never interfere. Timed initial literals are events
 too. An untimed plan for a temporal domain runs at times 1, 2, 3, and so on;
 `total-time` is the makespan.
+
+## PDDL+
+
+Processes run while their precondition holds and add their `#t` rates to those
+of the running durative actions; events fire as soon as their precondition
+holds, all enabled ones together, and then the validator checks again, so
+events cascade (at most 1000 rounds at one time, else `EventCascade`). Between
+plan happenings, the validator ends each stretch of fixed dynamics at the first
+root of a process or event precondition where one switches, so the switching
+times are exact for linear change. Rates that read changing fluents, as in
+`(increase (speed) (* #t 9.8))` with `(decrease (height) (* #t (speed)))`, are
+nonlinear and `Unsupported`. Processes and events run until the plan's last
+step; the `:time` requirement is accepted.
 
 ## Diagnostics
 

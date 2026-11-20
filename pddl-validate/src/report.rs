@@ -316,6 +316,15 @@ pub enum ViolationKind {
         /// The time between the two events, smaller than `epsilon`.
         separation: f64,
     },
+    /// PDDL+ events kept triggering each other at `time`: after `limit` rounds of firing,
+    /// one was still enabled, typically an event whose effect leaves its own precondition
+    /// true.
+    EventCascade {
+        /// When the cascade happened.
+        time: f64,
+        /// The number of rounds fired.
+        limit: usize,
+    },
 }
 
 impl fmt::Display for ViolationKind {
@@ -367,6 +376,12 @@ impl fmt::Display for ViolationKind {
             }
             Self::InvariantViolated { time, unmet } => {
                 write!(f, "invariant violated at time {time}: {unmet}")
+            }
+            Self::EventCascade { time, limit } => {
+                write!(
+                    f,
+                    "events still trigger at time {time} after {limit} rounds"
+                )
             }
             Self::Interference {
                 event,
@@ -589,8 +604,11 @@ pub enum Construct {
     TimedEffectConditions,
     /// An assignment nested inside a numeric expression of a durative action.
     NestedAssignments,
-    /// PDDL+ processes and events (level 4).
-    ProcessesAndEvents,
+    /// A PDDL+ process effect that is not continuous, such as `(at start ...)` or `when`.
+    DiscreteProcessEffects,
+    /// PDDL+ dynamics that switch processes or fire events without end, such as a
+    /// process that turns itself off and on again at one instant (Zeno behaviour).
+    ZenoDynamics,
     /// State-trajectory constraints.
     Constraints,
     /// Preferences, and `is-violated` in a metric.
@@ -618,7 +636,8 @@ impl fmt::Display for Construct {
                 f.write_str("these timed conditions of conditional effects")
             }
             Self::NestedAssignments => f.write_str("nested assignments"),
-            Self::ProcessesAndEvents => f.write_str("processes and events"),
+            Self::DiscreteProcessEffects => f.write_str("discrete effects of processes"),
+            Self::ZenoDynamics => f.write_str("dynamics that switch without end"),
             Self::Constraints => f.write_str("constraints"),
             Self::Preferences => f.write_str("preferences"),
             Self::ObjectFluents => f.write_str("object fluents"),

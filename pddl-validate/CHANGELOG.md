@@ -30,5 +30,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   (`Validator::with_epsilon`, 0.01 by default) and `total-time` as the
   makespan. `Plan` reads `t: (action args) [d]` steps. Nonlinear dynamics and
   derived predicates in temporal plans are `Unsupported`.
+- PDDL+: processes and events on the temporal timeline. Processes add linear
+  rates while their precondition holds; events fire when theirs holds, in
+  cascades (`EventCascade` after 1000 rounds at one time). Switching times are
+  the exact roots of the linear conditions. Nonlinear dynamics, discrete
+  process effects and Zeno behaviour are `Unsupported`.
 - `Plan`, which reads plan files as planners write them: one `(action args)`
   per step, `;` comments and cost lines, CRLF line ends and a byte order mark.

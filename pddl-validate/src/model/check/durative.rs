@@ -33,6 +33,28 @@ impl Checker<'_, '_> {
         Ok(())
     }
 
+    /// Checks the effect of a PDDL+ process: continuous effects only, possibly under
+    /// `and` and `forall`.
+    pub(super) fn process_effect(&mut self, effect: &DurativeActionEffect) -> Result<(), Issue> {
+        match effect {
+            DurativeActionEffect::Timed(timed @ TimedEffect::ContinuousEffect(..)) => {
+                self.timed_effect(timed)
+            }
+            DurativeActionEffect::All(items) => {
+                items.iter().try_for_each(|item| self.process_effect(item))
+            }
+            DurativeActionEffect::Forall(variables, inner) => {
+                let count = self.bind(variables)?;
+                self.process_effect(inner)?;
+                self.unbind(count);
+                Ok(())
+            }
+            DurativeActionEffect::Timed(_) | DurativeActionEffect::When(..) => {
+                Err(self.unsupported(Construct::DiscreteProcessEffects))
+            }
+        }
+    }
+
     /// Checks one duration constraint.
     fn duration(&self, constraint: &SimpleDurationConstraint) -> Result<(), Issue> {
         match constraint {

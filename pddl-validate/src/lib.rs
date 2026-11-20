@@ -53,11 +53,17 @@
 //!   epsilon separation of interfering events ([`Validator::with_epsilon`]) and
 //!   `total-time` as the makespan.
 //!
+//! - **PDDL+** (level 4): processes, which run while their precondition holds and change
+//!   fluents linearly, and events, which fire as soon as their precondition holds,
+//!   in cascades of up to 1000 rounds at one time. The validator finds the times at
+//!   which processes switch and events trigger exactly, at the roots of the linear
+//!   conditions.
+//!
 //! Every construct outside this scope makes the report
-//! [`ValidationStatus::Unsupported`], never valid: processes and events (level 4; the
-//! `pddl` parser does not read them yet), continuous change whose rate depends on a
-//! changing fluent and invariants that are not linear in time, derived predicates in
-//! temporal plans, preferences, constraints and object fluents.
+//! [`ValidationStatus::Unsupported`], never valid: continuous change whose rate depends
+//! on a changing fluent (such as acceleration), conditions that are not linear in time,
+//! discrete effects of processes, dynamics that switch without end, derived predicates
+//! in temporal plans, preferences, constraints and object fluents.
 //!
 //! ## Semantics
 //!

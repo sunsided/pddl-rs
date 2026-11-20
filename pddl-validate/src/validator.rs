@@ -83,6 +83,10 @@ pub const DEFAULT_EPSILON: f64 = 0.01;
 
 /// What [`Validator::new`] found.
 #[derive(Debug)]
+#[expect(
+    clippy::large_enum_variant,
+    reason = "one per validator, built once; boxing buys nothing"
+)]
 enum Inner<'a> {
     /// A task the validator interprets.
     Ready {

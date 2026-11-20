@@ -24,6 +24,7 @@
 
 mod continuous;
 mod mutex;
+mod pddl_plus;
 mod timed;
 
 use alloc::boxed::Box;
@@ -45,8 +46,9 @@ use crate::model::Model;
 use crate::plan::{Plan, PlanStep};
 use crate::report::{Report, StepRef, StepTrace, ViolationKind};
 use crate::state::State;
-use continuous::{Flow, Interval};
+use continuous::{Flow, Interval, Rates};
 use mutex::Footprint;
+use pddl_plus::Dynamics;
 use timed::{Collector, Memo, Moment};
 
 /// Events closer in time than this belong to one happening.
@@ -140,7 +142,8 @@ impl<'v> Timeline<'v, '_> {
         events.extend(self.timed_literals(makespan));
         events.sort_by(|a, b| a.time.total_cmp(&b.time));
 
-        match self.happenings(initial, &mut instances, &events) {
+        let dynamics = Dynamics::new(&self.evaluator(initial, None));
+        match self.happenings(initial, &mut instances, &events, &dynamics) {
             Ok((state, trace)) => {
                 let evaluator = self.evaluator(&state, None);
                 finish(&evaluator, self.problem, makespan, trace)
@@ -300,9 +303,14 @@ impl<'v> Timeline<'v, '_> {
         initial: &State,
         instances: &mut [Instance<'v>],
         events: &[Event<'v>],
+        dynamics: &Dynamics<'v>,
     ) -> Result<(State, Vec<StepTrace>), (Failure, Vec<StepTrace>)> {
         let mut state = initial.clone();
         let mut trace = Vec::new();
+        if let Err(failure) = self.cascade(dynamics, &mut state, 0.0, &mut trace) {
+            return Err((failure, trace));
+        }
+
         let mut active = BTreeSet::new();
         let mut recent: Vec<Past> = Vec::new();
         let mut clock = 0.0;
@@ -318,7 +326,14 @@ impl<'v> Timeline<'v, '_> {
             rest = later;
 
             if first.time - clock > SAME_TIME {
-                state = match self.interval(&state, instances, &active, clock, first.time) {
+                let next = self.interval(
+                    dynamics,
+                    &state,
+                    (instances, &active),
+                    (clock, first.time),
+                    &mut trace,
+                );
+                state = match next {
                     Ok(next) => next,
                     Err(failure) => return Err((failure, trace)),
                 };
@@ -330,6 +345,10 @@ impl<'v> Timeline<'v, '_> {
             match self.happen(&mut state, instances, happening, &mut recent) {
                 Ok(step) => trace.push(step),
                 Err(failure) => return Err((failure, trace)),
+            }
+
+            if let Err(failure) = self.cascade(dynamics, &mut state, first.time, &mut trace) {
+                return Err((failure, trace));
             }
 
             for event in happening {
@@ -348,17 +367,22 @@ impl<'v> Timeline<'v, '_> {
         Ok((state, trace))
     }
 
-    /// Advances continuous change from `start` to `end` and checks the `over all`
-    /// conditions of the actions running throughout. Returns the state at `end`.
+    /// Advances continuous change from `start` to `end`, with processes and events if
+    /// the task has any, and checks the `over all` conditions of the actions running
+    /// throughout. Returns the state at `end`.
     fn interval(
         &self,
+        dynamics: &Dynamics<'v>,
         state: &State,
-        instances: &[Instance<'v>],
-        active: &BTreeSet<usize>,
-        start: f64,
-        end: f64,
+        (instances, active): (&[Instance<'v>], &BTreeSet<usize>),
+        (start, end): (f64, f64),
+        trace: &mut Vec<StepTrace>,
     ) -> Result<State, Failure> {
         let running: Vec<&Instance<'v>> = active.iter().filter_map(|&i| instances.get(i)).collect();
+        if !dynamics.is_empty() {
+            return self.hybrid_interval(dynamics, state, &running, start, end, trace);
+        }
+
         let Some(first) = running.first() else {
             return Ok(state.clone());
         };
@@ -366,11 +390,26 @@ impl<'v> Timeline<'v, '_> {
         let flows: Vec<&Flow<'v>> = running.iter().flat_map(|i| &i.flows).collect();
         let rates = continuous::rates(&self.evaluator(state, None), &flows)
             .map_err(|error| failure(Some(first.step.clone()), Stop::from(error)))?;
+        self.check_invariants(&running, state, &rates, start, end)?;
+
+        Ok(continuous::advance(state, &rates, end - start))
+    }
+
+    /// Checks the `over all` conditions of the `running` actions on the open interval
+    /// from `start` to `end`, with `state` at `start` and constant `rates`.
+    fn check_invariants(
+        &self,
+        running: &[&Instance<'v>],
+        state: &State,
+        rates: &Rates,
+        start: f64,
+        end: f64,
+    ) -> Result<(), Failure> {
         let interval = Interval {
             start,
             end,
             state,
-            rates: &rates,
+            rates,
         };
         for instance in running {
             let Some(invariant) = instance.action.condition() else {
@@ -389,7 +428,7 @@ impl<'v> Timeline<'v, '_> {
             }
         }
 
-        Ok(continuous::advance(state, &rates, end - start))
+        Ok(())
     }
 
     /// Runs one happening on `state`: checks every event's conditions in the state
