@@ -15,6 +15,7 @@ on:
       - 'pddl-runtime/**'
       - 'pddl-bench/**'
       - 'pddl-codegen/**'
+      - 'pddl-validate/**'
       - 'schema/**'
       - 'editors/vscode/**'
       - '.github/workflows/rust.yml'
@@ -31,6 +32,7 @@ on:
       - 'pddl-runtime/**'
       - 'pddl-bench/**'
       - 'pddl-codegen/**'
+      - 'pddl-validate/**'
       - 'schema/**'
       - 'editors/vscode/**'
       - '.github/workflows/rust.yml'
@@ -82,6 +84,7 @@ jobs:
         run: |
           cargo test -p pddl-core --all-features
           cargo test -p pddl-runtime --all-features
+          cargo test -p pddl-validate --all-features
           cargo test -p pddl-codegen
           cargo test -p pddl-lsp --all-features
           cargo test -p pddl --features miette,pretty,serde

@@ -51,6 +51,7 @@ pub use actions::effects::Effects;
 #[allow(deprecated)]
 pub use actions::p_effect::PEffect;
 pub use actions::p_effect::PrimitiveEffect;
+pub use actions::process_definition::ProcessDefinition;
 
 // goals: goal descriptions, literals, atomic formulas and preferences
 pub use goals::atomic_formula::{AtomicFormula, EqualityAtomicFormula, PredicateAtomicFormula};

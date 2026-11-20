@@ -22,6 +22,18 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `pddl-codegen` crate and builds on the new `pddl-runtime` crate, which
   `pddl::runtime` re-exports. `pddl::codegen` loads problems for it.
 
+- The parser reads PDDL+ `(:process ...)` and `(:event ...)` sections into the
+  new `StructureDef::Process` (a `ProcessDefinition`, whose effect is read like
+  a durative action's so `#t` survives, and which rejects timed `at` effects
+  and `when`, whose condition would be timed: a process has only continuous
+  effects) and `StructureDef::Event` (an
+  `ActionDefinition`). They pretty-print and round-trip through `serde`, as a
+  domain's `processes` and `events`, and the NOVA schema has them. The
+  `sas-plus` grounder and code generation reject them as unsupported.
+- `pddl-validate`, a new crate in this repository, validates sequential
+  plans against a domain and problem, independently of any planner, and
+  reports the first failing step, condition and a VAL-style repair hint.
+  See its own changelog.
 - The `sas-plus` feature grounds a domain and problem into a Fast Downward
   SAS+ task with `pddl::sas_plus::ground`. It computes relaxed reachability
   while it binds parameters, so groundings that can never apply are never
@@ -35,6 +47,8 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Licensed under `EUPL-1.2 OR MPL-2.0`, at your option, instead of `EUPL-1.2`
   alone. Versions already published keep the licence they were published under.
+- **Breaking:** `StructureDef` gains the variants `Process` and `Event` for
+  PDDL+ (see Added), so exhaustive matches on it need new arms.
 - The types and the parser moved into a new crate, `pddl-core`, which `pddl`
   re-exports in full, so paths such as `pddl::Domain` stay the same. The split
   lets `pddl-macros` use the parser while `pddl` re-exports the macros.
@@ -59,6 +73,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- A problem may leave out `:init`, which the grammar requires but VHPOP's
+  `durative.pddl` and other files omit; it parses with an empty initial state.
+- A durative action may leave out `:condition`, which the grammar requires
+  but many domains omit; it parses as no condition.
 - `parsers::check` is no longer quadratic in the number of errors: a file of
   100,000 bad lines took 21 s and now returns at once.
 - A lone carriage return counts as a line break in error positions.

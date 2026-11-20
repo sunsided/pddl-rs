@@ -66,6 +66,8 @@ const DOMAIN_SECTIONS: &[&str] = &[
     ":constraints",
     ":action",
     ":durative-action",
+    ":process",
+    ":event",
     ":derived",
     ":extends",
     ":timeless",
@@ -961,7 +963,7 @@ impl Server {
             let words = match parent.as_deref() {
                 Some("define") if problem => PROBLEM_SECTIONS,
                 Some("define") => DOMAIN_SECTIONS,
-                Some(":action") => ACTION_KEYWORDS,
+                Some(":action" | ":process" | ":event") => ACTION_KEYWORDS,
                 Some(":durative-action") => DURATIVE_ACTION_KEYWORDS,
                 Some(":requirements") => REQUIREMENTS,
                 _ => &[],

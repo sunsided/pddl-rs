@@ -17,6 +17,9 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The server asks clients that support it to watch `**/*.pddl`, so closed
   files changed on disk stay current in editors other than VS Code, and it
   re-reads changed closed files before a rename.
+- PDDL+ `(:process ...)` and `(:event ...)` sections are analysed like
+  actions: references, definitions, parameter scope, undeclared names, and
+  section and keyword completion.
 
 ### Fixed
 

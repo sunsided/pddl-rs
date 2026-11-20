@@ -193,6 +193,9 @@ fn ground_with_costs(
             StructureDef::Action(action) => Schema::new(&world, action),
             StructureDef::DurativeAction(_) => Err(GroundError::Unsupported("durative actions")),
             StructureDef::Derived(_) => Err(GroundError::Unsupported("derived predicates")),
+            StructureDef::Process(_) | StructureDef::Event(_) => {
+                Err(GroundError::Unsupported("processes and events"))
+            }
         })
         .collect::<Result<Vec<_>, _>>()?;
     let fluent: HashSet<&str> = schemas

@@ -94,8 +94,8 @@
 //! Deserializing rebuilds the PDDL text and runs the [`Parser`] on it, so the input is
 //! checked against the grammar and yields exactly what parsing the PDDL would. Where
 //! the Rust types can represent one PDDL form in several ways, the result is the
-//! parser's choice, and actions, durative actions and derived predicates come back in
-//! that order. Error messages quote the rebuilt PDDL.
+//! parser's choice, and actions, durative actions, derived predicates, processes and
+//! events come back in that order. Error messages quote the rebuilt PDDL.
 //!
 //! The format must be self-describing; formats like `bincode` aren't supported.
 //!

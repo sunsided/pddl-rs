@@ -1,10 +1,12 @@
-//! Pretty-printing of actions, durative actions and derived predicates.
+//! Pretty-printing of actions, durative actions, derived predicates, and PDDL+ processes
+//! and events.
 
 use std::ops::Deref;
 
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{
-    ActionDefinition, DerivedPredicate, DurativeActionDefinition, StructureDef, StructureDefs,
+    ActionDefinition, ActionSymbol, DerivedPredicate, DurativeActionDefinition,
+    PreconditionGoalDescriptions, ProcessDefinition, StructureDef, StructureDefs, TypedVariables,
 };
 use crate::visitor::{Accept, Visitor};
 use pretty::RcDoc;
@@ -12,37 +14,69 @@ use pretty::RcDoc;
 impl sealed::Sealed for ActionDefinition {}
 impl sealed::Sealed for DurativeActionDefinition {}
 impl sealed::Sealed for DerivedPredicate {}
+impl sealed::Sealed for ProcessDefinition {}
 impl sealed::Sealed for StructureDef {}
 impl sealed::Sealed for StructureDefs {}
 
 impl Visitor<ActionDefinition, RcDoc<'static>> for PrettyRenderer {
     fn visit(&self, value: &ActionDefinition) -> RcDoc<'static> {
-        let mut doc = RcDoc::text("(:action ")
-            .append(value.symbol().accept(self))
+        let effect = value.effect().as_ref().map(|e| e.accept(self));
+        self.action_like(
+            "(:action ",
+            value.symbol(),
+            value.parameters(),
+            value.precondition(),
+            effect,
+        )
+    }
+}
+
+impl Visitor<ProcessDefinition, RcDoc<'static>> for PrettyRenderer {
+    fn visit(&self, value: &ProcessDefinition) -> RcDoc<'static> {
+        // `()` parses back to no effect; a durative effect `(and)` would not.
+        let effect = Some(
+            value
+                .effect()
+                .as_ref()
+                .map_or_else(|| RcDoc::text("()"), |e| e.accept(self)),
+        );
+        self.action_like(
+            "(:process ",
+            value.symbol(),
+            value.parameters(),
+            value.precondition(),
+            effect,
+        )
+    }
+}
+
+impl PrettyRenderer {
+    /// Renders the form that actions, events and processes share; a missing effect as
+    /// `(and)`.
+    fn action_like(
+        &self,
+        opening: &'static str,
+        symbol: &ActionSymbol,
+        parameters: &TypedVariables,
+        precondition: &PreconditionGoalDescriptions,
+        effect: Option<RcDoc<'static>>,
+    ) -> RcDoc<'static> {
+        RcDoc::text(opening)
+            .append(symbol.accept(self))
             .append(RcDoc::hardline())
             .append(self.keyword_line("parameters"))
             .append(RcDoc::text(" ("))
-            .append(value.parameters().accept(self))
+            .append(parameters.accept(self))
             .append(")")
             .append(RcDoc::hardline())
             .append(self.keyword_line("precondition"))
             .append(RcDoc::text(" "))
-            .append(value.precondition().accept(self));
-
-        if let Some(effect) = value.effect() {
-            doc = doc
-                .append(RcDoc::hardline())
-                .append(self.keyword_line("effect"))
-                .append(RcDoc::text(" "))
-                .append(effect.accept(self));
-        } else {
-            doc = doc
-                .append(RcDoc::hardline())
-                .append(self.keyword_line("effect"))
-                .append(RcDoc::text(" (and)"));
-        }
-
-        doc.append(")")
+            .append(precondition.accept(self))
+            .append(RcDoc::hardline())
+            .append(self.keyword_line("effect"))
+            .append(RcDoc::text(" "))
+            .append(effect.unwrap_or_else(|| RcDoc::text("(and)")))
+            .append(")")
     }
 }
 
@@ -97,6 +131,21 @@ impl Visitor<StructureDef, RcDoc<'static>> for PrettyRenderer {
             StructureDef::Action(a) => a.accept(self),
             StructureDef::DurativeAction(da) => da.as_ref().accept(self),
             StructureDef::Derived(d) => d.accept(self),
+            StructureDef::Process(p) => p.as_ref().accept(self),
+            StructureDef::Event(e) => {
+                // `()` parses back to no effect; `(and)` would be an empty one.
+                let effect = e
+                    .effect()
+                    .as_ref()
+                    .map_or_else(|| RcDoc::text("()"), |effect| effect.accept(self));
+                self.action_like(
+                    "(:event ",
+                    e.symbol(),
+                    e.parameters(),
+                    e.precondition(),
+                    Some(effect),
+                )
+            }
         }
     }
 }

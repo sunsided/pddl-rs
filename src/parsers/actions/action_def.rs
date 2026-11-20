@@ -3,15 +3,77 @@
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
 use crate::parsers::{
-    empty_or, keyword_arg, opt_keyword_arg, parse_action_symbol, parse_effect, parse_pre_gd,
-    prefix, typed_variables,
+    empty_or, keyword_arg, opt_keyword_arg, parse_action_symbol, parse_da_effect, parse_effect,
+    parse_pre_gd, prefix, typed_variables,
 };
-use crate::types::ActionDefinition;
+use crate::types::{ActionDefinition, DurativeActionEffect, ProcessDefinition};
 
 /// Parses an action definition (`<action-def>`), i.e. `(:action <action-symbol> :parameters (<typed list (variable)>)
 /// [:precondition <pre-GD>] [:effect <effect>])`. `()` stands for no precondition or effect.
 pub(crate) fn parse_action_def(node: &Node) -> R<ActionDefinition> {
-    prefix(node, ":action", |args| {
+    parse_action_like(node, ":action")
+}
+
+/// Parses a PDDL+ event definition, i.e. `(:event <name> :parameters (<typed list (variable)>)
+/// [:precondition <pre-GD>] [:effect <effect>])`, which has the form of an action.
+pub(crate) fn parse_event_def(node: &Node) -> R<ActionDefinition> {
+    parse_action_like(node, ":event")
+}
+
+/// Parses a PDDL+ process definition, i.e. `(:process <name> :parameters (<typed list (variable)>)
+/// [:precondition <pre-GD>] [:effect <da-effect>])`. The effect is read like a durative
+/// action's, so its continuous effects keep `#t`, but it may contain only continuous effects
+/// such as `(increase (height) (* #t (velocity)))`: a timed `(at <time-specifier> ...)`
+/// effect is an error, and so is `when`, whose condition a `<da-effect>` reads as timed.
+pub(crate) fn parse_process_def(node: &Node) -> R<ProcessDefinition> {
+    prefix(node, ":process", |args| {
+        let symbol = parse_action_symbol(args.next()?)?;
+        let parameters = keyword_arg(args, ":parameters", typed_variables)?;
+        let precondition = opt_keyword_arg(args, ":precondition", |n| empty_or(n, parse_pre_gd))?;
+        let effect = opt_keyword_arg(args, ":effect", |n| empty_or(n, parse_process_effect))?;
+        args.reject_misspelled(&[":precondition", ":effect"])?;
+        Ok(ProcessDefinition::new(
+            symbol,
+            parameters,
+            precondition.flatten().into(),
+            effect.flatten(),
+        ))
+    })
+}
+
+/// Parses a process's effect: a `<da-effect>` made of continuous effects only.
+fn parse_process_effect(node: &Node) -> R<DurativeActionEffect> {
+    let effect = parse_da_effect(node)?;
+    reject_timed_effects(node)?;
+    Ok(effect)
+}
+
+/// Fails at the first `(at <time-specifier> ...)` or `(when ...)` effect in the parsed
+/// `<da-effect>` `node`, looking through `and` and `forall`; what remains are continuous
+/// effects. A `when` fails as a whole: in a `<da-effect>` its condition is a timed
+/// `<da-GD>`, and a process has no start or end for it to refer to.
+fn reject_timed_effects(node: &Node) -> R<()> {
+    let children = node.children().unwrap_or_default();
+    let effects = match node.head().map(str::to_ascii_lowercase).as_deref() {
+        Some("and") => children.get(1..),
+        Some("forall") => children.get(2..),
+        Some("at" | "when") => {
+            let reason = "a process allows only continuous effects";
+            return Err(node.error().reason(reason).fatal());
+        }
+        _ => None,
+    };
+
+    effects
+        .unwrap_or_default()
+        .iter()
+        .try_for_each(reject_timed_effects)
+}
+
+/// Parses `(<keyword> <name> :parameters ... [:precondition ...] [:effect ...])`, the
+/// form actions and events share.
+fn parse_action_like(node: &Node, keyword: &'static str) -> R<ActionDefinition> {
+    prefix(node, keyword, |args| {
         let symbol = parse_action_symbol(args.next()?)?;
         let parameters = keyword_arg(args, ":parameters", typed_variables)?;
         let precondition = opt_keyword_arg(args, ":precondition", |n| empty_or(n, parse_pre_gd))?;
@@ -27,6 +89,7 @@ pub(crate) fn parse_action_def(node: &Node) -> R<ActionDefinition> {
 }
 
 crate::parsers::impl_parser!(ActionDefinition => parse_action_def);
+crate::parsers::impl_parser!(ProcessDefinition => parse_process_def);
 
 #[cfg(test)]
 mod tests {
@@ -105,5 +168,77 @@ mod tests {
                     Some(Effects::from_str("(not (in ?x))").unwrap())
                 )
         );
+    }
+
+    #[test]
+    fn parses_pddl_plus_processes_and_events() {
+        let process = ProcessDefinition::from_str(
+            "(:process fall :parameters (?b - ball)
+               :precondition (falling ?b)
+               :effect (and (increase (height ?b) (* #t (velocity ?b)))
+                            (increase (velocity ?b) (* #t 9.8))))",
+        )
+        .unwrap();
+        check!(process.symbol() == &ActionSymbol::string("fall"));
+        check!(process.parameters().len() == 1);
+        check!(process.precondition().len() == 1);
+        assert2::assert!(let Some(DurativeActionEffect::All(effects)) = process.effect());
+        check!(effects.len() == 2);
+        check!(let DurativeActionEffect::Timed(TimedEffect::ContinuousEffect(..)) = &effects[0]);
+
+        let event = StructureDef::from_str(
+            "(:event bounce :parameters (?b - ball)
+               :precondition (and (falling ?b) (<= (height ?b) 0))
+               :effect (assign (velocity ?b) (* 0.8 (velocity ?b))))",
+        );
+        check!(let Ok(StructureDef::Event(_)) = event);
+
+        let without_effect = StructureDef::from_str("(:process idle :parameters ())").unwrap();
+        assert2::assert!(let StructureDef::Process(idle) = without_effect.clone());
+        let idle = *idle;
+        check!(idle.effect().is_none());
+        check!(idle.precondition().is_empty());
+        let symbol: &ActionSymbol = idle.as_ref();
+        check!(symbol == &ActionSymbol::string("idle"));
+        check!(StructureDef::from(idle) == without_effect);
+
+        check!(ProcessDefinition::from_str("(:action a :parameters ())").is_err());
+    }
+    /// The parse error of a discrete effect in a process.
+    const ONLY_CONTINUOUS: &str = "a process allows only continuous effects";
+
+    /// A process has only continuous effects, so a timed `at` effect anywhere in it,
+    /// also inside `and`, `forall` or `when`, is a parse error at that effect.
+    #[test]
+    fn process_rejects_timed_effects() {
+        let cases = [
+            "(:process fall :parameters (?b) :effect (at end (p)))",
+            "(:process fall :parameters (?b) :effect (and (increase (h) (* #t 1)) (at start (p))))",
+            "(:process fall :parameters (?b) :effect (forall (?x) (at end (increase (h) 1))))",
+        ];
+        for input in cases {
+            let error = ProcessDefinition::from_str(input).unwrap_err();
+            check!(error.reason() == Some(ONLY_CONTINUOUS), "{input}");
+            check!(input[error.offset()..].starts_with("(at "), "{input}");
+        }
+
+        // A `when` condition would be timed, so `when` fails as a whole, also around a
+        // continuous effect.
+        let conditional = [
+            "(:process fall :parameters (?b) :effect (when (at start (q)) (at end (p))))",
+            "(:process fall :parameters (?b)
+                :effect (forall (?x) (when (at start (q)) (decrease (h ?x) (* #t 2)))))",
+            "(:process fall :parameters (?b)
+                :effect (and (increase (h) (* #t 1)) (when (over all (q)) (increase (h) (* #t 2)))))",
+        ];
+        for input in conditional {
+            let error = ProcessDefinition::from_str(input).unwrap_err();
+            check!(error.reason() == Some(ONLY_CONTINUOUS), "{input}");
+            check!(input[error.offset()..].starts_with("(when "), "{input}");
+        }
+
+        let continuous = "(:process fall :parameters (?b)
+            :effect (forall (?x) (and (decrease (h ?x) (* #t 2)) (increase (t) #t))))";
+        check!(ProcessDefinition::from_str(continuous).is_ok());
     }
 }

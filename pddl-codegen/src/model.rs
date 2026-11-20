@@ -363,6 +363,9 @@ impl Model {
                     model.actions.push(action);
                 }
                 StructureDef::DurativeAction(_) => return unsupported("durative actions"),
+                StructureDef::Process(_) | StructureDef::Event(_) => {
+                    return unsupported("processes and events")
+                }
                 StructureDef::Derived(_) => {}
             }
         }

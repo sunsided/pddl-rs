@@ -1178,6 +1178,28 @@ mod tests {
         check!(hints("p.pddl") == ["object `t2` is never used"]);
     }
 
+    /// A PDDL+ process or event uses and checks names like an action does.
+    #[test]
+    fn checks_names_in_processes_and_events() {
+        let domain = "(define (domain d)
+  (:requirements :numeric-fluents :continuous-effects)
+  (:predicates (falling ?b) (held))
+  (:functions (height ?b) (velocity ?b))
+  (:process fall :parameters (?b)
+    :precondition (falling ?b)
+    :effect (increase (height ?b) (* #t (velocity ?b))))
+  (:event bounce :parameters (?b)
+    :precondition (and (held) (<= (height ?b) 0))
+    :effect (and (assign (velocity ?b) 0) (gone ?b))))";
+        let ws = workspace(&[("d.pddl", domain)]);
+        check!(messages(&ws, "d.pddl") == ["unknown predicate or function `gone`"]);
+
+        let height = ws
+            .target_at(&uri("d.pddl"), domain.find("(height ?b) 0").unwrap() + 1)
+            .unwrap();
+        check!(ws.definition(&height).unwrap().kind == Kind::Function);
+    }
+
     #[test]
     fn checks_problems_only_against_a_known_domain() {
         let problem = "(define (problem p) (:domain elsewhere) (:init (at a)) (:goal (at a)))";

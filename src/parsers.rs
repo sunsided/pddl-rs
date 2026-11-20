@@ -36,7 +36,7 @@ pub(crate) use structure::timeless_def::parse_timeless_def;
 pub(crate) use structure::types_def::parse_types_def;
 
 // actions: actions, derived predicates and their effects
-pub(crate) use actions::action_def::parse_action_def;
+pub(crate) use actions::action_def::{parse_action_def, parse_event_def, parse_process_def};
 pub(crate) use actions::action_symbol::parse_action_symbol;
 pub(crate) use actions::c_effect::parse_c_effect;
 pub(crate) use actions::cond_effect::parse_effect_condition;
