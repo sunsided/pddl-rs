@@ -46,6 +46,26 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   of ten private `ParseError` enums that all printed "Invalid operation".
   `MultiOp::try_from(BinaryOp)` fails with the new `NotAMultiOp`, and
   `NumberError` is now exported from the crate root.
+- Those `TryFrom<&str>` conversions ignore ASCII case, as the parser does, so
+  `Requirement::try_from(":STRIPS")` is `Requirement::Strips`.
+- `Number` compares with `==` against `Number`, `f64`, `f32` and the integer
+  types up to 32 bits through concrete impls instead of a generic one over
+  `Into<Number>`. Comparing with an infinite or NaN value is `false` instead of
+  a panic.
+- `FluentExpression::multi_op`, `DurativeActionFluentExpression::multi_op` and
+  `MetricFluentExpression::multi_op` return the `BinaryOp` the parser produces
+  for one extra operand, and the first operand alone for none.
+- `parsers::check` reports at most the first 1000 errors.
+
+### Fixed
+
+- `parsers::check` is no longer quadratic in the number of errors: a file of
+  100,000 bad lines took 21 s and now returns at once.
+- A lone carriage return counts as a line break in error positions.
+- Serializing a domain with repeated action, predicate, function or parameter
+  names fails, instead of producing duplicate keys that JSON readers drop.
+- Pretty-printed negative numbers in expressions print as `(- 5)`, and `-0` as
+  `0`, so the output parses again. `(- 5)` reads back as a negation.
 
 ## [0.4.0] - 2026-11-14
 
