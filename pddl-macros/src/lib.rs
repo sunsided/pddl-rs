@@ -59,6 +59,8 @@ use proc_macro::TokenStream;
 use expand::{Form, Kind};
 
 mod expand;
+#[cfg(feature = "codegen")]
+mod task;
 
 /// Checks one PDDL domain at compile time and expands to a
 /// `LazyLock<pddl::Domain>` that parses it on first use.
@@ -153,4 +155,54 @@ pub fn validated(input: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn validated_file(input: TokenStream) -> TokenStream {
     expand::run(Kind::Validated, Form::File, input)
+}
+
+/// Generates typed planning code for a PDDL domain into a module: one id type
+/// per PDDL type, `State`, `Statics`, `Action` and `Task`, which loads problems
+/// at run time and implements `pddl::runtime::Task`.
+///
+/// `domain = "blocks.pddl"` reads a file relative to the calling file and
+/// rebuilds when it changes; `domain_source = "(define ...)"` takes the PDDL
+/// itself. Items already in the module stay. Unsupported requirements and
+/// constructs are compile errors. Needs the `codegen` feature.
+///
+/// `types(robot = crate::Robot)` binds a PDDL type to a Rust type: `Task::new`
+/// then takes a closure per bound type that makes each object's value from its
+/// name, and `task.bound().robot[id.0 as usize]` holds it. `attach(near =
+/// crate::near)` backs a static predicate (`fn(&Bound, ids..) -> bool`) or
+/// function (`-> f64`) with a pure Rust function. Write `-` in PDDL names as
+/// `_`. See `pddl_codegen::Bindings`.
+///
+/// With `problem = "p.pddl"` (or `problem_source = "..."`) the task is
+/// grounded while the crate compiles instead (level B2): the module holds
+/// `State = [u64; WORDS]`, the mask tables `OPERATORS`, the names `NAMES`, and
+/// a unit struct `Task`. Only STRIPS with negative preconditions grounds this
+/// way. `max_operators = N` (default 100 000) and `max_facts = N` (default
+/// 10 000) turn a too large task into a compile error rather than a slow build.
+///
+/// ```
+/// #[pddl_macros::task(domain_source = r#"
+///     (define (domain switches)
+///       (:predicates (on ?s))
+///       (:action flip :parameters (?s) :precondition (not (on ?s)) :effect (on ?s)))
+/// "#)]
+/// mod switches {}
+///
+/// use pddl::Parser;
+/// use pddl::runtime::Task as _;
+///
+/// let problem = pddl::Problem::from_str(
+///     "(define (problem p) (:domain switches) (:objects a b) (:init) (:goal (on a)))",
+/// )
+/// .unwrap();
+/// let task = switches::Task::new(&problem).unwrap();
+/// let mut successors = Vec::new();
+/// task.successors(&task.initial_state(), &mut successors);
+/// assert_eq!(successors.len(), 2);
+/// assert_eq!(task.describe(successors[0].0), "(flip a)");
+/// ```
+#[cfg(feature = "codegen")]
+#[proc_macro_attribute]
+pub fn task(attr: TokenStream, item: TokenStream) -> TokenStream {
+    task::run(attr, item)
 }

@@ -1,0 +1,10 @@
+error: the derived predicates can't be stratified: `p` depends on its own negation
+ --> tests/ui/task_not_stratifiable.rs:1:37
+  |
+1 |   #[pddl_macros::task(domain_source = r#"
+  |  _____________________________________^
+2 | |     (define (domain d) (:requirements :derived-predicates)
+3 | |       (:predicates (p ?x) (q ?x))
+4 | |       (:derived (p ?x) (not (p ?x))))
+5 | | "#)]
+  | |__^

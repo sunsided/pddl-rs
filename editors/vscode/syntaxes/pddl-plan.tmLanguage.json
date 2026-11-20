@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "PDDL Plan",
+  "scopeName": "source.pddl.plan",
+  "patterns": [
+    { "name": "comment.line.semicolon.pddl", "match": ";.*$" },
+    { "name": "constant.numeric.pddl", "match": "-?\\d+(\\.\\d+)?" },
+    {
+      "begin": "\\(\\s*([^\\s()]+)",
+      "beginCaptures": { "1": { "name": "entity.name.function.pddl" } },
+      "end": "\\)",
+      "patterns": [{ "name": "variable.other.constant.pddl", "match": "[^\\s()]+" }]
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 //! Contains the [`TimeSpecifier`] type.
 
+use crate::types::keyword_error::UnknownKeyword;
 use std::fmt::{Display, Formatter};
 
 /// A time specifier used in e.g. [`TimedGD::At`](crate::types::TimedGD::At) and [`TimedEffect`](crate::types::TimedEffect).
@@ -32,21 +33,13 @@ impl Display for TimeSpecifier {
 }
 
 impl TryFrom<&str> for TimeSpecifier {
-    type Error = ParseError;
+    type Error = UnknownKeyword;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
             names::START => Ok(Self::Start),
             names::END => Ok(Self::End),
-            _ => Err(ParseError::InvalidSpecifier),
+            _ => Err(UnknownKeyword::new("time specifier", value)),
         }
     }
-}
-
-/// An error when parsing a [`TimeSpecifier`] from a string.
-#[derive(Debug, Clone, thiserror::Error)]
-pub enum ParseError {
-    #[error("Invalid specifier")]
-    /// The string is not a valid time specifier.
-    InvalidSpecifier,
 }

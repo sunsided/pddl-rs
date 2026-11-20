@@ -30,8 +30,13 @@ workspace = true
 pddl-core = { version = "0.4.0", path = "..", default-features = false, features = ["parser"] }
 proc-macro2 = "1.0.107"
 quote = "1.0.47"
-syn = { version = "3.0.10", default-features = false, features = ["parsing", "printing", "proc-macro"] }
+syn = { version = "3.0.10", default-features = false, features = ["parsing", "printing", "proc-macro", "full"] }
+pddl-codegen = { version = "0.1.0", path = "../pddl-codegen", optional = true }
+
+[features]
+## The `#[task]` attribute, which generates typed planning code from a domain.
+codegen = ["dep:pddl-codegen"]
 
 [dev-dependencies]
-pddl = { version = "0.4.0", path = "../pddl" }
+pddl = { version = "0.4.0", path = "../pddl", features = ["codegen"] }
 trybuild = "1.0.125"

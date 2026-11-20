@@ -1,6 +1,6 @@
 //! Converts a PDDL domain and problem to NOVA, and reads a problem written in NOVA.
 //!
-//! Run with `cargo run --example as_nova --features serde`.
+//! Run with `cargo run -p pddl-nova-tests --example as_nova`.
 
 use pddl::{Domain, Parser, Problem};
 

@@ -64,6 +64,34 @@ that corrects it.
   `:keyword value` pair on its own line, and keeps short lists on one line.
   It keeps your comments and blank lines.
 
+### Planning
+
+**PDDL: Solve with planutils** runs a [planutils](https://pypi.org/project/planutils)
+planner on the open problem and the domain its `(:domain ...)` names, as a
+task in the problem's folder: `planutils run <planner> <domain> <problem>`.
+Its terminal keeps the planner's output.
+Planners such as `lama-first` write the plan to `sas_plan` there. Install
+planutils with `pip install planutils` and a planner with
+`planutils install lama-first`. Desktop only, in a trusted folder.
+
+**PDDL: Validate Plan with VAL** checks the open plan (a `.plan`, `sas_plan`
+or `sas_plan.N` file) with [VAL](https://github.com/KCL-Planning/VAL) against
+its problem and domain, and marks the step whose precondition fails, or the
+last step if the goal isn't reached, with VAL's repair advice. The problem is
+the only one in the plan's folder, or the one you pick the first time. Go to
+Definition on a step's action opens it in the domain. Install VAL with
+`planutils install val` and set `pddl.validator` to `["val", "Validate"]`, or
+put VAL's `Validate` on `PATH`. Desktop only, in a trusted folder.
+
+**PDDL: Solve with Planning-as-a-Service** sends the open problem and its
+domain to a [Planning-as-a-Service](https://github.com/AI-Planning/planning-as-a-service)
+server, runs `pddl.planner` there and opens the plan it returns. It is off
+until you set `pddl.planningAsAService.url` in your user settings, such as
+`http://localhost:5001` for a server you run with
+`planutils install server-environment`, and it asks before it sends the files
+to a server for the first time. Works on the web too, where the server allows
+it (CORS).
+
 ### Highlighting
 
 Syntax highlighting for keywords, variables, numbers and comments. Semantic
@@ -94,6 +122,9 @@ the other features above don't cover embedded PDDL.
 | Setting             | Default | Description |
 |---------------------|---------|-------------|
 | `pddl.server.path`  | (empty) | Path to a native `pddl-lsp` binary. If empty, the extension uses the server it comes with. Ignored on the web. |
+| `pddl.planner`      | `lama-first` | The planutils planner that **PDDL: Solve with planutils** runs. |
+| `pddl.validator`    | `["Validate"]` | The VAL command, as a program and its first arguments; the extension appends `-v <domain> <problem> <plan>`. |
+| `pddl.planningAsAService.url` | (empty) | A Planning-as-a-Service server for **PDDL: Solve with Planning-as-a-Service**; empty turns it off. User settings only. |
 | `pddl.trace.server` | `off`   | Logs the messages between VS Code and the server to the "PDDL Language Server" output panel. |
 
 The **PDDL: Restart Language Server** command restarts the server.
@@ -107,6 +138,9 @@ folder, and a workspace can only set `pddl.server.path` after that.
 The extension also works in VS Code for the Web, such as
 [vscode.dev](https://vscode.dev) and github.dev, with the same bundled server.
 A native server can't run there.
+The server's WASI runtime needs a cross-origin isolated page
+(`SharedArrayBuffer`). If the extension reports that the page isn't, add
+`?vscode-coi=on` to the vscode.dev URL.
 
 ### Using a native server
 

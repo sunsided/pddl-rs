@@ -1,5 +1,6 @@
 //! Contains domain requirements such as [Strips](Requirement::Strips).
 
+use crate::types::keyword_error::UnknownKeyword;
 use std::borrow::Borrow;
 use std::fmt::{Display, Formatter};
 
@@ -258,7 +259,7 @@ impl Requirement {
 }
 
 impl TryFrom<&str> for Requirement {
-    type Error = ParseError;
+    type Error = UnknownKeyword;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
@@ -283,17 +284,9 @@ impl TryFrom<&str> for Requirement {
             names::PREFERENCES => Ok(Requirement::Preferences),
             names::CONSTRAINTS => Ok(Requirement::Constraints),
             names::ACTION_COSTS => Ok(Requirement::ActionCosts),
-            _ => Err(ParseError::InvalidRequirement),
+            _ => Err(UnknownKeyword::new("requirement key", value)),
         }
     }
-}
-
-#[derive(Debug, Clone, thiserror::Error)]
-/// An error when parsing a [`Requirement`] from a string.
-pub enum ParseError {
-    #[error("Invalid requirement")]
-    /// The string is not a known requirement key.
-    InvalidRequirement,
 }
 
 impl Borrow<str> for Requirement {

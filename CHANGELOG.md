@@ -12,14 +12,35 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   The new `macros` feature re-exports them, as `pddl::domain!` and so on.
 - The `serde` feature works with NOVA (`novafile::serde`), and
   `schema/pddl.novs` is a NOVA schema for it, down to the PDDL 3.1 grammar of
-  goals, effects and expressions, which the test corpus validates against. The `as_nova` example converts a domain and reads a hand-written
-  problem.
+  goals, effects and expressions, which the test corpus validates against. The `as_nova` example in
+  `pddl-nova-tests` converts a domain and reads a hand-written problem.
+
+- The `codegen` feature adds `#[pddl::task(domain = "blocks.pddl")] mod blocks {}`,
+  which generates typed planning code for a domain into the module: an id type
+  per PDDL type, a `State` with a field per predicate, an `Action` enum and a
+  `Task` that loads problems at run time. The code comes from the new
+  `pddl-codegen` crate and builds on the new `pddl-runtime` crate, which
+  `pddl::runtime` re-exports. `pddl::codegen` loads problems for it.
+
+- The `sas-plus` feature grounds a domain and problem into a Fast Downward
+  SAS+ task with `pddl::sas_plus::ground`. It computes relaxed reachability
+  while it binds parameters, so groundings that can never apply are never
+  built, and it fails with `GroundError::ConflictingEffects` instead of
+  splitting a delete into more than `MAX_DELETE_PIECES` conditional effects.
 
 ### Changed
 
 - The types and the parser moved into a new crate, `pddl-core`, which `pddl`
   re-exports in full, so paths such as `pddl::Domain` stay the same. The split
   lets `pddl-macros` use the parser while `pddl` re-exports the macros.
+- The `TryFrom<&str>` conversions of `AssignOp`, `TimedAssignOperator`,
+  `BinaryComparison`, `BinaryOp`, `MultiOp`, `Optimization`,
+  `DurationOperator`, `Interval`, `TimeSpecifier` and `Requirement` fail with
+  the new, public `UnknownKeyword`, which names the input and the kind of
+  keyword expected (`` `incr` is not a valid assignment operator ``), instead
+  of ten private `ParseError` enums that all printed "Invalid operation".
+  `MultiOp::try_from(BinaryOp)` fails with the new `NotAMultiOp`, and
+  `NumberError` is now exported from the crate root.
 
 ## [0.4.0] - 2026-11-14
 

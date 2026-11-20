@@ -1,0 +1,7 @@
+error: the grounded task has 3 operators, more than max_operators = 2; raise the limit or plan with the lifted form (no `problem`)
+ --> tests/ui/task_too_large.rs:2:21
+  |
+2 |       domain_source = r#"(define (domain d) (:predicates (p ?x))
+  |  _____________________^
+3 | |       (:action a :parameters (?x) :precondition () :effect (p ?x)))"#,
+  | |_____________________________________________________________________^

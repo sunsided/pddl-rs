@@ -39,10 +39,14 @@ sas-plus = ["pddl-core/sas-plus"]
 ## Re-exports the compile-time checked `domain!`, `problem!`, `pddl!` and `validated!`
 ## macros from `pddl-macros`, with their `_file` forms. Needs Rust 1.88.
 macros = ["parser", "dep:pddl-macros"]
+## Generates typed planning code from a domain with the `#[task]` attribute, and
+## re-exports `pddl-runtime` as `pddl::runtime` for the generated code. Needs Rust 1.88.
+codegen = ["macros", "pddl-macros/codegen", "pddl-core/codegen", "dep:pddl-runtime"]
 
 [dependencies]
 pddl-core = { version = "0.4.0", path = "..", default-features = false }
 pddl-macros = { version = "0.1.0", path = "../pddl-macros", optional = true }
+pddl-runtime = { version = "0.1.0", path = "../pddl-runtime", optional = true }
 
 [[test]]
 name = "macros"

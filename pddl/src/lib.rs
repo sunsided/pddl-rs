@@ -17,6 +17,10 @@
 //! * `macros` - Re-exports the `domain!`, `problem!`, `pddl!` and `validated!` macros
 //!   of [`pddl-macros`](https://docs.rs/pddl-macros), with their `_file` forms. They
 //!   check PDDL at compile time and turn syntax errors into compile errors. Needs Rust 1.88.
+//! * `codegen` - Adds the `#[task]` attribute, which generates typed planning code
+//!   from a domain into a module (see [`pddl-codegen`](https://docs.rs/pddl-codegen)),
+//!   and re-exports [`pddl-runtime`](https://docs.rs/pddl-runtime) as `pddl::runtime`.
+//!   Includes `macros`. Needs Rust 1.88.
 //!
 //! ## Example
 //!
@@ -341,3 +345,13 @@ pub use pddl_core::*;
 pub use pddl_macros::{
     domain, domain_file, pddl, pddl_file, problem, problem_file, validated, validated_file,
 };
+
+#[cfg_attr(docsrs, doc(cfg(feature = "codegen")))]
+#[cfg(feature = "codegen")]
+pub use pddl_macros::task;
+
+/// The task trait and fact storage that generated code builds on; see
+/// [`pddl_runtime`].
+#[cfg_attr(docsrs, doc(cfg(feature = "codegen")))]
+#[cfg(feature = "codegen")]
+pub use pddl_runtime as runtime;

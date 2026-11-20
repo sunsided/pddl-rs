@@ -1,5 +1,6 @@
 //! Contains the timed effect assignment operation type [`TimedAssignOperator`].
 
+use crate::types::keyword_error::UnknownKeyword;
 use std::fmt::{Display, Formatter};
 
 /// An assignment operation.
@@ -33,23 +34,15 @@ impl Display for TimedAssignOperator {
 }
 
 impl TryFrom<&str> for TimedAssignOperator {
-    type Error = ParseError;
+    type Error = UnknownKeyword;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
             names::INCREASE => Ok(Self::Increase),
             names::DECREASE => Ok(Self::Decrease),
-            _ => Err(ParseError::InvalidOperation),
+            _ => Err(UnknownKeyword::new("timed assignment operator", value)),
         }
     }
-}
-
-/// An error when parsing a [`TimedAssignOperator`] from a string.
-#[derive(Debug, Clone, thiserror::Error)]
-pub enum ParseError {
-    #[error("Invalid operation")]
-    /// The string is not a valid timed assignment operator.
-    InvalidOperation,
 }
 
 /// Alias for [`TimedAssignOperator`]; matches BNF `<assign-op-t>`.

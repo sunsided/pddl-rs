@@ -11,6 +11,11 @@ on:
       - 'pddl/**'
       - 'pddl-lsp/**'
       - 'pddl-macros/**'
+      - 'pddl-nova-tests/**'
+      - 'pddl-runtime/**'
+      - 'pddl-bench/**'
+      - 'pddl-codegen/**'
+      - 'schema/**'
       - 'editors/vscode/**'
       - '.github/workflows/rust.yml'
   pull_request:
@@ -22,6 +27,11 @@ on:
       - 'pddl/**'
       - 'pddl-lsp/**'
       - 'pddl-macros/**'
+      - 'pddl-nova-tests/**'
+      - 'pddl-runtime/**'
+      - 'pddl-bench/**'
+      - 'pddl-codegen/**'
+      - 'schema/**'
       - 'editors/vscode/**'
       - '.github/workflows/rust.yml'
 
@@ -63,13 +73,16 @@ jobs:
       # pddl-macros, and pddl's `macros` feature that pulls it in, need Rust 1.88.
       - name: Build with MSRV
         run: |
-          cargo build --workspace --all-features --exclude pddl --exclude pddl-macros
+          cargo build --workspace --all-features --exclude pddl --exclude pddl-macros --exclude pddl-nova-tests --exclude pddl-bench
           cargo build -p pddl --features miette,pretty,serde
-      # pddl-core's tests are left out: novafile, which its NOVA tests use, needs
-      # a newer Rust, and Cargo builds every dev-dependency for any test. They
-      # run on stable in "Build and Test"; the library builds on 1.86 above.
+      # The NOVA tests are in pddl-nova-tests, because novafile needs Rust 1.90
+      # and Cargo builds every dev-dependency for any test. They run on stable
+      # in "Build and Test".
       - name: Test with MSRV
         run: |
+          cargo test -p pddl-core --all-features
+          cargo test -p pddl-runtime --all-features
+          cargo test -p pddl-codegen
           cargo test -p pddl-lsp --all-features
           cargo test -p pddl --features miette,pretty,serde
       # `proc_macro::Span::local_file` and `line` are stable since 1.88. The
@@ -141,6 +154,10 @@ jobs:
         run: yarn run compile
       - name: Test in VS Code
         run: xvfb-run -a yarn run test
+      - name: Install Chromium for the web test
+        run: yarn playwright install --with-deps chromium
+      - name: Test in VS Code for the Web
+        run: yarn run test:web
       - name: Package
         run: yarn run package
 

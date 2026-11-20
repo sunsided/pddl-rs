@@ -4,8 +4,12 @@ pub(crate) mod actions;
 pub(crate) mod durative;
 pub(crate) mod expressions;
 pub(crate) mod goals;
+mod keyword_error;
 pub(crate) mod structure;
 pub(crate) mod terms;
+
+// errors of the keyword types' string conversions
+pub use keyword_error::{NotAMultiOp, UnknownKeyword};
 
 // structure: domain and problem definitions and their sections
 pub use structure::atomic_formula_skeleton::AtomicFormulaSkeleton;
@@ -116,7 +120,7 @@ pub use terms::function_type::FunctionType;
 pub use terms::function_typed::FunctionTyped;
 pub use terms::function_typed_list::FunctionTypedList;
 pub use terms::name::Name;
-pub use terms::number::Number;
+pub use terms::number::{Number, NumberError};
 pub use terms::predicate::Predicate;
 pub use terms::r#type::{PrimitiveType, Type};
 #[allow(unused_imports)]

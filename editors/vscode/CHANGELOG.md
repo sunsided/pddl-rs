@@ -4,6 +4,23 @@ All notable changes to the PDDL (pddl-lsp) extension are documented in this file
 
 ## Unreleased
 
+### Added
+
+- **PDDL: Solve with Planning-as-a-Service** solves the open problem on the
+  server of the new `pddl.planningAsAService.url` setting. Off by default; it
+  asks before it sends the domain and problem to a server.
+- Plan files (`.plan`, `sas_plan`) are highlighted, and Go to Definition on
+  a step's action opens it in the domain.
+- **PDDL: Validate Plan with VAL** runs VAL (the new `pddl.validator`
+  setting) on the open plan and shows its findings on the failing step.
+  Desktop only.
+- **PDDL: Solve with planutils** runs the planner of the new `pddl.planner`
+  setting (`lama-first` by default) on the open problem and its domain, as a
+  task. Desktop only.
+- A smoke test (`yarn run test:web`) runs the web entry point in VS Code for
+  the Web in a headless Chromium and checks that the bundled server publishes
+  diagnostics. It runs in CI.
+
 ## 0.2.0 - 2026-11-19
 
 ### Added

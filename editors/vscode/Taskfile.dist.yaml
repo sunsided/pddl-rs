@@ -65,6 +65,13 @@ tasks:
     cmds:
       - "{{if eq OS \"linux\"}}{{if not (env \"DISPLAY\")}}xvfb-run -a {{end}}{{end}}{{.YARN}} run test"
 
+  test:web:
+    desc: Run the web entry point in VS Code for the Web, in a headless Chromium
+    deps: [build, server]
+    cmds:
+      - "{{.YARN}} playwright install chromium"
+      - "{{.YARN}} run test:web"
+
   package:
     desc: Package the extension, with the server, as a .vsix file
     deps: [build, server]

@@ -1,0 +1,33 @@
+[package]
+name = "pddl-bench"
+version = "0.0.0"
+description = "Benchmarks and cross-checks of the runtime grounder and generated planning code; not published"
+license = "EUPL-1.2"
+repository = "https://github.com/sunsided/pddl-rs"
+authors = ["Markus Mayer <widemeadows@gmail.com>"]
+edition = "2021"
+rust-version = "1.88.0"
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+pddl = { path = "../pddl", default-features = false, features = ["parser", "sas-plus", "codegen"] }
+pddl-runtime = { path = "../pddl-runtime", features = ["search"] }
+
+[dev-dependencies]
+criterion = { version = "0.8", default-features = false, features = ["cargo_bench_support"] }
+
+[[bench]]
+name = "search"
+harness = false
+
+[[bench]]
+name = "compare"
+harness = false
+
+[build-dependencies]
+# Generates the gripper domain into OUT_DIR, as a build script user would.
+pddl-codegen = { path = "../pddl-codegen" }
+pddl-core = { path = "..", default-features = false, features = ["parser"] }

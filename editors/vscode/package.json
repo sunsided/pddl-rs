@@ -32,7 +32,10 @@
       "supported": "limited",
       "description": "In Restricted Mode, only syntax highlighting is available. The language server starts once you trust the folder, so an untrusted folder can't choose a program through `pddl.server.path`.",
       "restrictedConfigurations": [
-        "pddl.server.path"
+        "pddl.server.path",
+        "pddl.planner",
+        "pddl.validator",
+        "pddl.planningAsAService.url"
       ]
     }
   },
@@ -48,6 +51,22 @@
         ],
         "extensions": [
           ".pddl"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "pddl-plan",
+        "aliases": [
+          "PDDL Plan"
+        ],
+        "extensions": [
+          ".plan"
+        ],
+        "filenames": [
+          "sas_plan"
+        ],
+        "filenamePatterns": [
+          "sas_plan.*"
         ],
         "configuration": "./language-configuration.json"
       }
@@ -113,6 +132,11 @@
         "embeddedLanguages": {
           "meta.embedded.block.pddl": "pddl"
         }
+      },
+      {
+        "language": "pddl-plan",
+        "scopeName": "source.pddl.plan",
+        "path": "./syntaxes/pddl-plan.tmLanguage.json"
       }
     ],
     "configuration": {
@@ -133,6 +157,27 @@
           ],
           "default": "off",
           "description": "Logs the messages between VS Code and the language server to the output panel."
+        },
+        "pddl.planner": {
+          "type": "string",
+          "default": "lama-first",
+          "markdownDescription": "The [planutils](https://pypi.org/project/planutils) planner that **PDDL: Solve with planutils** runs, such as `lama-first`, `lama` or `enhsp`. Install it with `planutils install <planner>`."
+        },
+        "pddl.validator": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "Validate"
+          ],
+          "markdownDescription": "The command that runs [VAL](https://github.com/KCL-Planning/VAL) for **PDDL: Validate Plan with VAL**, as a program and its first arguments. The extension appends `-v <domain> <problem> <plan>`. With planutils (`planutils install val`), use `[\"val\", \"Validate\"]`."
+        },
+        "pddl.planningAsAService.url": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "markdownDescription": "A [Planning-as-a-Service](https://github.com/AI-Planning/planning-as-a-service) server, such as `http://localhost:5001` for one you run with `planutils install server-environment`. Empty (the default) turns **PDDL: Solve with Planning-as-a-Service** off. The command sends the full text of the domain and problem to this server, and asks before it does. Only user settings can set it, not a workspace."
         }
       }
     },
@@ -140,12 +185,56 @@
       {
         "command": "pddl.restartServer",
         "title": "PDDL: Restart Language Server"
+      },
+      {
+        "command": "pddl.solveWithPlanutils",
+        "title": "PDDL: Solve with planutils",
+        "enablement": "!isWeb"
+      },
+      {
+        "command": "pddl.validatePlan",
+        "title": "PDDL: Validate Plan with VAL",
+        "enablement": "!isWeb"
+      },
+      {
+        "command": "pddl.solveWithService",
+        "title": "PDDL: Solve with Planning-as-a-Service"
       }
     ],
     "snippets": [
       {
         "language": "pddl",
         "path": "./snippets/pddl.json"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "pddl.solveWithPlanutils",
+          "when": "!isWeb && editorLangId == pddl"
+        },
+        {
+          "command": "pddl.validatePlan",
+          "when": "!isWeb && editorLangId == pddl-plan"
+        },
+        {
+          "command": "pddl.solveWithService",
+          "when": "editorLangId == pddl"
+        }
+      ]
+    },
+    "taskDefinitions": [
+      {
+        "type": "pddl-planutils",
+        "required": [
+          "planner"
+        ],
+        "properties": {
+          "planner": {
+            "type": "string",
+            "description": "The planutils planner to run."
+          }
+        }
       }
     ]
   },
@@ -156,7 +245,8 @@
     "watch": "node esbuild.mjs --watch",
     "package": "vsce package --no-dependencies --baseContentUrl https://github.com/sunsided/pddl-rs/blob/main/editors/vscode --baseImagesUrl https://github.com/sunsided/pddl-rs/raw/main/editors/vscode",
     "vscode:prepublish": "yarn run compile:production",
-    "test": "node test/run.js"
+    "test": "node test/run.js",
+    "test:web": "node test/web.js"
   },
   "dependencies": {
     "@vscode/wasm-wasi": "1.0.2",
@@ -167,6 +257,7 @@
     "@types/node": "20.17.6",
     "@types/vscode": "1.91.0",
     "@vscode/test-electron": "2.4.1",
+    "@vscode/test-web": "0.0.81",
     "@vscode/vsce": "4.1.0",
     "esbuild": "0.28.1",
     "typescript": "5.6.3"

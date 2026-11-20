@@ -60,13 +60,13 @@ pub struct CallSite {
 }
 
 /// The PDDL to check, with what the expansion needs to embed it.
-struct Source {
+pub(crate) struct Source {
     /// The PDDL text.
-    text: String,
+    pub(crate) text: String,
     /// An expression of type `&'static str` that yields exactly the checked
     /// text in the expansion: the literal itself, or, for a file, the text read
     /// here as a new literal (see [`load_file`]).
-    expr: TokenStream,
+    pub(crate) expr: TokenStream,
     /// How error messages name the place of the PDDL.
     origin: diagnostics::Origin,
 }
@@ -84,7 +84,7 @@ pub fn run(kind: Kind, form: Form, input: proc_macro::TokenStream) -> proc_macro
 /// `syn` emits one `compile_error!` per error, back to back. That is only a
 /// valid expression for a single error, so the calls become statements of a
 /// block whose value, `panic!()`, fits any expected type.
-fn compile_errors(error: &syn::Error) -> TokenStream {
+pub(crate) fn compile_errors(error: &syn::Error) -> TokenStream {
     let errors = error.to_compile_error();
 
     quote!({ #errors ::core::panic!() })
@@ -96,7 +96,7 @@ fn compile_errors(error: &syn::Error) -> TokenStream {
 /// failing: IDE expansions and generated tokens have no local file, and a
 /// path that resolves elsewhere still gets a "couldn't read" error naming the
 /// absolute path it tried.
-fn call_site(input: &proc_macro::TokenStream) -> CallSite {
+pub(crate) fn call_site(input: &proc_macro::TokenStream) -> CallSite {
     let span = proc_macro::Span::call_site();
     let base_dir = span
         .local_file()
@@ -145,7 +145,7 @@ fn parse_literal(input: ParseStream<'_>) -> syn::Result<LitStr> {
 }
 
 /// Reads the PDDL, from the literal or from the file it names.
-fn load(form: Form, literal: &LitStr, call_site: &CallSite) -> syn::Result<Source> {
+pub(crate) fn load(form: Form, literal: &LitStr, call_site: &CallSite) -> syn::Result<Source> {
     match form {
         Form::Inline => Ok(Source {
             text: literal.value(),
@@ -202,7 +202,7 @@ fn load_file(literal: &LitStr, call_site: &CallSite) -> syn::Result<Source> {
 
 /// Checks the PDDL: every syntax error, then whether it is the kind of
 /// definition the macro expects.
-fn validate(kind: Kind, source: &Source, literal: &LitStr) -> syn::Result<()> {
+pub(crate) fn validate(kind: Kind, source: &Source, literal: &LitStr) -> syn::Result<()> {
     let errors = check(&source.text)
         .iter()
         .map(|error| diagnostics::message(error, &source.text, &source.origin))

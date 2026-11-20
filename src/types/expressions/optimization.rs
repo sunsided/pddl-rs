@@ -1,5 +1,6 @@
 //! Contains the [`Optimization`] type.
 
+use crate::types::keyword_error::UnknownKeyword;
 use std::fmt::{Display, Formatter};
 
 /// An optimization instruction.
@@ -35,21 +36,13 @@ impl Display for Optimization {
 }
 
 impl TryFrom<&str> for Optimization {
-    type Error = ParseError;
+    type Error = UnknownKeyword;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
             names::MINIMIZE => Ok(Self::Minimize),
             names::MAXIMIZE => Ok(Self::Maximize),
-            _ => Err(ParseError::InvalidGoal),
+            _ => Err(UnknownKeyword::new("optimization", value)),
         }
     }
-}
-
-/// An error when parsing an [`Optimization`] from a string.
-#[derive(Debug, Clone, thiserror::Error)]
-pub enum ParseError {
-    #[error("Invalid goal")]
-    /// The string is neither `minimize` nor `maximize`.
-    InvalidGoal,
 }

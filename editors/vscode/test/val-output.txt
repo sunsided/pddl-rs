@@ -1,0 +1,35 @@
+Type-checking drive
+...action passes type checking.
+Checking plan: deliver.plan
+Plan to validate:
+
+Plan size: 2
+1:
+(drive t1 home home)
+ 
+2:
+(drive t1 shop home)
+ 
+
+Plan Validation details
+-----------------------
+
+Checking next happening (time 1)
+WARNING: (drive t1 home home) adds and deletes the literal (at t1 home)
+Deleting (at t1 home)
+Adding (at t1 home)
+
+Checking next happening (time 2)
+Plan failed because of unsatisfied precondition in:
+(drive t1 shop home)
+
+Plan failed to execute
+
+Plan Repair Advice:
+
+(drive t1 shop home) has an unsatisfied precondition at time 2
+(Set (at t1 shop) to true)
+
+
+Failed plans:
+ deliver.plan 
