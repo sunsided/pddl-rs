@@ -106,3 +106,96 @@ fn cost_functions_must_hold_non_negative_integers() {
         }
     );
 }
+
+#[test]
+fn cost_functions_may_hold_any_number_without_the_metric() {
+    let problem = Problem::from_str(
+        "(define (problem p) (:domain fuel) (:objects a b - place)
+           (:init (at a) (road a b) (= (need a b) 2.5) (= (fuel) 5) (= (capacity) 5))
+           (:goal (at b)))",
+    )
+    .unwrap();
+    let task = fuel::Task::new(&problem).unwrap();
+    assert_eq!(breadth_first(&task).plan.unwrap().actions.len(), 1);
+}
+
+/// Each action reads `f`, which may be undefined or huge, in a condition whose
+/// value must not depend on the order of its parts.
+#[pddl::task(domain_source = r"
+(define (domain order)
+  (:requirements :adl :typing :numeric-fluents)
+  (:types thing)
+  (:predicates (p) (q) (done))
+  (:functions (f) (g ?t - thing))
+  (:action or-first :parameters () :precondition (or (> (f) 0) (p)) :effect (done))
+  (:action or-last :parameters () :precondition (or (p) (> (f) 0)) :effect (done))
+  (:action nand-first :parameters () :precondition (not (and (> (f) 0) (q))) :effect (done))
+  (:action nand-last :parameters () :precondition (not (and (q) (> (f) 0))) :effect (done))
+  (:action exists-g :parameters () :precondition (exists (?t - thing) (> (g ?t) 0)) :effect (done))
+  (:action when-or :parameters () :precondition (p)
+    :effect (when (or (p) (> (f) 0)) (done)))
+  (:action square :parameters () :precondition (> (* (f) (f)) 0) :effect (done))
+  (:action overflow :parameters () :precondition (p) :effect (scale-up (f) (f))))
+")]
+mod order {}
+
+/// An `order` problem: `(p)` holds, `(q)` doesn't, `g` is 1 at `t1` and
+/// undefined at `t2`; `f` is set by `init`, and the goal is `goal`.
+fn order_task(init: &str, goal: &str) -> order::Task {
+    let problem = Problem::from_str(&format!(
+        "(define (problem x) (:domain order) (:objects t1 t2 - thing)
+           (:init (p) (= (g t1) 1) {init}) (:goal {goal}))"
+    ))
+    .unwrap();
+    order::Task::new(&problem).unwrap()
+}
+
+/// The applicable actions of the initial state, and whether `when-or` adds `(done)`.
+fn applicable(task: &order::Task) -> (Vec<String>, bool) {
+    let mut out = Vec::new();
+    task.successors(&task.initial_state(), &mut out);
+    let done = out
+        .iter()
+        .any(|(a, next)| task.describe(*a) == "(when-or)" && next.done);
+    let names = out.iter().map(|(a, _)| task.describe(*a)).collect();
+
+    (names, done)
+}
+
+#[test]
+fn undefined_values_fail_a_condition_in_any_order() {
+    for goal in [
+        "(or (> (f) 0) (p))",
+        "(or (p) (> (f) 0))",
+        "(not (and (q) (> (f) 0)))",
+        "(not (and (> (f) 0) (q)))",
+    ] {
+        let task = order_task("", goal);
+        assert!(!task.is_goal(&task.initial_state()), "{goal}");
+    }
+    let task = order_task("", "(done)");
+    assert_eq!(applicable(&task), (vec!["(when-or)".to_string()], false));
+}
+
+#[test]
+fn non_finite_values_are_undefined() {
+    // 1e200: the parser takes no exponents.
+    let task = order_task(
+        &format!("(= (f) 1{})", "0".repeat(200)),
+        "(> (* (f) (f)) 0)",
+    );
+    let (mut names, done) = applicable(&task);
+    names.sort();
+    assert_eq!(
+        names,
+        [
+            "(nand-first)",
+            "(nand-last)",
+            "(or-first)",
+            "(or-last)",
+            "(when-or)"
+        ]
+    );
+    assert!(done);
+    assert!(!task.is_goal(&task.initial_state()));
+}

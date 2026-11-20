@@ -104,7 +104,9 @@ don't hold.
 **Identifiers.** Types and actions become `CamelCase`, predicates and
 parameters `snake_case`; Rust keywords get a trailing `_` (`?type` is
 `type_`). Names that map to the same identifier (`on-table`, `on_table`) are a
-compile error that names them.
+compile error that names them. The generated locals that could meet a PDDL
+name start with `__`: matches bind action fields as `__p0`, `__p1`, ..., and
+`Task::new` takes the closure of a bound type `robot` as `__robot`.
 
 **Supported** in B1 itself: STRIPS, `:typing`, `:negative-preconditions`,
 `:equality`. Other requirements are compile errors
@@ -146,22 +148,28 @@ against hand-computed optima.
 - **Undefined values** follow PDDL 2.1. A comparison that reads an undefined
   value makes the whole precondition or `when` condition fail, also under
   `not` (a `Cell` flag, set by the comparison, checked after each conjunct).
-  An action whose numeric effect reads an undefined value is not applicable:
-  `apply_<n>` returns `None`, and successors skip it.
+  So that the result does not depend on the order of the parts, `and`, `or`
+  and quantifiers over a comparison evaluate every part (`&`, `|`, `fold`),
+  and so does the goal's `Formula`. A non-finite result of arithmetic, as from
+  an overflow, is undefined too, as is a non-finite literal or attachment value.
+  An action whose numeric effect reads an undefined value or yields a
+  non-finite one is not applicable: `apply_<n>` returns `None`, and successors
+  skip it.
 - `assign` evaluates its value in the state before the action; `increase`,
   `decrease`, `scale-up` and `scale-down` apply to the state being built, so
   several increases of one fluent add up. A `scale-down` by 0 is undefined.
 - **Costs.** `(increase (total-cost) e)` is not a state fluent: it becomes
   `Task::cost`, used when the problem has `(:metric minimize (total-cost))`
   and 1 otherwise. `e` must be a sum or product of non-negative integer
-  literals and static functions, at the top level of the effect; the loader
-  rejects initial values of those functions that are not non-negative
-  integers (`LoadError::InvalidCost`), and an undefined cost makes the action
-  inapplicable. Actions without a cost effect cost 0 under the metric, as in
+  literals and static functions, at the top level of the effect; under the
+  metric the loader rejects initial values of those functions that are not
+  non-negative integers (`LoadError::InvalidCost`), and an undefined cost
+  makes the action inapplicable. Actions without a cost effect cost 0 under the metric, as in
   the grounder.
 - The parser reads `(= (f) (g))` as an equality of terms and
   `(assign (f) (g))` as an object assignment; for numeric functions the model
-  turns both into their numeric meaning.
+  turns both into their numeric meaning, and the loader does the same for a
+  goal `(= (f) (g))`.
 
 Checks (`pddl-bench/tests/numeric.rs`): lockstep and per-operator costs
 against the grounder on gripper-costs and courier, optima 7 and 16; a `fuel`
