@@ -121,3 +121,76 @@ impl fmt::Display for ModelErrorKind {
 }
 
 impl core::error::Error for ModelError {}
+
+#[cfg(test)]
+mod tests {
+    //! Pins the exact text of every model error, as users read it.
+
+    use alloc::string::ToString;
+
+    use super::*;
+
+    #[test]
+    fn model_errors_display_location_and_kind() {
+        let name = || "drive".to_string();
+        let cases = [
+            (
+                ModelErrorKind::DomainMismatch {
+                    domain: "trucks".to_string(),
+                    problem_domain: "boats".to_string(),
+                },
+                "the problem is for domain `boats`, not `trucks`",
+            ),
+            (ModelErrorKind::UnknownType(name()), "unknown type `drive`"),
+            (
+                ModelErrorKind::UnknownPredicate(name()),
+                "unknown predicate `drive`",
+            ),
+            (
+                ModelErrorKind::UnknownFunction(name()),
+                "unknown function `drive`",
+            ),
+            (
+                ModelErrorKind::UnknownObject(name()),
+                "unknown object `drive`",
+            ),
+            (
+                ModelErrorKind::UnboundVariable(name()),
+                "unbound variable `?drive`",
+            ),
+            (
+                ModelErrorKind::Arity {
+                    symbol: name(),
+                    expected: 2,
+                    found: 3,
+                },
+                "`drive` takes 2 arguments but is given 3",
+            ),
+            (
+                ModelErrorKind::DuplicateAction(name()),
+                "action `drive` is defined twice",
+            ),
+            (
+                ModelErrorKind::DuplicateVariable(name()),
+                "variable `?drive` is declared twice",
+            ),
+            (
+                ModelErrorKind::DerivedPredicateSet(name()),
+                "derived predicate `drive` cannot be set directly",
+            ),
+            (ModelErrorKind::EqualitySet, "`=` cannot be set"),
+            (
+                ModelErrorKind::ContradictoryTimedLiterals {
+                    atom: "(open shop)".to_string(),
+                    time: "1.5".to_string(),
+                },
+                "timed literals make `(open shop)` both true and false at 1.5",
+            ),
+        ];
+
+        for (kind, text) in cases {
+            let error = ModelError::new("action `drive`", kind);
+            assert_eq!(error.to_string(), alloc::format!("action `drive`: {text}"));
+        }
+    }
+}

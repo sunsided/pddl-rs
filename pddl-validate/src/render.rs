@@ -163,3 +163,85 @@ pub const fn binary_text(op: BinaryOp) -> &'static str {
         BinaryOp::Division => "/",
     }
 }
+
+#[cfg(test)]
+mod tests {
+    //! Pins the PDDL text of every goal and expression form.
+
+    use alloc::string::ToString;
+    use alloc::vec;
+
+    use pddl::Parser;
+
+    use super::*;
+
+    /// Parses `text` as a goal and renders it with `?t` bound to `t1`.
+    #[expect(
+        clippy::expect_used,
+        reason = "a test fails loudly on a broken fixture"
+    )]
+    fn render(text: &str) -> String {
+        let gd = GoalDescription::from_str(text).expect("the goal parses");
+        goal(&gd, &vec![("t".to_string(), "t1".to_string())])
+    }
+
+    #[test]
+    fn goals_render_with_bound_variables_replaced() {
+        let cases = [
+            ("(at ?t ?place)", "(at t1 ?place)"),
+            ("(not (at ?t home))", "(not (at t1 home))"),
+            ("(= ?t t2)", "(= t1 t2)"),
+            ("(and)", "(and)"),
+            ("(or (p) (not (and)))", "(or (p) (not (and)))"),
+            ("(imply (p) (q ?t))", "(imply (p) (q t1))"),
+            (
+                "(forall (?t - truck) (at ?t home))",
+                "(forall (?t - truck) (at ?t home))",
+            ),
+            (
+                "(exists (?x - place) (at ?t ?x))",
+                "(exists (?x - place) (at t1 ?x))",
+            ),
+            ("(p (f ?t))", "(p (f t1))"),
+        ];
+
+        for (text, rendered) in cases {
+            assert_eq!(render(text), rendered, "{text}");
+        }
+    }
+
+    #[test]
+    #[expect(
+        clippy::expect_used,
+        clippy::panic,
+        reason = "a test fails loudly on a broken fixture"
+    )]
+    fn negated_literals_render_as_not() {
+        let GoalDescription::AtomicFormula(atom) =
+            GoalDescription::from_str("(at ?t home)").expect("the goal parses")
+        else {
+            panic!("an atomic formula");
+        };
+        let gd = GoalDescription::Literal(Literal::new_not(atom));
+
+        assert_eq!(goal(&gd, &vec![]), "(not (at ?t home))");
+    }
+
+    #[test]
+    fn expressions_render_every_operator() {
+        let cases = [
+            ("(> (fuel ?t) 0.5)", "(> (fuel t1) 0.5)"),
+            ("(< (- (fuel)) 1)", "(< (- (fuel)) 1)"),
+            ("(= (* (fuel) 2) 1)", "(= (* (fuel) 2) 1)"),
+            ("(>= (+ (fuel) 2) 1)", "(>= (+ (fuel) 2) 1)"),
+            ("(<= (- (fuel) 2) 1)", "(<= (- (fuel) 2) 1)"),
+            ("(= (/ (fuel) 2) 1)", "(= (/ (fuel) 2) 1)"),
+            ("(= (+ (fuel) 2 3) 1)", "(= (+ (fuel) 2 3) 1)"),
+            ("(= (* (fuel) 2 3) 1)", "(= (* (fuel) 2 3) 1)"),
+        ];
+
+        for (text, rendered) in cases {
+            assert_eq!(render(text), rendered, "{text}");
+        }
+    }
+}

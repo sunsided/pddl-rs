@@ -675,3 +675,439 @@ impl fmt::Display for Construct {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    //! Pins the exact text of every diagnostic, as users read it.
+
+    use alloc::string::ToString;
+    use alloc::vec;
+
+    use super::*;
+    use crate::Plan;
+
+    /// Returns step 3, `(drive t1 a b)`, of a sequential plan.
+    fn step() -> StepRef {
+        StepRef {
+            number: 3,
+            line: 0,
+            action: "(drive t1 a b)".to_string(),
+            time: None,
+        }
+    }
+
+    /// Returns the unmet atom `(at t1 a)`, which needs to be true.
+    fn at() -> Unmet {
+        Unmet::Atom {
+            atom: Atom::new("at", ["t1", "a"]),
+            expected: true,
+            derived: false,
+        }
+    }
+
+    /// Returns the syntax error of the plan text `(a`.
+    #[expect(
+        clippy::expect_used,
+        reason = "a test fails loudly on a broken fixture"
+    )]
+    fn syntax_error() -> crate::PlanError {
+        "(a".parse::<Plan>().expect_err("`(a` is not closed")
+    }
+
+    /// Returns the advice for `kind`, tied to [`step`] when `with_step` holds.
+    fn advice(kind: ViolationKind, with_step: bool) -> String {
+        let step = with_step.then(step);
+        Violation { step, kind }.advice()
+    }
+
+    #[test]
+    fn report_accessors_match_the_outcome() {
+        let unsupported = Unsupported::new(Construct::Constraints, "problem");
+        let report = Report::new(Outcome::Unsupported(unsupported.clone()), vec![]);
+        assert_eq!(report.status(), ValidationStatus::Unsupported);
+        assert_eq!(report.unsupported(), Some(&unsupported));
+        assert_eq!(report.violation(), None);
+        assert_eq!(report.outcome(), &Outcome::Unsupported(unsupported));
+
+        let report = Report::new(Outcome::Valid, vec![]);
+        assert_eq!(report.unsupported(), None);
+        assert_eq!(report.violation(), None);
+    }
+
+    #[test]
+    fn violation_kinds_display_their_diagnostic() {
+        let atom = Atom::new("fuel", ["t1"]);
+        let cases = [
+            (
+                ViolationKind::PlanSyntax(syntax_error()),
+                "cannot read the plan: line 1, column 1: `(` is never closed",
+            ),
+            (
+                ViolationKind::UnknownAction("fly".to_string()),
+                "unknown action `fly`",
+            ),
+            (
+                ViolationKind::Arity {
+                    expected: 2,
+                    found: 1,
+                },
+                "expected 2 arguments, found 1",
+            ),
+            (
+                ViolationKind::UnknownObject {
+                    parameter: "t".to_string(),
+                    object: "t9".to_string(),
+                },
+                "unknown object `t9` for ?t",
+            ),
+            (
+                ViolationKind::TypeMismatch {
+                    parameter: "t".to_string(),
+                    object: "home".to_string(),
+                    expected: "truck".to_string(),
+                },
+                "`home` is not of type `truck`, as ?t requires",
+            ),
+            (
+                ViolationKind::Undefined(atom.clone()),
+                "(fuel t1) is undefined",
+            ),
+            (
+                ViolationKind::DivisionByZero("(/ 1 (fuel t1))".to_string()),
+                "(/ 1 (fuel t1)) divides by zero",
+            ),
+            (
+                ViolationKind::NonFinite("(* 1e308 10)".to_string()),
+                "(* 1e308 10) has no finite value",
+            ),
+            (
+                ViolationKind::ConflictingUpdates(atom),
+                "(fuel t1) is updated twice in incompatible ways",
+            ),
+            (
+                ViolationKind::MissingTimestamp,
+                "the plan is timed but this step has no time",
+            ),
+            (
+                ViolationKind::MissingDuration,
+                "a durative action needs a [duration]",
+            ),
+            (
+                ViolationKind::UnexpectedDuration,
+                "an instantaneous action cannot have a [duration]",
+            ),
+            (
+                ViolationKind::NonPositiveDuration(-1.5),
+                "the duration -1.5 is not a positive, finite number",
+            ),
+            (
+                ViolationKind::InvalidTime(-2.0),
+                "the time -2 is not a non-negative, finite number",
+            ),
+            (
+                ViolationKind::SelfOverlap { other: 1 },
+                "overlaps step 1, the same action with the same arguments",
+            ),
+            (
+                ViolationKind::Interference {
+                    event: "start".to_string(),
+                    other: "end of (load t1) (step 2)".to_string(),
+                    time: 4.0,
+                    separation: 0.0,
+                },
+                "start at time 4 interferes with end of (load t1) (step 2) 0 apart",
+            ),
+            (
+                ViolationKind::EventCascade {
+                    time: 2.5,
+                    limit: 1000,
+                },
+                "events still trigger at time 2.5 after 1000 rounds",
+            ),
+        ];
+
+        for (kind, text) in cases {
+            assert_eq!(kind.to_string(), text);
+        }
+    }
+
+    #[test]
+    fn condition_violations_display_the_unmet_part() {
+        let cases = [
+            (
+                ViolationKind::PreconditionUnsatisfied(at()),
+                "unsatisfied precondition: (at t1 a)",
+            ),
+            (
+                ViolationKind::GoalUnsatisfied(at()),
+                "goal not satisfied: (at t1 a)",
+            ),
+            (
+                ViolationKind::DurationConstraint(at()),
+                "the duration violates (at t1 a)",
+            ),
+            (
+                ViolationKind::StartConditionUnsatisfied(at()),
+                "unsatisfied condition at start: (at t1 a)",
+            ),
+            (
+                ViolationKind::EndConditionUnsatisfied(at()),
+                "unsatisfied condition at end: (at t1 a)",
+            ),
+            (
+                ViolationKind::InvariantViolated {
+                    time: 1.5,
+                    unmet: at(),
+                },
+                "invariant violated at time 1.5: (at t1 a)",
+            ),
+        ];
+
+        for (kind, text) in cases {
+            assert_eq!(kind.to_string(), text);
+        }
+    }
+
+    #[test]
+    fn violation_display_names_the_step() {
+        let violation = Violation {
+            step: Some(step()),
+            kind: ViolationKind::MissingDuration,
+        };
+        assert_eq!(
+            violation.to_string(),
+            "step 3 (drive t1 a b): a durative action needs a [duration]"
+        );
+    }
+
+    #[test]
+    fn step_violations_advise_a_repair() {
+        let cases = [
+            (
+                ViolationKind::StartConditionUnsatisfied(at()),
+                "(drive t1 a b) has an unsatisfied condition at start at step 3: \
+                 (Set (at t1 a) to true)",
+            ),
+            (
+                ViolationKind::EndConditionUnsatisfied(at()),
+                "(drive t1 a b) has an unsatisfied condition at end at step 3: \
+                 (Set (at t1 a) to true)",
+            ),
+            (
+                ViolationKind::InvariantViolated {
+                    time: 1.5,
+                    unmet: at(),
+                },
+                "(drive t1 a b) has an unsatisfied invariant at time 1.5 (step 3): \
+                 (Set (at t1 a) to true)",
+            ),
+            (
+                ViolationKind::DurationConstraint(at()),
+                "Choose a duration for (drive t1 a b) at step 3 that satisfies (at t1 a)",
+            ),
+            (
+                ViolationKind::SelfOverlap { other: 1 },
+                "Start (drive t1 a b) at step 3 after step 1 ends",
+            ),
+            (
+                ViolationKind::Interference {
+                    event: "start".to_string(),
+                    other: "timed literal (open shop)".to_string(),
+                    time: 4.0,
+                    separation: 0.0,
+                },
+                "Move (drive t1 a b) at step 3 at least epsilon away from \
+                 timed literal (open shop), or reorder them",
+            ),
+            (
+                ViolationKind::UnknownAction("fly".to_string()),
+                "Replace (drive t1 a b) at step 3: the domain has no such action",
+            ),
+            (
+                ViolationKind::Arity {
+                    expected: 2,
+                    found: 1,
+                },
+                "Give (drive t1 a b) at step 3 exactly 2 arguments",
+            ),
+            (
+                ViolationKind::UnknownObject {
+                    parameter: "t".to_string(),
+                    object: "t9".to_string(),
+                },
+                "Declare `t9` or replace it in (drive t1 a b) at step 3",
+            ),
+            (
+                ViolationKind::TypeMismatch {
+                    parameter: "t".to_string(),
+                    object: "home".to_string(),
+                    expected: "truck".to_string(),
+                },
+                "Pass an object of type `truck` for ?t in (drive t1 a b) at step 3",
+            ),
+            (
+                ViolationKind::Undefined(Atom::new("fuel", ["t1"])),
+                "(Give (fuel t1) a value in :init or an earlier step)",
+            ),
+            (
+                ViolationKind::MissingDuration,
+                "a durative action needs a [duration] in (drive t1 a b) at step 3",
+            ),
+        ];
+
+        for (kind, text) in cases {
+            assert_eq!(advice(kind, true), text);
+        }
+    }
+
+    #[test]
+    fn plan_wide_violations_advise_a_repair() {
+        assert_eq!(
+            advice(ViolationKind::PlanSyntax(syntax_error()), false),
+            "Fix the plan file"
+        );
+        assert_eq!(
+            advice(ViolationKind::GoalUnsatisfied(at()), false),
+            "The goal is not satisfied: (Set (at t1 a) to true)"
+        );
+        assert_eq!(
+            advice(
+                ViolationKind::EventCascade {
+                    time: 2.5,
+                    limit: 1000
+                },
+                false
+            ),
+            "events still trigger at time 2.5 after 1000 rounds"
+        );
+    }
+
+    #[test]
+    fn unmet_conditions_display_and_advise() {
+        let derived = Unmet::Atom {
+            atom: Atom::new("reachable", ["a"]),
+            expected: false,
+            derived: true,
+        };
+        let same = Unmet::Equality {
+            left: "a".to_string(),
+            right: "b".to_string(),
+            expected: true,
+        };
+        let different = Unmet::Equality {
+            left: "a".to_string(),
+            right: "a".to_string(),
+            expected: false,
+        };
+        let comparison = Unmet::Comparison {
+            condition: "(>= (fuel t1) 5)".to_string(),
+            left: 2.0,
+            right: 5.0,
+            expected: true,
+        };
+        let negated = Unmet::Comparison {
+            condition: "(>= (fuel t1) 5)".to_string(),
+            left: 7.0,
+            right: 5.0,
+            expected: false,
+        };
+        let none = Unmet::NoneOf {
+            condition: "(exists (?t - truck) (at ?t a))".to_string(),
+            alternatives: vec![],
+            omitted: 0,
+        };
+        let either = Unmet::NoneOf {
+            condition: "(or (at t1 a) (reachable a))".to_string(),
+            alternatives: vec![at(), same.clone()],
+            omitted: 0,
+        };
+
+        let cases = [
+            (
+                derived,
+                "(not (reachable a))",
+                "(Make the rule of derived (reachable a) yield false)",
+            ),
+            (same, "(= a b)", "(Use the same object for a and b)"),
+            (
+                different,
+                "(not (= a a))",
+                "(Use different objects instead of a twice)",
+            ),
+            (
+                comparison,
+                "(>= (fuel t1) 5)",
+                "(Make (>= (fuel t1) 5) true: the sides are 2 and 5)",
+            ),
+            (
+                negated,
+                "(not (>= (fuel t1) 5))",
+                "(Make (>= (fuel t1) 5) false: the sides are 7 and 5)",
+            ),
+            (
+                none,
+                "(exists (?t - truck) (at ?t a))",
+                "(No binding exists; declare a matching object)",
+            ),
+            (
+                either,
+                "(or (at t1 a) (reachable a))",
+                "one of: (Set (at t1 a) to true) or (Use the same object for a and b)",
+            ),
+        ];
+
+        for (unmet, text, hint) in cases {
+            assert_eq!(
+                (unmet.to_string(), unmet.advice()),
+                (text.to_string(), hint.to_string())
+            );
+        }
+    }
+
+    #[test]
+    fn constructs_display_their_name() {
+        let cases = [
+            (
+                Construct::UnknownRequirement(":fancy".to_string()),
+                "requirements like `:fancy`",
+            ),
+            (Construct::DomainExtension, "domain extensions"),
+            (Construct::Timeless, "timeless facts"),
+            (
+                Construct::NonlinearDynamics,
+                "nonlinear continuous dynamics",
+            ),
+            (
+                Construct::DerivedPredicatesInTemporalPlans,
+                "derived predicates in temporal plans",
+            ),
+            (
+                Construct::TimedEffectConditions,
+                "these timed conditions of conditional effects",
+            ),
+            (Construct::NestedAssignments, "nested assignments"),
+            (
+                Construct::DiscreteProcessEffects,
+                "discrete effects of processes",
+            ),
+            (Construct::ZenoDynamics, "dynamics that switch without end"),
+            (Construct::Constraints, "constraints"),
+            (Construct::Preferences, "preferences"),
+            (Construct::ObjectFluents, "object fluents"),
+            (
+                Construct::UnstratifiedDerivedPredicates,
+                "derived predicates that depend on their own negation",
+            ),
+            (Construct::EqualityEffects, "effects on `=`"),
+        ];
+
+        for (construct, text) in cases {
+            assert_eq!(construct.to_string(), text);
+        }
+
+        assert_eq!(
+            Unsupported::new(Construct::Timeless, "domain").to_string(),
+            "domain: timeless facts are not supported"
+        );
+    }
+}
