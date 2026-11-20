@@ -344,3 +344,31 @@ fn comparisons_in_derived_predicates() {
         })
     );
 }
+
+/// A task with one fluent `(x)` set to `x`, the goal `goal`, and actions `at-most`
+/// (needs `(<= (x) 1000000000)`) and `above` (needs `(> (x) 1000000000)`).
+fn threshold(x: &str, goal: &str) -> Task {
+    let domain = "(define (domain d) (:requirements :numeric-fluents)
+        (:predicates (done)) (:functions (x))
+        (:action at-most :parameters () :precondition (<= (x) 1000000000) :effect (done))
+        (:action above :parameters () :precondition (> (x) 1000000000) :effect (done)))";
+    let problem = format!("(define (problem p) (:domain d) (:init (= (x) {x})) (:goal {goal}))");
+    Task::new(domain, &problem)
+}
+
+#[test]
+fn default_tolerance_keeps_large_integers_exact() {
+    let task = threshold("1000000001", "(done)");
+    let kind = task.step_failure("(at-most)", 1);
+    assert!(
+        matches!(kind, ViolationKind::PreconditionUnsatisfied(_)),
+        "{kind:?}"
+    );
+    assert_eq!(task.run("(above)").status(), ValidationStatus::Valid);
+}
+
+#[test]
+fn default_tolerance_keeps_small_differences_near_zero() {
+    let task = threshold("0.0000000005", "(<= (x) 0)");
+    assert_eq!(task.run("").status(), ValidationStatus::Invalid);
+}

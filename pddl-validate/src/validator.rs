@@ -74,9 +74,14 @@ pub struct Validator<'a> {
     epsilon: f64,
 }
 
-/// The default relative tolerance of numeric comparisons: wide enough to absorb the
-/// rounding of a few thousand `f64` additions, far below any meaningful difference.
-pub const DEFAULT_TOLERANCE: f64 = 1e-9;
+/// The default relative tolerance of numeric comparisons, `1e-12`.
+///
+/// Two values `a` and `b` count as equal when `|a - b| <= 1e-12 * max(1, |a|, |b|)`.
+/// Near zero that absorbs differences up to `1e-12`; elsewhere it absorbs the rounding
+/// of summing many decimal costs such as `0.1`. Integers below `1e12` differ by at least
+/// 1, more than the tolerance, so they compare exactly.
+/// [`Validator::with_tolerance(0.0)`](Validator::with_tolerance) compares exactly.
+pub const DEFAULT_TOLERANCE: f64 = 1e-12;
 
 /// The default least time between interfering events of a temporal plan, VAL's default.
 pub const DEFAULT_EPSILON: f64 = 0.01;
