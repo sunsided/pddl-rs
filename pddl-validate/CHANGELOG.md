@@ -11,7 +11,8 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `pddl` syntax tree: STRIPS, typing, negative and disjunctive preconditions,
   equality, `exists`, `forall`, `imply`, conditional effects and stratified
   derived predicates. It checks a domain and problem once (`ModelError` for
-  undeclared names, wrong arities and unbound variables) and then runs any
+  undeclared names, wrong arities, unbound variables and a variable declared
+  twice in one list) and then runs any
   number of plans.
 - `Report`, with a `ValidationStatus` of `Valid`, `Invalid` or `Unsupported`.
   An invalid plan has a `Violation` naming the step, the failing condition as
@@ -21,7 +22,8 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Numeric fluents: comparisons in conditions and goals, `assign`, `increase`,
   `decrease`, `scale-up` and `scale-down`, action costs and the problem's
   `:metric` (`Report::metric`). Comparisons allow a relative tolerance
-  (`Validator::with_tolerance`). Undefined fluents, division by zero,
+  (`Validator::with_tolerance`, 1e-12 by default, so integers below 1e12
+  compare exactly). Undefined fluents, division by zero,
   overflow and conflicting updates of one fluent make a plan invalid.
 - Temporal plans: durative actions with `at start`, `over all` and `at end`
   conditions and effects, duration constraints and inequalities, conditional
