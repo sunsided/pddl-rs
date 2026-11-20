@@ -50,7 +50,7 @@ and derived predicates that depend on their own negation.
 
 Values are `f64`, as the `pddl` parser stores them. Comparisons treat `a` and
 `b` as equal when `|a - b| <= t * max(1, |a|, |b|)`, with a relative tolerance
-`t` of `1e-9` by default (`Validator::with_tolerance`), so exactly one of `<`,
+`t` of `1e-12` by default (`Validator::with_tolerance`), so exactly one of `<`,
 `=` and `>` holds for any pair. A comparison that reads a fluent without a
 value, divides by zero or overflows is unknown, and conditions follow
 three-valued (Kleene) logic: `(or (p) (> (f) 0))` holds when `(p)` does, and
