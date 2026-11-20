@@ -70,6 +70,8 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- A durative action may leave out `:condition`, which the grammar requires
+  but many domains omit; it parses as no condition.
 - `parsers::check` is no longer quadratic in the number of errors: a file of
   100,000 bad lines took 21 s and now returns at once.
 - A lone carriage return counts as a line break in error positions.
