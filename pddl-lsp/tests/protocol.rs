@@ -78,13 +78,40 @@ impl Client {
         result.unwrap_or(Value::Null)
     }
 
+    /// The next message from the server, failing rather than hanging if it
+    /// sends none.
+    fn recv(&self) -> Message {
+        let wait = std::time::Duration::from_secs(10);
+        self.connection.receiver.recv_timeout(wait).unwrap()
+    }
+
     /// The next diagnostics published for `uri`.
     fn diagnostics(&self, uri: &str) -> Vec<Value> {
         loop {
-            if let Message::Notification(n) = self.connection.receiver.recv().unwrap() {
+            if let Message::Notification(n) = self.recv() {
                 if n.method == "textDocument/publishDiagnostics" && n.params["uri"] == uri {
                     return n.params["diagnostics"].as_array().unwrap().clone();
                 }
+            }
+        }
+    }
+
+    /// The URIs of the diagnostics published until now, in order, found by
+    /// waiting for the answer to a request sent after them.
+    fn published(&mut self) -> Vec<String> {
+        self.next_id += 1;
+        let id = RequestId::from(self.next_id);
+        let params = json!({ "query": "" });
+        let request = Request::new(id.clone(), "workspace/symbol".into(), params);
+        self.connection.sender.send(request.into()).unwrap();
+        let mut uris = Vec::new();
+        loop {
+            match self.recv() {
+                Message::Response(response) if response.id == id => return uris,
+                Message::Notification(n) if n.method == "textDocument/publishDiagnostics" => {
+                    uris.push(n.params["uri"].as_str().unwrap().to_string());
+                }
+                _ => {}
             }
         }
     }
@@ -614,4 +641,104 @@ fn follows_workspace_files_on_disk() {
     let deleted = json!({ "changes": [{ "uri": dir.uri("extra.pddl"), "type": 3 }] });
     client.notify("workspace/didChangeWatchedFiles", deleted);
     check!(symbols(&mut client, "extra") == 0);
+}
+
+/// A closed or deleted document's diagnostics are cleared once, and closed
+/// workspace files never get any.
+#[test]
+fn publishes_diagnostics_for_open_documents_only() {
+    let dir = TempDir::new("publish");
+    std::fs::write(dir.0.join("domain.pddl"), DOMAIN).unwrap();
+    std::fs::write(dir.0.join("other.pddl"), "(define (domain other))").unwrap();
+    let folder = json!({ "uri": dir.uri(""), "name": "workspace" });
+    let mut client =
+        Client::start_with(json!({ "capabilities": {}, "workspaceFolders": [folder] })).0;
+
+    let p = dir.uri("problem.pddl");
+    client.open(&p, PROBLEM);
+    check!(client.published() == std::slice::from_ref(&p));
+
+    // Editing the domain checks the open problem again.
+    let d = dir.uri("domain.pddl");
+    client.open(&d, DOMAIN);
+    check!(client.published() == [d.clone(), p.clone()]);
+    client.notify(
+        "textDocument/didClose",
+        json!({ "textDocument": { "uri": d } }),
+    );
+    check!(client.diagnostics(&d).is_empty());
+    check!(client.published() == std::slice::from_ref(&p));
+
+    // An untitled document goes away on close, and its diagnostics with it.
+    let u = "untitled:Untitled-1";
+    client.open(u, "(define (problem q) (:domain logistics) (:init (nope)))");
+    check!(!client.diagnostics(u).is_empty());
+    client.notify(
+        "textDocument/didClose",
+        json!({ "textDocument": { "uri": u } }),
+    );
+    check!(client.diagnostics(u).is_empty());
+}
+
+/// Rename refuses reserved words and names already defined.
+#[test]
+fn rename_rejects_reserved_and_taken_names() {
+    let d = "file:///w/domain.pddl";
+    let mut client = Client::start();
+    client.open(d, "(define (domain d) (:predicates (p ?x) (q ?x)))");
+    let mut rename = |name: &str| {
+        let mut params = at(d, 0, 33);
+        params["newName"] = json!(name);
+        client
+            .response("textDocument/rename", params)
+            .error
+            .map(|e| e.message)
+    };
+    check!(rename("and").as_deref() == Some("`and` is a reserved word of PDDL"));
+    check!(rename("Either").as_deref() == Some("`Either` is a reserved word of PDDL"));
+    check!(rename("object").as_deref() == Some("`object` is a reserved word of PDDL"));
+    check!(rename("Q").as_deref() == Some("predicate `Q` already exists"));
+    check!(rename("P").is_none());
+    check!(rename("at").is_none());
+}
+
+/// A client that can register watchers dynamically is asked to watch `.pddl` files.
+#[test]
+fn registers_a_file_watcher() {
+    let capabilities =
+        json!({ "workspace": { "didChangeWatchedFiles": { "dynamicRegistration": true } } });
+    let (client, _) = Client::start_with(json!({ "capabilities": capabilities }));
+    let request = loop {
+        if let Message::Request(r) = client.recv() {
+            break r;
+        }
+    };
+    check!(request.method == "client/registerCapability");
+    let registration = &request.params["registrations"][0];
+    check!(registration["method"] == "workspace/didChangeWatchedFiles");
+    check!(registration["registerOptions"]["watchers"][0]["globPattern"] == "**/*.pddl");
+    let reply = Response::new_ok(request.id, Value::Null);
+    client.connection.sender.send(reply.into()).unwrap();
+}
+
+/// Rename reads closed files again when they changed on disk unannounced.
+#[test]
+fn rename_uses_the_current_text_of_closed_files() {
+    let dir = TempDir::new("rename");
+    std::fs::write(dir.0.join("domain.pddl"), DOMAIN).unwrap();
+    let folder = json!({ "uri": dir.uri(""), "name": "workspace" });
+    let mut client =
+        Client::start_with(json!({ "capabilities": {}, "workspaceFolders": [folder] })).0;
+    let p = dir.uri("problem.pddl");
+    client.open(&p, PROBLEM);
+    std::fs::write(dir.0.join("domain.pddl"), format!(";; moved\n{DOMAIN}")).unwrap();
+
+    let mut params = at(&p, 3, 10);
+    params["newName"] = json!("located");
+    let edit = client.request("textDocument/rename", params);
+    let edits = edit["changes"][dir.uri("domain.pddl")]
+        .as_array()
+        .unwrap()
+        .clone();
+    check!(edits[0]["range"]["start"] == json!({ "line": 4, "character": 16 }));
 }
