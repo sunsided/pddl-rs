@@ -2,7 +2,9 @@
 //!
 //! Two events interfere if one changes an atom or fluent that the other reads, if one
 //! adds an atom the other deletes, or if both update one fluent other than by
-//! `increase`/`decrease`. Interfering events must be at least epsilon apart.
+//! `increase`/`decrease`. Interfering events must be at least epsilon apart. A durative
+//! action's start and end update the fluents of its continuous effects like an
+//! `increase`, since the change starts or stops there.
 
 use alloc::collections::{BTreeMap, BTreeSet};
 
@@ -31,21 +33,26 @@ impl Footprint {
     /// Builds the footprint of an event that read what `observer` recorded and makes
     /// `changes`.
     pub fn new(observer: &Observer, changes: &Changes) -> Self {
+        let mut updates: BTreeMap<Atom, bool> = changes
+            .updates
+            .iter()
+            .map(|(fluent, ops)| {
+                let additive = ops
+                    .iter()
+                    .all(|(op, _)| matches!(op, AssignOp::Increase | AssignOp::Decrease));
+                (fluent.clone(), additive)
+            })
+            .collect();
+        for fluent in &changes.continuous {
+            updates.entry(fluent.clone()).or_insert(true);
+        }
+
         Self {
             atoms_read: observer.atoms.clone(),
             fluents_read: observer.fluents.clone(),
             adds: changes.add.clone(),
             deletes: changes.delete.clone(),
-            updates: changes
-                .updates
-                .iter()
-                .map(|(fluent, ops)| {
-                    let additive = ops
-                        .iter()
-                        .all(|(op, _)| matches!(op, AssignOp::Increase | AssignOp::Decrease));
-                    (fluent.clone(), additive)
-                })
-                .collect(),
+            updates,
         }
     }
 

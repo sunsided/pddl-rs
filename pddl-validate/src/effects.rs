@@ -32,6 +32,9 @@ pub struct Changes {
     pub delete: BTreeSet<Atom>,
     /// The numeric updates per fluent, with their right-hand sides evaluated.
     pub updates: BTreeMap<Atom, Vec<(AssignOp, f64)>>,
+    /// The fluents whose continuous change starts or stops here. Only interference reads
+    /// them; [`Changes::apply`] ignores them.
+    pub continuous: BTreeSet<Atom>,
 }
 
 impl Changes {
@@ -81,6 +84,8 @@ impl Changes {
         for (fluent, ops) in other.updates {
             self.updates.entry(fluent).or_default().extend(ops);
         }
+
+        self.continuous.extend(other.continuous);
     }
 
     /// Records a numeric update whose right-hand side is evaluated already.

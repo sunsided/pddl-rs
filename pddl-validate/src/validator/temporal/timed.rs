@@ -170,7 +170,8 @@ fn simple_duration(
 pub type Memo = VecDeque<bool>;
 
 /// Collects the discrete effects of a durative action that happen at `moment`
-/// (`Start` or `End`) for the duration `duration`.
+/// (`Start` or `End`) for the duration `duration`, and the fluents its continuous
+/// effects start or stop changing then.
 pub struct Collector<'e, 's, 'a> {
     /// Evaluates conditions and right-hand sides in the state before the happening.
     pub evaluator: &'e Evaluator<'s, 'a>,
@@ -267,9 +268,12 @@ impl Collector<'_, '_, '_> {
                 changes.update(fluent, assignment.operation().clone(), value);
                 Ok(())
             }
-            TimedEffect::Conditional(..)
-            | TimedEffect::NumericFluent(..)
-            | TimedEffect::ContinuousEffect(..) => Ok(()),
+            // The change itself runs between happenings; here it only starts or stops.
+            TimedEffect::ContinuousEffect(_, head, _) => {
+                changes.continuous.insert(fluent_atom(head, scope));
+                Ok(())
+            }
+            TimedEffect::Conditional(..) | TimedEffect::NumericFluent(..) => Ok(()),
         }
     }
 
