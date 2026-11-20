@@ -464,3 +464,200 @@ fn default_tolerance_keeps_small_differences_near_zero() {
     let task = threshold("0.0000000005", "(<= (x) 0)");
     assert_eq!(task.run("").status(), ValidationStatus::Invalid);
 }
+
+/// The violation of `(> exp 1000)` with `(x)` = 6, `(y)` = 2 and `(z)` = 0.
+fn probe(exp: &str) -> ViolationKind {
+    let domain = format!(
+        "(define (domain d) (:requirements :numeric-fluents) (:predicates (done))
+           (:functions (x) (y) (z))
+           (:action probe :parameters () :precondition (> {exp} 1000) :effect (done)))"
+    );
+    let problem =
+        "(define (problem p) (:domain d) (:init (= (x) 6) (= (y) 2) (= (z) 0)) (:goal (done)))";
+    Task::new(&domain, problem).step_failure("(probe)", 1)
+}
+
+/// The left side that [`probe`] reports for `exp`.
+fn left_side(exp: &str) -> f64 {
+    match probe(exp) {
+        ViolationKind::PreconditionUnsatisfied(Unmet::Comparison { left, .. }) => left,
+        kind => panic!("{exp}: {kind:?}"),
+    }
+}
+
+#[test]
+fn every_arithmetic_operator_in_conditions() {
+    let cases = [
+        ("(- (x))", -6.0),
+        ("(+ (x) (y))", 8.0),
+        ("(- (x) (y))", 4.0),
+        ("(* (x) (y))", 12.0),
+        ("(/ (x) (y))", 3.0),
+        ("(+ (x) (y) (y))", 10.0),
+        ("(* (x) (y) (y))", 24.0),
+        ("(- (* (x) (y) (y)) (+ 1 (x) (- (y))))", 19.0),
+    ];
+    for (exp, value) in cases {
+        assert_eq!(left_side(exp), value, "{exp}");
+    }
+}
+
+#[test]
+fn arithmetic_without_a_finite_value_leaves_a_condition_undefined() {
+    let big = format!("1{}", "0".repeat(308));
+    assert_eq!(
+        probe(&format!("(* (x) {big} (y))")),
+        ViolationKind::NonFinite(format!("(* (x) {big} (y))"))
+    );
+    assert_eq!(
+        probe("(+ (x) (/ (y) (z)))"),
+        ViolationKind::DivisionByZero("(/ (y) (z))".into())
+    );
+}
+
+#[test]
+fn every_arithmetic_operator_in_metrics() {
+    // The valid plan costs 9 and takes 3 steps.
+    let cases = [
+        ("(- (total-cost))", -9.0),
+        ("(- total-time)", -3.0),
+        ("(/ (total-cost) 2)", 4.5),
+        ("(- (total-cost) total-time)", 6.0),
+        ("(* 2 (total-cost) total-time)", 54.0),
+        ("(+ (total-cost) total-time 1)", 13.0),
+    ];
+    for (exp, value) in cases {
+        let task = task(
+            "(= (fuel t1) 5) (= (total-cost) 0)",
+            &format!("(:metric minimize {exp})"),
+        );
+        let report = task.run(VALID);
+        assert_eq!(report.metric().map(|m| m.value), Some(value), "{exp}");
+    }
+}
+
+#[test]
+fn a_metric_that_divides_by_zero_leaves_the_plan_valid_without_a_value() {
+    let task = task(
+        "(= (fuel t1) 5) (= (total-cost) 0)",
+        "(:metric minimize (/ (total-cost) (speed)))",
+    );
+    let report = task.run(VALID);
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+    assert_eq!(report.metric(), None);
+}
+
+/// A tank that fills at one unit per time unit once opened, until the event `full`
+/// fires on `CONDITION`.
+const TANK: &str = "
+(define (domain tank) (:requirements :time :numeric-fluents)
+  (:predicates (filling) (full))
+  (:functions (level))
+  (:action open :parameters () :effect (filling))
+  (:action wait :parameters ())
+  (:process fill :parameters () :precondition (filling)
+    :effect (increase (level) (* #t 1)))
+  (:event stop :parameters () :precondition (and (filling) CONDITION)
+    :effect (and (not (filling)) (full))))";
+
+/// Runs the tank with the event condition `condition` and returns the report.
+fn tank(condition: &str) -> pddl_validate::Report {
+    let task = Task::new(
+        &TANK.replace("CONDITION", condition),
+        "(define (problem p) (:domain tank) (:init (= (level) 0)) (:goal (full)))",
+    );
+    task.run("0: (open)\n10: (wait)")
+}
+
+#[test]
+fn events_on_linear_expressions_fire_when_the_level_reaches_four() {
+    let conditions = [
+        "(<= (- (level)) (- 4))",
+        "(>= (+ (level) 1) 5)",
+        "(>= (- (level) 1) 3)",
+        "(>= (/ (level) 2) 2)",
+        "(>= (+ (level) 1 1) 6)",
+        "(>= (* 2 (level) 1) 8)",
+    ];
+    for condition in conditions {
+        let report = tank(condition);
+        assert_eq!(
+            report.status(),
+            ValidationStatus::Valid,
+            "{condition}: {report:?}"
+        );
+        let stop = report
+            .trace()
+            .iter()
+            .find(|h| h.events == ["event (stop)"])
+            .expect("the event fires");
+        assert!(
+            (stop.time.unwrap() - 4.0).abs() < 1e-6,
+            "{condition}: {stop:?}"
+        );
+    }
+}
+
+#[test]
+fn events_on_nonlinear_expressions_are_unsupported() {
+    for condition in [
+        "(<= (/ 8 (+ (level) 1)) 2)",
+        "(>= (* (level) (level) 1) 16)",
+    ] {
+        let report = tank(condition);
+        assert_eq!(
+            report.unsupported().map(|u| u.construct.clone()),
+            Some(pddl_validate::Construct::NonlinearDynamics),
+            "{condition}: {report:?}"
+        );
+    }
+}
+
+/// Negated connectives over the undefined `(f)`, the true `(p)` and the false `(q)`.
+fn negated_kleene(precondition: &str) -> Task {
+    let domain = format!(
+        "(define (domain d) (:requirements :adl :numeric-fluents)
+           (:types t) (:predicates (p) (q) (done)) (:functions (f) (h ?x - t))
+           (:action go :parameters () :precondition {precondition} :effect (done)))"
+    );
+    Task::new(
+        &domain,
+        "(define (problem k) (:domain d) (:objects a b - t)
+           (:init (p) (= (h a) 1)) (:goal (done)))",
+    )
+}
+
+#[test]
+fn negated_connectives_follow_kleene_logic() {
+    let undefined = |name: &str| ViolationKind::Undefined(fluent(name, &[]));
+    let h_b = ViolationKind::Undefined(fluent("h", &["b"]));
+    let atom = |name: &str, expected: bool| {
+        ViolationKind::PreconditionUnsatisfied(Unmet::Atom {
+            atom: fluent(name, &[]),
+            expected,
+            derived: false,
+        })
+    };
+    let h_a = ViolationKind::PreconditionUnsatisfied(Unmet::Comparison {
+        condition: "(> (h a) 0)".into(),
+        left: 1.0,
+        right: 0.0,
+        expected: false,
+    });
+    let failures = [
+        ("(not (and (p) (> (f) 0)))", undefined("f")),
+        ("(not (or (p) (> (f) 0)))", atom("p", false)),
+        ("(not (or (q) (> (f) 0)))", undefined("f")),
+        ("(not (imply (p) (> (f) 0)))", undefined("f")),
+        ("(not (imply (q) (> (f) 0)))", atom("q", true)),
+        ("(not (exists (?x - t) (> (h ?x) 0)))", h_a),
+        ("(or (q) (forall (?x - t) (> (h ?x) 0)))", h_b),
+    ];
+    for (precondition, expected) in failures {
+        let kind = negated_kleene(precondition).step_failure("(go)", 1);
+        assert_eq!(kind, expected, "{precondition}");
+    }
+
+    let report = negated_kleene("(not (and (q) (> (f) 0)))").run("(go)");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+}

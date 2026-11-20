@@ -484,3 +484,256 @@ fn recursive_derived_predicates_over_a_cycle_terminate() {
     let report = task.run("(lay plant junction)");
     assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
 }
+
+/// Negated connectives, quantifiers and rules over the true `(p)` and `(r)`, the false
+/// `(q)`, and the objects `a` (with `(has a)`) and `b` of type `t`.
+const LOGIC: &str = "
+(define (domain logic)
+  (:requirements :typing :adl :derived-predicates)
+  (:types t)
+  (:predicates (p) (q) (r) (done) (has ?x - t) (distinct ?x ?y - t) (safe))
+  (:derived (distinct ?x ?y - t) (not (= ?x ?y)))
+  (:derived (safe) (imply (q) (has b)))
+  (:action nand-pr :parameters () :precondition (not (and (p) (r))) :effect (done))
+  (:action nand-pq :parameters () :precondition (not (and (p) (q))) :effect (done))
+  (:action nor-qp :parameters () :precondition (not (or (q) (p))) :effect (done))
+  (:action nimply-pq :parameters () :precondition (not (imply (p) (q))) :effect (done))
+  (:action nimply-qp :parameters () :precondition (not (imply (q) (p))) :effect (done))
+  (:action none-has :parameters ()
+    :precondition (not (exists (?x - t) (has ?x))) :effect (done))
+  (:action q-or-all-have :parameters ()
+    :precondition (or (q) (forall (?x - t) (has ?x))) :effect (done))
+  (:action pair :parameters (?x ?y - t) :precondition (distinct ?x ?y) :effect (done))
+  (:action guard :parameters () :precondition (safe) :effect (done))
+  (:action idle :parameters ()))";
+
+/// The [`LOGIC`] task with the goal `(done)`.
+fn logic() -> Task {
+    Task::new(
+        LOGIC,
+        "(define (problem l) (:domain logic) (:objects a b - t)
+           (:init (p) (r) (has a)) (:goal (done)))",
+    )
+}
+
+/// The ground atom `atom` with the truth value `expected` that a precondition needs.
+fn needs(atom: Atom, expected: bool) -> Unmet {
+    Unmet::Atom {
+        atom,
+        expected,
+        derived: false,
+    }
+}
+
+#[test]
+fn a_negated_conjunction_needs_one_false_part() {
+    let task = logic();
+    assert_eq!(task.run("(nand-pq)").status(), ValidationStatus::Valid);
+
+    let kind = task.step_failure("(nand-pr)", 1);
+    let unmet = Unmet::NoneOf {
+        condition: "(not (and (p) (r)))".into(),
+        alternatives: vec![needs(atom("p", &[]), false), needs(atom("r", &[]), false)],
+        omitted: 0,
+    };
+    assert_eq!(kind, ViolationKind::PreconditionUnsatisfied(unmet));
+}
+
+#[test]
+fn a_negated_disjunction_blames_its_true_part() {
+    let kind = logic().step_failure("(nor-qp)", 1);
+    assert_eq!(
+        kind,
+        ViolationKind::PreconditionUnsatisfied(needs(atom("p", &[]), false))
+    );
+}
+
+#[test]
+fn a_negated_implication_needs_its_premise_and_not_its_conclusion() {
+    let task = logic();
+    assert_eq!(task.run("(nimply-pq)").status(), ValidationStatus::Valid);
+
+    let kind = task.step_failure("(nimply-qp)", 1);
+    assert_eq!(
+        kind,
+        ViolationKind::PreconditionUnsatisfied(needs(atom("q", &[]), true))
+    );
+}
+
+#[test]
+fn a_negated_existential_blames_the_witness() {
+    let kind = logic().step_failure("(none-has)", 1);
+    assert_eq!(
+        kind,
+        ViolationKind::PreconditionUnsatisfied(needs(atom("has", &["a"]), false))
+    );
+}
+
+#[test]
+fn a_universal_inside_a_disjunction_blames_its_first_counterexample() {
+    let kind = logic().step_failure("(q-or-all-have)", 1);
+    let unmet = Unmet::NoneOf {
+        condition: "(or (q) (forall (?x - t) (has ?x)))".into(),
+        alternatives: vec![
+            needs(atom("q", &[]), true),
+            needs(atom("has", &["b"]), true),
+        ],
+        omitted: 0,
+    };
+    assert_eq!(kind, ViolationKind::PreconditionUnsatisfied(unmet));
+}
+
+#[test]
+fn rules_with_equality_and_implication_derive() {
+    let task = logic();
+    assert_eq!(task.run("(pair a b)").status(), ValidationStatus::Valid);
+    assert_eq!(task.run("(guard)").status(), ValidationStatus::Valid);
+
+    let kind = task.step_failure("(pair a a)", 1);
+    let unmet = Unmet::Atom {
+        atom: atom("distinct", &["a", "a"]),
+        expected: true,
+        derived: true,
+    };
+    assert_eq!(kind, ViolationKind::PreconditionUnsatisfied(unmet));
+}
+
+#[test]
+fn an_action_without_effects_changes_nothing() {
+    let report = logic().run("(idle)");
+    assert_eq!(
+        report.violation().map(|v| v.kind.clone()),
+        Some(ViolationKind::GoalUnsatisfied(needs(
+            atom("done", &[]),
+            true
+        )))
+    );
+    let step = &report.trace()[0];
+    assert!(
+        step.added.is_empty() && step.deleted.is_empty() && step.numeric.is_empty(),
+        "{step:?}"
+    );
+}
+
+#[test]
+fn a_negative_literal_built_in_code_is_negated() {
+    let domain = "(define (domain d) (:requirements :derived-predicates)
+        (:predicates (p) (r) (done))
+        (:derived (r) (p))
+        (:action go :parameters () :precondition (r) :effect (done))
+        (:action set :parameters () :effect (p)))";
+    let parsed = Task::new(
+        domain,
+        "(define (problem x) (:domain d) (:init) (:goal (done)))",
+    );
+    let task = Task {
+        domain: negate_rule_bodies(&parsed.domain),
+        problem: parsed.problem,
+    };
+    assert_eq!(task.run("(go)").status(), ValidationStatus::Valid);
+
+    let kind = task.step_failure("(set) (go)", 2);
+    let unmet = Unmet::Atom {
+        atom: atom("r", &[]),
+        expected: true,
+        derived: true,
+    };
+    assert_eq!(kind, ViolationKind::PreconditionUnsatisfied(unmet));
+}
+
+/// Rebuilds `domain` with each atomic rule body `(p)` replaced by the literal
+/// `(not (p))`, a form the parser never produces but a domain built in code can hold.
+fn negate_rule_bodies(domain: &pddl::Domain) -> pddl::Domain {
+    use pddl::{DerivedPredicate, GoalDescription, Literal, StructureDef, StructureDefs};
+
+    let negate = |def: &StructureDef| match def {
+        StructureDef::Derived(rule) => {
+            let GoalDescription::AtomicFormula(formula) = rule.expression() else {
+                panic!("the rule body is an atom");
+            };
+            let body = GoalDescription::Literal(Literal::new_not(formula.clone()));
+            StructureDef::Derived(DerivedPredicate::new(rule.predicate().clone(), body))
+        }
+        other => other.clone(),
+    };
+    let structure = StructureDefs::new(domain.structure().iter().map(negate));
+
+    pddl::Domain::builder(domain.name().clone(), structure)
+        .with_requirements(domain.requirements().clone())
+        .with_predicates(domain.predicates().clone())
+}
+
+#[test]
+fn an_unsatisfied_existential_lists_at_most_eight_bindings() {
+    let domain = "(define (domain d) (:predicates (has ?x) (done))
+        (:action any :parameters () :precondition (exists (?x) (has ?x)) :effect (done)))";
+    let objects: Vec<String> = (0..10).map(|i| format!("o{i}")).collect();
+    let problem = format!(
+        "(define (problem p) (:domain d) (:objects {}) (:init) (:goal (done)))",
+        objects.join(" ")
+    );
+    let kind = Task::new(domain, &problem).step_failure("(any)", 1);
+    let ViolationKind::PreconditionUnsatisfied(Unmet::NoneOf {
+        alternatives,
+        omitted,
+        ..
+    }) = kind
+    else {
+        panic!("{kind:?}");
+    };
+    assert_eq!(alternatives.len(), pddl_validate::MAX_ALTERNATIVES);
+    assert_eq!(omitted, 2);
+}
+
+#[test]
+fn either_types_name_their_alternatives_in_a_type_mismatch() {
+    let kind = transport().step_failure("(unload p1 depot shop)", 1);
+    assert_eq!(
+        kind,
+        ViolationKind::TypeMismatch {
+            parameter: "v".into(),
+            object: "depot".into(),
+            expected: "(either truck van)".into()
+        }
+    );
+}
+
+#[test]
+fn overlapping_either_types_bind_each_object_once() {
+    let domain = "(define (domain d) (:requirements :typing :existential-preconditions)
+        (:types car - vehicle) (:predicates (fast ?v - vehicle) (done))
+        (:action race :parameters ()
+          :precondition (exists (?v - (either car vehicle)) (fast ?v)) :effect (done)))";
+    let problem = "(define (problem p) (:domain d) (:objects c1 - car v2 - vehicle)
+        (:init) (:goal (done)))";
+    let kind = Task::new(domain, problem).step_failure("(race)", 1);
+    let ViolationKind::PreconditionUnsatisfied(Unmet::NoneOf { alternatives, .. }) = kind else {
+        panic!("{kind:?}");
+    };
+    assert_eq!(
+        alternatives,
+        [
+            needs(atom("fast", &["c1"]), true),
+            needs(atom("fast", &["v2"]), true)
+        ]
+    );
+}
+
+#[test]
+fn a_type_that_is_its_own_supertype_terminates() {
+    let domain = "(define (domain d) (:requirements :typing) (:types a - a)
+        (:predicates (done))
+        (:action go :parameters (?x - a) :effect (done)))";
+    let task = Task::new(
+        domain,
+        "(define (problem p) (:domain d) (:objects x - a y) (:init) (:goal (done)))",
+    );
+    assert_eq!(task.run("(go x)").status(), ValidationStatus::Valid);
+    assert!(
+        matches!(
+            task.step_failure("(go y)", 1),
+            ViolationKind::TypeMismatch { .. }
+        ),
+        "an untyped object is not an `a`"
+    );
+}

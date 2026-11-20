@@ -264,11 +264,11 @@ impl Evaluator<'_, '_> {
         let mut odometer: Vec<usize> = alloc::vec![0; candidates.len()];
         loop {
             scope.truncate(base);
-            for ((name, objects), &index) in candidates.iter().zip(&odometer) {
-                if let Some(object) = objects.get(index) {
-                    scope.push((name.clone(), (*object).to_string()));
-                }
-            }
+            let indices = candidates.iter().zip(&odometer);
+            scope.extend(indices.filter_map(|((name, objects), &index)| {
+                let object = objects.get(index)?;
+                Some((name.clone(), (*object).to_string()))
+            }));
 
             let result = f(scope);
             scope.truncate(base);

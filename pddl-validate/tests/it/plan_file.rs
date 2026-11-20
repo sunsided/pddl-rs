@@ -159,3 +159,35 @@ fn random_text_never_panics() {
         let _ = validator.validate_text(&text);
     }
 }
+
+#[test]
+fn a_duration_cut_off_by_the_end_of_the_file() {
+    assert_eq!(
+        error("(a) [ ; 2]"),
+        (PlanErrorKind::MalformedDuration, 1, 5)
+    );
+}
+
+#[test]
+fn every_plan_error_explains_itself_with_its_position() {
+    let cases = [
+        ("(a", "line 1, column 1: `(` is never closed"),
+        (")", "line 1, column 1: `)` has no matching `(`"),
+        ("(a (b))", "line 1, column 4: a step cannot contain `(`"),
+        ("()", "line 1, column 1: a step needs an action name"),
+        ("x", "line 1, column 1: unexpected `x` outside a step"),
+        ("1:", "line 1, column 3: a timestamp needs a step after it"),
+        (
+            "(a) [2",
+            "line 1, column 5: a duration is one number in `[` and `]`",
+        ),
+        (
+            "-1: (a)",
+            "line 1, column 1: `-1` is not a finite, non-negative number",
+        ),
+    ];
+    for (text, message) in cases {
+        let error = text.parse::<Plan>().expect_err(text);
+        assert_eq!(error.to_string(), message, "{text}");
+    }
+}

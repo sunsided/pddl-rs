@@ -114,3 +114,24 @@ fn over_all_conditions_of_conditional_effects() {
         &Construct::TimedEffectConditions,
     );
 }
+
+#[test]
+fn derived_predicates_through_the_premise_of_their_own_implication() {
+    let rule = "(:derived (q) (imply (q) (p)))";
+    assert_unsupported(
+        &domain(rule),
+        &problem(""),
+        "(a)",
+        &Construct::UnstratifiedDerivedPredicates,
+    );
+}
+
+#[test]
+fn assigning_undefined_to_a_fluent() {
+    let domain = domain("").replace(
+        "(:predicates (p) (q))",
+        "(:predicates (p) (q)) (:functions (level))",
+    );
+    let domain = domain.replace(":effect (p)", ":effect (assign (level) undefined)");
+    assert_unsupported(&domain, &problem(""), "(a)", &Construct::ObjectFluents);
+}
