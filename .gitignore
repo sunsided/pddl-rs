@@ -2,3 +2,6 @@
 /Cargo.lock
 /.idea
 /.task
+
+# cargo-mutants output
+mutants.out*/

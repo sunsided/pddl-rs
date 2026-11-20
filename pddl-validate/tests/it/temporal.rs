@@ -847,3 +847,152 @@ fn continuous_change_interferes_with_a_discrete_update() {
     let report = task.run("0: (ramp) [5]\n0: (jump) [1]\n0: (climb) [5]");
     assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
 }
+
+/// Validates the untimed plan `plan` in a domain with `body`, the predicates `(on)`
+/// and `(done)` and the function `(c)`, for the goal `(done)` with `init`.
+fn untimed(body: &str, init: &str, plan: &str) -> ValidationStatus {
+    let domain = format!(
+        "(define (domain d) (:requirements :time :timed-initial-literals)
+           (:predicates (on) (done)) (:functions (c))
+           (:action wait :parameters ())
+           {body})"
+    );
+    let problem = format!("(define (problem p) (:domain d) (:init {init}) (:goal (done)))");
+    Task::new(&domain, &problem).run(plan).status()
+}
+
+#[test]
+fn untimed_steps_run_at_times_one_two_three() {
+    // Processes alone make the task temporal; step i runs at time i, so the clock reads
+    // 2 at the second step.
+    let process = "(:process tick :parameters () :effect (increase (c) #t))
+                   (:action check :parameters () :precondition (>= (c) 2) :effect (done))";
+    assert_eq!(
+        untimed(process, "(= (c) 0)", "(wait) (check)"),
+        ValidationStatus::Valid
+    );
+    assert_eq!(
+        untimed(process, "(= (c) 0)", "(check)"),
+        ValidationStatus::Invalid
+    );
+
+    // Events alone make it temporal.
+    let event = "(:action switch :parameters () :effect (on))
+                 (:event finish :parameters () :precondition (and (on) (not (done)))
+                   :effect (done))";
+    assert_eq!(untimed(event, "", "(switch)"), ValidationStatus::Valid);
+
+    // Timed initial literals alone make it temporal.
+    let timed = "(:action finish :parameters () :precondition (on) :effect (done))";
+    assert_eq!(
+        untimed(timed, "(at 1.5 (on))", "(wait) (finish)"),
+        ValidationStatus::Valid
+    );
+    assert_eq!(
+        untimed(timed, "(at 1.5 (on))", "(finish)"),
+        ValidationStatus::Invalid
+    );
+}
+
+#[test]
+fn epsilon_and_duration_tolerance_are_settable() {
+    let task = rover();
+    let apart =
+        "0: (drive r1 base hill) [2]\n2.05: (sample r1 hill) [3]\n5.1: (drive r1 hill ridge) [3]";
+    assert_eq!(task.run(apart).status(), ValidationStatus::Valid);
+    let wide = task.validator().with_epsilon(0.1);
+    assert!(matches!(
+        wide.validate_text(apart).violation().map(|v| &v.kind),
+        Some(ViolationKind::Interference { .. })
+    ));
+    // A negative epsilon counts as 0, which still forbids simultaneous interference.
+    let simultaneous =
+        "0: (drive r1 base hill) [2]\n2: (sample r1 hill) [3]\n5.02: (drive r1 hill ridge) [3]";
+    let none = task.validator().with_epsilon(-1.0);
+    assert_eq!(
+        none.validate_text(simultaneous).status(),
+        ValidationStatus::Invalid
+    );
+
+    let rounded = Task::new(ROUNDED, ROUNDED_PROBLEM);
+    let loose = rounded.validator().with_duration_tolerance(0.01);
+    assert_eq!(
+        loose.validate_text("0: (go) [3.34]").status(),
+        ValidationStatus::Valid
+    );
+}
+
+#[test]
+fn back_to_back_instances_in_either_plan_order() {
+    let task = Task::new(ROUNDED, ROUNDED_PROBLEM);
+    assert_eq!(
+        task.run("2: (loop a) [2]\n0: (loop a) [2]").status(),
+        ValidationStatus::Valid
+    );
+}
+
+#[test]
+fn simultaneous_events_form_one_happening() {
+    let report = Task::new(ROUNDED, ROUNDED_PROBLEM).run("0: (loop a) [2]\n0: (loop b) [2]");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+    let times: Vec<Option<f64>> = report.trace().iter().map(|h| h.time).collect();
+    assert_eq!(times, [Some(0.0), Some(2.0)]);
+}
+
+#[test]
+fn exactly_epsilon_apart_passes_at_large_times() {
+    // As f64, 100000000001.01 - 100000000001.00 is 0.0099945, below epsilon by more
+    // than a few units in the last place of 1e-2, but within the rounding of 1e11.
+    let task = Task::new(
+        SWITCH,
+        "(define (problem p) (:domain switch) (:init) (:goal (lit)))",
+    );
+    let report = task.run("100000000001.00: (flip)\n100000000001.01: (light)");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+}
+
+#[test]
+fn interference_through_updates_and_undone_adds_alone() {
+    let domain = "(define (domain d) (:requirements :numeric-fluents :negative-preconditions)
+      (:predicates (p) (done)) (:functions (x))
+      (:action inc :parameters () :effect (increase (x) 1))
+      (:action check :parameters () :precondition (>= (x) 0) :effect (done))
+      (:action add :parameters () :effect (p))
+      (:action del :parameters () :effect (and (not (p)) (done))))";
+    let task = Task::new(
+        domain,
+        "(define (problem x) (:domain d) (:init (= (x) 0)) (:goal (done)))",
+    );
+    // `inc` changes a fluent `check` reads; `del` undoes what `add` adds, and neither
+    // reads `(p)`.
+    for plan in ["0: (inc)\n0.005: (check)", "0: (add)\n0.005: (del)"] {
+        let kind = task.step_failure(plan, 2);
+        assert!(
+            matches!(kind, ViolationKind::Interference { .. }),
+            "{plan}: {kind:?}"
+        );
+    }
+}
+
+#[test]
+fn negative_times_and_zero_or_infinite_durations_from_code() {
+    let task = tank("3", "");
+    let validator = task.validator();
+    let kind = |step: pddl_validate::PlanStep| {
+        let report = validator.validate(&pddl_validate::Plan::new(vec![step]));
+        report.violation().unwrap().kind.clone()
+    };
+    let drain = || pddl_validate::PlanStep::new("drain", Vec::<String>::new());
+    assert!(matches!(
+        kind(drain().at(-1.0).lasting(1.0)),
+        ViolationKind::InvalidTime(_)
+    ));
+    assert!(matches!(
+        kind(drain().at(0.0).lasting(0.0)),
+        ViolationKind::NonPositiveDuration(_)
+    ));
+    assert!(matches!(
+        kind(drain().at(0.0).lasting(f64::INFINITY)),
+        ViolationKind::NonPositiveDuration(_)
+    ));
+}

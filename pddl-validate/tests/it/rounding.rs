@@ -80,3 +80,37 @@ fn a_process_root_rounding_onto_the_segment_end_is_not_a_switch() {
     let report = task.run("0: (watch) [10000000]");
     assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
 }
+
+#[test]
+fn crossing_inside_an_interval_that_starts_late_is_caught() {
+    // The level falls from 1 at rate 1 from time 2, so `(> (level) 0)` fails from 3 on;
+    // the middle of the interval, 2.6, is still fine.
+    let kind = task("1", "1", "(>= (rate) 0)").step_failure("2: (drain) [1.2]", 1);
+    let ViolationKind::InvariantViolated { time, .. } = kind else {
+        panic!("{kind:?}");
+    };
+    assert!((time - 3.0).abs() < 1e-9, "{time}");
+}
+
+#[test]
+fn root_rounding_onto_the_interval_start_is_not_sampled() {
+    // `fill` takes 0.30000000000000004 from a level of 0.3 at its start, leaving it
+    // 5.6e-17 below 0, and then raises it, so the root lies 5.6e-17 after the start:
+    // rounding noise. Sampling there would find the level below 0, which an exact
+    // comparison rejects.
+    let task = Task::new(
+        "(define (domain fill)
+           (:requirements :durative-actions :continuous-effects :numeric-fluents)
+           (:predicates (full)) (:functions (level))
+           (:durative-action fill :parameters () :duration (= ?duration 1)
+             :condition (over all (>= (level) 0))
+             :effect (and (at start (decrease (level) 0.30000000000000004))
+                          (increase (level) (* #t 1)) (at end (full)))))",
+        "(define (problem p) (:domain fill) (:init (= (level) 0.3)) (:goal (full)))",
+    );
+    let report = task
+        .validator()
+        .with_tolerance(0.0)
+        .validate_text("0: (fill) [1]");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+}

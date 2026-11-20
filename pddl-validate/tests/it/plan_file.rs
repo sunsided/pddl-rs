@@ -191,3 +191,12 @@ fn every_plan_error_explains_itself_with_its_position() {
         assert_eq!(error.to_string(), message, "{text}");
     }
 }
+
+#[test]
+fn a_lone_carriage_return_ends_a_line() {
+    let plan: Plan = "(a)\r(b)\r\n(c)\n(d)".parse().unwrap();
+    let lines: Vec<usize> = plan.steps().iter().map(PlanStep::line).collect();
+    assert_eq!(lines, [1, 2, 3, 4]);
+    assert!(!plan.is_empty());
+    assert!("; no steps".parse::<Plan>().unwrap().is_empty());
+}
