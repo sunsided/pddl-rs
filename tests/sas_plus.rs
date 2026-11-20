@@ -845,3 +845,14 @@ fn long_chains_ground_every_step() {
     assert_eq!(names, expected);
     assert_eq!(file.variables.len(), n);
 }
+
+#[test]
+fn processes_and_events_are_unsupported() {
+    let plain = problem_with("", "(p a)", "");
+    for section in [
+        "(:process grow :parameters () :effect (increase (f) (* #t 1)))",
+        "(:event flip :parameters () :precondition (q) :effect (p a))",
+    ] {
+        assert_unsupported(&domain_with(section), &plain, "processes and events");
+    }
+}
