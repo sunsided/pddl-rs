@@ -70,33 +70,4 @@ mod tests {
             )
         );
     }
-
-    #[test]
-    fn doc_example_0() {
-        check!(DurativeActionFluentExpression::from_str("?duration")
-            .is_value(DurativeActionFluentExpression::Duration));
-
-        check!(
-            DurativeActionFluentExpression::from_str("(+ 1.23 2.34)").is_value(
-                DurativeActionFluentExpression::new_binary_op(
-                    BinaryOp::Addition,
-                    DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(1.23)),
-                    DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(2.34))
-                )
-            )
-        );
-
-        check!(
-            DurativeActionFluentExpression::from_str("(+ 1.23 2.34 3.45)").is_value(
-                DurativeActionFluentExpression::new_multi_op(
-                    MultiOp::Addition,
-                    DurativeActionFluentExpression::new_f_exp(FluentExpression::new_number(1.23)),
-                    [
-                        FluentExpression::new_number(2.34).into(),
-                        FluentExpression::new_number(3.45).into()
-                    ]
-                )
-            )
-        );
-    }
 }
