@@ -120,15 +120,20 @@ impl ParseError {
 
     /// Describes `error` within `input`.
     pub(crate) fn new(input: &str, error: &Error) -> Self {
+        Self::with_lines(&Lines::new(input), error)
+    }
+
+    /// Describes `error` within the input of `lines`, which can be shared by many errors.
+    pub(crate) fn with_lines(lines: &Lines<'_>, error: &Error) -> Self {
+        let input = lines.input;
         let offset = error.offset.min(input.len());
-        let before = &input[..offset];
-        let line_start = before.rfind('\n').map_or(0, |i| i + 1);
+        let (line, column) = lines.position(offset);
         let rest = &input[offset..];
         Self(Box::new(Details {
             offset,
             len: error.len.min(rest.len()),
-            line: before.matches('\n').count() + 1,
-            column: before[line_start..].chars().count() + 1,
+            line,
+            column,
             found: (!rest.is_empty()).then(|| sanitize(rest)),
             keyword: error.keyword.as_deref().map(sanitize),
             reason: error.reason.map(sanitize),
@@ -217,6 +222,43 @@ fn sanitize(text: &str) -> String {
         safe.push_str("...");
     }
     safe
+}
+
+/// The byte offsets at which the lines of an input start, to find the line and
+/// column of many offsets without scanning the input again for each.
+///
+/// A line ends at `\n`, `\r\n` or a lone `\r`, as a comment does.
+pub(crate) struct Lines<'a> {
+    /// The input the offsets refer to.
+    input: &'a str,
+    /// The byte offset of each line's first character, sorted ascending; starts with `0`.
+    starts: Vec<usize>,
+}
+
+impl<'a> Lines<'a> {
+    /// Finds the line starts of `input`, in one pass.
+    pub(crate) fn new(input: &'a str) -> Self {
+        let bytes = input.as_bytes();
+        let breaks = bytes
+            .iter()
+            .enumerate()
+            .filter(|&(i, &b)| b == b'\n' || (b == b'\r' && bytes.get(i + 1) != Some(&b'\n')));
+        let starts = std::iter::once(0)
+            .chain(breaks.map(|(i, _)| i + 1))
+            .collect();
+        Self { input, starts }
+    }
+
+    /// The 1-based line and column (in characters) of the byte `offset`, which
+    /// must be at most the input's length and on a character boundary.
+    ///
+    /// Takes logarithmic time in the number of lines plus linear time in the
+    /// length of `offset`'s line.
+    fn position(&self, offset: usize) -> (usize, usize) {
+        let line = self.starts.partition_point(|&start| start <= offset);
+        let start = self.starts[line - 1];
+        (line, self.input[start..offset].chars().count() + 1)
+    }
 }
 
 /// A grammar error: where it happened and, if known, in which form and why.
@@ -611,6 +653,15 @@ mod tests {
     fn the_message_does_not_include_the_suggestion() {
         let error = Domain::from_str("(define (domain d) (:predicats (p)))").unwrap_err();
         check!(!error.to_string().contains("did you mean"));
+    }
+
+    #[test]
+    fn a_lone_carriage_return_ends_a_line() {
+        let error = Domain::from_str("(define (domain d)\r  (:predicats (p)))").unwrap_err();
+        check!((error.line(), error.column()) == (2, 3));
+        // `\r\n` counts once.
+        let error = Domain::from_str("(define (domain d)\r\n\r  (:predicats (p)))").unwrap_err();
+        check!((error.line(), error.column()) == (3, 3));
     }
 
     #[test]
