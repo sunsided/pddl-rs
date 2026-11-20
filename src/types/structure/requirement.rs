@@ -262,30 +262,54 @@ impl TryFrom<&str> for Requirement {
     type Error = UnknownKeyword;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value {
-            names::STRIPS => Ok(Requirement::Strips),
-            names::TYPING => Ok(Requirement::Typing),
-            names::NEGATIVE_PRECONDITIONS => Ok(Requirement::NegativePreconditions),
-            names::DISJUNCTIVE_PRECONDITIONS => Ok(Requirement::DisjunctivePreconditions),
-            names::EQUALITY => Ok(Requirement::Equality),
-            names::EXISTENTIAL_PRECONDITIONS => Ok(Requirement::ExistentialPreconditions),
-            names::UNIVERSAL_PRECONDITIONS => Ok(Requirement::UniversalPreconditions),
-            names::QUANTIFIED_PRECONDITIONS => Ok(Requirement::QuantifiedPreconditions),
-            names::CONDITIONAL_EFFECTS => Ok(Requirement::ConditionalEffects),
-            names::FLUENTS => Ok(Requirement::Fluents),
-            names::NUMERIC_FLUENTS => Ok(Requirement::NumericFluents),
-            names::OBJECT_FLUENTS => Ok(Requirement::ObjectFluents),
-            names::ADL => Ok(Requirement::Adl),
-            names::DURATIVE_ACTIONS => Ok(Requirement::DurativeActions),
-            names::DURATION_INEQUALITIES => Ok(Requirement::DurationInequalities),
-            names::CONTINUOUS_EFFECTS => Ok(Requirement::ContinuousEffects),
-            names::DERIVED_PREDICATES => Ok(Requirement::DerivedPredicates),
-            names::TIMED_INITIAL_LITERALS => Ok(Requirement::TimedInitialLiterals),
-            names::PREFERENCES => Ok(Requirement::Preferences),
-            names::CONSTRAINTS => Ok(Requirement::Constraints),
-            names::ACTION_COSTS => Ok(Requirement::ActionCosts),
-            _ => Err(UnknownKeyword::new("requirement key", value)),
-        }
+        UnknownKeyword::lookup(
+            "requirement key",
+            value,
+            &[
+                (names::STRIPS, Requirement::Strips),
+                (names::TYPING, Requirement::Typing),
+                (
+                    names::NEGATIVE_PRECONDITIONS,
+                    Requirement::NegativePreconditions,
+                ),
+                (
+                    names::DISJUNCTIVE_PRECONDITIONS,
+                    Requirement::DisjunctivePreconditions,
+                ),
+                (names::EQUALITY, Requirement::Equality),
+                (
+                    names::EXISTENTIAL_PRECONDITIONS,
+                    Requirement::ExistentialPreconditions,
+                ),
+                (
+                    names::UNIVERSAL_PRECONDITIONS,
+                    Requirement::UniversalPreconditions,
+                ),
+                (
+                    names::QUANTIFIED_PRECONDITIONS,
+                    Requirement::QuantifiedPreconditions,
+                ),
+                (names::CONDITIONAL_EFFECTS, Requirement::ConditionalEffects),
+                (names::FLUENTS, Requirement::Fluents),
+                (names::NUMERIC_FLUENTS, Requirement::NumericFluents),
+                (names::OBJECT_FLUENTS, Requirement::ObjectFluents),
+                (names::ADL, Requirement::Adl),
+                (names::DURATIVE_ACTIONS, Requirement::DurativeActions),
+                (
+                    names::DURATION_INEQUALITIES,
+                    Requirement::DurationInequalities,
+                ),
+                (names::CONTINUOUS_EFFECTS, Requirement::ContinuousEffects),
+                (names::DERIVED_PREDICATES, Requirement::DerivedPredicates),
+                (
+                    names::TIMED_INITIAL_LITERALS,
+                    Requirement::TimedInitialLiterals,
+                ),
+                (names::PREFERENCES, Requirement::Preferences),
+                (names::CONSTRAINTS, Requirement::Constraints),
+                (names::ACTION_COSTS, Requirement::ActionCosts),
+            ],
+        )
     }
 }
 

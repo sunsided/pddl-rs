@@ -509,13 +509,21 @@ impl<'a> Loader<'a> {
         scope: &HashMap<String, u32>,
     ) -> Result<Formula, LoadError> {
         Ok(match formula {
-            AtomicFormula::Equality(eq) => {
-                if self.term(eq.first(), scope)? == self.term(eq.second(), scope)? {
-                    Formula::True
-                } else {
-                    Formula::False
+            AtomicFormula::Equality(eq) => match (eq.first(), eq.second()) {
+                // The parser reads `(= (f) (g))` as an equality of terms; it is numeric.
+                (Term::Function(a), Term::Function(b)) => Formula::Compare(
+                    Comparison::Equal,
+                    self.fluent(a.symbol(), a.terms(), scope)?,
+                    self.fluent(b.symbol(), b.terms(), scope)?,
+                ),
+                (a, b) => {
+                    if self.term(a, scope)? == self.term(b, scope)? {
+                        Formula::True
+                    } else {
+                        Formula::False
+                    }
                 }
-            }
+            },
             AtomicFormula::Predicate(atom) => {
                 let args = atom
                     .values()
@@ -535,6 +543,25 @@ impl<'a> Loader<'a> {
         })
     }
 
+    /// Grounds the fluent `symbol(terms)`.
+    fn fluent(
+        &self,
+        symbol: &str,
+        terms: &[Term],
+        scope: &HashMap<String, u32>,
+    ) -> Result<Expr, LoadError> {
+        let args = terms
+            .iter()
+            .map(|t| self.term(t, scope))
+            .collect::<Result<Vec<_>, _>>()?;
+        let (func, args) = self.check(false, symbol, args)?;
+
+        Ok(Expr::Fluent {
+            func,
+            args: args.into(),
+        })
+    }
+
     /// Grounds a numeric expression.
     fn expr(
         &self,
@@ -549,15 +576,7 @@ impl<'a> Loader<'a> {
                     FunctionHead::Simple(symbol) => (symbol, &[]),
                     FunctionHead::WithTerms(symbol, terms) => (symbol, terms),
                 };
-                let args = terms
-                    .iter()
-                    .map(|t| self.term(t, scope))
-                    .collect::<Result<Vec<_>, _>>()?;
-                let (func, args) = self.check(false, symbol, args)?;
-                Expr::Fluent {
-                    func,
-                    args: args.into(),
-                }
+                self.fluent(symbol, terms, scope)?
             }
             FluentExpression::Negative(inner) => Expr::Neg(boxed(inner)?),
             FluentExpression::BinaryOp(op, a, b) => {
@@ -761,6 +780,18 @@ mod tests {
         };
         assert!(!goal[0].holds(&fact, &value));
         assert!(goal[1..].iter().all(|g| g.holds(&fact, &value)), "{goal:?}");
+    }
+
+    #[test]
+    fn reads_an_equality_of_two_functions_as_numeric() {
+        let loaded = load_str(
+            "(define (problem p) (:domain d) (:objects t u - truck)
+               (:init) (:goal (= (fuel t) (fuel u))))",
+        )
+        .unwrap();
+        let value = |_: usize, args: &[u32]| Some(f64::from(args[0]));
+        assert!(!loaded.goal.holds(&|_, _| false, &value));
+        assert!(loaded.goal.holds(&|_, _| false, &|_, _| Some(1.0)));
     }
 
     #[test]

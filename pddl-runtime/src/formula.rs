@@ -144,22 +144,14 @@ impl Formula {
             Self::False => false,
             Self::Atom { pred, args } => fact(*pred, args),
             Self::Not(inner) => !inner.eval(fact, value)?,
-            Self::And(parts) => {
-                for part in parts {
-                    if !part.eval(fact, value)? {
-                        return Some(false);
-                    }
-                }
-                true
-            }
-            Self::Or(parts) => {
-                for part in parts {
-                    if part.eval(fact, value)? {
-                        return Some(true);
-                    }
-                }
-                false
-            }
+            // No early exit on a decided part: an undefined part anywhere
+            // makes the formula undefined, whatever the order of the parts.
+            Self::And(parts) => parts
+                .iter()
+                .try_fold(true, |all, part| Some(part.eval(fact, value)? & all))?,
+            Self::Or(parts) => parts
+                .iter()
+                .try_fold(false, |any, part| Some(part.eval(fact, value)? | any))?,
             Self::Compare(op, a, b) => op.holds(a.eval(value)?, b.eval(value)?),
         })
     }
@@ -233,6 +225,18 @@ mod tests {
             Expr::Number(1.0)
         )));
         assert!(Comparison::Less.holds(1.0, 2.0) && Comparison::LessOrEqual.holds(2.0, 2.0));
+    }
+
+    #[test]
+    fn undefined_values_fail_a_formula_in_any_order() {
+        let undefined = || Formula::Compare(Comparison::Less, f(1), Expr::Number(0.0));
+        let not = |inner| Formula::Not(Box::new(inner));
+        for parts in [vec![p(1), undefined()], vec![undefined(), p(1)]] {
+            assert!(!eval(&not(Formula::And(parts.clone()))), "{parts:?}");
+        }
+        for parts in [vec![p(0), undefined()], vec![undefined(), p(0)]] {
+            assert!(!eval(&Formula::Or(parts.clone())), "{parts:?}");
+        }
     }
 
     #[test]

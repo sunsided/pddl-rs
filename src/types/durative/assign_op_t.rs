@@ -37,11 +37,14 @@ impl TryFrom<&str> for TimedAssignOperator {
     type Error = UnknownKeyword;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value {
-            names::INCREASE => Ok(Self::Increase),
-            names::DECREASE => Ok(Self::Decrease),
-            _ => Err(UnknownKeyword::new("timed assignment operator", value)),
-        }
+        UnknownKeyword::lookup(
+            "timed assignment operator",
+            value,
+            &[
+                (names::INCREASE, Self::Increase),
+                (names::DECREASE, Self::Decrease),
+            ],
+        )
     }
 }
 

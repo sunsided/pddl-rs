@@ -2,7 +2,12 @@
 //!
 //! Each type gets a [`Visitor`] impl on [`PrettyRenderer`] that turns it into a
 //! [`pretty`] document; [`Pretty::pretty`] renders that document through `Display`.
-//! The output parses back to an equal value.
+//! The output parses back to an equal value, with two exceptions for values the
+//! parser never builds. PDDL has no negative literals, so a negative number in
+//! an expression prints as `(- 5)` and parses back as a negation of `5`.
+//! A `MultiOp` built directly with one extra operand prints as `(+ a b)`, which
+//! parses back as a `BinaryOp`, and with none it prints as its only operand;
+//! the `multi_op` constructors build those equal forms instead.
 
 use std::fmt;
 

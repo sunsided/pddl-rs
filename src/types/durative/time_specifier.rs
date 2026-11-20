@@ -36,10 +36,10 @@ impl TryFrom<&str> for TimeSpecifier {
     type Error = UnknownKeyword;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value {
-            names::START => Ok(Self::Start),
-            names::END => Ok(Self::End),
-            _ => Err(UnknownKeyword::new("time specifier", value)),
-        }
+        UnknownKeyword::lookup(
+            "time specifier",
+            value,
+            &[(names::START, Self::Start), (names::END, Self::End)],
+        )
     }
 }

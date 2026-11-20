@@ -154,9 +154,27 @@ struct Gen<'a> {
     attached_functions: Vec<Option<TokenStream>>,
 }
 
+/// The variable an `Action` match binds parameter `i`'s typed id to; the `__`
+/// keeps it apart from the PDDL names and the generated locals.
+fn param(i: usize) -> Ident {
+    format_ident!("__p{}", i)
+}
+
+/// The pattern of an `Action` variant that binds each field `f` to [`param`].
+fn pattern(variant: &Ident, fields: &[Ident]) -> TokenStream {
+    let params = (0..fields.len()).map(param);
+    quote!(Action::#variant { #(#fields: #params),* })
+}
+
 /// The variable holding slot `i`'s object number.
 fn var(i: usize) -> Ident {
     format_ident!("v{}", i)
+}
+
+/// The `Task::new` parameter with the values of the bound type `name`; the
+/// `__` keeps it apart from `problem` and the locals of `Task::new`.
+fn bound_param(name: &str) -> Ident {
+    format_ident!("__{}", snake(name))
 }
 
 /// Whether a binding's `name` names the PDDL name `pddl`: exactly, or with
@@ -338,7 +356,7 @@ impl Gen<'_> {
             let args: Vec<_> = args.iter().map(|&a| self.arg(action, a)).collect();
             let guard = self.guard(&info.args, &args);
             let call = self.call(path, &info.args, &args, &quote!(self.starts));
-            return quote!((if #guard { ::core::option::Option::Some(#call) } else { ::core::option::Option::None }));
+            return quote!((if #guard { ::core::option::Option::Some(#call).filter(|v: &f64| v.is_finite()) } else { ::core::option::Option::None }));
         }
         let field = &self.names.functions[func];
         let store = if info.is_static {
@@ -377,11 +395,13 @@ impl Gen<'_> {
         quote!([#(#parts),*])
     }
 
-    /// A numeric expression over `state`, as an `Option<f64>`.
+    /// A numeric expression over `state`, as an `Option<f64>`: `None` where
+    /// undefined, as is every non-finite value.
     fn num(&self, action: &ActionInfo, expr: &NumExpr, state: &TokenStream) -> TokenStream {
         let pair =
             |a: &NumExpr, b: &NumExpr| (self.num(action, a, state), self.num(action, b, state));
         match expr {
+            NumExpr::Number(n) if !n.is_finite() => quote!(::core::option::Option::<f64>::None),
             NumExpr::Number(n) => {
                 let n = proc_macro2::Literal::f64_suffixed(*n);
                 quote!(::core::option::Option::Some(#n))
@@ -389,19 +409,19 @@ impl Gen<'_> {
             NumExpr::Fluent { func, args } => self.fluent(action, *func, args, state),
             NumExpr::Add(a, b) => {
                 let (a, b) = pair(a, b);
-                quote!(#a.zip(#b).map(|(a, b)| a + b))
+                quote!(#a.zip(#b).map(|(a, b)| a + b).filter(|v| v.is_finite()))
             }
             NumExpr::Sub(a, b) => {
                 let (a, b) = pair(a, b);
-                quote!(#a.zip(#b).map(|(a, b)| a - b))
+                quote!(#a.zip(#b).map(|(a, b)| a - b).filter(|v| v.is_finite()))
             }
             NumExpr::Mul(a, b) => {
                 let (a, b) = pair(a, b);
-                quote!(#a.zip(#b).map(|(a, b)| a * b))
+                quote!(#a.zip(#b).map(|(a, b)| a * b).filter(|v| v.is_finite()))
             }
             NumExpr::Div(a, b) => {
                 let (a, b) = pair(a, b);
-                quote!(#a.zip(#b).and_then(|(a, b)| (b != 0.0).then(|| a / b)))
+                quote!(#a.zip(#b).and_then(|(a, b)| (b != 0.0).then(|| a / b)).filter(|v| v.is_finite()))
             }
             NumExpr::Neg(a) => {
                 let a = self.num(action, a, state);
@@ -464,36 +484,26 @@ impl Gen<'_> {
                 let inner = self.cond(action, inner, state);
                 quote!((!#inner))
             }
+            // A part with a comparison must run even when the others decide
+            // the result: it may read an undefined value, which fails it all.
             Cond::And(parts) => {
                 let parts: Vec<_> = parts.iter().map(|p| self.cond(action, p, state)).collect();
-                if parts.is_empty() {
-                    quote!(true)
-                } else {
-                    quote!((#(#parts)&&*))
+                match (parts.is_empty(), Self::compares(cond)) {
+                    (true, _) => quote!(true),
+                    (false, false) => quote!((#(#parts)&&*)),
+                    (false, true) => quote!((#(#parts)&*)),
                 }
             }
             Cond::Or(parts) => {
                 let parts: Vec<_> = parts.iter().map(|p| self.cond(action, p, state)).collect();
-                if parts.is_empty() {
-                    quote!(false)
-                } else {
-                    quote!((#(#parts)||*))
+                match (parts.is_empty(), Self::compares(cond)) {
+                    (true, _) => quote!(false),
+                    (false, false) => quote!((#(#parts)||*)),
+                    (false, true) => quote!((#(#parts)|*)),
                 }
             }
             Cond::Exists(slots, body) | Cond::Forall(slots, body) => {
-                let exists = matches!(cond, Cond::Exists(..));
-                let mut expr = self.cond(action, body, state);
-                for &slot in slots.iter().rev() {
-                    let v = var(slot);
-                    let ty = action.slots[slot].ty;
-                    let member = Self::member(action, slot);
-                    expr = if exists {
-                        quote!((self.starts[#ty]..self.ends[#ty]).any(|#v| #member && #expr))
-                    } else {
-                        quote!((self.starts[#ty]..self.ends[#ty]).all(|#v| !#member || #expr))
-                    };
-                }
-                expr
+                self.quantified(action, matches!(cond, Cond::Exists(..)), slots, body, state)
             }
             Cond::Compare(op, a, b) => {
                 let (a, b) = (self.num(action, a, state), self.num(action, b, state));
@@ -512,6 +522,45 @@ impl Gen<'_> {
                     }
                 })
             }
+        }
+    }
+
+    /// An `exists` (`exists` is `true`) or `forall` over `slots`: one loop
+    /// per slot, which visits every object if `body` has a comparison.
+    fn quantified(
+        &self,
+        action: &ActionInfo,
+        exists: bool,
+        slots: &[usize],
+        body: &Cond,
+        state: &TokenStream,
+    ) -> TokenStream {
+        let every = Self::compares(body);
+        let mut expr = self.cond(action, body, state);
+        for &slot in slots.iter().rev() {
+            let v = var(slot);
+            let ty = action.slots[slot].ty;
+            let member = Self::member(action, slot);
+            let objects = quote!((self.starts[#ty]..self.ends[#ty]));
+            expr = match (exists, every) {
+                (true, false) => quote!(#objects.any(|#v| #member && #expr)),
+                (false, false) => quote!(#objects.all(|#v| !#member || #expr)),
+                (true, true) => quote!(#objects.fold(false, |any, #v| any | (#member && #expr))),
+                (false, true) => quote!(#objects.fold(true, |all, #v| all & (!#member || #expr))),
+            };
+        }
+        expr
+    }
+
+    /// Whether a condition has a numeric comparison.
+    fn compares(cond: &Cond) -> bool {
+        match cond {
+            Cond::Atom { .. } | Cond::Eq(..) => false,
+            Cond::Compare(..) => true,
+            Cond::Not(inner) | Cond::Exists(_, inner) | Cond::Forall(_, inner) => {
+                Self::compares(inner)
+            }
+            Cond::And(parts) | Cond::Or(parts) => parts.iter().any(Self::compares),
         }
     }
 
@@ -700,7 +749,8 @@ impl Gen<'_> {
 
     /// The code for the numeric effects among `effects`: values read `state`,
     /// changes go to `next`, so `increase` and `decrease` add up. Returns
-    /// `None` from the apply method where a value is undefined.
+    /// `None` from the apply method where a value is undefined or a result is
+    /// not finite.
     fn assigns(&self, action: &ActionInfo, effects: &[Effect]) -> TokenStream {
         let state = quote!(state);
         let code = effects
@@ -734,7 +784,7 @@ impl Gen<'_> {
                     quote!(if #guard {
                         let index = #index;
                         let value = #value?;
-                        let new = #new;
+                        let new = ::core::option::Option::Some(#new).filter(|v: &f64| v.is_finite())?;
                         next.#field.set(&index, ::core::option::Option::Some(new));
                     })
                 }
@@ -1062,18 +1112,17 @@ impl Gen<'_> {
         let cost_arms = (0..model.actions.len()).map(|a| {
             let action = &model.actions[a];
             let variant = &self.names.actions[a];
-            let fields = &self.names.params[a];
+            let pattern = pattern(variant, &self.names.params[a]);
             let binds = action.slots[..action.arity]
                 .iter()
-                .zip(fields)
                 .enumerate()
-                .map(|(i, (slot, field))| {
-                    let v = var(i);
+                .map(|(i, slot)| {
+                    let (v, p) = (var(i), param(i));
                     let t = slot.ty;
-                    quote!(let #v = #field.0 + self.starts[#t];)
+                    quote!(let #v = #p.0 + self.starts[#t];)
                 });
             let cost = self.cost_expr(action);
-            quote!(Action::#variant { #(#fields),* } => {
+            quote!(#pattern => {
                 #(#binds)*
                 // The loader checked that cost functions are non-negative integers.
                 #cost.map_or(u32::MAX, |cost| cost.min(f64::from(u32::MAX)) as u32)
@@ -1126,27 +1175,25 @@ impl Gen<'_> {
             let action = &model.actions[a];
             action.slots[..action.arity]
                 .iter()
-                .zip(&self.names.params[a])
-                .map(|(slot, field)| {
-                    let t = slot.ty;
-                    quote!(#field.0 + self.starts[#t])
+                .enumerate()
+                .map(|(i, slot)| {
+                    let (p, t) = (param(i), slot.ty);
+                    quote!(#p.0 + self.starts[#t])
                 })
                 .collect::<Vec<_>>()
         };
         let apply_arms = (0..model.actions.len()).map(|a| {
-            let variant = &self.names.actions[a];
-            let fields = &self.names.params[a];
+            let pattern = pattern(&self.names.actions[a], &self.names.params[a]);
             let apply = Self::apply_fn(a);
             let globals = globals(a);
-            quote!(Action::#variant { #(#fields),* } => self.#apply(state, #(#globals),*),)
+            quote!(#pattern => self.#apply(state, #(#globals),*),)
         });
         let describe_arms = (0..model.actions.len()).map(|a| {
-            let variant = &self.names.actions[a];
-            let fields = &self.names.params[a];
+            let pattern = pattern(&self.names.actions[a], &self.names.params[a]);
             let name = &model.actions[a].name;
             let globals = globals(a);
             quote! {
-                Action::#variant { #(#fields),* } => {
+                #pattern => {
                     let mut text = ::std::string::String::from(concat!("(", #name));
                     #(
                         text.push(' ');
@@ -1178,14 +1225,15 @@ impl Gen<'_> {
             .enumerate()
             .filter_map(|(t, path)| {
                 let path = path.as_ref()?;
-                let field = Ident::new(&snake(&model.types[t].name), Span::call_site());
-                Some(quote!(mut #field: impl FnMut(&str) -> #path))
+                let param = bound_param(&model.types[t].name);
+                Some(quote!(mut #param: impl FnMut(&str) -> #path))
             })
             .collect();
         let bound_values: Vec<TokenStream> = self.bound.iter().enumerate().filter_map(|(t, path)| {
             path.as_ref()?;
             let field = Ident::new(&snake(&model.types[t].name), Span::call_site());
-            Some(quote!(#field: (loaded.starts[#t]..loaded.ends[#t]).map(|g| #field(&loaded.names[g as usize])).collect()))
+            let param = bound_param(&model.types[t].name);
+            Some(quote!(#field: (loaded.starts[#t]..loaded.ends[#t]).map(|g| #param(&loaded.names[g as usize])).collect()))
         }).collect();
         let bound_docs = if bound_params.is_empty() {
             quote!()
@@ -1286,7 +1334,9 @@ impl Gen<'_> {
                         }
                     }
                     for (func, args, value) in &loaded.values {
-                        if [#(#cost_functions),*].contains(func)
+                        // Costs count only under the metric; otherwise any value will do.
+                        if loaded.minimize_total_cost
+                            && [#(#cost_functions),*].contains(func)
                             && !(*value >= 0.0 && value.fract() == 0.0 && *value <= f64::from(u32::MAX))
                         {
                             return ::core::result::Result::Err(::pddl::codegen::LoadError::InvalidCost {

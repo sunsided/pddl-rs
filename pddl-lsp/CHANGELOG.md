@@ -9,6 +9,25 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Licensed under `EUPL-1.2 OR MPL-2.0`, at your option, instead of `EUPL-1.2`
   alone. Versions already published keep the licence they were published under.
+- `Server::request` and `Server::diagnostics` take `&mut self`: the server
+  remembers which documents it published diagnostics for.
+
+### Added
+
+- The server asks clients that support it to watch `**/*.pddl`, so closed
+  files changed on disk stay current in editors other than VS Code, and it
+  re-reads changed closed files before a rename.
+
+### Fixed
+
+- A domain no longer sees the predicates, types or constants of another
+  file's domain with the same name, in diagnostics, go to definition, rename
+  and completion. A rename no longer edits that other file.
+- Closing or deleting a document clears its diagnostics.
+- An edit publishes diagnostics for open documents only, instead of one
+  notification per file in the workspace.
+- Rename refuses PDDL reserved words, such as `and` or `object`, and names
+  already defined in the same scope.
 
 ## [0.2.0] - 2026-11-19
 

@@ -34,15 +34,4 @@ mod tests {
             ))
         );
     }
-
-    #[test]
-    fn doc_example_0() {
-        check!(DurationValue::from_str("1.23").is_value(DurationValue::number(1.23)));
-
-        check!(
-            DurationValue::from_str("fun-sym").is_value(DurationValue::fluent_expression(
-                FluentExpression::function(FunctionHead::Simple("fun-sym".into()))
-            ))
-        );
-    }
 }

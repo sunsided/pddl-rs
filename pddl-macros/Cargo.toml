@@ -38,5 +38,7 @@ pddl-codegen = { version = "0.1.0", path = "../pddl-codegen", optional = true }
 codegen = ["dep:pddl-codegen"]
 
 [dev-dependencies]
-pddl = { version = "0.4.0", path = "../pddl", features = ["codegen"] }
+# Path only: Cargo drops it on publish. A version would keep it, and the
+# published pddl has no `codegen` feature and depends on these macros.
+pddl = { path = "../pddl", features = ["codegen"] }
 trybuild = "1.0.125"

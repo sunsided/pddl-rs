@@ -39,10 +39,13 @@ impl TryFrom<&str> for Optimization {
     type Error = UnknownKeyword;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value {
-            names::MINIMIZE => Ok(Self::Minimize),
-            names::MAXIMIZE => Ok(Self::Maximize),
-            _ => Err(UnknownKeyword::new("optimization", value)),
-        }
+        UnknownKeyword::lookup(
+            "optimization",
+            value,
+            &[
+                (names::MINIMIZE, Self::Minimize),
+                (names::MAXIMIZE, Self::Maximize),
+            ],
+        )
     }
 }

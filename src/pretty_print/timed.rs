@@ -20,7 +20,7 @@ impl sealed::Sealed for DurativeActionGoalDescription {}
 impl Visitor<DurationValue, RcDoc<'static>> for PrettyRenderer {
     fn visit(&self, value: &DurationValue) -> RcDoc<'static> {
         match value {
-            DurationValue::Number(n) => n.accept(self),
+            DurationValue::Number(n) => self.f_exp_number(*n),
             DurationValue::FluentExpression(e) => e.accept(self),
         }
     }

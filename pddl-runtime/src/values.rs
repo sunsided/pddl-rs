@@ -3,6 +3,8 @@
 use std::fmt::{Debug, Formatter};
 use std::hash::{Hash, Hasher};
 
+use crate::bits::flat;
+
 /// The values of a numeric fluent of any arity, e.g. `(fuel ?t - truck)`, as
 /// one flat table with a stride per argument. A value can be undefined, as
 /// PDDL functions are until the initial state or an effect assigns them.
@@ -44,7 +46,7 @@ impl Values {
     /// If `tuple` has the wrong length or an index is out of range.
     #[must_use]
     pub fn get(&self, tuple: &[usize]) -> Option<f64> {
-        let value = self.data[self.flat(tuple)];
+        let value = self.data[flat(&self.dims, tuple)];
         (!value.is_nan()).then_some(value)
     }
 
@@ -53,23 +55,11 @@ impl Values {
     /// # Panics
     /// If `tuple` has the wrong length or an index is out of range.
     pub fn set(&mut self, tuple: &[usize], value: Option<f64>) {
-        let i = self.flat(tuple);
+        let i = flat(&self.dims, tuple);
         self.data[i] = match value {
             Some(v) if v.is_finite() => v + 0.0, // turns -0.0 into 0.0
             _ => f64::NAN,
         };
-    }
-
-    /// The flat index of `tuple`, checked against the dimensions.
-    fn flat(&self, tuple: &[usize]) -> usize {
-        assert_eq!(tuple.len(), self.dims.len(), "wrong number of arguments");
-        tuple
-            .iter()
-            .zip(self.dims.iter())
-            .fold(0, |flat, (&i, &dim)| {
-                assert!(i < dim, "index {i} is out of range for {dim} objects");
-                flat * dim + i
-            })
     }
 
     /// The canonical bits of each value: one NaN for every undefined value.

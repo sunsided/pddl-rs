@@ -97,12 +97,41 @@ impl Error for NumberError {}
 
 impl Eq for Number {}
 
-impl<I: Into<Number> + Copy> PartialEq<I> for Number {
-    fn eq(&self, other: &I) -> bool {
-        // Plain `f64` equality: `-0.0 == 0.0`, as in `Ord` and `Hash`.
-        self.0 == (*other).into().0
+// Plain `f64` equality: `-0.0 == 0.0`, as in `Ord` and `Hash`.
+impl PartialEq for Number {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
     }
 }
+
+impl PartialEq<UnderlyingType> for Number {
+    /// Compares as `f64`, without constructing a [`Number`]: NaN and the
+    /// infinities are never equal.
+    fn eq(&self, other: &UnderlyingType) -> bool {
+        self.0 == *other
+    }
+}
+
+impl PartialEq<f32> for Number {
+    /// Compares with the value [`Number::from`] gives for `other`; NaN and the
+    /// infinities are never equal.
+    fn eq(&self, other: &f32) -> bool {
+        other.is_finite() && *self == Number::from(*other)
+    }
+}
+
+/// Implements `Number == $ty` for integer types that convert to `f64` exactly.
+macro_rules! impl_eq_integer {
+    ($($ty:ty),+) => {$(
+        impl PartialEq<$ty> for Number {
+            fn eq(&self, other: &$ty) -> bool {
+                self.0 == UnderlyingType::from(*other)
+            }
+        }
+    )+};
+}
+
+impl_eq_integer!(i8, u8, i16, u16, i32, u32);
 
 impl Ord for Number {
     fn cmp(&self, other: &Self) -> Ordering {
@@ -221,6 +250,16 @@ mod tests {
     #[test]
     fn from_str_rejects_infinity() {
         check!(let Err(NumberError::NotFinite) = "inf".parse::<Number>());
+    }
+
+    #[test]
+    fn comparing_with_a_non_finite_value_is_false() {
+        let n = Number::from(1);
+        for other in [f64::INFINITY, f64::NEG_INFINITY, f64::NAN] {
+            check!(n != other);
+        }
+        check!(n != f32::NAN);
+        check!(n == 1.0f32 && n == 1.0 && n == 1u8 && n == Number::from(1));
     }
 
     #[test]

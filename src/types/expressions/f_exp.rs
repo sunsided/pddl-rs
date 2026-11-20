@@ -21,7 +21,8 @@ pub enum FluentExpression {
     Negative(Box<FluentExpression>),
     /// An operation applied to two fluent expressions.
     BinaryOp(BinaryOp, Box<FluentExpression>, Box<FluentExpression>),
-    /// An operation applied to two or more fluent expressions.
+    /// An operation applied to two or more fluent expressions, with at least two
+    /// in the `Vec`; see [`multi_op`](Self::multi_op) for fewer.
     MultiOp(MultiOp, Box<FluentExpression>, Vec<FluentExpression>),
 }
 
@@ -54,6 +55,10 @@ impl FluentExpression {
     }
 
     /// Creates an operation over two or more operands, `(<multi-op> <f-exp> <f-exp>+)`.
+    ///
+    /// `(<multi-op> a b)` is a binary operation and `(<multi-op> a)` isn't PDDL, so
+    /// with one operand in `rhs` this returns the equal `BinaryOp`, and with none
+    /// it returns `lhs`. The result then prints and parses back to an equal value.
     #[doc(alias = "new_multi_op")]
     #[must_use]
     pub fn multi_op<I: IntoIterator<Item = FluentExpression>>(
@@ -61,7 +66,12 @@ impl FluentExpression {
         lhs: FluentExpression,
         rhs: I,
     ) -> Self {
-        Self::MultiOp(op, Box::new(lhs), rhs.into_iter().collect())
+        let mut rhs: Vec<_> = rhs.into_iter().collect();
+        match rhs.len() {
+            0 => lhs,
+            1 => Self::binary_op(op.into(), lhs, rhs.remove(0)),
+            _ => Self::MultiOp(op, Box::new(lhs), rhs),
+        }
     }
 
     /// Creates an operation over two or more operands, `(<multi-op> <f-exp> <f-exp>+)`.

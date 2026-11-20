@@ -91,15 +91,17 @@ export async function solveWithService(context: vscode.ExtensionContext): Promis
     async (_progress, token): Promise<Finished | undefined> => {
       const abort = new AbortController();
       token.onCancellationRequested(() => abort.abort());
+      const deadline = Date.now() + TIMEOUT_MS;
+      // A hung request ends at the deadline too, not only the polls between requests.
+      const signal = () => AbortSignal.any([abort.signal, AbortSignal.timeout(Math.max(0, deadline - Date.now()))]);
       const base = new URL(`${url}/`);
-      const submitted = await post(new URL(`package/${encodeURIComponent(planner)}/solve`, base), body, abort.signal);
+      const submitted = await post(new URL(`package/${encodeURIComponent(planner)}/solve`, base), body, signal());
       if (typeof submitted?.result !== "string") {
         throw new Error(submitted?.Error ?? `unexpected answer: ${JSON.stringify(submitted)}`);
       }
       const check = new URL(submitted.result, base);
-      const deadline = Date.now() + TIMEOUT_MS;
       while (Date.now() < deadline && !token.isCancellationRequested) {
-        const answer: Finished = await post(check, {}, abort.signal);
+        const answer: Finished = await post(check, {}, signal());
         if (answer.status !== "PENDING") {
           return answer;
         }
@@ -113,6 +115,13 @@ export async function solveWithService(context: vscode.ExtensionContext): Promis
   ).then(
     (answer) => answer,
     (error) => {
+      if (error?.name === "AbortError") {
+        // The user cancelled.
+        return undefined;
+      }
+      if (error?.name === "TimeoutError") {
+        error = new Error(`no plan after ${TIMEOUT_MS / 60_000} minutes`);
+      }
       vscode.window.showErrorMessage(`Planning-as-a-Service failed: ${error.message ?? error}`);
       return undefined;
     },

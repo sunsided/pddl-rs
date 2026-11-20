@@ -206,6 +206,34 @@ fn negative_numbers_read_back() {
     check!(back == FluentExpression::negative(FluentExpression::Number(Number::from(5))));
 }
 
+/// An object holds each key once, so repeated names fail instead of vanishing.
+#[test]
+fn repeated_names_fail_to_serialize() {
+    let domains = [
+        "(define (domain d) (:action a :parameters ()) (:action a :parameters ()))",
+        "(define (domain d) \
+         (:durative-action a :parameters () :duration (= ?duration 1) :condition () :effect ()) \
+         (:durative-action a :parameters () :duration (= ?duration 1) :condition () :effect ()))",
+        "(define (domain d) (:predicates (p) (p ?x)))",
+        "(define (domain d) (:predicates (p ?x - a ?x - b)))",
+        "(define (domain d) (:functions (f) (f ?x)))",
+        "(define (domain d) (:constants c c))",
+    ];
+    for input in domains {
+        let domain = Domain::from_str(input).unwrap();
+        let error = serde_json::to_value(&domain).unwrap_err();
+        check!(
+            error.to_string().contains("duplicate key"),
+            "{input}: {error}"
+        );
+    }
+
+    let unique = Domain::from_str(
+        "(define (domain d) (:action a :parameters ()) (:action b :parameters ()))",
+    );
+    check!(serde_json::to_value(unique.unwrap()).is_ok());
+}
+
 #[test]
 fn input_cannot_change_the_pddl_structure() {
     let injected = json!({"problem": "p) (:goal (x", "domain": "d", "init": [], "goal": ["g"]});

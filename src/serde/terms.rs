@@ -1,7 +1,7 @@
 //! Names, variables, terms, numbers and types.
 
 use crate::serde::{
-    deserialize_from_pddl, formula, serialize_deref, serialize_display, type_, Head,
+    deserialize_from_pddl, formula, serialize_deref, serialize_display, type_, Head, UniqueKeys,
 };
 use crate::{
     BasicFunctionTerm, FunctionSymbol, FunctionTerm, FunctionType, Name, Number, Predicate,
@@ -100,11 +100,15 @@ impl<T: Serialize> Serialize for Typed<T> {
     }
 }
 
-impl<T: Serialize> Serialize for TypedList<T> {
+impl<T: Serialize + AsRef<str>> Serialize for TypedList<T> {
     /// An object from each value to its type, in order.
+    ///
+    /// Fails on a value that repeats, e.g. `(?x - a ?x - b)`: the object could hold only one.
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut map = serializer.serialize_map(Some(self.len()))?;
+        let mut keys = UniqueKeys::default();
         for typed in self.iter() {
+            keys.insert(typed.value().as_ref())?;
             map.serialize_entry(typed.value(), typed.type_())?;
         }
         map.end()

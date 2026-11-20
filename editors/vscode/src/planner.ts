@@ -46,6 +46,21 @@ export async function activeTask(): Promise<Task | undefined> {
   return { problem: editor.document.uri, domain };
 }
 
+/**
+ * Saves the open, changed documents among `uris`, as tools that read the files
+ * from disk need. `false`, after telling the user, if one could not be saved.
+ */
+export async function saveAll(uris: vscode.Uri[]): Promise<boolean> {
+  for (const uri of uris) {
+    const document = vscode.workspace.textDocuments.find((d) => d.uri.toString() === uri.toString());
+    if (document && (document.isDirty || document.isUntitled) && !(await document.save())) {
+      vscode.window.showErrorMessage(`Could not save ${vscode.workspace.asRelativePath(uri)}; save it, then try again.`);
+      return false;
+    }
+  }
+  return true;
+}
+
 /** The directory of a file URI, as a path. */
 function directory(uri: vscode.Uri): string {
   return vscode.Uri.joinPath(uri, "..").fsPath;
@@ -66,7 +81,9 @@ export async function solveWithPlanutils(): Promise<vscode.TaskExecution | undef
   if (!solve) {
     return undefined;
   }
-  await vscode.workspace.save(solve.problem);
+  if (!(await saveAll([solve.domain, solve.problem]))) {
+    return undefined;
+  }
   const planner = vscode.workspace.getConfiguration("pddl").get<string>("planner", "lama-first").trim();
   const task = new vscode.Task(
     { type: "pddl-planutils", planner },

@@ -678,10 +678,16 @@ fn decimal_summands_of_whole_costs_are_whole() {
 fn dropped_operators_do_not_set_the_scale() {
     // `idle` changes nothing, so it isn't in the task, and its cost neither
     // makes `ground` fail nor sets the scale; not even when it can't fit.
-    for idle in ["0.5", "4294967.296"] {
+    for idle in [
+        "0.5",
+        "4294967.296",
+        "100000000000000000000000000000000000000000",
+        "0.00000000000000000000000000000000000000001",
+    ] {
         let (domain, problem) = cost_sum(&["2"], idle);
         let file = ground(&domain, &problem).unwrap();
         assert_eq!(file.operators.len(), 1, "{idle}");
+        assert_eq!(file.operators[0].cost, 2, "{idle}");
         assert_eq!(
             ground_scaled(&domain, &problem).unwrap().cost_scale,
             1,
@@ -706,4 +712,136 @@ fn ground_reports_costs_beyond_u32() {
         ground(&domain, &problem),
         Err(GroundError::InvalidCost { .. })
     ));
+}
+
+#[test]
+fn costs_with_too_many_digits_are_out_of_range() {
+    // 39 places: the digits alone don't fit, let alone the scale.
+    let (domain, problem) = cost_sum(&["0.000000000000000000000000000000000000001"], "1");
+    assert_eq!(
+        ground_scaled(&domain, &problem),
+        Err(GroundError::CostOutOfRange {
+            action: "act".into(),
+            places: 39
+        })
+    );
+    // With `ground`, decimal places are invalid before they are out of range.
+    assert_eq!(
+        ground(&domain, &problem),
+        Err(GroundError::InvalidCost {
+            action: "act".into()
+        })
+    );
+    // A whole number with more digits than fit is out of range too.
+    let (domain, problem) = cost_sum(&["100000000000000000000000000000000000000000"], "1");
+    assert_eq!(
+        ground(&domain, &problem),
+        Err(GroundError::CostOutOfRange {
+            action: "act".into(),
+            places: 0
+        })
+    );
+}
+
+#[test]
+fn cost_overflow_does_not_depend_on_the_order_of_the_terms() {
+    // 2e38 + 2e38 overflows u128; whether 0.5 is added before or after the
+    // overflow must not change the error.
+    let big = "200000000000000000000000000000000000000";
+    for costs in [[big, big, "0.5"], ["0.5", big, big]] {
+        let (domain, problem) = cost_sum(&costs, "1");
+        assert_eq!(
+            ground(&domain, &problem),
+            Err(GroundError::InvalidCost {
+                action: "act".into()
+            }),
+            "{costs:?}"
+        );
+        assert_eq!(
+            ground_scaled(&domain, &problem),
+            Err(GroundError::CostOutOfRange {
+                action: "act".into(),
+                places: 1
+            }),
+            "{costs:?}"
+        );
+    }
+}
+
+/// Formats each number of `range` and joins the results with spaces.
+fn spaced(range: std::ops::Range<usize>, format: impl Fn(usize) -> String) -> String {
+    range.map(format).collect::<Vec<_>>().join(" ")
+}
+
+#[test]
+fn exists_binders_do_not_duplicate_operators() {
+    // Each of the 25 bindings of `?y ?z` grounds to the same operator.
+    let objects = spaced(0..5, |i| format!("o{i}"));
+    let init = spaced(0..5, |i| format!("(s o{i})"));
+    let file = ground_str(
+        "(define (domain d) (:predicates (s ?x) (q))
+           (:action act :parameters () :precondition (exists (?y ?z) (and (s ?y) (s ?z)))
+             :effect (q)))",
+        &format!(
+            "(define (problem p) (:domain d) (:objects {objects}) (:init {init}) (:goal (q)))"
+        ),
+    )
+    .unwrap();
+    let names: Vec<_> = file.operators.iter().map(|op| op.name.as_str()).collect();
+    assert_eq!(names, ["act"]);
+}
+
+#[test]
+fn actions_declared_twice_do_not_duplicate_operators() {
+    // The two `a` are equal but not adjacent: `b` is declared between them.
+    let file = ground_str(
+        "(define (domain d) (:predicates (q) (r))
+           (:action a :parameters () :effect (q))
+           (:action b :parameters () :effect (r))
+           (:action a :parameters () :effect (q)))",
+        "(define (problem p) (:domain d) (:init) (:goal (and (q) (r))))",
+    )
+    .unwrap();
+    let names: Vec<_> = file.operators.iter().map(|op| op.name.as_str()).collect();
+    assert_eq!(names, ["a", "b"]);
+}
+
+#[test]
+fn exists_binders_keep_distinct_operators() {
+    // The binder picks which fluent atom the operator needs, so the two
+    // groundings differ and both stay.
+    let file = ground_str(
+        "(define (domain d) (:predicates (s ?x) (q))
+           (:action mk :parameters (?x) :effect (s ?x))
+           (:action act :parameters () :precondition (exists (?y) (s ?y)) :effect (q)))",
+        "(define (problem p) (:domain d) (:objects a b) (:init) (:goal (q)))",
+    )
+    .unwrap();
+    let names: Vec<_> = file.operators.iter().map(|op| op.name.as_str()).collect();
+    assert_eq!(names, ["mk a", "mk b", "act", "act"]);
+}
+
+#[test]
+fn long_chains_ground_every_step() {
+    // Each step makes the next one reachable, so reachability takes one round
+    // per node. Recomputing every round in full took ~1.9 s (release) here;
+    // trying only the bindings that use a newly reachable atom takes ~14 ms.
+    let n = 300;
+    let objects = spaced(0..n, |i| format!("n{i}"));
+    let links = spaced(1..n, |i| format!("(conn n{} n{i})", i - 1));
+    let file = ground_str(
+        "(define (domain d) (:predicates (at ?x) (conn ?x ?y))
+           (:action mv :parameters (?a ?b) :precondition (and (at ?a) (conn ?a ?b))
+             :effect (and (at ?b) (not (at ?a)))))",
+        &format!(
+            "(define (problem p) (:domain d) (:objects {objects}) (:init (at n0) {links})
+               (:goal (at n{})))",
+            n - 1
+        ),
+    )
+    .unwrap();
+    let names: Vec<_> = file.operators.iter().map(|op| op.name.clone()).collect();
+    let expected: Vec<_> = (1..n).map(|i| format!("mv n{} n{i}", i - 1)).collect();
+    assert_eq!(names, expected);
+    assert_eq!(file.variables.len(), n);
 }

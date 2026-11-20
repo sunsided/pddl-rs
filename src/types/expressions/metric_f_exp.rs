@@ -13,7 +13,8 @@ use crate::types::{BinaryOp, FunctionSymbol, MultiOp, Name, Number, PreferenceNa
 pub enum MetricFluentExpression {
     /// A binary operation, `(<binary-op> <metric-f-exp> <metric-f-exp>)`.
     BinaryOp(BinaryOp, Box<Self>, Box<Self>),
-    /// An operation over two or more operands, `(<multi-op> <metric-f-exp> <metric-f-exp>+)`.
+    /// An operation over two or more operands, `(<multi-op> <metric-f-exp> <metric-f-exp>+)`,
+    /// with at least two in the `Vec`; see [`multi_op`](Self::multi_op) for fewer.
     MultiOp(MultiOp, Box<Self>, Vec<Self>),
     /// A negation, `(- <metric-f-exp>)`.
     Negative(Box<Self>),
@@ -44,16 +45,18 @@ impl MetricFluentExpression {
 
     /// Creates an operation over two or more operands, `(<multi-op> <metric-f-exp> <metric-f-exp>+)`.
     ///
-    /// `rhs` must contain at least one operand; this is checked in debug builds.
+    /// `(<multi-op> a b)` is a binary operation and `(<multi-op> a)` isn't PDDL, so
+    /// with one operand in `rhs` this returns the equal `BinaryOp`, and with none
+    /// it returns `lhs`. The result then prints and parses back to an equal value.
     #[doc(alias = "new_multi_op")]
     #[must_use]
     pub fn multi_op<I: IntoIterator<Item = Self>>(op: MultiOp, lhs: Self, rhs: I) -> Self {
-        let vec: Vec<_> = rhs.into_iter().collect();
-        debug_assert!(
-            !vec.is_empty(),
-            "Right-hand side requires at least one operand"
-        );
-        Self::MultiOp(op, Box::new(lhs), vec)
+        let mut rhs: Vec<_> = rhs.into_iter().collect();
+        match rhs.len() {
+            0 => lhs,
+            1 => Self::binary_op(op.into(), lhs, rhs.remove(0)),
+            _ => Self::MultiOp(op, Box::new(lhs), rhs),
+        }
     }
 
     /// Creates an operation over two or more operands, `(<multi-op> <metric-f-exp> <metric-f-exp>+)`.
@@ -164,6 +167,17 @@ mod tests {
         let rhs = MetricFluentExpression::number(2);
         let expr = MetricFluentExpression::binary_op(BinaryOp::Addition, lhs, rhs);
         check!(let MetricFluentExpression::BinaryOp(_, _, _) = expr);
+    }
+
+    #[test]
+    fn multi_op_with_fewer_than_three_operands_is_equal_to_what_parses() {
+        let (one, two) = (
+            MetricFluentExpression::number(1),
+            MetricFluentExpression::number(2),
+        );
+        let sum = MetricFluentExpression::multi_op(MultiOp::Addition, one.clone(), [two.clone()]);
+        check!(sum == MetricFluentExpression::binary_op(BinaryOp::Addition, one.clone(), two));
+        check!(MetricFluentExpression::multi_op(MultiOp::Multiplication, one.clone(), []) == one);
     }
 
     #[test]

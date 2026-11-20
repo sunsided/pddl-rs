@@ -3,14 +3,17 @@
 
 import { execFile } from "child_process";
 import * as vscode from "vscode";
-import { domainOf } from "./planner";
+import { domainOf, saveAll } from "./planner";
 import { problemFor } from "./plans";
 import { parseVal } from "./val";
+
+/** How long VAL may run. */
+const TIMEOUT_MS = 60_000;
 
 /** Runs `command` with `args` in `cwd`; resolves with its output whatever its exit code. */
 function run(command: string[], args: string[], cwd: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    execFile(command[0], [...command.slice(1), ...args], { cwd, timeout: 60_000 }, (error, stdout, stderr) => {
+    execFile(command[0], [...command.slice(1), ...args], { cwd, timeout: TIMEOUT_MS, maxBuffer: 64 * 1024 * 1024 }, (error, stdout, stderr) => {
       // VAL exits with the number of failed plans; only a failure to start is an error.
       if (error && typeof error.code !== "number") {
         reject(error);
@@ -36,18 +39,33 @@ export async function validatePlan(
     return undefined;
   }
   const plan = editor.document;
+  // Only an unsaved plan has no file; remote and virtual workspaces have other schemes.
+  if (plan.isUntitled) {
+    vscode.window.showErrorMessage("Save this plan to a file next to its problem, then validate it.");
+    return undefined;
+  }
   const problem = await problemFor(context, plan.uri, true);
   const domain = problem && (await domainOf(await vscode.workspace.openTextDocument(problem)));
   if (!problem || !domain) {
     vscode.window.showErrorMessage("Could not find the problem this plan solves, or its domain.");
     return undefined;
   }
-  await plan.save();
+  if (!(await saveAll([domain, problem, plan.uri]))) {
+    return undefined;
+  }
   const command = vscode.workspace.getConfiguration("pddl").get<string[]>("validator", ["Validate"]);
   let output: string;
   try {
     output = await run(command, ["-v", domain.fsPath, problem.fsPath, plan.uri.fsPath], vscode.Uri.joinPath(plan.uri, "..").fsPath);
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER") {
+      vscode.window.showErrorMessage(`VAL (\`${command.join(" ")}\`) wrote more than 64 MiB of output; it was stopped.`);
+      return undefined;
+    }
+    if (error?.killed) {
+      vscode.window.showErrorMessage(`VAL (\`${command.join(" ")}\`) did not finish within ${TIMEOUT_MS / 1000} seconds; it was stopped.`);
+      return undefined;
+    }
     vscode.window.showErrorMessage(
       `Could not run VAL (\`${command.join(" ")}\`): ${error}. Install it with \`planutils install val\` and set ` +
         `pddl.validator to ["val", "Validate"], or build it from https://github.com/KCL-Planning/VAL.`,

@@ -1,6 +1,6 @@
 //! Provides parsers for files with several domain and problem definitions.
 
-use crate::parsers::error::R;
+use crate::parsers::error::{Lines, R};
 use crate::parsers::sexpr::{self, Node};
 use crate::parsers::structure::domain::parse_domain_recovering;
 use crate::parsers::structure::problem::parse_problem_recovering;
@@ -41,13 +41,17 @@ pub(crate) fn parse_pddl_file(nodes: &[Node]) -> R<(PddlFile, usize)> {
 
 crate::parsers::impl_parser!(Definition => parse_definition);
 
+/// The most errors [`check`] reports; it stops checking once it found this many.
+const MAX_ERRORS: usize = 1000;
+
 /// Parses `input` like [`PddlFile::from_str`](crate::Parser::from_str), but
 /// returns every error it finds instead of stopping at the first one.
 ///
 /// After an error, checking resumes at the next section of the same domain or
 /// problem, or at the next top-level form. So it reports at most one error per
-/// section, action or top-level form, in input order. The result is empty
-/// exactly when [`PddlFile::from_str`](crate::Parser::from_str) succeeds.
+/// section, action or top-level form, in input order, and at most the first
+/// 1000. The result is empty exactly when
+/// [`PddlFile::from_str`](crate::Parser::from_str) succeeds.
 ///
 /// ## Example
 /// ```
@@ -65,6 +69,10 @@ pub fn check(input: &str) -> Vec<ParseError> {
     };
     let mut errors = Vec::new();
     for node in &forest.nodes {
+        if errors.len() >= MAX_ERRORS {
+            break;
+        }
+
         if !node
             .head()
             .is_some_and(|h| h.eq_ignore_ascii_case("define"))
@@ -81,7 +89,13 @@ pub fn check(input: &str) -> Vec<ParseError> {
         errors.extend(result.err());
     }
     errors.extend(forest.unbalanced);
-    errors.iter().map(|e| ParseError::new(input, e)).collect()
+    errors.truncate(MAX_ERRORS);
+
+    let lines = Lines::new(input);
+    errors
+        .iter()
+        .map(|e| ParseError::with_lines(&lines, e))
+        .collect()
 }
 
 impl Parser for PddlFile {
@@ -95,6 +109,7 @@ impl Parser for PddlFile {
 
 #[cfg(test)]
 mod tests {
+    use super::MAX_ERRORS;
     use assert2::check;
 
     use crate::*;
@@ -218,6 +233,16 @@ mod tests {
                 ]
         );
         check!(errors.iter().all(|e| e.help().is_none()));
+    }
+
+    #[test]
+    fn check_stops_at_the_error_limit_with_correct_positions() {
+        // Counting lines again for each error took 21 s for this input.
+        let errors = parsers::check(&"x\n".repeat(100_000));
+        check!(errors.len() == MAX_ERRORS);
+        for (i, error) in errors.iter().enumerate() {
+            check!((error.line(), error.column(), error.offset()) == (i + 1, 1, 2 * i));
+        }
     }
 
     #[test]

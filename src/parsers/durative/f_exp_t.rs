@@ -61,31 +61,4 @@ mod tests {
             )
         );
     }
-
-    #[test]
-    fn doc_example_0() {
-        check!(TimedFluentExpression::from_str("#t").is_value(TimedFluentExpression::Now));
-
-        check!(
-            TimedFluentExpression::from_str("(* (fuel ?tank) #t)").is_value(
-                TimedFluentExpression::scaled(FluentExpression::function(
-                    FunctionHead::with_terms(
-                        FunctionSymbol::string("fuel"),
-                        [Term::Variable(Variable::string("tank"))]
-                    )
-                ))
-            )
-        );
-
-        check!(
-            TimedFluentExpression::from_str("(* #t (fuel ?tank))").is_value(
-                TimedFluentExpression::scaled(FluentExpression::function(
-                    FunctionHead::with_terms(
-                        FunctionSymbol::string("fuel"),
-                        [Term::Variable(Variable::string("tank"))]
-                    )
-                ))
-            )
-        );
-    }
 }

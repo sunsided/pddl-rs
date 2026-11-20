@@ -363,7 +363,7 @@ impl BitTable {
     /// If `tuple` has the wrong length or an index is out of range.
     #[must_use]
     pub fn contains(&self, tuple: &[usize]) -> bool {
-        self.bits.get(self.flat(tuple))
+        self.bits.get(flat(&self.dims, tuple))
     }
 
     /// Adds `tuple`; returns whether it was not in the table.
@@ -371,7 +371,7 @@ impl BitTable {
     /// # Panics
     /// If `tuple` has the wrong length or an index is out of range.
     pub fn insert(&mut self, tuple: &[usize]) -> bool {
-        let i = self.flat(tuple);
+        let i = flat(&self.dims, tuple);
         self.bits.set(i, true)
     }
 
@@ -380,7 +380,7 @@ impl BitTable {
     /// # Panics
     /// If `tuple` has the wrong length or an index is out of range.
     pub fn remove(&mut self, tuple: &[usize]) -> bool {
-        let i = self.flat(tuple);
+        let i = flat(&self.dims, tuple);
         self.bits.set(i, false)
     }
 
@@ -389,7 +389,7 @@ impl BitTable {
     /// # Panics
     /// If `tuple` has the wrong length or an index is out of range.
     pub fn set(&mut self, tuple: &[usize], value: bool) {
-        let i = self.flat(tuple);
+        let i = flat(&self.dims, tuple);
         self.bits.set(i, value);
     }
 
@@ -415,18 +415,18 @@ impl BitTable {
             tuple
         })
     }
+}
 
-    /// The flat index of `tuple`, checked against the dimensions.
-    fn flat(&self, tuple: &[usize]) -> usize {
-        assert_eq!(tuple.len(), self.dims.len(), "wrong number of arguments");
-        tuple
-            .iter()
-            .zip(self.dims.iter())
-            .fold(0, |flat, (&i, &dim)| {
-                assert!(i < dim, "index {i} is out of range for {dim} objects");
-                flat * dim + i
-            })
-    }
+/// The row-major index of `tuple` in a table with the dimensions `dims`.
+///
+/// # Panics
+/// If `tuple` has the wrong length or an index is out of range.
+pub(crate) fn flat(dims: &[usize], tuple: &[usize]) -> usize {
+    assert_eq!(tuple.len(), dims.len(), "wrong number of arguments");
+    tuple.iter().zip(dims).fold(0, |flat, (&i, &dim)| {
+        assert!(i < dim, "index {i} is out of range for {dim} objects");
+        flat * dim + i
+    })
 }
 
 impl Debug for BitTable {

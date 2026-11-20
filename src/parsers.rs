@@ -218,6 +218,8 @@ mod tests {
                     for input in [names::$name.to_string(), names::$name.to_ascii_uppercase()] {
                         let parsed = <$ty as Parser>::from_str(&input);
                         check!(parsed == Ok(expected.clone()), "{input}");
+                        let converted = <$ty>::try_from(input.as_str());
+                        check!(converted == Ok(expected.clone()), "{input}");
                     }
                 )+
             }};

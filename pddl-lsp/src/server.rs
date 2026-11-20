@@ -6,7 +6,7 @@ use std::fmt::Write as _;
 use std::ops::Range;
 use std::path::Path;
 
-use lsp_server::{Connection, ErrorCode, Message, Notification, Request, Response};
+use lsp_server::{Connection, ErrorCode, Message, Notification, Request, RequestId, Response};
 use lsp_types::notification::{
     DidChangeTextDocument, DidChangeWatchedFiles, DidCloseTextDocument, DidOpenTextDocument,
     Notification as _, PublishDiagnostics,
@@ -15,23 +15,25 @@ use lsp_types::request::InlayHintRequest;
 use lsp_types::request::{
     CodeActionRequest, Completion, DocumentHighlightRequest, DocumentSymbolRequest,
     FoldingRangeRequest, Formatting, GotoDefinition, HoverRequest, PrepareRenameRequest,
-    References, Rename, Request as _, SemanticTokensFullRequest, SignatureHelpRequest,
-    WorkspaceSymbolRequest,
+    References, RegisterCapability, Rename, Request as _, SemanticTokensFullRequest,
+    SignatureHelpRequest, WorkspaceSymbolRequest,
 };
 use lsp_types::{
     CodeAction, CodeActionKind, CodeActionOrCommand, CodeActionParams,
     CodeActionProviderCapability, CompletionItem, CompletionItemKind, CompletionOptions,
     CompletionParams, CompletionResponse, Diagnostic, DiagnosticSeverity, DiagnosticTag,
-    DidChangeTextDocumentParams, DidChangeWatchedFilesParams, DidCloseTextDocumentParams,
+    DidChangeTextDocumentParams, DidChangeWatchedFilesParams,
+    DidChangeWatchedFilesRegistrationOptions, DidCloseTextDocumentParams,
     DidOpenTextDocumentParams, DocumentFormattingParams, DocumentHighlight,
     DocumentHighlightParams, DocumentSymbol, DocumentSymbolParams, DocumentSymbolResponse,
-    FileChangeType, FoldingRange, FoldingRangeParams, FoldingRangeProviderCapability,
-    GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverContents, HoverParams,
-    HoverProviderCapability, InitializeParams, Location, MarkupContent, MarkupKind, OneOf,
-    ParameterInformation, ParameterLabel, PositionEncodingKind, PrepareRenameResponse,
-    PublishDiagnosticsParams, ReferenceParams, RenameOptions, RenameParams, SemanticToken,
-    SemanticTokenModifier, SemanticTokenType, SemanticTokens, SemanticTokensFullOptions,
-    SemanticTokensLegend, SemanticTokensOptions, SemanticTokensParams, SemanticTokensResult,
+    FileChangeType, FileSystemWatcher, FoldingRange, FoldingRangeParams,
+    FoldingRangeProviderCapability, GlobPattern, GotoDefinitionParams, GotoDefinitionResponse,
+    Hover, HoverContents, HoverParams, HoverProviderCapability, InitializeParams, Location,
+    MarkupContent, MarkupKind, OneOf, ParameterInformation, ParameterLabel, PositionEncodingKind,
+    PrepareRenameResponse, PublishDiagnosticsParams, ReferenceParams, Registration,
+    RegistrationParams, RenameOptions, RenameParams, SemanticToken, SemanticTokenModifier,
+    SemanticTokenType, SemanticTokens, SemanticTokensFullOptions, SemanticTokensLegend,
+    SemanticTokensOptions, SemanticTokensParams, SemanticTokensResult,
     SemanticTokensServerCapabilities, ServerCapabilities, ServerInfo, SignatureHelp,
     SignatureHelpOptions, SignatureHelpParams, SignatureInformation, SymbolKind,
     TextDocumentIdentifier, TextDocumentPositionParams, TextDocumentSyncCapability,
@@ -137,6 +139,21 @@ const FORMULA_WORDS: &[&str] = &[
     "either",
 ];
 
+/// Words that may not name a definition, besides [`FORMULA_WORDS`]: the
+/// structure of a file, the built-in types, and words of `:metric` and
+/// durations. Compared ignoring case.
+const RESERVED_NAMES: &[&str] = &[
+    "define",
+    "domain",
+    "problem",
+    "object",
+    "number",
+    "minimize",
+    "maximize",
+    "total-time",
+    "is-violated",
+];
+
 /// The words that can start a fact of `:init`, for completion after `(`: a
 /// negated fact, a timed initial literal, or a function's value. A function
 /// itself can't, only within `(= ...)`.
@@ -161,7 +178,14 @@ pub struct Server {
     workspace: Workspace,
     /// How the client counts columns.
     encoding: Encoding,
+    /// The documents whose last published diagnostics may be non-empty, so
+    /// that they get an empty list once they close or go away.
+    published: HashSet<Url>,
 }
+
+/// The id of the `client/registerCapability` request that asks the client to
+/// watch `.pddl` files; its response is ignored.
+const WATCH_REQUEST: &str = "pddl-lsp/watch-files";
 
 /// The error a server run ends with.
 type RunError = Box<dyn Error + Send + Sync>;
@@ -241,9 +265,17 @@ fn serve(
     });
     send(Message::Response(Response::new_ok(id, result)))?;
 
+    let watch = params
+        .capabilities
+        .workspace
+        .as_ref()
+        .and_then(|w| w.did_change_watched_files)
+        .and_then(|w| w.dynamic_registration)
+        .unwrap_or(false);
     let mut server = Server {
         workspace: Workspace::default(),
         encoding,
+        published: HashSet::new(),
     };
     #[allow(deprecated)] // `root_uri` is still what clients without folders send.
     let roots = match params.workspace_folders {
@@ -281,6 +313,13 @@ fn serve(
                 };
             }
             Message::Notification(_) if shut_down => {}
+            Message::Notification(notification) if notification.method == "initialized" => {
+                // Without it, only clients that watch files on their own report
+                // changes to closed files.
+                if watch {
+                    send(Message::Request(watch_files()))?;
+                }
+            }
             Message::Notification(notification) => {
                 if server.notification(notification) {
                     for diagnostics in server.diagnostics() {
@@ -294,6 +333,28 @@ fn serve(
         }
     }
     Ok(())
+}
+
+/// The request asking the client to report changes to `.pddl` files.
+fn watch_files() -> Request {
+    let options = DidChangeWatchedFilesRegistrationOptions {
+        watchers: vec![FileSystemWatcher {
+            glob_pattern: GlobPattern::String("**/*.pddl".into()),
+            kind: None,
+        }],
+    };
+    let registration = Registration {
+        id: WATCH_REQUEST.into(),
+        method: DidChangeWatchedFiles::METHOD.into(),
+        register_options: serde_json::to_value(options).ok(),
+    };
+    Request::new(
+        RequestId::from(WATCH_REQUEST.to_string()),
+        RegisterCapability::METHOD.into(),
+        RegistrationParams {
+            registrations: vec![registration],
+        },
+    )
 }
 
 /// What the server can do.
@@ -358,8 +419,11 @@ fn call<P: DeserializeOwned, R: Serialize>(
 impl Server {
     /// Answers `request`.
     #[must_use]
-    pub fn request(&self, request: Request) -> Response {
+    pub fn request(&mut self, request: Request) -> Response {
         let params = request.params;
+        if request.method == Rename::METHOD {
+            self.refresh_closed();
+        }
         let result = match request.method.as_str() {
             HoverRequest::METHOD => call(self, params, Self::hover),
             GotoDefinition::METHOD => call(self, params, Self::definition),
@@ -476,6 +540,25 @@ impl Server {
         }
     }
 
+    /// Reads the closed documents from the disk again whose file changed, so
+    /// that edits computed from them use the file's current byte ranges even
+    /// when the client doesn't report changes to closed files.
+    ///
+    /// shortcut: reads every closed file, which is fine for a rare request
+    /// such as rename; track modification times if it gets called more often.
+    fn refresh_closed(&mut self) {
+        let stale: Vec<Url> = self
+            .workspace
+            .documents
+            .iter()
+            .filter(|(uri, document)| !document.open && on_disk_differs(uri, &document.text))
+            .map(|(uri, _)| uri.clone())
+            .collect();
+        for uri in stale {
+            self.reload(&uri);
+        }
+    }
+
     /// Reads the `.pddl` files under `root`, skipping hidden and build folders.
     fn scan(&mut self, root: &Path) {
         let mut pending = vec![root.to_path_buf()];
@@ -518,38 +601,58 @@ impl Server {
         }
     }
 
-    /// The diagnostics of every open document, and empty ones for closed documents.
+    /// The diagnostics of every open document, and an empty list for each
+    /// document that has closed or gone away since the last call.
     ///
     /// All open documents are checked again after any change, since a change to
-    /// a domain changes what its problems may use.
+    /// a domain changes what its problems may use. Closed documents get no
+    /// diagnostics, so a change publishes nothing for them.
     #[must_use]
-    pub fn diagnostics(&self) -> Vec<PublishDiagnosticsParams> {
-        self.workspace
+    pub fn diagnostics(&mut self) -> Vec<PublishDiagnosticsParams> {
+        let open: HashSet<Url> = self
+            .workspace
             .documents
             .iter()
-            .map(|(uri, document)| {
-                let diagnostics = if document.open {
-                    self.workspace
-                        .problems(uri)
-                        .into_iter()
-                        .map(|problem| Diagnostic {
-                            range: self.range(document, problem.span),
-                            severity: Some(match problem.severity {
-                                Severity::Error => DiagnosticSeverity::ERROR,
-                                Severity::Warning => DiagnosticSeverity::WARNING,
-                                Severity::Unused => DiagnosticSeverity::HINT,
-                            }),
-                            tags: (problem.severity == Severity::Unused)
-                                .then(|| vec![DiagnosticTag::UNNECESSARY]),
-                            source: Some("pddl".into()),
-                            message: problem.message,
-                            ..Diagnostic::default()
-                        })
-                        .collect()
-                } else {
-                    Vec::new()
-                };
-                PublishDiagnosticsParams::new(uri.clone(), diagnostics, None)
+            .filter(|(_, document)| document.open)
+            .map(|(uri, _)| uri.clone())
+            .collect();
+        let cleared = self
+            .published
+            .difference(&open)
+            .map(|uri| PublishDiagnosticsParams::new(uri.clone(), Vec::new(), None));
+        let mut published: Vec<_> = cleared.collect();
+        for (uri, document) in &self.workspace.documents {
+            if document.open {
+                let diagnostics = self.document_diagnostics(uri, document);
+                published.push(PublishDiagnosticsParams::new(
+                    uri.clone(),
+                    diagnostics,
+                    None,
+                ));
+            }
+        }
+
+        self.published = open;
+        published
+    }
+
+    /// The diagnostics of `document`, which is `uri`.
+    fn document_diagnostics(&self, uri: &Url, document: &Document) -> Vec<Diagnostic> {
+        self.workspace
+            .problems(uri)
+            .into_iter()
+            .map(|problem| Diagnostic {
+                range: self.range(document, problem.span),
+                severity: Some(match problem.severity {
+                    Severity::Error => DiagnosticSeverity::ERROR,
+                    Severity::Warning => DiagnosticSeverity::WARNING,
+                    Severity::Unused => DiagnosticSeverity::HINT,
+                }),
+                tags: (problem.severity == Severity::Unused)
+                    .then(|| vec![DiagnosticTag::UNNECESSARY]),
+                source: Some("pddl".into()),
+                message: problem.message,
+                ..Diagnostic::default()
             })
             .collect()
     }
@@ -693,6 +796,17 @@ impl Server {
                 definition.kind.label()
             ));
         }
+
+        if is_reserved(&new_name) {
+            return Err(format!("`{new_name}` is a reserved word of PDDL"));
+        }
+
+        if self.name_taken(&target, definition, &new_name) {
+            return Err(format!(
+                "{} `{new_name}` already exists",
+                definition.kind.label()
+            ));
+        }
         let mut changes: HashMap<Url, Vec<TextEdit>> = HashMap::new();
         for (uri, span) in self.workspace.references(&target) {
             if let Some(location) = self.location(&uri, span) {
@@ -701,6 +815,25 @@ impl Server {
             }
         }
         Ok(Some(WorkspaceEdit::new(changes)))
+    }
+
+    /// Whether a definition other than `target` (which is `definition`) of
+    /// the same kind is named `name` where `target` is defined, ignoring case:
+    /// in the same parameter list for a variable, else in the same domain or
+    /// problem.
+    fn name_taken(&self, target: &Target, definition: &Definition, name: &str) -> bool {
+        let analysis = &self.workspace.documents[&target.uri].analysis;
+        analysis
+            .definitions
+            .iter()
+            .enumerate()
+            .any(|(index, other)| {
+                index != target.index
+                    && other.kind == definition.kind
+                    && other.context == definition.context
+                    && other.scope == definition.scope
+                    && other.name.eq_ignore_ascii_case(name)
+            })
     }
 
     /// The outline of a document: its domains and problems and what they define.
@@ -1083,6 +1216,16 @@ impl Server {
     }
 }
 
+/// Whether the file of `uri` can't be read or holds something other than
+/// `text`. A URI that is not a file is never stale.
+fn on_disk_differs(uri: &Url, text: &str) -> bool {
+    let Ok(path) = uri.to_file_path() else {
+        return false;
+    };
+
+    std::fs::read_to_string(path).map_or(true, |disk| disk != text)
+}
+
 /// The lists containing `offset`, outermost first.
 fn enclosing_lists<'n, 'a>(nodes: &'n [Node<'a>], offset: usize) -> Vec<&'n Node<'a>> {
     let mut found = Vec::new();
@@ -1095,6 +1238,14 @@ fn enclosing_lists<'n, 'a>(nodes: &'n [Node<'a>], offset: usize) -> Vec<&'n Node
         level = list.children().unwrap_or_default();
     }
     found
+}
+
+/// Whether `name` is a word of PDDL that may not name a definition, ignoring case.
+fn is_reserved(name: &str) -> bool {
+    FORMULA_WORDS
+        .iter()
+        .chain(RESERVED_NAMES)
+        .any(|word| word.eq_ignore_ascii_case(name))
 }
 
 /// The variables declared around `offset`, each name once.

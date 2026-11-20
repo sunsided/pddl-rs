@@ -52,14 +52,17 @@ impl TryFrom<&str> for BinaryComparison {
     type Error = UnknownKeyword;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value {
-            names::GREATER_THAN => Ok(Self::GreaterThan),
-            names::LESS_THAN => Ok(Self::LessThan),
-            names::EQUAL => Ok(Self::Equal),
-            names::GREATER_THAN_OR_EQUAL => Ok(Self::GreaterOrEqual),
-            names::LESS_THAN_OR_EQUAL => Ok(Self::LessThanOrEqual),
-            _ => Err(UnknownKeyword::new("binary comparison", value)),
-        }
+        UnknownKeyword::lookup(
+            "binary comparison",
+            value,
+            &[
+                (names::GREATER_THAN, Self::GreaterThan),
+                (names::LESS_THAN, Self::LessThan),
+                (names::EQUAL, Self::Equal),
+                (names::GREATER_THAN_OR_EQUAL, Self::GreaterOrEqual),
+                (names::LESS_THAN_OR_EQUAL, Self::LessThanOrEqual),
+            ],
+        )
     }
 }
 

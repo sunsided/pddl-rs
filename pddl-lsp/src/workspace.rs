@@ -133,12 +133,11 @@ impl Workspace {
     pub fn resolve(&self, uri: &Url, index: usize) -> Option<Target> {
         let document = self.documents.get(uri)?;
         let reference = &document.analysis.references[index];
-        let context = &document.analysis.contexts[reference.context];
         let matches = |d: &Definition, kind: Kind| {
             d.kind == kind && d.name.eq_ignore_ascii_case(&reference.name)
         };
         if reference.expect == Expect::Domain {
-            return self.in_domain(uri, &reference.name, |d| d.kind == Kind::Domain);
+            return self.in_domain_named(uri, &reference.name, |d| d.kind == Kind::Domain);
         }
         for &kind in reference.expect.kinds() {
             let found = if kind == Kind::Object {
@@ -152,8 +151,7 @@ impl Workspace {
                         index,
                     })
             } else {
-                let domain = context.domain.as_deref()?;
-                self.in_domain(uri, domain, |d| matches(d, kind))
+                self.in_domain(uri, reference.context, |d| matches(d, kind))
             };
             if found.is_some() {
                 return found;
@@ -187,24 +185,46 @@ impl Workspace {
             })
     }
 
-    /// The first definition in a domain named `domain` for which `accept` holds.
+    /// The domains that `context` of `uri` sees, each as its document and
+    /// context index: a domain sees only itself, so that another file's domain
+    /// of the same name doesn't leak into it, and a problem sees every known
+    /// domain its `(:domain ...)` names, those in `uri` first.
+    fn seen_from<'w>(
+        &'w self,
+        uri: &'w Url,
+        context: usize,
+    ) -> impl Iterator<Item = (&'w Url, &'w Document, usize)> + 'w {
+        let found = self.documents.get_key_value(uri).map(|(uri, document)| {
+            let own = &document.analysis.contexts[context];
+            let itself = (own.kind == Kind::Domain).then_some((uri, document, context));
+            let named = (own.kind != Kind::Domain)
+                .then_some(own.domain.as_deref())
+                .flatten()
+                .map(|domain| self.domains(uri, domain));
+            itself.into_iter().chain(named.into_iter().flatten())
+        });
+        found.into_iter().flatten()
+    }
+
+    /// The first definition in the domains that `context` of `first` sees for
+    /// which `accept` holds.
     fn in_domain(
+        &self,
+        first: &Url,
+        context: usize,
+        accept: impl Fn(&Definition) -> bool,
+    ) -> Option<Target> {
+        first_accepted(self.seen_from(first, context), accept)
+    }
+
+    /// The first definition in a domain named `domain` for which `accept` holds.
+    fn in_domain_named(
         &self,
         first: &Url,
         domain: &str,
         accept: impl Fn(&Definition) -> bool,
     ) -> Option<Target> {
-        self.domains(first, domain)
-            .find_map(|(uri, document, context)| {
-                let definitions = &document.analysis.definitions;
-                definitions
-                    .iter()
-                    .position(|d| d.context == context && accept(d))
-                    .map(|index| Target {
-                        uri: uri.clone(),
-                        index,
-                    })
-            })
+        first_accepted(self.domains(first, domain), accept)
     }
 
     /// The definitions usable in `context` of `uri`: its own objects, and the
@@ -214,17 +234,13 @@ impl Workspace {
         let Some(document) = self.documents.get(uri) else {
             return Vec::new();
         };
-        let own = &document.analysis.contexts[context];
         let mut found: Vec<&Definition> = document
             .analysis
             .definitions
             .iter()
             .filter(|d| d.context == context && d.kind == Kind::Object)
             .collect();
-        let Some(domain) = own.domain.as_deref() else {
-            return found;
-        };
-        for (_, document, context) in self.domains(uri, domain) {
+        for (_, document, context) in self.seen_from(uri, context) {
             found.extend(document.analysis.definitions.iter().filter(|d| {
                 d.context == context && !matches!(d.kind, Kind::Variable | Kind::Domain)
             }));
@@ -246,13 +262,7 @@ impl Workspace {
 
     /// Whether the domain that `context` in `uri` sees is known.
     fn domain_known(&self, uri: &Url, context: usize) -> bool {
-        let Some(document) = self.documents.get(uri) else {
-            return false;
-        };
-        let Some(domain) = document.analysis.contexts[context].domain.as_deref() else {
-            return false;
-        };
-        self.domains(uri, domain).next().is_some()
+        self.seen_from(uri, context).next().is_some()
     }
 
     /// Every name defining or referring to `target`, the definition first.
@@ -612,7 +622,7 @@ impl Workspace {
         let own = &self.documents[uri].analysis.contexts[context];
         let mut declared = own.requirements.clone();
         if own.kind == Kind::Problem {
-            let (_, document, domain) = self.domains(uri, own.domain.as_deref()?).next()?;
+            let (_, document, domain) = self.seen_from(uri, context).next()?;
             declared.extend(&document.analysis.contexts[domain].requirements);
         }
         let mut expanded: HashSet<Requirement> = declared
@@ -693,6 +703,24 @@ impl Workspace {
         }
         problems
     }
+}
+
+/// The first definition for which `accept` holds in `domains`, each given as
+/// its document and context index.
+fn first_accepted<'w>(
+    mut domains: impl Iterator<Item = (&'w Url, &'w Document, usize)>,
+    accept: impl Fn(&Definition) -> bool,
+) -> Option<Target> {
+    domains.find_map(|(uri, document, context)| {
+        let definitions = &document.analysis.definitions;
+        definitions
+            .iter()
+            .position(|d| d.context == context && accept(d))
+            .map(|index| Target {
+                uri: uri.clone(),
+                index,
+            })
+    })
 }
 
 /// Adds the first of the requirements `need` asks for to its domain's or
@@ -1224,5 +1252,45 @@ mod tests {
         check!(fix.span == problems[0].span);
         let text = &ws.documents[&uri("d.pddl")].text;
         check!(&text[problems[0].span.clone()] == ":predicats");
+    }
+
+    /// A domain sees only its own definitions, not those of another file's
+    /// domain of the same name; a problem still sees every such domain.
+    #[test]
+    fn keeps_same_name_domains_in_other_files_apart() {
+        let old = "(define (domain log) (:predicates (at ?x) (gone ?x)))";
+        let new = "(define (domain log) (:predicates (at ?x))
+  (:action a :parameters (?x) :precondition (gone ?x) :effect (at ?x)))";
+        let ws = workspace(&[("a/old.pddl", old), ("b/new.pddl", new)]);
+        check!(messages(&ws, "b/new.pddl") == ["unknown predicate or function `gone`"]);
+
+        let gone = new.find("(gone").unwrap() + 1;
+        check!(ws.target_at(&uri("b/new.pddl"), gone).is_none());
+        let at = new.rfind("(at").unwrap() + 1;
+        let target = ws.target_at(&uri("b/new.pddl"), at).unwrap();
+        check!(target.uri == uri("b/new.pddl"));
+        let refs = ws.references(&target);
+        check!(refs.iter().all(|(u, _)| *u == uri("b/new.pddl")));
+
+        let context = ws.documents[&uri("b/new.pddl")]
+            .analysis
+            .context_at(gone)
+            .unwrap();
+        let new_uri = uri("b/new.pddl");
+        let visible = ws.visible(&new_uri, context);
+        check!(visible.iter().all(|d| d.name != "gone"));
+
+        let problem =
+            "(define (problem p) (:domain log) (:objects o) (:init (gone o)) (:goal (at o)))";
+        let ws = workspace(&[
+            ("a/old.pddl", old),
+            ("b/new.pddl", new),
+            ("p.pddl", problem),
+        ]);
+        let unknown = messages(&ws, "p.pddl");
+        check!(
+            unknown.iter().all(|m| !m.starts_with("unknown")),
+            "{unknown:?}"
+        );
     }
 }

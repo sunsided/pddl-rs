@@ -4,7 +4,10 @@
 
 use assert2::check;
 
-use pddl::{Domain, Parser, Pretty, PrimitiveEffect, Problem, Term};
+use pddl::{
+    Domain, FluentExpression, MetricFluentExpression, MultiOp, Number, Parser, Pretty,
+    PrimitiveEffect, Problem, Term,
+};
 
 fn round_trip_domain(input: &str, width: usize, label: &str) {
     let original = Domain::from_str(input).unwrap_or_else(|_| panic!("{label}: parse original"));
@@ -531,4 +534,39 @@ fn continuous_and_duration_dependent_effects_round_trip() {
                          (decrease (fuel ?t) (* #t 2))
                          (at end (decrease (fuel ?t) ?duration)))))";
     round_trip_domain(input, 80, "continuous effects");
+}
+
+/// PDDL has no negative literals: a negative number prints as `(- n)`, which
+/// parses back as a negation of `n`, and `-0` prints as `0`.
+#[test]
+fn negative_numbers_print_as_negations_that_parse() {
+    let printed = FluentExpression::number(Number::from(-5))
+        .pretty(80)
+        .to_string();
+    check!(printed == "(- 5)");
+    let five = FluentExpression::number(5);
+    check!(FluentExpression::from_str(&printed).unwrap() == FluentExpression::negative(five));
+
+    let zero = FluentExpression::number(Number::from(-0.0));
+    check!(FluentExpression::from_str(&zero.pretty(80).to_string()).unwrap() == zero);
+
+    let metric = MetricFluentExpression::number(Number::from(-5))
+        .pretty(80)
+        .to_string();
+    check!(MetricFluentExpression::from_str(&metric).is_ok());
+}
+
+/// Multi-operand operations built with fewer than two extra operands print and
+/// parse back to an equal value.
+#[test]
+fn short_multi_ops_round_trip() {
+    let one = || FluentExpression::number(1);
+    for rest in [vec![], vec![one()], vec![one(), one()]] {
+        let e = FluentExpression::multi_op(MultiOp::Addition, one(), rest);
+        let printed = e.pretty(80).to_string();
+        check!(
+            FluentExpression::from_str(&printed).unwrap() == e,
+            "{printed}"
+        );
+    }
 }

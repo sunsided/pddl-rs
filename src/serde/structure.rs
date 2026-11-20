@@ -4,7 +4,7 @@ use crate::serde::actions::{action, derived, ActionBody};
 use crate::serde::durative::{durative_action, DurativeActionBody};
 use crate::serde::{
     as_map, as_seq, as_str, atom, deserialize_from_pddl, deserialize_from_pddl_or_default, formula,
-    single_entry, spaced, string, type_, typed_list, Keyed, Render, Value,
+    single_entry, spaced, string, type_, typed_list, Keyed, Render, UniqueKeys, Value,
 };
 use crate::{
     AtomicFormulaSkeleton, AtomicFunctionSkeleton, Constants, Definition, Domain,
@@ -90,7 +90,9 @@ impl Serialize for PredicateDefinitions {
     /// An object from each predicate to its parameters.
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut map = serializer.serialize_map(Some(self.len()))?;
+        let mut keys = UniqueKeys::default();
         for skeleton in self.iter() {
+            keys.insert(skeleton.predicate().as_ref())?;
             map.serialize_entry(skeleton.predicate(), skeleton.variables())?;
         }
         map.end()
@@ -153,7 +155,9 @@ impl Serialize for FunctionTypedList<AtomicFunctionSkeleton> {
     /// when its type isn't `number`.
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut map = serializer.serialize_map(Some(self.len()))?;
+        let mut keys = UniqueKeys::default();
         for function in self.iter() {
+            keys.insert(function.value_ref().symbol().as_ref())?;
             map.serialize_entry(function.value_ref().symbol(), &FunctionEntry(function))?;
         }
         map.end()
@@ -274,8 +278,10 @@ struct Actions<'a>(&'a [StructureDef]);
 impl Serialize for Actions<'_> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut map = serializer.serialize_map(None)?;
+        let mut keys = UniqueKeys::default();
         for def in self.0 {
             if let StructureDef::Action(action) = def {
+                keys.insert(action.symbol().as_ref())?;
                 map.serialize_entry(action.symbol(), &ActionBody(action))?;
             }
         }
@@ -289,8 +295,10 @@ struct DurativeActions<'a>(&'a [StructureDef]);
 impl Serialize for DurativeActions<'_> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut map = serializer.serialize_map(None)?;
+        let mut keys = UniqueKeys::default();
         for def in self.0 {
             if let StructureDef::DurativeAction(action) = def {
+                keys.insert(action.symbol().as_ref())?;
                 map.serialize_entry(action.symbol(), &DurativeActionBody(action))?;
             }
         }

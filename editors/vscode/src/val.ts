@@ -38,6 +38,43 @@ function section(lines: string[], heading: string): string[] {
   return body;
 }
 
+/** The time N of the last `Checking next happening (time N)` before line `end`. */
+function happeningBefore(lines: string[], end: number): number | undefined {
+  for (let i = end - 1; i >= 0; i--) {
+    const match = /^Checking next happening \(time ([\d.]+)\)/.exec(lines[i].trim());
+    if (match) {
+      return Number(match[1]);
+    }
+  }
+  return undefined;
+}
+
+/**
+ * The plan step `step` that VAL checked at `time`: for a timed plan
+ * (`0.000: (move a b) [1]`) the last such step starting at or before it, for
+ * an untimed one the time-th step. Otherwise the first step with that text.
+ */
+function stepAt(
+  steps: { line: number; step: string }[],
+  planLines: string[],
+  step: string | undefined,
+  time: number | undefined,
+): { line: number; step: string } | undefined {
+  const same = steps.filter((s) => s.step === step);
+  if (time !== undefined) {
+    const timed = same.map((s) => ({ ...s, time: /^\s*([\d.]+)\s*:/.exec(planLines[s.line])?.[1] }));
+    if (timed.length > 0 && timed.every((s) => s.time !== undefined)) {
+      const started = timed.filter((s) => Number(s.time) <= time);
+      if (started.length > 0) {
+        return started[started.length - 1];
+      }
+    } else if (Number.isInteger(time) && steps[time - 1]?.step === step) {
+      return steps[time - 1];
+    }
+  }
+  return same[0];
+}
+
 /**
  * Turns VAL's output into problems on `plan`'s lines. A failed precondition
  * marks its step, an unreached goal the last step, and output VAL gives no
@@ -58,7 +95,8 @@ export function parseVal(output: string, plan: string): ValResult {
   const failed = section(lines, "Plan failed because of unsatisfied precondition in:")[0];
   if (failed !== undefined) {
     const step = normalizeStep(failed);
-    const at = steps.find((s) => s.step === step);
+    const failedAt = lines.findIndex((line) => line.trim() === "Plan failed because of unsatisfied precondition in:");
+    const at = stepAt(steps, planLines, step, happeningBefore(lines, failedAt));
     return {
       valid: false,
       problems: [{ line: at?.line ?? 0, message: withAdvice(`VAL: unsatisfied precondition in ${failed}`) }],

@@ -3,7 +3,7 @@
 use crate::pretty_print::{sealed, PrettyRenderer};
 use crate::types::{
     BinaryComparison, BinaryOp, DurativeActionFluentExpression, DurativeActionFunctionAssignment,
-    FluentComparison, FluentExpression, FunctionHead, MetricFluentExpression, MultiOp,
+    FluentComparison, FluentExpression, FunctionHead, MetricFluentExpression, MultiOp, Number,
     TimedFluentExpression,
 };
 use crate::visitor::{Accept, Visitor};
@@ -17,10 +17,36 @@ impl sealed::Sealed for DurativeActionFluentExpression {}
 impl sealed::Sealed for DurativeActionFunctionAssignment {}
 impl sealed::Sealed for MetricFluentExpression {}
 
+impl PrettyRenderer {
+    /// A number where an `<f-exp>` may stand: `(- 5)` for a negative one, which
+    /// has no PDDL literal. It parses back as a negation of `5`.
+    pub(super) fn f_exp_number(&self, number: Number) -> RcDoc<'static> {
+        if *number < 0.0 {
+            self.sexpr("-", [Number::new(-*number).accept(self)])
+        } else {
+            number.accept(self)
+        }
+    }
+
+    /// `(op first rest...)`, or only `first` if `rest` is empty: `(+ x)` isn't PDDL.
+    fn multi_op(
+        &self,
+        op: &'static str,
+        first: RcDoc<'static>,
+        rest: impl ExactSizeIterator<Item = RcDoc<'static>>,
+    ) -> RcDoc<'static> {
+        if rest.len() == 0 {
+            return first;
+        }
+
+        self.sexpr(op, std::iter::once(first).chain(rest))
+    }
+}
+
 impl Visitor<FluentExpression, RcDoc<'static>> for PrettyRenderer {
     fn visit(&self, value: &FluentExpression) -> RcDoc<'static> {
         match value {
-            FluentExpression::Number(n) => n.accept(self),
+            FluentExpression::Number(n) => self.f_exp_number(*n),
             FluentExpression::Function(head) => head.accept(self),
             FluentExpression::Negative(e) => RcDoc::text("(")
                 .append("-")
@@ -43,9 +69,10 @@ impl Visitor<FluentExpression, RcDoc<'static>> for PrettyRenderer {
                     MultiOp::Addition => "+",
                     MultiOp::Multiplication => "*",
                 };
-                self.sexpr(
+                self.multi_op(
                     op_str,
-                    std::iter::once(self.visit(&**first)).chain(rest.iter().map(|e| self.visit(e))),
+                    self.visit(&**first),
+                    rest.iter().map(|e| self.visit(e)),
                 )
             }
         }
@@ -121,9 +148,10 @@ impl Visitor<DurativeActionFluentExpression, RcDoc<'static>> for PrettyRenderer 
                     MultiOp::Addition => "+",
                     MultiOp::Multiplication => "*",
                 };
-                self.sexpr(
+                self.multi_op(
                     op_str,
-                    std::iter::once(self.visit(&**first)).chain(rest.iter().map(|e| self.visit(e))),
+                    self.visit(&**first),
+                    rest.iter().map(|e| self.visit(e)),
                 )
             }
             DurativeActionFluentExpression::Assign(op, head, expr) => {
@@ -148,7 +176,7 @@ impl Visitor<DurativeActionFunctionAssignment, RcDoc<'static>> for PrettyRendere
 impl Visitor<MetricFluentExpression, RcDoc<'static>> for PrettyRenderer {
     fn visit(&self, value: &MetricFluentExpression) -> RcDoc<'static> {
         match value {
-            MetricFluentExpression::Number(n) => n.accept(self),
+            MetricFluentExpression::Number(n) => self.f_exp_number(*n),
             MetricFluentExpression::Function(sym, names) => {
                 if names.is_empty() {
                     sym.accept(self)
@@ -194,9 +222,10 @@ impl Visitor<MetricFluentExpression, RcDoc<'static>> for PrettyRenderer {
                     MultiOp::Addition => "+",
                     MultiOp::Multiplication => "*",
                 };
-                self.sexpr(
+                self.multi_op(
                     op_str,
-                    std::iter::once(self.visit(&**first)).chain(rest.iter().map(|e| self.visit(e))),
+                    self.visit(&**first),
+                    rest.iter().map(|e| self.visit(e)),
                 )
             }
         }
@@ -242,6 +271,33 @@ mod tests {
         let inner = FluentExpression::number(Number::from(5));
         let e = FluentExpression::negative(inner);
         check!(prettify!(e, 10) == "(- 5)");
+    }
+
+    #[test]
+    fn negative_numbers_print_as_negations() {
+        let e = FluentExpression::number(Number::from(-5));
+        check!(prettify!(e, 10) == "(- 5)");
+        let m = MetricFluentExpression::number(Number::from(-2.5));
+        check!(prettify!(m, 10) == "(- 2.5)");
+        let zero = FluentExpression::number(Number::from(-0.0));
+        check!(prettify!(zero, 10) == "0");
+    }
+
+    #[test]
+    fn multi_op_without_extra_operands_prints_the_operand() {
+        let one = || Box::new(FluentExpression::number(1));
+        check!(
+            prettify!(
+                FluentExpression::MultiOp(MultiOp::Addition, one(), vec![]),
+                10
+            ) == "1"
+        );
+        let m = MetricFluentExpression::MultiOp(
+            MultiOp::Addition,
+            Box::new(MetricFluentExpression::total_time()),
+            vec![],
+        );
+        check!(prettify!(m, 20) == "total-time");
     }
 
     #[test]

@@ -42,12 +42,15 @@ impl TryFrom<&str> for DurationOperator {
     type Error = UnknownKeyword;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value {
-            names::EQUAL => Ok(Self::Equal),
-            names::GREATER_OR_EQUAL => Ok(Self::GreaterOrEqual),
-            names::LESS_THAN_OR_EQUAL => Ok(Self::LessThanOrEqual),
-            _ => Err(UnknownKeyword::new("duration operator", value)),
-        }
+        UnknownKeyword::lookup(
+            "duration operator",
+            value,
+            &[
+                (names::EQUAL, Self::Equal),
+                (names::GREATER_OR_EQUAL, Self::GreaterOrEqual),
+                (names::LESS_THAN_OR_EQUAL, Self::LessThanOrEqual),
+            ],
+        )
     }
 }
 

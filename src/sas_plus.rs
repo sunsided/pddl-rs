@@ -207,7 +207,7 @@ fn ground_with_costs(
         functions: &functions,
         use_metric,
     };
-    let (ops, reachable) = grounder.reachable_ops(&schemas)?;
+    let (ops, reachable) = grounder.reachable_ops(&schemas);
     let index: HashMap<&Atom, VarId> = reachable
         .iter()
         .enumerate()
@@ -222,38 +222,7 @@ fn ground_with_costs(
     .preconditions(problem.goals(), &HashMap::new(), false, &mut goal_lits)?;
     let goal = ground_goal(&goal_lits, &grounder, &index)?;
 
-    // Only the operators that make it into the task set the scale.
-    let mut operators = Vec::new();
-    for op in &ops {
-        if let Some(operator) = op.to_sas(&index, 0)? {
-            operators.push((operator, op));
-        }
-    }
-    if let Some((_, op)) = operators.iter().find(|(_, op)| op.cost.places > 0) {
-        if !decimal_costs {
-            return Err(GroundError::InvalidCost {
-                action: op.name.clone(),
-            });
-        }
-    }
-    let places = operators
-        .iter()
-        .map(|(_, op)| op.cost.places)
-        .max()
-        .unwrap_or(0);
-    let operators = operators
-        .into_iter()
-        .map(|(mut operator, op)| {
-            operator.cost = op
-                .cost
-                .scaled(places)
-                .ok_or_else(|| GroundError::CostOutOfRange {
-                    action: op.name.clone(),
-                    places,
-                })?;
-            Ok(operator)
-        })
-        .collect::<Result<_, GroundError>>()?;
+    let (operators, places) = task_operators(&ops, &index, decimal_costs)?;
     let file = SasFile {
         use_metric,
         variables: reachable
@@ -281,6 +250,97 @@ fn ground_with_costs(
     Ok(ScaledTask { file, cost_scale })
 }
 
+/// Converts the ground actions to the task's operators, with their costs
+/// scaled to the returned number of decimal places, and drops duplicates.
+///
+/// Only the operators that make it into the task are checked for valid costs
+/// and set the scale.
+///
+/// # Errors
+/// [`GroundError::InvalidCost`] for a kept operator whose cost is invalid, or
+/// has decimal places without `decimal_costs`;
+/// [`GroundError::CostOutOfRange`] for one whose scaled cost doesn't fit; and
+/// [`GroundError::ConflictingEffects`] as [`GroundOp::to_sas`].
+fn task_operators(
+    ops: &[GroundOp],
+    index: &HashMap<&Atom, VarId>,
+    decimal_costs: bool,
+) -> Result<(Vec<SasOperator>, u32), GroundError> {
+    let mut kept = Vec::new();
+    for op in ops {
+        if let Some(operator) = op.to_sas(index)? {
+            kept.push((operator, op));
+        }
+    }
+
+    let invalid = |cost: &Result<Decimal, CostError>| match cost {
+        Ok(Decimal { places, .. }) | Err(CostError::Overflow { places }) => {
+            *places > 0 && !decimal_costs
+        }
+        Err(CostError::Invalid) => true,
+    };
+    if let Some((_, op)) = kept.iter().find(|(_, op)| invalid(&op.cost)) {
+        return Err(GroundError::InvalidCost {
+            action: op.name.clone(),
+        });
+    }
+
+    let places = kept
+        .iter()
+        .filter_map(|(_, op)| match op.cost {
+            Ok(Decimal { places, .. }) | Err(CostError::Overflow { places }) => Some(places),
+            Err(CostError::Invalid) => None,
+        })
+        .max()
+        .unwrap_or(0);
+    let operators = kept
+        .into_iter()
+        .map(|(mut operator, op)| {
+            operator.cost = op
+                .cost
+                .ok()
+                .and_then(|cost| cost.scaled(places))
+                .ok_or_else(|| GroundError::CostOutOfRange {
+                    action: op.name.clone(),
+                    places,
+                })?;
+            Ok(operator)
+        })
+        .collect::<Result<_, GroundError>>()?;
+
+    Ok((dedup_operators(operators), places))
+}
+
+/// Drops every operator equal to an earlier one of the same name, keeping the
+/// order. Equal operators come from bindings of `exists` binders and from
+/// actions declared twice under one name, which need not be adjacent.
+fn dedup_operators(operators: Vec<SasOperator>) -> Vec<SasOperator> {
+    let mut kept: Vec<SasOperator> = Vec::with_capacity(operators.len());
+    let mut by_name: HashMap<String, Vec<usize>> = HashMap::new();
+    for operator in operators {
+        let same = by_name.entry(operator.name.clone()).or_default();
+        if !same.iter().any(|&i| kept[i] == operator) {
+            same.push(kept.len());
+            kept.push(operator);
+        }
+    }
+
+    kept
+}
+
+/// Why an action's cost cannot be an operator cost.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CostError {
+    /// A summand is negative or not finite, or refers to a function without a
+    /// value.
+    Invalid,
+    /// The exact cost has more digits than fit.
+    Overflow {
+        /// The most decimal places of any summand of the cost.
+        places: u32,
+    },
+}
+
 /// A non-negative decimal number, exact: `units / 10^places`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct Decimal {
@@ -296,32 +356,38 @@ impl Decimal {
         Self { units, places: 0 }
     }
 
-    /// The shortest decimal that reads back as `value`, or `None` if it is
-    /// negative, not finite, or has more digits than fit.
-    fn from_f64(value: f64) -> Option<Self> {
+    /// The shortest decimal that reads back as `value`.
+    ///
+    /// # Errors
+    /// [`CostError::Invalid`] if `value` is negative or not finite, and
+    /// [`CostError::Overflow`] if it has more digits than fit.
+    fn from_f64(value: f64) -> Result<Self, CostError> {
         if !value.is_finite() || value < 0.0 {
-            return None;
+            return Err(CostError::Invalid);
         }
+
         // `Display` for `f64` prints the shortest round-trip digits, never an exponent.
         let text = value.to_string();
         let (whole, fraction) = text.split_once('.').unwrap_or((&text, ""));
-        let places = u32::try_from(fraction.len()).ok()?;
-        let units = format!("{whole}{fraction}").parse().ok()?;
-        Some(Self { units, places })
+        let places = u32::try_from(fraction.len()).unwrap_or(u32::MAX);
+        let units = format!("{whole}{fraction}")
+            .parse()
+            .map_err(|_| CostError::Overflow { places })?;
+        Ok(Self { units, places })
     }
 
-    /// The exact sum, or `None` if it doesn't fit.
-    fn checked_add(self, other: Self) -> Option<Self> {
+    /// The exact sum.
+    ///
+    /// # Errors
+    /// [`CostError::Overflow`] if the sum has more digits than fit.
+    fn checked_add(self, other: Self) -> Result<Self, CostError> {
         let places = self.places.max(other.places);
-        let units = self
-            .units
-            .checked_mul(10u128.checked_pow(places - self.places)?)?
-            .checked_add(
-                other
-                    .units
-                    .checked_mul(10u128.checked_pow(places - other.places)?)?,
-            )?;
-        Some(Self { units, places }.normalized())
+        let shifted = |n: Self| n.units.checked_mul(10u128.checked_pow(places - n.places)?);
+        let units = shifted(self)
+            .zip(shifted(other))
+            .and_then(|(a, b)| a.checked_add(b))
+            .ok_or(CostError::Overflow { places })?;
+        Ok(Self { units, places }.normalized())
     }
 
     /// The same number without trailing zero places: `1.0` is `1`, so a sum
@@ -924,8 +990,9 @@ struct GroundOp {
     pre: Vec<GLit>,
     /// The add and delete effects.
     effects: Vec<GEffect>,
-    /// The cost, exact.
-    cost: Decimal,
+    /// The cost, exact, or why it is not a valid operator cost; only an
+    /// error for an operator that makes it into the task.
+    cost: Result<Decimal, CostError>,
 }
 
 /// The state of binding the parameters of one schema.
@@ -936,6 +1003,9 @@ struct Search<'s, 'o> {
     checks: &'s [Vec<&'s SLit>],
     /// The fluent atoms reachable so far.
     reachable: &'s HashSet<Atom>,
+    /// The object index each parameter is fixed to, or `None` (or missing)
+    /// where it ranges over all its objects.
+    fixed: &'s [Option<usize>],
     /// The bindings already grounded, as object indices.
     emitted: &'o mut HashSet<Vec<usize>>,
     /// The objects bound so far.
@@ -1008,10 +1078,12 @@ impl Grounder<'_> {
     /// is only bound to objects for which the static and positive fluent
     /// preconditions mentioning it already hold or are reachable, so groundings
     /// that can never apply are never built.
-    fn reachable_ops(
-        &self,
-        schemas: &[Schema],
-    ) -> Result<(Vec<GroundOp>, BTreeSet<Atom>), GroundError> {
+    ///
+    /// The evaluation is semi-naive: after the first round, which tries every
+    /// binding, a round only tries the bindings under which some positive
+    /// fluent precondition is an atom the previous round made reachable. Any
+    /// other binding was tried before, against the same atoms.
+    fn reachable_ops(&self, schemas: &[Schema]) -> (Vec<GroundOp>, BTreeSet<Atom>) {
         let mut reachable: HashSet<Atom> = self
             .init
             .iter()
@@ -1024,16 +1096,27 @@ impl Grounder<'_> {
         let mut emitted: Vec<HashSet<Vec<usize>>> = vec![HashSet::new(); schemas.len()];
         // The add effects of `ops` whose conditions were not reachable yet.
         let mut pending: Vec<(Vec<GLit>, Atom)> = Vec::new();
+        // The atoms made reachable by the previous round; `None` in the first.
+        let mut added: Option<Vec<Atom>> = None;
         loop {
             let before = ops.len();
             for (i, schema) in schemas.iter().enumerate() {
                 let mut found = Vec::new();
-                self.instantiate(schema, &reachable, &mut emitted[i], &mut found)?;
+                let seeds = match &added {
+                    None => vec![Vec::new()],
+                    Some(added) => self.seeds(schema, added),
+                };
+                for fixed in &seeds {
+                    self.instantiate(schema, &reachable, fixed, &mut emitted[i], &mut found);
+                }
+
                 ops.extend(found.into_iter().map(|(path, op)| (i, path, op)));
             }
+
             if ops.len() == before {
                 break;
             }
+
             for (_, _, op) in &ops[before..] {
                 pending.extend(
                     op.effects
@@ -1042,41 +1125,50 @@ impl Grounder<'_> {
                         .map(|effect| (effect.conds.clone(), effect.atom.clone())),
                 );
             }
-            // Fire the conditional adds of the actions found so far.
-            loop {
-                let count = reachable.len();
-                pending.retain(|(conds, atom)| {
-                    if reachable.contains(atom) {
-                        false
-                    } else if holds_relaxed(conds, &reachable) {
-                        reachable.insert(atom.clone());
-                        false
-                    } else {
-                        true
-                    }
-                });
-                if reachable.len() == count {
-                    break;
-                }
-            }
+            added = Some(fire_pending(&mut pending, &mut reachable));
         }
+
         ops.sort_by(|(a, pa, _), (b, pb, _)| (a, pa).cmp(&(b, pb)));
-        Ok((
+        (
             ops.into_iter().map(|(_, _, op)| op).collect(),
             reachable.into_iter().collect(),
-        ))
+        )
     }
 
-    /// Adds every grounding of `schema` that is not in `emitted` and whose
-    /// static preconditions hold and positive fluent preconditions are
-    /// `reachable`, with the indices of its objects.
+    /// The partial bindings of `schema` under which one of its positive fluent
+    /// preconditions is one of the `added` atoms: for each, the object index
+    /// that parameter `i` is fixed to, or `None` where it is free.
+    fn seeds(&self, schema: &Schema, added: &[Atom]) -> Vec<Vec<Option<usize>>> {
+        let mut seeds = Vec::new();
+        for lit in &schema.pre {
+            let SLit::Atom(atom, true) = lit else {
+                continue;
+            };
+            if !self.fluent.contains(atom.pred.as_str()) {
+                continue;
+            }
+
+            seeds.extend(
+                added
+                    .iter()
+                    .filter_map(|ground| unify(schema, atom, ground)),
+            );
+        }
+
+        seeds
+    }
+
+    /// Adds every grounding of `schema` that agrees with `fixed`, is not in
+    /// `emitted`, and whose static preconditions hold and positive fluent
+    /// preconditions are `reachable`, with the indices of its objects.
     fn instantiate(
         &self,
         schema: &Schema,
         reachable: &HashSet<Atom>,
+        fixed: &[Option<usize>],
         emitted: &mut HashSet<Vec<usize>>,
         out: &mut Vec<(Vec<usize>, GroundOp)>,
-    ) -> Result<(), GroundError> {
+    ) {
         // Check each literal as soon as its last parameter is bound.
         let mut checks: Vec<Vec<&SLit>> = vec![Vec::new(); schema.params.len()];
         for lit in &schema.pre {
@@ -1089,21 +1181,23 @@ impl Grounder<'_> {
             if checked {
                 match lit.last_param() {
                     Some(i) => checks[i].push(lit),
-                    None if !self.relaxed(lit, &[], reachable) => return Ok(()),
+                    None if !self.relaxed(lit, &[], reachable) => return,
                     None => {}
                 }
             }
         }
+
         let mut search = Search {
             schema,
             checks: &checks,
             reachable,
+            fixed,
             emitted,
             binding: Vec::with_capacity(schema.params.len()),
             path: Vec::with_capacity(schema.params.len()),
             out,
         };
-        self.bind(&mut search)
+        self.bind(&mut search);
     }
 
     /// Whether `lit` can hold in the delete relaxation: a static literal that
@@ -1118,43 +1212,40 @@ impl Grounder<'_> {
     }
 
     /// Binds the next parameter, recursively.
-    fn bind(&self, search: &mut Search<'_, '_>) -> Result<(), GroundError> {
+    fn bind(&self, search: &mut Search<'_, '_>) {
         let depth = search.binding.len();
         if depth == search.schema.params.len() {
             if search.emitted.insert(search.path.clone()) {
-                let mut found = Vec::new();
-                self.emit(search.schema, &search.binding, &mut found)?;
-                search
-                    .out
-                    .extend(found.into_iter().map(|op| (search.path.clone(), op)));
+                if let Some(op) = self.emit(search.schema, &search.binding) {
+                    search.out.push((search.path.clone(), op));
+                }
             }
-            return Ok(());
+            return;
         }
-        for (i, object) in search.schema.params[depth].iter().enumerate() {
-            search.binding.push(object.clone());
+
+        let objects = &search.schema.params[depth];
+        let range = match search.fixed.get(depth).copied().flatten() {
+            Some(i) => i..i + 1,
+            None => 0..objects.len(),
+        };
+        for i in range {
+            search.binding.push(objects[i].clone());
             search.path.push(i);
             if search.checks[depth]
                 .iter()
                 .all(|lit| self.relaxed(lit, &search.binding, search.reachable))
             {
-                self.bind(search)?;
+                self.bind(search);
             }
             search.binding.pop();
             search.path.pop();
         }
-        Ok(())
     }
 
-    /// Adds the ground action for a complete binding.
-    fn emit(
-        &self,
-        schema: &Schema,
-        binding: &[String],
-        out: &mut Vec<GroundOp>,
-    ) -> Result<(), GroundError> {
-        let Some(pre) = self.fluent_lits(&schema.pre, binding) else {
-            return Ok(());
-        };
+    /// The ground action for a complete binding, or `None` if a static
+    /// precondition is false.
+    fn emit(&self, schema: &Schema, binding: &[String]) -> Option<GroundOp> {
+        let pre = self.fluent_lits(&schema.pre, binding)?;
         let name = std::iter::once(schema.name.as_str())
             .chain(binding[..schema.arity].iter().map(String::as_str))
             .collect::<Vec<_>>()
@@ -1172,36 +1263,98 @@ impl Grounder<'_> {
             .collect();
         let cost = if self.use_metric {
             self.cost(schema, binding)
-                .ok_or_else(|| GroundError::InvalidCost {
-                    action: name.clone(),
-                })?
         } else {
-            Decimal::whole(1)
+            Ok(Decimal::whole(1))
         };
-        out.push(GroundOp {
+        Some(GroundOp {
             name,
             pre,
             effects,
             cost,
-        });
-        Ok(())
+        })
     }
 
-    /// Sums the cost of a ground action exactly, or `None` if a summand is
-    /// negative or refers to a function without a value.
-    fn cost(&self, schema: &Schema, binding: &[String]) -> Option<Decimal> {
-        let mut total = Decimal::whole(0);
+    /// Sums the cost of a ground action exactly.
+    ///
+    /// # Errors
+    /// [`CostError::Invalid`] if a summand is negative or refers to a function
+    /// without a value, and [`CostError::Overflow`] if the sum has more digits
+    /// than fit.
+    fn cost(&self, schema: &Schema, binding: &[String]) -> Result<Decimal, CostError> {
+        // Every summand is read even after an overflow, so that an invalid
+        // summand wins and the places don't depend on the order of the terms.
+        let mut total = Ok(Decimal::whole(0));
+        let mut places = 0;
         for term in &schema.cost {
             let value = match term {
                 CostTerm::Number(n) => *n,
-                CostTerm::Function(symbol, args) => *self.functions.get(&(
-                    symbol.clone(),
-                    args.iter().map(|a| ground_arg(a, binding)).collect(),
-                ))?,
+                CostTerm::Function(symbol, args) => *self
+                    .functions
+                    .get(&(
+                        symbol.clone(),
+                        args.iter().map(|a| ground_arg(a, binding)).collect(),
+                    ))
+                    .ok_or(CostError::Invalid)?,
             };
-            total = total.checked_add(Decimal::from_f64(value)?)?;
+            let summand = Decimal::from_f64(value);
+            places = places.max(match summand {
+                Ok(Decimal { places, .. }) | Err(CostError::Overflow { places }) => places,
+                Err(CostError::Invalid) => return Err(CostError::Invalid),
+            });
+            total = total.and_then(|total: Decimal| total.checked_add(summand?));
         }
-        Some(total)
+
+        total.map_err(|_| CostError::Overflow { places })
+    }
+}
+
+/// The object indices that make the schematic `atom` of `schema` equal to the
+/// `ground` atom, per parameter (`None` where `atom` doesn't mention it), or
+/// `None` if no binding does.
+fn unify(schema: &Schema, atom: &SAtom, ground: &Atom) -> Option<Vec<Option<usize>>> {
+    let (pred, objects) = ground;
+    if *pred != atom.pred || objects.len() != atom.args.len() {
+        return None;
+    }
+
+    let mut fixed = vec![None; schema.params.len()];
+    for (arg, object) in atom.args.iter().zip(objects) {
+        match arg {
+            Arg::Obj(constant) if constant != object => return None,
+            Arg::Obj(_) => {}
+            Arg::Var(i) => {
+                let index = schema.params[*i].iter().position(|o| o == object)?;
+                if *fixed[*i].get_or_insert(index) != index {
+                    return None;
+                }
+            }
+        }
+    }
+
+    Some(fixed)
+}
+
+/// Makes reachable every `pending` add whose conditions are reachable, until
+/// none is left to fire, and drops the adds of atoms that are reachable.
+/// Returns the atoms that became reachable.
+fn fire_pending(pending: &mut Vec<(Vec<GLit>, Atom)>, reachable: &mut HashSet<Atom>) -> Vec<Atom> {
+    let mut added = Vec::new();
+    loop {
+        let count = added.len();
+        pending.retain(|(conds, atom)| {
+            if reachable.contains(atom) {
+                false
+            } else if holds_relaxed(conds, reachable) {
+                reachable.insert(atom.clone());
+                added.push(atom.clone());
+                false
+            } else {
+                true
+            }
+        });
+        if added.len() == count {
+            return added;
+        }
     }
 }
 
@@ -1295,17 +1448,14 @@ fn drop_subsumed(mut pieces: Vec<Vec<Fact>>) -> Vec<Vec<Fact>> {
 }
 
 impl GroundOp {
-    /// Converts the action to a SAS+ operator, or `None` if its precondition
-    /// can never hold.
+    /// Converts the action to a SAS+ operator of cost 0, or `None` if its
+    /// precondition can never hold or it has no effect; the caller sets the
+    /// cost once it knows the scale.
     ///
     /// # Errors
     /// [`GroundError::ConflictingEffects`] if restricting a delete to where no
     /// add of the same atom fires needs more than [`MAX_DELETE_PIECES`] effects.
-    fn to_sas(
-        &self,
-        index: &HashMap<&Atom, VarId>,
-        cost: u32,
-    ) -> Result<Option<SasOperator>, GroundError> {
+    fn to_sas(&self, index: &HashMap<&Atom, VarId>) -> Result<Option<SasOperator>, GroundError> {
         let Some(pre) = resolve_all(index, &self.pre) else {
             return Ok(None);
         };
@@ -1368,7 +1518,7 @@ impl GroundOp {
                     post,
                 })
                 .collect(),
-            cost,
+            cost: 0,
         }))
     }
 }

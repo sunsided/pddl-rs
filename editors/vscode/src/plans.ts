@@ -26,7 +26,13 @@ export async function problemFor(
   }
   const folder = vscode.Uri.joinPath(plan, "..");
   const nearby: vscode.Uri[] = [];
-  for (const [name, type] of await vscode.workspace.fs.readDirectory(folder)) {
+  let entries: [string, vscode.FileType][] = [];
+  try {
+    entries = await vscode.workspace.fs.readDirectory(folder);
+  } catch {
+    // No folder to look in, such as for a plan that isn't saved yet.
+  }
+  for (const [name, type] of entries) {
     const uri = vscode.Uri.joinPath(folder, name);
     if (type === vscode.FileType.File && name.toLowerCase().endsWith(".pddl") && isProblem(await read(uri))) {
       nearby.push(uri);
@@ -67,7 +73,8 @@ export function planDefinitions(context: vscode.ExtensionContext): vscode.Defini
       const step = normalizeStep(document.lineAt(position.line).text);
       const name = step?.slice(1, -1).split(" ")[0];
       const word = document.getWordRangeAtPosition(position, /[^\s()]+/);
-      if (!name || !word || document.getText(word).toLowerCase() !== name) {
+      // An unsaved plan (such as one from Planning-as-a-Service) has no folder to find its problem in.
+      if (!name || !word || document.getText(word).toLowerCase() !== name || document.isUntitled) {
         return undefined;
       }
       const problem = await problemFor(context, document.uri, false);
