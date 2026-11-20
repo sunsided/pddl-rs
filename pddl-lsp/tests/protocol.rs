@@ -742,3 +742,31 @@ fn rename_uses_the_current_text_of_closed_files() {
         .clone();
     check!(edits[0]["range"]["start"] == json!({ "line": 4, "character": 16 }));
 }
+
+#[test]
+fn validates_plans_over_the_protocol() {
+    // `PROBLEM`'s goal has a wrong arity; a well-formed one is needed to validate.
+    let problem = PROBLEM.replace("(at t1 work ham)", "(at t1 work)");
+    let mut client = Client::start();
+    let valid = client.request(
+        "pddl/validatePlan",
+        json!({ "domain": DOMAIN, "problem": problem, "plan": "(drive t1 home work)\n" }),
+    );
+    check!(
+        valid
+            == json!({
+                "status": "valid", "message": "", "line": null, "advice": null,
+                "metric": null, "minimize": null
+            })
+    );
+
+    let invalid = client.request(
+        "pddl/validatePlan",
+        json!({ "domain": DOMAIN, "problem": problem, "plan": "(drive t1 work home)\n" }),
+    );
+    check!(invalid["status"] == "invalid");
+    check!(invalid["line"] == 0);
+
+    let bad = client.response("pddl/validatePlan", json!({ "domain": DOMAIN }));
+    check!(bad.error.unwrap().code == -32602);
+}
