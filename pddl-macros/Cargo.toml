@@ -2,7 +2,7 @@
 name = "pddl-macros"
 version = "0.1.0"
 description = "Compile-time checked PDDL: domain!, problem! and pddl! macros for the pddl crate"
-license = "EUPL-1.2"
+license = "EUPL-1.2 OR MPL-2.0"
 categories = ["parser-implementations", "science", "development-tools::procedural-macro-helpers"]
 keywords = ["pddl", "planning", "macro", "parser"]
 repository = "https://github.com/sunsided/pddl-rs"

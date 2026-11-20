@@ -2,7 +2,7 @@
 name = "pddl-bench"
 version = "0.0.0"
 description = "Benchmarks and cross-checks of the runtime grounder and generated planning code; not published"
-license = "EUPL-1.2"
+license = "EUPL-1.2 OR MPL-2.0"
 repository = "https://github.com/sunsided/pddl-rs"
 authors = ["Markus Mayer <widemeadows@gmail.com>"]
 edition = "2021"

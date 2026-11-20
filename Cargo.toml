@@ -2,7 +2,7 @@
 name = "pddl-core"
 version = "0.4.0"
 description = "The types and the parser behind the pddl crate; depend on pddl instead"
-license = "EUPL-1.2"
+license = "EUPL-1.2 OR MPL-2.0"
 documentation = "https://docs.rs/pddl-core"
 categories = ["parser-implementations", "science", "simulation"]
 keywords = ["pddl", "planning", "parser"]

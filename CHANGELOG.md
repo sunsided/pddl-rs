@@ -30,6 +30,8 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Licensed under `EUPL-1.2 OR MPL-2.0`, at your option, instead of `EUPL-1.2`
+  alone. Versions already published keep the licence they were published under.
 - The types and the parser moved into a new crate, `pddl-core`, which `pddl`
   re-exports in full, so paths such as `pddl::Domain` stay the same. The split
   lets `pddl-macros` use the parser while `pddl` re-exports the macros.
