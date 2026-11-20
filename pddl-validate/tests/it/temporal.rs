@@ -613,3 +613,37 @@ fn a_ground_durative_action_must_not_overlap_itself() {
         ValidationStatus::Valid
     );
 }
+
+/// A durative action whose end adds what an instant action reads.
+const HOLD: &str = "
+(define (domain hold)
+  (:requirements :durative-actions)
+  (:predicates (held) (used))
+  (:durative-action hold :parameters () :duration (>= ?duration 0)
+    :condition () :effect (at end (held)))
+  (:action useg :parameters () :precondition (held) :effect (used)))";
+
+/// A problem for [`HOLD`].
+const HOLD_PROBLEM: &str = "(define (problem p) (:domain hold) (:init) (:goal (used)))";
+
+#[test]
+fn epsilon_separation_holds_at_large_times() {
+    let task = Task::new(HOLD, HOLD_PROBLEM);
+    // Exactly epsilon apart as written, whatever the rounding of the times.
+    for start in [0.0, 100_000.0, 1_000_000_000.0] {
+        let plan = format!("{start}: (hold) [2]\n{}.01: (useg)", start + 2.0);
+        let report = task.run(&plan);
+        assert_eq!(
+            report.status(),
+            ValidationStatus::Valid,
+            "{plan}: {report:?}"
+        );
+    }
+
+    // Closer than epsilon still interferes at large times.
+    let kind = task.step_failure("1000000000: (hold) [2]\n1000000002.005: (useg)", 2);
+    assert!(
+        matches!(kind, ViolationKind::Interference { .. }),
+        "{kind:?}"
+    );
+}

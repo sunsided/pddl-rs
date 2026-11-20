@@ -51,8 +51,17 @@ use mutex::Footprint;
 use pddl_plus::Dynamics;
 use timed::{Collector, Memo, Moment};
 
-/// Events closer in time than this belong to one happening.
-pub const SAME_TIME: f64 = 1e-9;
+pub use crate::model::SAME_TIME;
+
+/// The rounding error that a difference of two times near `time` may carry.
+///
+/// Plan times are decimals rounded to `f64`, so the difference of two of them is off by
+/// up to a few units in the last place of the larger one: about `1e-7` near `1e9`. The
+/// slack is [`SAME_TIME`] for small times and grows with `time`, so a separation of
+/// exactly epsilon as written in the plan passes at any magnitude.
+fn rounding_slack(time: f64) -> f64 {
+    SAME_TIME.max(time.abs() * 8.0 * f64::EPSILON)
+}
 
 /// Runs plans on the timeline of a temporal task.
 pub struct Timeline<'v, 'a> {
@@ -387,7 +396,8 @@ impl<'v> Timeline<'v, '_> {
             }
 
             // Events exactly epsilon apart are far enough, despite rounding.
-            recent.retain(|past| first.time - past.time < self.epsilon - SAME_TIME);
+            let slack = rounding_slack(first.time);
+            recent.retain(|past| first.time - past.time < self.epsilon - slack);
             match self.happen(&mut state, instances, happening, &mut recent) {
                 Ok(step) => trace.push(step),
                 Err(failure) => return Err((failure, trace)),
