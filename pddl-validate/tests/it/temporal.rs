@@ -532,3 +532,19 @@ fn random_temporal_plans_never_panic_or_hang() {
         let _ = validator.validate_text(&text);
     }
 }
+
+#[test]
+fn a_start_time_too_large_to_hold_the_duration_fails() {
+    let domain = "(define (domain d) (:requirements :durative-actions :negative-preconditions)
+        (:predicates (q))
+        (:durative-action bad :parameters () :duration (= ?duration 2)
+          :condition (and (at end (not (q))) (over all (not (q))))
+          :effect (at start (q))))";
+    let problem = "(define (problem p) (:domain d) (:init) (:goal (and)))";
+    let task = Task::new(domain, problem);
+    assert_eq!(task.run("0: (bad) [2]").status(), ValidationStatus::Invalid);
+    assert_eq!(
+        task.step_failure("100000000000000000: (bad) [2]", 1),
+        ViolationKind::NonPositiveDuration(0.0)
+    );
+}

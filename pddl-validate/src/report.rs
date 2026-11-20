@@ -284,7 +284,8 @@ pub enum ViolationKind {
     MissingDuration,
     /// An instantaneous action has a `[duration]`.
     UnexpectedDuration,
-    /// The duration is not positive (at most 1e-9) or not finite.
+    /// The duration is not positive (at most 1e-9), not finite, or rounds away when added
+    /// to a huge start time.
     NonPositiveDuration(f64),
     /// A start or end time that is negative or not finite.
     InvalidTime(f64),

@@ -202,6 +202,12 @@ impl<'v> Timeline<'v, '_> {
                     return fail(ViolationKind::InvalidTime(end));
                 }
 
+                // At a huge start time the duration can round away, merging start and end
+                // into one happening that skips the over all conditions.
+                if end - time <= SAME_TIME {
+                    return fail(ViolationKind::NonPositiveDuration(end - time));
+                }
+
                 let number = instances.len();
                 events.push(event(
                     time,
