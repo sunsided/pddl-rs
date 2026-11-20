@@ -118,7 +118,31 @@ use crate::PreferenceName;
 use ::serde::de::{self, Deserializer, MapAccess, SeqAccess, Visitor};
 use ::serde::ser::{SerializeMap, SerializeSeq, Serializer};
 use ::serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::fmt;
+
+/// The keys of an object being serialized, to fail on one that repeats.
+///
+/// A format's map keeps only one entry per key (`serde_json::Value` keeps the
+/// last), so a repeated name, e.g. two `(:action a ...)`, would be lost silently.
+#[derive(Default)]
+pub(crate) struct UniqueKeys<'a>(HashSet<&'a str>);
+
+impl<'a> UniqueKeys<'a> {
+    /// Records `key`.
+    ///
+    /// # Errors
+    /// Fails with a custom serialization error if `key` was recorded before.
+    pub(crate) fn insert<E: ::serde::ser::Error>(&mut self, key: &'a str) -> Result<(), E> {
+        if self.0.insert(key) {
+            Ok(())
+        } else {
+            Err(E::custom(format_args!(
+                "duplicate key `{key}`: an object can hold it only once"
+            )))
+        }
+    }
+}
 
 /// Serializes as `{key: value}`.
 pub(crate) struct Keyed<'a, V: ?Sized>(pub &'a str, pub &'a V);
