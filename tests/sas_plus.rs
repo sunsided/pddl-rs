@@ -640,3 +640,70 @@ fn scaled_costs_that_do_not_fit_are_errors() {
         Err(GroundError::CostOutOfRange { places: 10, .. })
     ));
 }
+
+/// A domain whose `act` adds `(done)` for the summed `costs`, and whose
+/// `idle` only re-adds `(ready)`, which it needs, for `idle_cost`.
+fn cost_sum(costs: &[&str], idle_cost: &str) -> (Domain, Problem) {
+    let increases = costs.iter().fold(String::new(), |mut text, cost| {
+        text.push_str(" (increase (total-cost) ");
+        text.push_str(cost);
+        text.push(')');
+        text
+    });
+    let domain = Domain::from_str(&format!(
+        "(define (domain d) (:requirements :action-costs) (:predicates (done) (ready))
+           (:functions (total-cost))
+           (:action act :parameters () :precondition (ready) :effect (and (done){increases}))
+           (:action idle :parameters () :precondition (ready)
+             :effect (and (ready) (increase (total-cost) {idle_cost}))))"
+    ))
+    .unwrap();
+    let problem = Problem::from_str(
+        "(define (problem p) (:domain d) (:init (ready) (= (total-cost) 0)) (:goal (done))
+           (:metric minimize (total-cost)))",
+    )
+    .unwrap();
+    (domain, problem)
+}
+
+#[test]
+fn decimal_summands_of_whole_costs_are_whole() {
+    // 0.5 + 0.5 is exactly 1: `ground` accepts it and the scale stays 1.
+    let (domain, problem) = cost_sum(&["0.5", "0.5"], "1");
+    assert_eq!(ground(&domain, &problem).unwrap().operators[0].cost, 1);
+    assert_eq!(ground_scaled(&domain, &problem).unwrap().cost_scale, 1);
+}
+
+#[test]
+fn dropped_operators_do_not_set_the_scale() {
+    // `idle` changes nothing, so it isn't in the task, and its cost neither
+    // makes `ground` fail nor sets the scale; not even when it can't fit.
+    for idle in ["0.5", "4294967.296"] {
+        let (domain, problem) = cost_sum(&["2"], idle);
+        let file = ground(&domain, &problem).unwrap();
+        assert_eq!(file.operators.len(), 1, "{idle}");
+        assert_eq!(
+            ground_scaled(&domain, &problem).unwrap().cost_scale,
+            1,
+            "{idle}"
+        );
+    }
+}
+
+#[test]
+fn ground_reports_costs_beyond_u32() {
+    let (domain, problem) = cost_sum(&["5000000000"], "1");
+    assert_eq!(
+        ground(&domain, &problem),
+        Err(GroundError::CostOutOfRange {
+            action: "act".into(),
+            places: 0
+        })
+    );
+    // With `ground`, decimal places are invalid before they are out of range.
+    let (domain, problem) = cost_sum(&["0.0000000001"], "1");
+    assert!(matches!(
+        ground(&domain, &problem),
+        Err(GroundError::InvalidCost { .. })
+    ));
+}

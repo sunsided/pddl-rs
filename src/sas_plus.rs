@@ -96,8 +96,8 @@ pub enum GroundError {
         /// The ground action, e.g. `drive depot north`.
         action: String,
     },
-    /// Scaled to the most decimal places of any action's cost, an action's
-    /// cost doesn't fit in a `u32`. Only [`ground_scaled`] scales costs.
+    /// An action's cost doesn't fit in a `u32`: as it is, or, with
+    /// [`ground_scaled`], scaled to the most decimal places of any cost.
     #[error("action `{action}` costs more than a u32 holds at {places} decimal places")]
     CostOutOfRange {
         /// The ground action, e.g. `drive depot north`.
@@ -136,14 +136,12 @@ pub const MAX_DELETE_PIECES: usize = 1024;
 ///
 /// # Errors
 /// Returns a [`GroundError`] if the input uses an unsupported construct, refers
-/// to undeclared types, objects or variables, has an invalid action cost, or
-/// has a goal that no reachable state satisfies.
+/// to undeclared types, objects or variables, has an action cost that is not a
+/// non-negative integer ([`InvalidCost`](GroundError::InvalidCost)) or doesn't
+/// fit in a `u32` ([`CostOutOfRange`](GroundError::CostOutOfRange)), or has a
+/// goal that no reachable state satisfies.
 pub fn ground(domain: &Domain, problem: &Problem) -> Result<SasFile, GroundError> {
-    let (file, fractional) = ground_with_costs(domain, problem)?;
-    match fractional {
-        Some(action) => Err(GroundError::InvalidCost { action }),
-        None => Ok(file.file),
-    }
+    ground_with_costs(domain, problem, false).map(|task| task.file)
 }
 
 /// A SAS+ task whose operator costs are the action costs times
@@ -172,15 +170,17 @@ pub struct ScaledTask {
 /// As [`ground`], except that decimal costs are accepted, and
 /// [`GroundError::CostOutOfRange`] if a scaled cost doesn't fit in a `u32`.
 pub fn ground_scaled(domain: &Domain, problem: &Problem) -> Result<ScaledTask, GroundError> {
-    ground_with_costs(domain, problem).map(|(task, _)| task)
+    ground_with_costs(domain, problem, true)
 }
 
-/// Grounds with every cost scaled to the most decimal places of any cost, and
-/// names an action whose cost has decimal places, if any.
+/// Grounds with every cost scaled to the most decimal places of any cost in
+/// the task; without `decimal_costs`, a cost with decimal places is an
+/// [`InvalidCost`](GroundError::InvalidCost).
 fn ground_with_costs(
     domain: &Domain,
     problem: &Problem,
-) -> Result<(ScaledTask, Option<String>), GroundError> {
+    decimal_costs: bool,
+) -> Result<ScaledTask, GroundError> {
     reject_unsupported(domain, problem)?;
     let world = World::new(domain, problem)?;
     let use_metric = uses_total_cost(problem)?;
@@ -208,22 +208,6 @@ fn ground_with_costs(
         use_metric,
     };
     let (ops, reachable) = grounder.reachable_ops(&schemas)?;
-    let places = ops.iter().map(|op| op.cost.places).max().unwrap_or(0);
-    let fractional = ops
-        .iter()
-        .find(|op| op.cost.places > 0)
-        .map(|op| op.name.clone());
-    let costs = ops
-        .iter()
-        .map(|op| {
-            op.cost
-                .scaled(places)
-                .ok_or_else(|| GroundError::CostOutOfRange {
-                    action: op.name.clone(),
-                    places,
-                })
-        })
-        .collect::<Result<Vec<u32>, _>>()?;
     let index: HashMap<&Atom, VarId> = reachable
         .iter()
         .enumerate()
@@ -238,6 +222,38 @@ fn ground_with_costs(
     .preconditions(problem.goals(), &HashMap::new(), false, &mut goal_lits)?;
     let goal = ground_goal(&goal_lits, &grounder, &index)?;
 
+    // Only the operators that make it into the task set the scale.
+    let mut operators = Vec::new();
+    for op in &ops {
+        if let Some(operator) = op.to_sas(&index, 0)? {
+            operators.push((operator, op));
+        }
+    }
+    if let Some((_, op)) = operators.iter().find(|(_, op)| op.cost.places > 0) {
+        if !decimal_costs {
+            return Err(GroundError::InvalidCost {
+                action: op.name.clone(),
+            });
+        }
+    }
+    let places = operators
+        .iter()
+        .map(|(_, op)| op.cost.places)
+        .max()
+        .unwrap_or(0);
+    let operators = operators
+        .into_iter()
+        .map(|(mut operator, op)| {
+            operator.cost = op
+                .cost
+                .scaled(places)
+                .ok_or_else(|| GroundError::CostOutOfRange {
+                    action: op.name.clone(),
+                    places,
+                })?;
+            Ok(operator)
+        })
+        .collect::<Result<_, GroundError>>()?;
     let file = SasFile {
         use_metric,
         variables: reachable
@@ -258,15 +274,11 @@ fn ground_with_costs(
             .map(|atom| if init.contains(atom) { TRUE } else { FALSE })
             .collect(),
         goal,
-        operators: ops
-            .iter()
-            .zip(costs)
-            .filter_map(|(op, cost)| op.to_sas(&index, cost).transpose())
-            .collect::<Result<_, _>>()?,
+        operators,
         axioms: Vec::new(),
     };
     let cost_scale = 10u32.pow(places); // `scaled` checked that it fits
-    Ok((ScaledTask { file, cost_scale }, fractional))
+    Ok(ScaledTask { file, cost_scale })
 }
 
 /// A non-negative decimal number, exact: `units / 10^places`.
@@ -309,7 +321,17 @@ impl Decimal {
                     .units
                     .checked_mul(10u128.checked_pow(places - other.places)?)?,
             )?;
-        Some(Self { units, places })
+        Some(Self { units, places }.normalized())
+    }
+
+    /// The same number without trailing zero places: `1.0` is `1`, so a sum
+    /// such as `0.5 + 0.5` counts as an integer.
+    fn normalized(mut self) -> Self {
+        while self.places > 0 && self.units % 10 == 0 {
+            self.units /= 10;
+            self.places -= 1;
+        }
+        self
     }
 
     /// The value times `10^places`, if that is a `u32` and `places` is at
