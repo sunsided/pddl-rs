@@ -3,7 +3,9 @@
 //! It finds undeclared names, wrong arities and unbound variables, so evaluation never
 //! meets them, and it finds every construct the validator does not interpret, so no plan
 //! that uses one is ever accepted. Formulas inside an unsupported construct are not
-//! checked further.
+//! checked further. [`durative`] checks durative actions.
+
+mod durative;
 
 use alloc::format;
 use alloc::string::String;
@@ -44,6 +46,11 @@ pub fn check(model: &Model<'_>, problem: &Problem) -> Result<(), Issue> {
         if let Some(effects) = action.effect() {
             checker.effects(effects)?;
         }
+    }
+
+    for (name, action) in &model.durative {
+        let mut checker = Checker::new(model, format!("durative action `{name}`"));
+        checker.durative(action)?;
     }
 
     for rule in &model.rules {
@@ -375,8 +382,11 @@ impl<'m, 'a> Checker<'m, 'a> {
         match element {
             InitElement::Literal(
                 Literal::AtomicFormula(formula) | Literal::NotAtomicFormula(formula),
+            )
+            | InitElement::At(
+                _,
+                Literal::AtomicFormula(formula) | Literal::NotAtomicFormula(formula),
             ) => self.settable(&name_formula(formula)),
-            InitElement::At(..) => Err(self.unsupported(Construct::TimedInitialLiterals)),
             InitElement::IsValue(term, _) => {
                 let found = term.names().len();
                 let unknown = ModelErrorKind::UnknownFunction;

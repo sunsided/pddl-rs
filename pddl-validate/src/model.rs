@@ -8,11 +8,13 @@ pub mod check;
 pub mod universe;
 
 use alloc::collections::{BTreeMap, BTreeSet};
-use alloc::format;
 use alloc::string::String;
 use alloc::vec::Vec;
 
-use pddl::{ActionDefinition, Domain, GoalDescription, Problem, StructureDef, TypedVariables};
+use pddl::{
+    ActionDefinition, Domain, DurativeActionDefinition, GoalDescription, InitElement, Problem,
+    StructureDef, TypedVariables,
+};
 
 use crate::atom::lower;
 use crate::error::{ModelError, ModelErrorKind};
@@ -30,6 +32,8 @@ pub struct Model<'a> {
     pub functions: BTreeMap<String, usize>,
     /// The actions by name.
     pub actions: BTreeMap<String, &'a ActionDefinition>,
+    /// The durative actions by name. No name is both an action and a durative action.
+    pub durative: BTreeMap<String, &'a DurativeActionDefinition>,
     /// The derived-predicate rules, sorted by stratum once [`crate::derived::stratify`] ran.
     pub rules: Vec<Rule<'a>>,
     /// The names of the derived predicates.
@@ -70,12 +74,22 @@ impl<'a> Model<'a> {
             .map(|f| (lower(f.symbol()), f.variables().len()))
             .collect();
         let mut actions = BTreeMap::new();
+        let mut durative = BTreeMap::new();
         let mut rules = Vec::new();
         for def in domain.structure().iter() {
             match def {
                 StructureDef::Action(action) => {
                     let name = lower(action.symbol());
-                    if actions.insert(name.clone(), action).is_some() {
+                    let taken = durative.contains_key(&name);
+                    if actions.insert(name.clone(), action).is_some() || taken {
+                        let kind = ModelErrorKind::DuplicateAction(name);
+                        return Err(ModelError::new("domain", kind));
+                    }
+                }
+                StructureDef::DurativeAction(action) => {
+                    let name = lower(action.symbol());
+                    let taken = actions.contains_key(&name);
+                    if durative.insert(name.clone(), &**action).is_some() || taken {
                         let kind = ModelErrorKind::DuplicateAction(name);
                         return Err(ModelError::new("domain", kind));
                     }
@@ -91,8 +105,6 @@ impl<'a> Model<'a> {
                         stratum: 0,
                     });
                 }
-                // `unsupported_sections` reports these before a model is built.
-                StructureDef::DurativeAction(_) => {}
             }
         }
 
@@ -103,6 +115,7 @@ impl<'a> Model<'a> {
             predicates,
             functions,
             actions,
+            durative,
             rules,
             derived,
         })
@@ -110,6 +123,16 @@ impl<'a> Model<'a> {
 }
 
 impl Model<'_> {
+    /// Returns `true` if plans for this task run on the temporal timeline whatever their
+    /// form: the domain has durative actions or the problem timed initial literals.
+    pub fn is_temporal(&self, problem: &Problem) -> bool {
+        !self.durative.is_empty()
+            || problem
+                .init()
+                .iter()
+                .any(|element| matches!(element, InitElement::At(..)))
+    }
+
     /// Returns `true` if a metric's `(symbol)` with `arity` arguments means `total-time`.
     ///
     /// The parser reads `(total-time)` as a function application; it means the plan's
@@ -156,15 +179,8 @@ pub fn unsupported_sections(domain: &Domain, problem: &Problem) -> Option<Unsupp
         (!domain.constraints().is_empty(), Construct::Constraints),
         (!problem.constraints().is_empty(), Construct::Constraints),
     ];
-    if let Some((_, construct)) = found.into_iter().find(|(present, _)| *present) {
-        return Some(Unsupported::new(construct, "domain or problem"));
-    }
-
-    domain.structure().iter().find_map(|def| match def {
-        StructureDef::DurativeAction(action) => Some(Unsupported::new(
-            Construct::DurativeActions,
-            format!("durative action `{}`", lower(action.symbol())),
-        )),
-        StructureDef::Action(_) | StructureDef::Derived(_) => None,
-    })
+    found
+        .into_iter()
+        .find(|(present, _)| *present)
+        .map(|(_, construct)| Unsupported::new(construct, "domain or problem"))
 }

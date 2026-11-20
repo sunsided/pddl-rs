@@ -196,3 +196,60 @@ fn agrees_with_val_on_the_extension_fixture() {
     // Step 1, `(drive t1 home home)`, deletes and adds `(at t1 home)`; as in VAL it stays.
     assert!(report.trace()[0].added.is_empty() && report.trace()[0].deleted.is_empty());
 }
+
+/// Reads a domain and a problem from one file of the VHPOP corpus. The parser requires
+/// `:init`, which VHPOP's problems may leave out, so an empty one is added.
+fn vhpop_file(name: &str) -> (Domain, Problem) {
+    let text = read(&format!("tests/data/vhpop/{name}"));
+    let text = text.replace("(:goal", "(:init) (:goal");
+    let mut file = pddl::PddlFile::from_str(&text).unwrap();
+    (file.domains.remove(0), file.problems.remove(0))
+}
+
+#[test]
+fn vhpop_durative_domain() {
+    let domain = Domain::from_str(&read("tests/data/vhpop/durative-domain.pddl")).unwrap();
+    let problem = Problem::from_str(&read("tests/data/vhpop/durative-problem.pddl")).unwrap();
+    let validator = Validator::new(&domain, &problem).unwrap();
+    let report = validator.validate_text("0.000: (da) [0.0001]");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+
+    // The duration must be exactly 0.0001.
+    let report = validator.validate_text("0.000: (da) [0.001]");
+    assert!(matches!(
+        report.violation().unwrap().kind,
+        ViolationKind::DurationConstraint(_)
+    ));
+}
+
+#[test]
+fn vhpop_durative_with_duration_inequalities() {
+    let (domain, problem) = vhpop_file("durative.pddl");
+    let validator = Validator::new(&domain, &problem).unwrap();
+    // da1 needs (a) at its start and (c), which da2 gives at its end, at its end.
+    let plan = "0: (a)\n0.01: (da1) [20]\n0.02: (da2) [15]";
+    let report = validator.validate_text(plan);
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+
+    // da2 starts reading (d), which da1 adds at its start: not at the same time.
+    let report = validator.validate_text("0: (a)\n0.01: (da1) [20]\n0.01: (da2) [15]");
+    assert!(matches!(
+        report.violation().unwrap().kind,
+        ViolationKind::Interference { .. }
+    ));
+
+    // da2 ending after da1 leaves (c) false at da1's end.
+    let report = validator.validate_text("0: (a)\n0.01: (da1) [10]\n0.02: (da2) [15]");
+    assert!(matches!(
+        report.violation().unwrap().kind,
+        ViolationKind::EndConditionUnsatisfied(_)
+    ));
+
+    for plan in ["0: (da1) [20]", "(a) (da1)", "0: (a)\n0.01: (da1) [9]"] {
+        assert_eq!(
+            validator.validate_text(plan).status(),
+            ValidationStatus::Invalid,
+            "{plan}"
+        );
+    }
+}

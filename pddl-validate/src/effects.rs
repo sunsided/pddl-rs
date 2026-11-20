@@ -27,11 +27,11 @@ use crate::state::State;
 #[derive(Debug, Default)]
 pub struct Changes {
     /// Atoms the step makes true.
-    add: BTreeSet<Atom>,
+    pub add: BTreeSet<Atom>,
     /// Atoms the step makes false, unless it also adds them.
-    delete: BTreeSet<Atom>,
+    pub delete: BTreeSet<Atom>,
     /// The numeric updates per fluent, with their right-hand sides evaluated.
-    updates: BTreeMap<Atom, Vec<(AssignOp, f64)>>,
+    pub updates: BTreeMap<Atom, Vec<(AssignOp, f64)>>,
 }
 
 impl Changes {
@@ -74,8 +74,22 @@ impl Changes {
         Ok(())
     }
 
+    /// Adds the changes of `other`, as when several events share a happening.
+    pub fn merge(&mut self, other: Self) {
+        self.add.extend(other.add);
+        self.delete.extend(other.delete);
+        for (fluent, ops) in other.updates {
+            self.updates.entry(fluent).or_default().extend(ops);
+        }
+    }
+
+    /// Records a numeric update whose right-hand side is evaluated already.
+    pub fn update(&mut self, fluent: Atom, op: AssignOp, value: f64) {
+        self.updates.entry(fluent).or_default().push((op, value));
+    }
+
     /// Collects one primitive effect.
-    fn primitive(
+    pub fn primitive(
         &mut self,
         evaluator: &Evaluator<'_, '_>,
         effect: &PrimitiveEffect,
@@ -147,6 +161,8 @@ impl Changes {
 
         Ok(StepTrace {
             step: None,
+            time: None,
+            events: Vec::new(),
             added,
             deleted,
             numeric,

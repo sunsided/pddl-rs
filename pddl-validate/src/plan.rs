@@ -1,4 +1,4 @@
-//! Sequential plans and the plan file format.
+//! Plans and the plan file format.
 //!
 //! A plan file lists one ground action per step, as Fast Downward and most classical
 //! planners write it:
@@ -14,10 +14,17 @@
 //! validator computes the cost itself. Steps may share a line or span several. Names are
 //! case-insensitive and stored in ASCII lowercase.
 //!
-//! Timestamped steps (`0.000: (a) [1.000]`) belong to temporal plans, which this crate
-//! does not validate yet; [`Plan::from_str`] fails on them with
-//! [`PlanErrorKind::Timestamped`], which [`Validator::validate_text`](crate::Validator::validate_text)
-//! reports as [`ValidationStatus::Unsupported`](crate::ValidationStatus::Unsupported).
+//! Temporal planners prefix each step with its start time and follow a durative action
+//! with its duration, as VAL reads them:
+//!
+//! ```text
+//! 0.000: (load p1 t1 depot) [2.000]
+//! 2.010: (drive t1 depot shop) [5.000]
+//! 7.020: (refuel t1)
+//! ```
+//!
+//! Times and durations are non-negative decimal numbers. Steps need not be sorted by
+//! time. A plan either times every step or none.
 
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -26,8 +33,9 @@ use core::str::FromStr;
 
 use crate::atom::lower;
 
-/// A sequential plan: ground actions, executed one after the other.
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+/// A plan: ground actions, executed one after the other or, with timestamps, at the
+/// times given.
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct Plan {
     /// The steps in execution order.
     steps: Vec<PlanStep>,
@@ -91,8 +99,9 @@ impl FromStr for Plan {
     }
 }
 
-/// One ground action of a plan, such as `(drive t1 home shop)`.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// One ground action of a plan, such as `(drive t1 home shop)`, with its start time
+/// and duration in a temporal plan.
+#[derive(Debug, Clone, PartialEq)]
 pub struct PlanStep {
     /// The action name, in ASCII lowercase.
     action: String,
@@ -100,6 +109,10 @@ pub struct PlanStep {
     arguments: Vec<String>,
     /// The 1-based line of the plan file the step starts on; 0 for a step built in code.
     line: usize,
+    /// The start time, finite and non-negative; `None` in a sequential plan.
+    time: Option<f64>,
+    /// The duration of a durative action, finite and non-negative; `None` otherwise.
+    duration: Option<f64>,
 }
 
 impl PlanStep {
@@ -124,7 +137,44 @@ impl PlanStep {
             action: lower(action.as_ref()),
             arguments: arguments.into_iter().map(|a| lower(a.as_ref())).collect(),
             line: 0,
+            time: None,
+            duration: None,
         }
+    }
+
+    /// Returns the step starting at `time`, for a temporal plan.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use pddl_validate::PlanStep;
+    ///
+    /// let step = PlanStep::new("drive", ["t1"]).at(1.5).lasting(2.0);
+    /// assert_eq!((step.time(), step.duration()), (Some(1.5), Some(2.0)));
+    /// ```
+    #[must_use]
+    pub const fn at(mut self, time: f64) -> Self {
+        self.time = Some(time);
+        self
+    }
+
+    /// Returns the step with a duration, for a durative action.
+    #[must_use]
+    pub const fn lasting(mut self, duration: f64) -> Self {
+        self.duration = Some(duration);
+        self
+    }
+
+    /// Returns the start time, or `None` in a sequential plan.
+    #[must_use]
+    pub const fn time(&self) -> Option<f64> {
+        self.time
+    }
+
+    /// Returns the duration, or `None` if the plan gives none.
+    #[must_use]
+    pub const fn duration(&self) -> Option<f64> {
+        self.duration
     }
 
     /// Returns the action name, in ASCII lowercase.
@@ -182,10 +232,15 @@ pub enum PlanErrorKind {
     Nested,
     /// A step `()` without an action name.
     EmptyStep,
-    /// Text outside parentheses that is neither whitespace nor a comment.
+    /// Text outside parentheses that is neither whitespace, a comment, a timestamp nor a
+    /// duration.
     UnexpectedText(String),
-    /// A timestamp (`0.5:`) or duration (`[2]`) of a temporal plan.
-    Timestamped,
+    /// A timestamp (`0.5:`) without a step after it.
+    DanglingTimestamp,
+    /// A `[` without its `]`, or a duration that is not one number.
+    MalformedDuration,
+    /// A time or duration that is not a finite, non-negative number.
+    InvalidNumber(String),
 }
 
 impl fmt::Display for PlanError {
@@ -199,8 +254,12 @@ impl fmt::Display for PlanError {
             PlanErrorKind::UnexpectedText(text) => {
                 write!(f, "unexpected `{text}` outside a step")
             }
-            PlanErrorKind::Timestamped => {
-                f.write_str("timestamps and durations belong to temporal plans")
+            PlanErrorKind::DanglingTimestamp => f.write_str("a timestamp needs a step after it"),
+            PlanErrorKind::MalformedDuration => {
+                f.write_str("a duration is one number in `[` and `]`")
+            }
+            PlanErrorKind::InvalidNumber(text) => {
+                write!(f, "`{text}` is not a finite, non-negative number")
             }
         }
     }
@@ -246,18 +305,64 @@ impl<'t> Scanner<'t> {
             match c {
                 '(' => {
                     self.bump();
-                    steps.push(self.step(start)?);
+                    let step = self.step(start)?;
+                    steps.push(self.duration(step)?);
                 }
                 ')' => return Err(error(start, PlanErrorKind::Unopened)),
-                '[' => return Err(error(start, PlanErrorKind::Timestamped)),
                 _ => {
-                    let word = self.word();
-                    return Err(error(start, outside_kind(word)));
+                    let time = self.timestamp(start)?;
+                    let at = self.at;
+                    if self.skip_blank() != Some('(') {
+                        return Err(error(at, PlanErrorKind::DanglingTimestamp));
+                    }
+
+                    let step_start = self.at;
+                    self.bump();
+                    let step = self.step(step_start)?.at(time);
+                    steps.push(self.duration(step)?);
                 }
             }
         }
 
         Ok(Plan::new(steps))
+    }
+
+    /// Reads a timestamp such as `0.500:`.
+    fn timestamp(&mut self, start: Position) -> Result<f64, PlanError> {
+        let mut word = self.word();
+        if word.is_empty() {
+            // A lone `[` or `]`, which `word` does not consume.
+            word.extend(self.chars.next());
+        }
+
+        let Some(number) = word.strip_suffix(':') else {
+            return Err(error(start, PlanErrorKind::UnexpectedText(word)));
+        };
+
+        number_at(start, number)
+    }
+
+    /// Reads an optional `[duration]` after a step and attaches it.
+    fn duration(&mut self, step: PlanStep) -> Result<PlanStep, PlanError> {
+        if self.skip_blank() != Some('[') {
+            return Ok(step);
+        }
+
+        let start = self.at;
+        self.bump();
+        if self.skip_blank().is_none() {
+            return Err(error(start, PlanErrorKind::MalformedDuration));
+        }
+
+        let number_start = self.at;
+        let word = self.word();
+        let duration = number_at(number_start, &word)?;
+        if self.skip_blank() != Some(']') {
+            return Err(error(start, PlanErrorKind::MalformedDuration));
+        }
+
+        self.bump();
+        Ok(step.lasting(duration))
     }
 
     /// Reads the names of a step after its `(`, through its `)`.
@@ -271,6 +376,10 @@ impl<'t> Scanner<'t> {
                     break;
                 }
                 Some('(') => return Err(error(self.at, PlanErrorKind::Nested)),
+                Some(c @ ('[' | ']')) => {
+                    let kind = PlanErrorKind::UnexpectedText(String::from(c));
+                    return Err(error(self.at, kind));
+                }
                 Some(_) => names.push(lower(&self.word())),
             }
         }
@@ -284,6 +393,8 @@ impl<'t> Scanner<'t> {
             action,
             arguments: names.collect(),
             line: start.line,
+            time: None,
+            duration: None,
         })
     }
 
@@ -307,7 +418,7 @@ impl<'t> Scanner<'t> {
     fn word(&mut self) -> String {
         let mut word = String::new();
         while let Some(&c) = self.chars.peek() {
-            if c.is_whitespace() || matches!(c, '(' | ')' | ';') {
+            if c.is_whitespace() || matches!(c, '(' | ')' | ';' | '[' | ']') {
                 break;
             }
 
@@ -342,15 +453,10 @@ const fn error(at: Position, kind: PlanErrorKind) -> PlanError {
     }
 }
 
-/// Classifies text found outside a step: a number followed by `:` is a timestamp of a
-/// temporal plan, anything else is unexpected.
-fn outside_kind(word: String) -> PlanErrorKind {
-    let is_timestamp = word.strip_suffix(':').is_some_and(|number| {
-        !number.is_empty() && number.chars().all(|c| c.is_ascii_digit() || c == '.')
-    });
-    if is_timestamp {
-        PlanErrorKind::Timestamped
-    } else {
-        PlanErrorKind::UnexpectedText(word)
+/// Parses a time or duration written at `at`.
+fn number_at(at: Position, text: &str) -> Result<f64, PlanError> {
+    match text.parse::<f64>() {
+        Ok(value) if value.is_finite() && value >= 0.0 => Ok(value),
+        _ => Err(error(at, PlanErrorKind::InvalidNumber(String::from(text)))),
     }
 }

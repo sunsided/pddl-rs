@@ -11,6 +11,7 @@
 //!
 //! [`Validator::with_tolerance`]: crate::Validator::with_tolerance
 
+use alloc::collections::BTreeSet;
 use alloc::string::String;
 use core::cmp::Ordering;
 
@@ -34,6 +35,17 @@ impl Evaluator<'_, '_> {
     ) -> Verdict {
         let left = self.value(comparison.first(), scope)?;
         let right = self.value(comparison.second(), scope)?;
+        if let Some(observer) = self.observer {
+            let mut observer = observer.borrow_mut();
+            observer.differences.push(left - right);
+            let degree = degree(comparison.first(), scope, &observer.moving).max(degree(
+                comparison.second(),
+                scope,
+                &observer.moving,
+            ));
+            observer.nonlinear |= degree > 1;
+        }
+
         let order = compare(left, right, self.tolerance);
         let holds = match comparison.comparison() {
             BinaryComparison::GreaterThan => order == Ordering::Greater,
@@ -86,6 +98,10 @@ impl Evaluator<'_, '_> {
     ///
     /// [`EvalError::Undefined`] if it has none.
     pub fn fluent(&self, atom: &Atom) -> Result<f64, EvalError> {
+        if let Some(observer) = self.observer {
+            observer.borrow_mut().fluents.insert(atom.clone());
+        }
+
         self.state
             .fluents
             .get(atom)
@@ -93,41 +109,41 @@ impl Evaluator<'_, '_> {
             .ok_or_else(|| EvalError::Undefined(atom.clone()))
     }
 
-    /// Evaluates a metric expression in the final state of a plan of `steps` steps.
-    /// `total-time` is the number of steps, the makespan of a sequential plan whose
-    /// steps take one time unit each.
+    /// Evaluates a metric expression in the final state of a plan whose `total-time` is
+    /// `total_time`: the makespan of a temporal plan, or the number of steps of a
+    /// sequential one, whose steps take one time unit each.
     ///
     /// # Errors
     ///
     /// As [`Self::value`], and [`EvalError::Unsupported`] for `is-violated`.
-    pub fn metric(&self, exp: &MetricFluentExpression, steps: usize) -> Result<f64, EvalError> {
+    pub fn metric(&self, exp: &MetricFluentExpression, total_time: f64) -> Result<f64, EvalError> {
         let value = match exp {
             MetricFluentExpression::Number(number) => **number,
             MetricFluentExpression::Function(symbol, names)
                 if self.model.is_total_time(symbol, names.len()) =>
             {
-                total_time(steps)
+                total_time
             }
             MetricFluentExpression::Function(symbol, names) => {
                 let arguments = names.iter().map(|name| lower(name)).collect();
                 return self.fluent(&Atom::lowered(lower(symbol), arguments));
             }
-            MetricFluentExpression::Negative(inner) => -self.metric(inner, steps)?,
+            MetricFluentExpression::Negative(inner) => -self.metric(inner, total_time)?,
             MetricFluentExpression::BinaryOp(op, left, right) => {
-                let left = self.metric(left, steps)?;
-                let right = self.metric(right, steps)?;
+                let left = self.metric(left, total_time)?;
+                let right = self.metric(right, total_time)?;
                 binary(*op, left, right)
                     .ok_or_else(|| EvalError::DivisionByZero(String::from("metric")))?
             }
             MetricFluentExpression::MultiOp(op, first, rest) => {
-                let mut total = self.metric(first, steps)?;
+                let mut total = self.metric(first, total_time)?;
                 for item in rest {
-                    total = multi(*op, total, self.metric(item, steps)?);
+                    total = multi(*op, total, self.metric(item, total_time)?);
                 }
 
                 total
             }
-            MetricFluentExpression::TotalTime => total_time(steps),
+            MetricFluentExpression::TotalTime => total_time,
             MetricFluentExpression::IsViolated(_) => {
                 return Err(EvalError::Unsupported(Construct::Preferences));
             }
@@ -137,13 +153,33 @@ impl Evaluator<'_, '_> {
     }
 }
 
-/// Returns the `total-time` of a sequential plan of `steps` steps.
-#[expect(
-    clippy::cast_precision_loss,
-    reason = "plans of more than 2^53 steps do not fit in memory"
-)]
-const fn total_time(steps: usize) -> f64 {
-    steps as f64
+/// Returns the polynomial degree of `exp` in time when the fluents in `moving` change
+/// linearly and all others stay constant: 0 for a constant, 1 for linear, and
+/// [`u32::MAX`] for a division by a changing value.
+pub fn degree(exp: &FluentExpression, scope: &Scope, moving: &BTreeSet<Atom>) -> u32 {
+    match exp {
+        FluentExpression::Number(_) => 0,
+        FluentExpression::Function(head) => u32::from(moving.contains(&fluent_atom(head, scope))),
+        FluentExpression::Negative(inner) => degree(inner, scope, moving),
+        FluentExpression::BinaryOp(op, left, right) => {
+            let (left, right) = (degree(left, scope, moving), degree(right, scope, moving));
+            match op {
+                BinaryOp::Addition | BinaryOp::Subtraction => left.max(right),
+                BinaryOp::Multiplication => left.saturating_add(right),
+                BinaryOp::Division if right > 0 => u32::MAX,
+                BinaryOp::Division => left,
+            }
+        }
+        FluentExpression::MultiOp(op, first, rest) => {
+            let degrees = core::iter::once(&**first)
+                .chain(rest)
+                .map(|e| degree(e, scope, moving));
+            match op {
+                MultiOp::Addition => degrees.max().unwrap_or(0),
+                MultiOp::Multiplication => degrees.fold(0, u32::saturating_add),
+            }
+        }
+    }
 }
 
 /// Orders `left` and `right`, treating them as equal within the relative `tolerance`.
@@ -161,7 +197,7 @@ pub fn compare(left: f64, right: f64, tolerance: f64) -> Ordering {
 }
 
 /// Applies a binary operator; `None` for a division by zero.
-fn binary(op: BinaryOp, left: f64, right: f64) -> Option<f64> {
+pub fn binary(op: BinaryOp, left: f64, right: f64) -> Option<f64> {
     match op {
         BinaryOp::Multiplication => Some(left * right),
         BinaryOp::Addition => Some(left + right),
@@ -172,7 +208,7 @@ fn binary(op: BinaryOp, left: f64, right: f64) -> Option<f64> {
 }
 
 /// Applies an n-ary operator to an accumulated value and the next operand.
-fn multi(op: MultiOp, total: f64, next: f64) -> f64 {
+pub fn multi(op: MultiOp, total: f64, next: f64) -> f64 {
     match op {
         MultiOp::Addition => total + next,
         MultiOp::Multiplication => total * next,
@@ -181,7 +217,7 @@ fn multi(op: MultiOp, total: f64, next: f64) -> f64 {
 
 /// Returns `value` if it is finite, and else an [`EvalError::NonFinite`] naming the
 /// expression that `text` renders.
-fn finite(value: f64, text: impl FnOnce() -> String) -> Result<f64, EvalError> {
+pub fn finite(value: f64, text: impl FnOnce() -> String) -> Result<f64, EvalError> {
     if value.is_finite() {
         Ok(value)
     } else {

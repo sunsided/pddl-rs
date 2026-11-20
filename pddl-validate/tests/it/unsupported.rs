@@ -24,41 +24,25 @@ fn problem(extra: &str) -> String {
 }
 
 #[test]
-fn durative_actions() {
+fn derived_predicates_in_temporal_plans() {
+    let rule = "(:derived (q) (p))";
+    assert_unsupported(
+        &domain(rule),
+        &problem(""),
+        "0: (a)",
+        &Construct::DerivedPredicatesInTemporalPlans,
+    );
+}
+
+#[test]
+fn end_conditions_of_start_effects() {
     let action = "(:durative-action go :parameters () :duration (= ?duration 1)
-                    :condition (at start (q)) :effect (at end (p)))";
+                    :condition (at start (q)) :effect (when (at end (q)) (at start (p))))";
     assert_unsupported(
         &domain(action),
         &problem(""),
-        "(a)",
-        &Construct::DurativeActions,
-    );
-}
-
-#[test]
-fn temporal_plans() {
-    assert_unsupported(
-        &domain(""),
-        &problem(""),
-        "0.000: (a) [1.000]",
-        &Construct::TemporalPlans,
-    );
-    assert_unsupported(
-        &domain(""),
-        &problem(""),
-        "(a) [1]",
-        &Construct::TemporalPlans,
-    );
-}
-
-#[test]
-fn timed_initial_literals() {
-    let problem = problem("").replace("(:init)", "(:init (at 10 (q)))");
-    assert_unsupported(
-        &domain(""),
-        &problem,
-        "(a)",
-        &Construct::TimedInitialLiterals,
+        "0: (go) [1]",
+        &Construct::TimedEffectConditions,
     );
 }
 

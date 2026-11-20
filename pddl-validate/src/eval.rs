@@ -11,8 +11,10 @@
 
 pub mod numeric;
 
+use alloc::collections::BTreeSet;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
+use core::cell::RefCell;
 
 use pddl::{
     AtomicFormula, GoalDescription, Literal, PreconditionGoalDescription,
@@ -64,6 +66,23 @@ pub struct Evaluator<'s, 'a> {
     pub state: &'s State,
     /// The relative tolerance of numeric comparisons; see [`numeric`].
     pub tolerance: f64,
+    /// Records what the evaluation reads, for temporal plans; `None` otherwise.
+    pub observer: Option<&'s RefCell<Observer>>,
+}
+
+/// What an evaluation read, for the interference and invariant checks of temporal plans.
+#[derive(Debug, Default)]
+pub struct Observer {
+    /// The ground atoms read.
+    pub atoms: BTreeSet<Atom>,
+    /// The numeric fluents read.
+    pub fluents: BTreeSet<Atom>,
+    /// `left - right` of every comparison, in evaluation order.
+    pub differences: Vec<f64>,
+    /// The fluents that change continuously while the condition is checked.
+    pub moving: BTreeSet<Atom>,
+    /// `true` once a comparison is not linear in the `moving` fluents.
+    pub nonlinear: bool,
 }
 
 impl Evaluator<'_, '_> {
@@ -259,6 +278,10 @@ impl Evaluator<'_, '_> {
             }
             AtomicFormula::Predicate(predicate) => {
                 let atom = ground(predicate, scope);
+                if let Some(observer) = self.observer {
+                    observer.borrow_mut().atoms.insert(atom.clone());
+                }
+
                 let derived = self.model.derived.contains(&atom.symbol);
                 let set = if derived {
                     &self.state.derived

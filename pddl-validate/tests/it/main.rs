@@ -5,6 +5,7 @@ mod model_errors;
 mod mutation;
 mod numeric;
 mod plan_file;
+mod temporal;
 mod unsupported;
 
 use pddl::{Domain, Parser, Problem};

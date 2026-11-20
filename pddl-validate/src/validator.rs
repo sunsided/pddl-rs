@@ -15,6 +15,8 @@
 //!     step -- no --> goal["check the goal"]
 //! ```
 
+mod temporal;
+
 use alloc::format;
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -29,7 +31,7 @@ use crate::eval::{EvalError, Evaluator, Scope};
 use crate::model::check::{self, Issue};
 use crate::model::universe::type_text;
 use crate::model::{self as model, Model};
-use crate::plan::{Plan, PlanErrorKind, PlanStep};
+use crate::plan::{Plan, PlanStep};
 use crate::report::{
     Construct, Metric, Outcome, Report, StepRef, StepTrace, Unsupported, Violation, ViolationKind,
 };
@@ -68,11 +70,16 @@ pub struct Validator<'a> {
     inner: Inner<'a>,
     /// The relative tolerance of numeric comparisons; see [`Validator::with_tolerance`].
     tolerance: f64,
+    /// The least time between interfering events; see [`Validator::with_epsilon`].
+    epsilon: f64,
 }
 
 /// The default relative tolerance of numeric comparisons: wide enough to absorb the
 /// rounding of a few thousand `f64` additions, far below any meaningful difference.
 pub const DEFAULT_TOLERANCE: f64 = 1e-9;
+
+/// The default least time between interfering events of a temporal plan, VAL's default.
+pub const DEFAULT_EPSILON: f64 = 0.01;
 
 /// What [`Validator::new`] found.
 #[derive(Debug)]
@@ -115,8 +122,8 @@ impl From<EvalError> for Stop {
 impl<'a> Validator<'a> {
     /// Checks `domain` and `problem` and prepares the initial state.
     ///
-    /// A task that uses a construct the validator does not interpret yet, such as durative
-    /// actions, still builds a validator, whose every report is
+    /// A task that uses a construct the validator does not interpret yet, such as
+    /// preferences, still builds a validator, whose every report is
     /// [`ValidationStatus::Unsupported`](crate::ValidationStatus::Unsupported).
     ///
     /// # Errors
@@ -153,6 +160,7 @@ impl<'a> Validator<'a> {
                 initial,
             },
             tolerance: DEFAULT_TOLERANCE,
+            epsilon: DEFAULT_EPSILON,
         })
     }
 
@@ -161,6 +169,7 @@ impl<'a> Validator<'a> {
         Self {
             inner: Inner::Unsupported(unsupported),
             tolerance: DEFAULT_TOLERANCE,
+            epsilon: DEFAULT_EPSILON,
         }
     }
 
@@ -195,21 +204,28 @@ impl<'a> Validator<'a> {
         self
     }
 
+    /// Sets the least time between two interfering events of a temporal plan,
+    /// [`DEFAULT_EPSILON`] (VAL's default) unless set.
+    ///
+    /// Two events interfere (PDDL 2.1 mutex) when one changes an atom or fluent the other
+    /// reads or changes, except two `increase`/`decrease` updates of one fluent. Such
+    /// events must be at least `epsilon` apart; at the same time or closer, the plan is
+    /// invalid with [`ViolationKind::Interference`]. A negative or NaN epsilon counts
+    /// as 0, which forbids only simultaneous interference.
+    #[must_use]
+    pub fn with_epsilon(mut self, epsilon: f64) -> Self {
+        self.epsilon = if epsilon > 0.0 { epsilon } else { 0.0 };
+        self
+    }
+
     /// Parses `text` as a plan file and validates it.
     ///
     /// A plan file that cannot be read is [`ValidationStatus::Invalid`](crate::ValidationStatus::Invalid)
-    /// with [`ViolationKind::PlanSyntax`]; one with timestamps is
-    /// [`ValidationStatus::Unsupported`](crate::ValidationStatus::Unsupported), since
-    /// temporal plans are not validated yet.
+    /// with [`ViolationKind::PlanSyntax`].
     #[must_use]
     pub fn validate_text(&self, text: &str) -> Report {
         match text.parse::<Plan>() {
             Ok(plan) => self.validate(&plan),
-            Err(error) if error.kind == PlanErrorKind::Timestamped => {
-                let location = format!("plan line {}", error.line);
-                let unsupported = Unsupported::new(Construct::TemporalPlans, location);
-                Report::new(Outcome::Unsupported(unsupported), Vec::new())
-            }
             Err(error) => {
                 let violation = Violation {
                     step: None,
@@ -238,6 +254,23 @@ impl<'a> Validator<'a> {
         };
 
         let tolerance = self.tolerance;
+        let timed = plan.steps().iter().any(|step| step.time().is_some());
+        if timed || model.is_temporal(problem) {
+            if !model.rules.is_empty() {
+                let construct = Construct::DerivedPredicatesInTemporalPlans;
+                let unsupported = Unsupported::new(construct, "domain");
+                return Report::new(Outcome::Unsupported(unsupported), Vec::new());
+            }
+
+            let timeline = temporal::Timeline {
+                model,
+                problem,
+                tolerance,
+                epsilon: self.epsilon,
+            };
+            return timeline.run(initial, plan);
+        }
+
         let mut state = initial.clone();
         let mut trace = Vec::new();
         if let Err(error) = derived::close(model, &mut state, tolerance) {
@@ -245,11 +278,7 @@ impl<'a> Validator<'a> {
         }
 
         for (index, step) in plan.steps().iter().enumerate() {
-            let at = StepRef {
-                number: index + 1,
-                line: step.line(),
-                action: alloc::string::ToString::to_string(step),
-            };
+            let at = step_ref(index, step);
             match run_step(model, &mut state, step, tolerance) {
                 Ok(mut changes) => {
                     changes.step = Some(at);
@@ -262,31 +291,59 @@ impl<'a> Validator<'a> {
             }
         }
 
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "plans of more than 2^53 steps do not fit in memory"
+        )]
+        let total_time = plan.len() as f64;
         let evaluator = Evaluator {
             model,
             state: &state,
             tolerance,
-        };
-        match evaluator.preconditions(problem.goals(), &mut Scope::new()) {
-            Ok(None) => {}
-            Ok(Some(unmet)) => {
-                let kind = ViolationKind::GoalUnsatisfied(unmet);
-                return stopped(Stop::Invalid(kind), None, String::from("goal"), trace);
-            }
-            Err(error) => return stopped(Stop::from(error), None, String::from("goal"), trace),
-        }
-
-        let Some(spec) = problem.metric_spec() else {
-            return Report::new(Outcome::Valid, trace);
+            observer: None,
         };
 
-        match evaluator.metric(spec.expression(), plan.len()) {
-            Ok(value) => Report::new(Outcome::Valid, trace).with_metric(Metric {
-                optimization: spec.optimization(),
-                value,
-            }),
-            Err(error) => stopped(Stop::from(error), None, String::from("metric"), trace),
+        finish(&evaluator, problem, total_time, trace)
+    }
+}
+
+/// Checks the goal in the final state and evaluates the metric, with `total-time` set
+/// to `total_time`.
+fn finish(
+    evaluator: &Evaluator<'_, '_>,
+    problem: &Problem,
+    total_time: f64,
+    trace: Vec<StepTrace>,
+) -> Report {
+    match evaluator.preconditions(problem.goals(), &mut Scope::new()) {
+        Ok(None) => {}
+        Ok(Some(unmet)) => {
+            let kind = ViolationKind::GoalUnsatisfied(unmet);
+            return stopped(Stop::Invalid(kind), None, String::from("goal"), trace);
         }
+        Err(error) => return stopped(Stop::from(error), None, String::from("goal"), trace),
+    }
+
+    let Some(spec) = problem.metric_spec() else {
+        return Report::new(Outcome::Valid, trace);
+    };
+
+    match evaluator.metric(spec.expression(), total_time) {
+        Ok(value) => Report::new(Outcome::Valid, trace).with_metric(Metric {
+            optimization: spec.optimization(),
+            value,
+        }),
+        Err(error) => stopped(Stop::from(error), None, String::from("metric"), trace),
+    }
+}
+
+/// Names step `index` (from 0) for diagnostics.
+fn step_ref(index: usize, step: &PlanStep) -> StepRef {
+    StepRef {
+        number: index + 1,
+        line: step.line(),
+        action: alloc::string::ToString::to_string(step),
+        time: step.time(),
     }
 }
 
@@ -309,10 +366,15 @@ fn run_step(
     tolerance: f64,
 ) -> Result<StepTrace, Stop> {
     let (action, mut scope) = bind(model, step)?;
+    if step.duration().is_some() {
+        return Err(Stop::Invalid(ViolationKind::UnexpectedDuration));
+    }
+
     let evaluator = Evaluator {
         model,
         state: &*state,
         tolerance,
+        observer: None,
     };
     if let Some(unmet) = evaluator.preconditions(action.precondition(), &mut scope)? {
         return Err(Stop::Invalid(ViolationKind::PreconditionUnsatisfied(unmet)));
@@ -334,12 +396,21 @@ fn bind<'m>(
     model: &'m Model<'_>,
     step: &PlanStep,
 ) -> Result<(&'m pddl::ActionDefinition, Scope), Stop> {
-    let invalid = |kind| Err(Stop::Invalid(kind));
     let Some(action) = model.actions.get(step.action()) else {
-        return invalid(ViolationKind::UnknownAction(String::from(step.action())));
+        let kind = ViolationKind::UnknownAction(String::from(step.action()));
+        return Err(Stop::Invalid(kind));
     };
 
-    let parameters = action.parameters();
+    Ok((action, bind_parameters(model, action.parameters(), step)?))
+}
+
+/// Binds `parameters` to the objects of `step`, checking arity, objects and types.
+fn bind_parameters(
+    model: &Model<'_>,
+    parameters: &pddl::TypedVariables,
+    step: &PlanStep,
+) -> Result<Scope, Stop> {
+    let invalid = |kind| Err(Stop::Invalid(kind));
     if parameters.len() != step.arguments().len() {
         return invalid(ViolationKind::Arity {
             expected: parameters.len(),
@@ -368,7 +439,7 @@ fn bind<'m>(
         scope.push((name, object.clone()));
     }
 
-    Ok((action, scope))
+    Ok(scope)
 }
 
 /// Builds the initial state from the problem's `:init`.

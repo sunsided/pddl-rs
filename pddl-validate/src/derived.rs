@@ -165,6 +165,7 @@ fn round(
         model,
         state,
         tolerance,
+        observer: None,
     };
     let mut new = BTreeSet::new();
     for rule in rules {

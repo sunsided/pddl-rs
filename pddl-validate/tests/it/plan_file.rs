@@ -46,8 +46,50 @@ fn reports_malformed_plans_with_positions() {
         error("(a)\r\nstep"),
         (PlanErrorKind::UnexpectedText("step".into()), 2, 1)
     );
-    assert_eq!(error("1: (a)"), (PlanErrorKind::Timestamped, 1, 1));
-    assert_eq!(error("(a) [2]"), (PlanErrorKind::Timestamped, 1, 5));
+    assert_eq!(error("1:"), (PlanErrorKind::DanglingTimestamp, 1, 3));
+    assert_eq!(error("1: ;\n)"), (PlanErrorKind::DanglingTimestamp, 1, 3));
+    assert_eq!(error("(a) [2"), (PlanErrorKind::MalformedDuration, 1, 5));
+    assert_eq!(error("(a) [2 3]"), (PlanErrorKind::MalformedDuration, 1, 5));
+    assert_eq!(
+        error("(a) []"),
+        (PlanErrorKind::InvalidNumber(String::new()), 1, 6)
+    );
+    assert_eq!(
+        error("x1: (a)"),
+        (PlanErrorKind::InvalidNumber("x1".into()), 1, 1)
+    );
+    assert_eq!(
+        error("inf: (a)"),
+        (PlanErrorKind::InvalidNumber("inf".into()), 1, 1)
+    );
+    assert_eq!(
+        error("(a [1])"),
+        (PlanErrorKind::UnexpectedText("[".into()), 1, 4)
+    );
+    assert_eq!(
+        error("]"),
+        (PlanErrorKind::UnexpectedText("]".into()), 1, 1)
+    );
+}
+
+#[test]
+fn reads_temporal_plans() {
+    let text = "0.000: (load p1 t1 depot) [2.000]\n2.5:(drive t1 depot shop)[ 1e1 ]\n13: (unload p1 t1 shop)";
+    let plan: Plan = text.parse().unwrap();
+    let timing: Vec<(Option<f64>, Option<f64>)> = plan
+        .steps()
+        .iter()
+        .map(|step| (step.time(), step.duration()))
+        .collect();
+    assert_eq!(
+        timing,
+        [
+            (Some(0.0), Some(2.0)),
+            (Some(2.5), Some(10.0)),
+            (Some(13.0), None)
+        ]
+    );
+    assert_eq!(plan.steps()[1].to_string(), "(drive t1 depot shop)");
 }
 
 #[test]

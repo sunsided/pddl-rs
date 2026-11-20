@@ -46,10 +46,18 @@
 //!   `increase`, `decrease`, `scale-up`, `scale-down`), action costs and the problem's
 //!   `:metric`, which [`Report::metric`] returns for a valid plan.
 //!
+//! - **Temporal plans** (level 3): durative actions with `at start`, `over all` and
+//!   `at end` conditions and effects, timestamped plans (`t: (action args) [d]`),
+//!   duration constraints and inequalities, conditional effects with `at start` or
+//!   `at end` conditions, linear continuous effects (`#t`), timed initial literals, the
+//!   epsilon separation of interfering events ([`Validator::with_epsilon`]) and
+//!   `total-time` as the makespan.
+//!
 //! Every construct outside this scope makes the report
-//! [`ValidationStatus::Unsupported`], never valid: durative actions and temporal plans
-//! (level 3), processes and events (level 4), timed initial literals, preferences,
-//! constraints and object fluents.
+//! [`ValidationStatus::Unsupported`], never valid: processes and events (level 4; the
+//! `pddl` parser does not read them yet), continuous change whose rate depends on a
+//! changing fluent and invariants that are not linear in time, derived predicates in
+//! temporal plans, preferences, constraints and object fluents.
 //!
 //! ## Semantics
 //!
@@ -66,7 +74,12 @@
 //!   nullary `total-cost` without an initial value starts at 0.
 //! - Updates of one fluent in one step combine if all are `increase` or `decrease`;
 //!   any other combination is a [`ViolationKind::ConflictingUpdates`].
-//! - In a metric, `total-time` is the number of steps.
+//! - In a metric, `total-time` is the number of steps of a sequential plan and the
+//!   makespan of a temporal one.
+//! - Temporal plans follow PDDL 2.1 and VAL. Events at one time form a happening whose
+//!   conditions are checked in the state before it and whose effects apply at once.
+//!   `over all` conditions must hold strictly between an action's start and end, and
+//!   interfering events must be at least epsilon apart.
 //! - Validation stops at the first violation. Steps count from 1, as in VAL.
 //!
 //! The crate is `no_std` with `alloc`. That is nominal for now: the `pddl` crate it reads
@@ -103,7 +116,7 @@ pub use report::{
     Construct, FluentChange, Metric, Outcome, Report, StepRef, StepTrace, Unmet, Unsupported,
     Violation, ViolationKind, MAX_ALTERNATIVES,
 };
-pub use validator::{Validator, DEFAULT_TOLERANCE};
+pub use validator::{Validator, DEFAULT_EPSILON, DEFAULT_TOLERANCE};
 
 /// The overall result of validating a plan.
 ///

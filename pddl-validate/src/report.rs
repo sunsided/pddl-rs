@@ -151,6 +151,31 @@ impl Violation {
                 step.number,
                 unmet.advice()
             ),
+            (ViolationKind::StartConditionUnsatisfied(unmet), Some(step)) => format!(
+                "{} has an unsatisfied condition at start at step {}: {}",
+                step.action,
+                step.number,
+                unmet.advice()
+            ),
+            (ViolationKind::EndConditionUnsatisfied(unmet), Some(step)) => format!(
+                "{} has an unsatisfied condition at end at step {}: {}",
+                step.action,
+                step.number,
+                unmet.advice()
+            ),
+            (ViolationKind::InvariantViolated { time, unmet }, Some(step)) => format!(
+                "{} has an unsatisfied invariant at time {time} (step {}): {}",
+                step.action,
+                step.number,
+                unmet.advice()
+            ),
+            (ViolationKind::DurationConstraint(unmet), Some(step)) => {
+                format!("Choose a duration for {} that satisfies {unmet}", at(step))
+            }
+            (ViolationKind::Interference { other, .. }, Some(step)) => format!(
+                "Move {} at least epsilon away from {other}, or reorder them",
+                at(step)
+            ),
             (ViolationKind::GoalUnsatisfied(unmet), _) => {
                 format!("The goal is not satisfied: {}", unmet.advice())
             }
@@ -195,7 +220,7 @@ impl fmt::Display for Violation {
 }
 
 /// A step of the plan, as diagnostics name it.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 #[non_exhaustive]
 pub struct StepRef {
     /// The 1-based position of the step in the plan, as VAL counts.
@@ -204,6 +229,8 @@ pub struct StepRef {
     pub line: usize,
     /// The step as written, in lowercase, such as `(drive t1 home shop)`.
     pub action: String,
+    /// The start time of the step in a temporal plan; `None` in a sequential one.
+    pub time: Option<f64>,
 }
 
 /// The kinds of [`Violation`]. All names are in ASCII lowercase.
@@ -250,6 +277,42 @@ pub enum ViolationKind {
     /// The step updates the fluent with `assign`, `scale-up` or `scale-down` together
     /// with another update, so the result would depend on their order.
     ConflictingUpdates(Atom),
+    /// A timestamped plan has a step without a timestamp.
+    MissingTimestamp,
+    /// A durative action has no `[duration]`.
+    MissingDuration,
+    /// An instantaneous action has a `[duration]`.
+    UnexpectedDuration,
+    /// The duration is not positive.
+    NonPositiveDuration(f64),
+    /// The duration violates the action's `:duration` constraint; `left` is the duration.
+    DurationConstraint(Unmet),
+    /// An `at start` condition does not hold when the action starts.
+    StartConditionUnsatisfied(Unmet),
+    /// An `at end` condition does not hold when the action ends.
+    EndConditionUnsatisfied(Unmet),
+    /// An `over all` condition fails at `time`, strictly between the action's start and
+    /// end.
+    InvariantViolated {
+        /// A time at which the condition fails.
+        time: f64,
+        /// What fails then.
+        unmet: Unmet,
+    },
+    /// The event interferes with another one at the same time or less than the
+    /// separation `epsilon` apart (PDDL 2.1 mutex): one changes what the other reads or
+    /// changes.
+    Interference {
+        /// What this step does then: `start`, `end` or `apply`.
+        event: String,
+        /// The other event, such as `end of (drive t1 a b) (step 2)` or
+        /// `timed literal (open shop)`.
+        other: String,
+        /// The time of this event.
+        time: f64,
+        /// The time between the two events, smaller than `epsilon`.
+        separation: f64,
+    },
 }
 
 impl fmt::Display for ViolationKind {
@@ -281,6 +344,33 @@ impl fmt::Display for ViolationKind {
             Self::ConflictingUpdates(fluent) => {
                 write!(f, "{fluent} is updated twice in incompatible ways")
             }
+            Self::MissingTimestamp => f.write_str("the plan is timed but this step has no time"),
+            Self::MissingDuration => f.write_str("a durative action needs a [duration]"),
+            Self::UnexpectedDuration => {
+                f.write_str("an instantaneous action cannot have a [duration]")
+            }
+            Self::NonPositiveDuration(d) => write!(f, "the duration {d} is not positive"),
+            Self::DurationConstraint(unmet) => {
+                write!(f, "the duration violates {unmet}")
+            }
+            Self::StartConditionUnsatisfied(unmet) => {
+                write!(f, "unsatisfied condition at start: {unmet}")
+            }
+            Self::EndConditionUnsatisfied(unmet) => {
+                write!(f, "unsatisfied condition at end: {unmet}")
+            }
+            Self::InvariantViolated { time, unmet } => {
+                write!(f, "invariant violated at time {time}: {unmet}")
+            }
+            Self::Interference {
+                event,
+                other,
+                time,
+                separation,
+            } => write!(
+                f,
+                "{event} at time {time} interferes with {other} {separation} apart"
+            ),
         }
     }
 }
@@ -409,8 +499,13 @@ impl fmt::Display for Unmet {
 #[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub struct StepTrace {
-    /// The step.
+    /// The step, in a sequential plan.
     pub step: Option<StepRef>,
+    /// The time of the happening, in a temporal plan.
+    pub time: Option<f64>,
+    /// The events of the happening, in a temporal plan, such as `start (drive t1 a b)`,
+    /// in plan order.
+    pub events: Vec<String>,
     /// Atoms that were false and are true after the step, sorted.
     pub added: Vec<Atom>,
     /// Atoms that were true and are false after the step, sorted.
@@ -477,12 +572,17 @@ pub enum Construct {
     DomainExtension,
     /// PDDL 1.2 `:timeless` facts.
     Timeless,
-    /// Durative actions in the domain (level 3).
-    DurativeActions,
-    /// Timestamps or durations in the plan (level 3).
-    TemporalPlans,
-    /// Timed initial literals (level 3).
-    TimedInitialLiterals,
+    /// Continuous change whose rate depends on a continuously changing fluent, or an
+    /// `over all` condition that is not linear in time (level 4 dynamics).
+    NonlinearDynamics,
+    /// Derived predicates in a temporal plan, whose interference this validator does not
+    /// decide.
+    DerivedPredicatesInTemporalPlans,
+    /// A conditional effect of a durative action with an `over all` condition, or with an
+    /// `at end` condition on an `at start` effect.
+    TimedEffectConditions,
+    /// An assignment nested inside a numeric expression of a durative action.
+    NestedAssignments,
     /// State-trajectory constraints.
     Constraints,
     /// Preferences, and `is-violated` in a metric.
@@ -502,9 +602,14 @@ impl fmt::Display for Construct {
             Self::UnknownRequirement(name) => write!(f, "requirements like `{name}`"),
             Self::DomainExtension => f.write_str("domain extensions"),
             Self::Timeless => f.write_str("timeless facts"),
-            Self::DurativeActions => f.write_str("durative actions"),
-            Self::TemporalPlans => f.write_str("temporal plans"),
-            Self::TimedInitialLiterals => f.write_str("timed initial literals"),
+            Self::NonlinearDynamics => f.write_str("nonlinear continuous dynamics"),
+            Self::DerivedPredicatesInTemporalPlans => {
+                f.write_str("derived predicates in temporal plans")
+            }
+            Self::TimedEffectConditions => {
+                f.write_str("these timed conditions of conditional effects")
+            }
+            Self::NestedAssignments => f.write_str("nested assignments"),
             Self::Constraints => f.write_str("constraints"),
             Self::Preferences => f.write_str("preferences"),
             Self::ObjectFluents => f.write_str("object fluents"),

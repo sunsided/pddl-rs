@@ -36,11 +36,13 @@ assert_eq!(
 | --- | --- | --- |
 | 1. Classical | STRIPS, typing, negative and disjunctive preconditions, equality, `exists`, `forall`, `imply`, conditional effects, derived predicates | Supported |
 | 2. Numeric | numeric fluents, `assign`, `increase`, `decrease`, `scale-up`, `scale-down`, action costs, metrics | Supported |
-| 3. Temporal | durative actions, timestamped plans, timed initial literals | Out of scope for now |
-| 4. PDDL+ | processes, events, continuous effects | Out of scope for now |
+| 3. Temporal | durative actions, timestamped plans, duration inequalities, linear continuous effects, timed initial literals, epsilon separation, makespan | Supported |
+| 4. PDDL+ | processes, events | Not yet: the `pddl` parser does not read them |
 
 A plan that uses a construct outside the supported levels is reported as
-`Unsupported`, never as valid. So are preferences, constraints, object fluents,
+`Unsupported`, never as valid. So are continuous change whose rate reads a
+changing fluent, `over all` conditions that are not linear in time, derived
+predicates in temporal plans, preferences, constraints, object fluents,
 PDDL 1.2 `:extends` and `:timeless`, requirement flags the parser does not know,
 and derived predicates that depend on their own negation.
 
@@ -57,6 +59,23 @@ Fast Downward. Updates of one fluent in one step add up when all are
 `total-time` is the number of steps. `Report::metric` returns the metric's
 value for a valid plan.
 
+## Temporal plans
+
+A temporal plan times every step and gives each durative action its duration,
+as VAL reads it: `0.000: (drive r1 base hill) [2.000]`. A durative action
+splits into a start and an end event; events at the same time form a
+happening. In each happening, every `at start` and `at end` condition,
+duration constraint and precondition is checked in the state before it, and
+then all effects apply at once. Between happenings, continuous effects change
+fluents linearly, and the `over all` conditions of the running actions must hold
+on the whole open interval: the validator checks them at every root of their
+comparisons and between them, which is exact for linear change. Two events that
+interfere (one changes what the other reads or changes) must be at least
+epsilon apart, 0.01 by default as in VAL (`Validator::with_epsilon`); an
+action's own start and end never interfere. Timed initial literals are events
+too. An untimed plan for a temporal domain runs at times 1, 2, 3, and so on;
+`total-time` is the makespan.
+
 ## Diagnostics
 
 Validation stops at the first violation, as VAL's does. The `Violation` names:
@@ -64,7 +83,10 @@ Validation stops at the first violation, as VAL's does. The `Violation` names:
 - the step, numbered from 1 as VAL counts, with its line in the plan file;
 - what fails: an unknown action or object, a wrong number of arguments, an
   object of the wrong type, an unsatisfied precondition or an unmet goal, an
-  undefined fluent, a division by zero, an overflow, or conflicting updates;
+  undefined fluent, a division by zero, an overflow, conflicting updates, a
+  missing timestamp or duration, a duration constraint, an `at start` or
+  `at end` condition, an `over all` condition with the time it fails, or
+  interference with another event;
 - for a condition, the most specific part to blame (`Unmet`): the first failing
   conjunct or `forall` instance, every alternative of an `or` or `exists`, or a
   comparison with the values of both sides;

@@ -23,5 +23,12 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `:metric` (`Report::metric`). Comparisons allow a relative tolerance
   (`Validator::with_tolerance`). Undefined fluents, division by zero,
   overflow and conflicting updates of one fluent make a plan invalid.
+- Temporal plans: durative actions with `at start`, `over all` and `at end`
+  conditions and effects, duration constraints and inequalities, conditional
+  effects on `at start` or `at end` conditions, linear continuous effects,
+  timed initial literals, PDDL 2.1 interference with an epsilon separation
+  (`Validator::with_epsilon`, 0.01 by default) and `total-time` as the
+  makespan. `Plan` reads `t: (action args) [d]` steps. Nonlinear dynamics and
+  derived predicates in temporal plans are `Unsupported`.
 - `Plan`, which reads plan files as planners write them: one `(action args)`
   per step, `;` comments and cost lines, CRLF line ends and a byte order mark.
