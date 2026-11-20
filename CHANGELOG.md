@@ -24,8 +24,9 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - The parser reads PDDL+ `(:process ...)` and `(:event ...)` sections into the
   new `StructureDef::Process` (a `ProcessDefinition`, whose effect is read like
-  a durative action's so `#t` survives, and which rejects timed `at` effects:
-  a process has only continuous effects) and `StructureDef::Event` (an
+  a durative action's so `#t` survives, and which rejects timed `at` effects
+  and `when`, whose condition would be timed: a process has only continuous
+  effects) and `StructureDef::Event` (an
   `ActionDefinition`). They pretty-print and round-trip through `serde`, as a
   domain's `processes` and `events`, and the NOVA schema has them. The
   `sas-plus` grounder and code generation reject them as unsupported.

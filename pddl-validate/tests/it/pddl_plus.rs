@@ -195,23 +195,18 @@ fn process_domain(effect: &str) -> String {
 
 #[test]
 fn discrete_process_effects_are_never_accepted() {
-    // The parser rejects a timed effect in a process.
-    let error = pddl::Domain::from_str(&process_domain("(at start (q))")).unwrap_err();
-    assert!(
-        error.to_string().contains("only continuous effects"),
-        "{error}"
-    );
-
-    // A conditional continuous effect parses, but the validator does not support it.
-    let effect = "(when (at start (q)) (increase (x) (* #t 1)))";
-    let task = Task::new(
-        &process_domain(effect),
-        "(define (problem x) (:domain d) (:init (= (x) 0)) (:goal (q)))",
-    );
-    assert_eq!(
-        task.run("1: (wait)").unsupported().unwrap().construct,
-        Construct::DiscreteProcessEffects
-    );
+    // The parser rejects a timed effect in a process, and a `when`, whose condition
+    // would be timed, even around a continuous effect.
+    for effect in [
+        "(at start (q))",
+        "(when (at start (q)) (increase (x) (* #t 1)))",
+    ] {
+        let error = pddl::Domain::from_str(&process_domain(effect)).unwrap_err();
+        assert!(
+            error.to_string().contains("only continuous effects"),
+            "{effect}: {error}"
+        );
+    }
 }
 
 #[test]

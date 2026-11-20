@@ -24,7 +24,7 @@ pub(crate) fn parse_event_def(node: &Node) -> R<ActionDefinition> {
 /// [:precondition <pre-GD>] [:effect <da-effect>])`. The effect is read like a durative
 /// action's, so its continuous effects keep `#t`, but it may contain only continuous effects
 /// such as `(increase (height) (* #t (velocity)))`: a timed `(at <time-specifier> ...)`
-/// effect is an error.
+/// effect is an error, and so is `when`, whose condition a `<da-effect>` reads as timed.
 pub(crate) fn parse_process_def(node: &Node) -> R<ProcessDefinition> {
     prefix(node, ":process", |args| {
         let symbol = parse_action_symbol(args.next()?)?;
@@ -41,21 +41,23 @@ pub(crate) fn parse_process_def(node: &Node) -> R<ProcessDefinition> {
     })
 }
 
-/// Parses a process's effect: a `<da-effect>` whose timed effects are all continuous.
+/// Parses a process's effect: a `<da-effect>` made of continuous effects only.
 fn parse_process_effect(node: &Node) -> R<DurativeActionEffect> {
     let effect = parse_da_effect(node)?;
     reject_timed_effects(node)?;
     Ok(effect)
 }
 
-/// Fails at the first `(at <time-specifier> ...)` effect in the parsed `<da-effect>` `node`,
-/// looking through `and`, `forall` and `when`; what remains are continuous effects.
+/// Fails at the first `(at <time-specifier> ...)` or `(when ...)` effect in the parsed
+/// `<da-effect>` `node`, looking through `and` and `forall`; what remains are continuous
+/// effects. A `when` fails as a whole: in a `<da-effect>` its condition is a timed
+/// `<da-GD>`, and a process has no start or end for it to refer to.
 fn reject_timed_effects(node: &Node) -> R<()> {
     let children = node.children().unwrap_or_default();
     let effects = match node.head().map(str::to_ascii_lowercase).as_deref() {
         Some("and") => children.get(1..),
-        Some("forall" | "when") => children.get(2..),
-        Some("at") => {
+        Some("forall") => children.get(2..),
+        Some("at" | "when") => {
             let reason = "a process allows only continuous effects";
             return Err(node.error().reason(reason).fatal());
         }
@@ -210,7 +212,6 @@ mod tests {
             "(:process fall :parameters (?b) :effect (at end (p)))",
             "(:process fall :parameters (?b) :effect (and (increase (h) (* #t 1)) (at start (p))))",
             "(:process fall :parameters (?b) :effect (forall (?x) (at end (increase (h) 1))))",
-            "(:process fall :parameters (?b) :effect (when (at start (q)) (at end (p))))",
         ];
         for input in cases {
             let error = ProcessDefinition::from_str(input).unwrap_err();
@@ -221,8 +222,26 @@ mod tests {
             check!(input[error.offset()..].starts_with("(at "), "{input}");
         }
 
+        // A `when` condition would be timed, so `when` fails as a whole, also around a
+        // continuous effect.
+        let conditional = [
+            "(:process fall :parameters (?b) :effect (when (at start (q)) (at end (p))))",
+            "(:process fall :parameters (?b)
+                :effect (forall (?x) (when (at start (q)) (decrease (h ?x) (* #t 2)))))",
+            "(:process fall :parameters (?b)
+                :effect (and (increase (h) (* #t 1)) (when (over all (q)) (increase (h) (* #t 2)))))",
+        ];
+        for input in conditional {
+            let error = ProcessDefinition::from_str(input).unwrap_err();
+            check!(
+                error.reason() == Some("a process allows only continuous effects"),
+                "{input}"
+            );
+            check!(input[error.offset()..].starts_with("(when "), "{input}");
+        }
+
         let continuous = "(:process fall :parameters (?b)
-            :effect (forall (?x) (when (at start (q)) (decrease (h ?x) (* #t 2)))))";
+            :effect (forall (?x) (and (decrease (h ?x) (* #t 2)) (increase (t) #t))))";
         check!(ProcessDefinition::from_str(continuous).is_ok());
     }
 }
