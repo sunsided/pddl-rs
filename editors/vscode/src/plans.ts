@@ -74,7 +74,7 @@ export function planDefinitions(context: vscode.ExtensionContext): vscode.Defini
       const name = step?.slice(1, -1).split(" ")[0];
       const word = document.getWordRangeAtPosition(position, /[^\s()]+/);
       // An unsaved plan (such as one from Planning-as-a-Service) has no folder to find its problem in.
-      if (!name || !word || document.getText(word).toLowerCase() !== name || document.uri.scheme !== "file") {
+      if (!name || !word || document.getText(word).toLowerCase() !== name || document.isUntitled) {
         return undefined;
       }
       const problem = await problemFor(context, document.uri, false);

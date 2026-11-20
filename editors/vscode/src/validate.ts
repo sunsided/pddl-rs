@@ -39,7 +39,8 @@ export async function validatePlan(
     return undefined;
   }
   const plan = editor.document;
-  if (plan.uri.scheme !== "file") {
+  // Only an unsaved plan has no file; remote and virtual workspaces have other schemes.
+  if (plan.isUntitled) {
     vscode.window.showErrorMessage("Save this plan to a file next to its problem, then validate it.");
     return undefined;
   }
