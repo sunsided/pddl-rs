@@ -1,4 +1,4 @@
-//! Actions, derived predicates and effects.
+//! Actions, derived predicates, effects, and PDDL+ processes and events.
 
 use crate::serde::expressions::operation;
 use crate::serde::{
@@ -7,7 +7,7 @@ use crate::serde::{
 };
 use crate::{
     ActionDefinition, ActionSymbol, ConditionalEffect, DerivedPredicate, EffectCondition, Effects,
-    ForallConditionalEffect, PrimitiveEffect, WhenConditionalEffect,
+    ForallConditionalEffect, PrimitiveEffect, ProcessDefinition, WhenConditionalEffect,
 };
 use ::serde::ser::SerializeMap;
 use ::serde::{Serialize, Serializer};
@@ -99,19 +99,64 @@ impl Serialize for ActionBody<'_> {
     }
 }
 
+impl Serialize for ProcessDefinition {
+    /// `{"name": {"parameters": ..., "precondition": ..., "effect": ...}}`, an entry
+    /// of a domain's `processes`.
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        Keyed(self.symbol(), &ProcessBody(self)).serialize(serializer)
+    }
+}
+
+/// A process without its name, as the value in a domain's `processes`.
+pub(crate) struct ProcessBody<'a>(pub &'a ProcessDefinition);
+
+impl Serialize for ProcessBody<'_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let process = self.0;
+        let mut map = serializer.serialize_map(None)?;
+        if !process.parameters().is_empty() {
+            map.serialize_entry("parameters", process.parameters())?;
+        }
+        if !process.precondition().is_empty() {
+            map.serialize_entry("precondition", process.precondition())?;
+        }
+        if let Some(effect) = process.effect() {
+            map.serialize_entry("effect", effect)?;
+        }
+        map.end()
+    }
+}
+
 /// Writes `(:action name ...)` from an action's name and body.
 pub(crate) fn action(out: &mut String, name: &str, body: &Value) -> Result<(), String> {
+    action_like(out, "action", name, body)
+}
+
+/// Writes `(:event name ...)` from an event's name and body, which an action's has.
+pub(crate) fn event(out: &mut String, name: &str, body: &Value) -> Result<(), String> {
+    action_like(out, "event", name, body)
+}
+
+/// Writes `(:process name ...)` from a process's name and body, which an action's has.
+pub(crate) fn process(out: &mut String, name: &str, body: &Value) -> Result<(), String> {
+    action_like(out, "process", name, body)
+}
+
+/// Writes `(:<kind> name ...)` for an action, event or process.
+fn action_like(out: &mut String, kind: &str, name: &str, body: &Value) -> Result<(), String> {
     let (mut parameters, mut precondition, mut effect) = (None, None, None);
     for (key, value) in as_map(body)? {
         let slot = match key.as_str() {
             "parameters" => &mut parameters,
             "precondition" => &mut precondition,
             "effect" => &mut effect,
-            _ => return Err(format!("unknown key `{key}` in action `{name}`")),
+            _ => return Err(format!("unknown key `{key}` in {kind} `{name}`")),
         };
         *slot = Some(value);
     }
-    out.push_str("(:action ");
+    out.push_str("(:");
+    out.push_str(kind);
+    out.push(' ');
     atom(out, name)?;
     out.push_str(" :parameters (");
     if let Some(parameters) = parameters {
@@ -187,4 +232,8 @@ deserialize_from_pddl!(
         action(out, name, body)
     },
     DerivedPredicate => derived,
+    ProcessDefinition => |out, value| {
+        let (name, body) = single_entry(value)?;
+        process(out, name, body)
+    },
 );

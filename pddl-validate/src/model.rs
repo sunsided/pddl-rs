@@ -94,6 +94,8 @@ impl<'a> Model<'a> {
                         return Err(ModelError::new("domain", kind));
                     }
                 }
+                // `unsupported_sections` reports these before a model is built.
+                StructureDef::Process(_) | StructureDef::Event(_) => {}
                 StructureDef::Derived(rule) => {
                     let head: &pddl::AtomicFormulaSkeleton = rule.as_ref();
                     let predicate = lower(head.name());
@@ -179,8 +181,13 @@ pub fn unsupported_sections(domain: &Domain, problem: &Problem) -> Option<Unsupp
         (!domain.constraints().is_empty(), Construct::Constraints),
         (!problem.constraints().is_empty(), Construct::Constraints),
     ];
+    let pddl_plus = domain
+        .structure()
+        .iter()
+        .any(|def| matches!(def, StructureDef::Process(_) | StructureDef::Event(_)));
     found
         .into_iter()
+        .chain([(pddl_plus, Construct::ProcessesAndEvents)])
         .find(|(present, _)| *present)
         .map(|(_, construct)| Unsupported::new(construct, "domain or problem"))
 }

@@ -10,7 +10,8 @@ use pddl::{
 };
 
 fn round_trip_domain(input: &str, width: usize, label: &str) {
-    let original = Domain::from_str(input).unwrap_or_else(|_| panic!("{label}: parse original"));
+    let original =
+        Domain::from_str(input).unwrap_or_else(|e| panic!("{label}: parse original: {e:?}"));
     let printed = original.pretty(width).to_string();
     let reparsed =
         Domain::from_str(&printed).unwrap_or_else(|e| panic!("{label}: parse printed output at width {width}\n--- Printed ---\n{printed}\n--- Error ---\n{e:?}"));
@@ -101,6 +102,27 @@ fn conditional_effects_domain_round_trip() {
 fn durative_actions_domain_round_trip() {
     for width in [40, 80, 200] {
         round_trip_domain(DURATIVE_ACTIONS_DOMAIN, width, "durative-domain");
+    }
+}
+
+/// A PDDL+ domain with a process and an event.
+const PDDL_PLUS_DOMAIN: &str = "(define (domain ball)
+  (:requirements :typing :time)
+  (:types ball)
+  (:predicates (falling ?b - ball) (held ?b - ball))
+  (:functions (height ?b - ball) (velocity ?b - ball))
+  (:action drop :parameters (?b - ball) :precondition (held ?b)
+    :effect (and (not (held ?b)) (falling ?b)))
+  (:process fall :parameters (?b - ball) :precondition (falling ?b)
+    :effect (and (increase (height ?b) (* #t (velocity ?b))) (decrease (velocity ?b) (* #t 9.8))))
+  (:process rest :parameters ())
+  (:event land :parameters (?b - ball) :precondition (and (falling ?b) (<= (height ?b) 0))
+    :effect (not (falling ?b))))";
+
+#[test]
+fn pddl_plus_domain_round_trip() {
+    for width in [40, 80, 200] {
+        round_trip_domain(PDDL_PLUS_DOMAIN, width, "pddl-plus-domain");
     }
 }
 

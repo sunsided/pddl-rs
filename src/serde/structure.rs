@@ -1,6 +1,6 @@
 //! Domains, problems and their sections.
 
-use crate::serde::actions::{action, derived, ActionBody};
+use crate::serde::actions::{action, derived, event, process, ActionBody, ProcessBody};
 use crate::serde::durative::{durative_action, DurativeActionBody};
 use crate::serde::{
     as_map, as_seq, as_str, atom, deserialize_from_pddl, deserialize_from_pddl_or_default, formula,
@@ -237,7 +237,8 @@ fn formula_section(out: &mut String, keyword: &str, value: &Value) -> Result<(),
 }
 
 impl Serialize for StructureDef {
-    /// `{"action": {...}}`, `{"durative-action": {...}}` or `{"derived": {...}}`.
+    /// `{"action": {...}}`, `{"durative-action": {...}}`, `{"derived": {...}}`,
+    /// `{"process": {...}}` or `{"event": {...}}`.
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         match self {
             StructureDef::Action(def) => Keyed("action", def).serialize(serializer),
@@ -245,6 +246,8 @@ impl Serialize for StructureDef {
                 Keyed("durative-action", def).serialize(serializer)
             }
             StructureDef::Derived(def) => Keyed("derived", def).serialize(serializer),
+            StructureDef::Process(def) => Keyed("process", def).serialize(serializer),
+            StructureDef::Event(def) => Keyed("event", def).serialize(serializer),
         }
     }
 }
@@ -262,6 +265,14 @@ fn structure_def(out: &mut String, value: &Value) -> Result<(), String> {
             durative_action(out, name, body)
         }
         "derived" => derived(out, value),
+        "process" => {
+            let (name, body) = single_entry(value)?;
+            process(out, name, body)
+        }
+        "event" => {
+            let (name, body) = single_entry(value)?;
+            event(out, name, body)
+        }
         _ => Err(format!("unknown structure definition `{kind}`")),
     }
 }
@@ -300,6 +311,40 @@ impl Serialize for DurativeActions<'_> {
             if let StructureDef::DurativeAction(action) = def {
                 keys.insert(action.symbol().as_ref())?;
                 map.serialize_entry(action.symbol(), &DurativeActionBody(action))?;
+            }
+        }
+        map.end()
+    }
+}
+
+/// The PDDL+ processes among a domain's structure definitions, by name.
+struct Processes<'a>(&'a [StructureDef]);
+
+impl Serialize for Processes<'_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut map = serializer.serialize_map(None)?;
+        let mut keys = UniqueKeys::default();
+        for def in self.0 {
+            if let StructureDef::Process(process) = def {
+                keys.insert(process.symbol().as_ref())?;
+                map.serialize_entry(process.symbol(), &ProcessBody(process))?;
+            }
+        }
+        map.end()
+    }
+}
+
+/// The PDDL+ events among a domain's structure definitions, by name.
+struct Events<'a>(&'a [StructureDef]);
+
+impl Serialize for Events<'_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut map = serializer.serialize_map(None)?;
+        let mut keys = UniqueKeys::default();
+        for def in self.0 {
+            if let StructureDef::Event(event) = def {
+                keys.insert(event.symbol().as_ref())?;
+                map.serialize_entry(event.symbol(), &ActionBody(event))?;
             }
         }
         map.end()
@@ -360,6 +405,12 @@ impl Serialize for Domain {
         if has(|def| matches!(def, StructureDef::Derived(_))) {
             map.serialize_entry("derived", &Derived(structure))?;
         }
+        if has(|def| matches!(def, StructureDef::Process(_))) {
+            map.serialize_entry("processes", &Processes(structure))?;
+        }
+        if has(|def| matches!(def, StructureDef::Event(_))) {
+            map.serialize_entry("events", &Events(structure))?;
+        }
         map.end()
     }
 }
@@ -417,6 +468,8 @@ fn domain(out: &mut String, value: &Value) -> Result<(), String> {
             "actions" => |out, value| named(out, value, action),
             "durative-actions" => |out, value| named(out, value, durative_action),
             "derived" => |out, value| spaced(out, as_seq(value)?, derived),
+            "processes" => |out, value| named(out, value, process),
+            "events" => |out, value| named(out, value, event),
             _ => return Err(format!("unknown key `{key}` in a domain")),
         };
         if !is_empty(value) {

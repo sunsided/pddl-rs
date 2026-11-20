@@ -163,6 +163,39 @@ fn durative_actions_and_derived_predicates() {
 }
 
 #[test]
+fn pddl_plus_processes_and_events() {
+    let domain = Domain::from_str(
+        "(define (domain ball)
+           (:process fall :parameters (?b - ball) :precondition (falling ?b)
+             :effect (increase (height ?b) (* #t (velocity ?b))))
+           (:event land :parameters (?b - ball) :precondition (<= (height ?b) 0)
+             :effect (not (falling ?b))))",
+    )
+    .unwrap();
+    let expected = json!({
+        "domain": "ball",
+        "processes": {
+            "fall": {
+                "parameters": {"?b": "ball"},
+                "precondition": ["falling", "?b"],
+                "effect": {"increase": [["height", "?b"], {"*": ["#t", ["velocity", "?b"]]}]}
+            }
+        },
+        "events": {
+            "land": {
+                "parameters": {"?b": "ball"},
+                "precondition": {"<=": [["height", "?b"], 0]},
+                "effect": {"not": ["falling", "?b"]}
+            }
+        }
+    });
+    check!(serde_json::to_value(&domain).unwrap() == expected);
+    check!(serde_json::from_value::<Domain>(expected).unwrap() == domain);
+    round_trip::<pddl::ProcessDefinition>("(:process idle :parameters ())");
+    round_trip::<pddl::StructureDef>("(:event e :parameters () :precondition (p) :effect (q))");
+}
+
+#[test]
 fn negation_and_subtraction_are_told_apart() {
     for pddl in [
         "(- (f ?x))",

@@ -589,6 +589,8 @@ pub enum Construct {
     TimedEffectConditions,
     /// An assignment nested inside a numeric expression of a durative action.
     NestedAssignments,
+    /// PDDL+ processes and events (level 4).
+    ProcessesAndEvents,
     /// State-trajectory constraints.
     Constraints,
     /// Preferences, and `is-violated` in a metric.
@@ -616,6 +618,7 @@ impl fmt::Display for Construct {
                 f.write_str("these timed conditions of conditional effects")
             }
             Self::NestedAssignments => f.write_str("nested assignments"),
+            Self::ProcessesAndEvents => f.write_str("processes and events"),
             Self::Constraints => f.write_str("constraints"),
             Self::Preferences => f.write_str("preferences"),
             Self::ObjectFluents => f.write_str("object fluents"),

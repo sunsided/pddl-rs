@@ -1,6 +1,8 @@
 //! Contains definitions for domain structure definitions.
 
-use crate::types::{ActionDefinition, DerivedPredicate, DurativeActionDefinition};
+use crate::types::{
+    ActionDefinition, DerivedPredicate, DurativeActionDefinition, ProcessDefinition,
+};
 
 /// A domain structure definition.
 ///
@@ -16,9 +18,32 @@ pub enum StructureDef {
     /// ## Requirements
     /// Requires [Derived Predicates](crate::Requirement::DerivedPredicates).
     Derived(DerivedPredicate),
+    /// A PDDL+ process, `(:process ...)`: continuous change while its precondition holds.
+    ///
+    /// ## Requirements
+    /// Requires PDDL+ (`:time`).
+    Process(Box<ProcessDefinition>),
+    /// A PDDL+ event, `(:event ...)`: an action that happens by itself as soon as its
+    /// precondition holds.
+    ///
+    /// ## Requirements
+    /// Requires PDDL+ (`:time`).
+    Event(ActionDefinition),
 }
 
 impl StructureDef {
+    /// Creates a PDDL+ process structure definition.
+    #[must_use]
+    pub fn process(process: ProcessDefinition) -> Self {
+        Self::Process(Box::new(process))
+    }
+
+    /// Creates a PDDL+ event structure definition.
+    #[must_use]
+    pub const fn event(event: ActionDefinition) -> Self {
+        Self::Event(event)
+    }
+
     /// Creates a new action structure definition.
     #[doc(alias = "new_action")]
     #[must_use]
@@ -68,6 +93,12 @@ impl From<ActionDefinition> for StructureDef {
 impl From<DurativeActionDefinition> for StructureDef {
     fn from(value: DurativeActionDefinition) -> Self {
         StructureDef::durative_action(value)
+    }
+}
+
+impl From<ProcessDefinition> for StructureDef {
+    fn from(value: ProcessDefinition) -> Self {
+        StructureDef::process(value)
     }
 }
 

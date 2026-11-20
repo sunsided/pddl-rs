@@ -404,6 +404,9 @@ record Domain:
   # about them (field-case), and a schema can't switch the rule off.
   durative-actions?: map<Name, DurativeAction>
   derived?: Derived[]
+  # PDDL+: processes take a durative action's effects, events an action's form.
+  processes?: map<Name, Process>
+  events?: map<Name, Action>
 
 # A function whose type isn't `number`; a `number` function is its parameters alone.
 record FunctionSignature:
@@ -414,6 +417,11 @@ record Action:
   parameters?: TypedList
   precondition?: Precondition
   effect?: Effect
+
+record Process:
+  parameters?: TypedList
+  precondition?: Precondition
+  effect?: DurativeEffect
 
 record DurativeAction:
   parameters?: TypedList

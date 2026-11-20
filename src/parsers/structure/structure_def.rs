@@ -2,10 +2,14 @@
 
 use crate::parsers::error::R;
 use crate::parsers::sexpr::Node;
-use crate::parsers::{alt, parse_action_def, parse_da_def, parse_derived_predicate};
+use crate::parsers::{
+    alt, parse_action_def, parse_da_def, parse_derived_predicate, parse_event_def,
+    parse_process_def,
+};
 use crate::types::StructureDef;
 
-/// Parses a structure definition (`<structure-def>`), i.e. `<action-def> | <durative-action-def> | <derived-def>`.
+/// Parses a structure definition (`<structure-def>`), i.e. `<action-def> | <durative-action-def> | <derived-def>`,
+/// or a PDDL+ `<process-def> | <event-def>`.
 pub(crate) fn parse_structure_def(node: &Node) -> R<StructureDef> {
     alt(
         node,
@@ -15,6 +19,9 @@ pub(crate) fn parse_structure_def(node: &Node) -> R<StructureDef> {
             &|n| parse_action_def(n).map(StructureDef::new_action),
             // :durative-actions
             &|n| parse_da_def(n).map(StructureDef::new_durative_action),
+            // PDDL+
+            &|n| parse_process_def(n).map(StructureDef::process),
+            &|n| parse_event_def(n).map(StructureDef::event),
         ],
     )
 }

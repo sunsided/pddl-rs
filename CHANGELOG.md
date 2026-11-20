@@ -22,6 +22,13 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `pddl-codegen` crate and builds on the new `pddl-runtime` crate, which
   `pddl::runtime` re-exports. `pddl::codegen` loads problems for it.
 
+- The parser reads PDDL+ `(:process ...)` and `(:event ...)` sections into the
+  new `StructureDef::Process` (a `ProcessDefinition`, whose effect is read like
+  a durative action's so `#t` survives) and `StructureDef::Event` (an
+  `ActionDefinition`). They pretty-print and round-trip through `serde`, as a
+  domain's `processes` and `events`, and the NOVA schema has them. The
+  `sas-plus` grounder and code generation reject them as unsupported.
+  `StructureDef` gains two variants, so exhaustive matches on it need new arms.
 - `pddl-validate`, a new crate in this repository, validates sequential
   plans against a domain and problem, independently of any planner, and
   reports the first failing step, condition and a VAL-style repair hint.

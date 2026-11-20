@@ -7,3 +7,4 @@ pub(super) mod conditional_effect;
 pub(super) mod derived_predicate;
 pub(super) mod effects;
 pub(super) mod p_effect;
+pub(super) mod process_definition;

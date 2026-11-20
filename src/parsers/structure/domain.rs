@@ -22,6 +22,8 @@ const SECTIONS: &[&str] = &[
     ":action",
     ":durative-action",
     ":derived",
+    ":process",
+    ":event",
 ];
 
 /// Parses a domain definition (`<domain>`), i.e. `(define (domain <name>) <section>*)`.
@@ -77,7 +79,7 @@ pub(crate) fn parse_domain_recovering(
                         set_once(&mut constraints, value, section)
                     }
                     ":timeless" => set_once(&mut timeless, parse_timeless_def(section)?, section),
-                    ":action" | ":durative-action" | ":derived" => {
+                    ":action" | ":durative-action" | ":derived" | ":process" | ":event" => {
                         structure.push(parse_structure_def(section)?);
                         Ok(())
                     }
