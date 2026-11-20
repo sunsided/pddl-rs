@@ -312,17 +312,15 @@ fn task_operators(
 }
 
 /// Drops every operator equal to an earlier one of the same name, keeping the
-/// order. Bindings of `exists` binders that ground to the same operator are
-/// adjacent, as they share the declared parameters.
+/// order. Equal operators come from bindings of `exists` binders and from
+/// actions declared twice under one name, which need not be adjacent.
 fn dedup_operators(operators: Vec<SasOperator>) -> Vec<SasOperator> {
     let mut kept: Vec<SasOperator> = Vec::with_capacity(operators.len());
-    let mut run = 0; // where the operators named like the last kept one start
+    let mut by_name: HashMap<String, Vec<usize>> = HashMap::new();
     for operator in operators {
-        if kept.last().is_some_and(|last| last.name != operator.name) {
-            run = kept.len();
-        }
-
-        if !kept[run..].contains(&operator) {
+        let same = by_name.entry(operator.name.clone()).or_default();
+        if !same.iter().any(|&i| kept[i] == operator) {
+            same.push(kept.len());
             kept.push(operator);
         }
     }
@@ -338,7 +336,7 @@ enum CostError {
     Invalid,
     /// The exact cost has more digits than fit.
     Overflow {
-        /// The decimal places of the cost.
+        /// The most decimal places of any summand of the cost.
         places: u32,
     },
 }
@@ -1283,7 +1281,10 @@ impl Grounder<'_> {
     /// without a value, and [`CostError::Overflow`] if the sum has more digits
     /// than fit.
     fn cost(&self, schema: &Schema, binding: &[String]) -> Result<Decimal, CostError> {
-        let mut total = Decimal::whole(0);
+        // Every summand is read even after an overflow, so that an invalid
+        // summand wins and the places don't depend on the order of the terms.
+        let mut total = Ok(Decimal::whole(0));
+        let mut places = 0;
         for term in &schema.cost {
             let value = match term {
                 CostTerm::Number(n) => *n,
@@ -1295,10 +1296,15 @@ impl Grounder<'_> {
                     ))
                     .ok_or(CostError::Invalid)?,
             };
-            total = total.checked_add(Decimal::from_f64(value)?)?;
+            let summand = Decimal::from_f64(value);
+            places = places.max(match summand {
+                Ok(Decimal { places, .. }) | Err(CostError::Overflow { places }) => places,
+                Err(CostError::Invalid) => return Err(CostError::Invalid),
+            });
+            total = total.and_then(|total: Decimal| total.checked_add(summand?));
         }
 
-        Ok(total)
+        total.map_err(|_| CostError::Overflow { places })
     }
 }
 

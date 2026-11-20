@@ -743,6 +743,31 @@ fn costs_with_too_many_digits_are_out_of_range() {
     );
 }
 
+#[test]
+fn cost_overflow_does_not_depend_on_the_order_of_the_terms() {
+    // 2e38 + 2e38 overflows u128; whether 0.5 is added before or after the
+    // overflow must not change the error.
+    let big = "200000000000000000000000000000000000000";
+    for costs in [[big, big, "0.5"], ["0.5", big, big]] {
+        let (domain, problem) = cost_sum(&costs, "1");
+        assert_eq!(
+            ground(&domain, &problem),
+            Err(GroundError::InvalidCost {
+                action: "act".into()
+            }),
+            "{costs:?}"
+        );
+        assert_eq!(
+            ground_scaled(&domain, &problem),
+            Err(GroundError::CostOutOfRange {
+                action: "act".into(),
+                places: 1
+            }),
+            "{costs:?}"
+        );
+    }
+}
+
 /// Formats each number of `range` and joins the results with spaces.
 fn spaced(range: std::ops::Range<usize>, format: impl Fn(usize) -> String) -> String {
     range.map(format).collect::<Vec<_>>().join(" ")
@@ -764,6 +789,21 @@ fn exists_binders_do_not_duplicate_operators() {
     .unwrap();
     let names: Vec<_> = file.operators.iter().map(|op| op.name.as_str()).collect();
     assert_eq!(names, ["act"]);
+}
+
+#[test]
+fn actions_declared_twice_do_not_duplicate_operators() {
+    // The two `a` are equal but not adjacent: `b` is declared between them.
+    let file = ground_str(
+        "(define (domain d) (:predicates (q) (r))
+           (:action a :parameters () :effect (q))
+           (:action b :parameters () :effect (r))
+           (:action a :parameters () :effect (q)))",
+        "(define (problem p) (:domain d) (:init) (:goal (and (q) (r))))",
+    )
+    .unwrap();
+    let names: Vec<_> = file.operators.iter().map(|op| op.name.as_str()).collect();
+    assert_eq!(names, ["a", "b"]);
 }
 
 #[test]
