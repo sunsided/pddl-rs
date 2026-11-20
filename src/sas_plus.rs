@@ -26,6 +26,8 @@
 //! - action costs: `(increase (total-cost) <n>)` with a number or a static
 //!   function from the initial state, used when the problem has
 //!   `(:metric minimize (total-cost))`; otherwise every action costs 1.
+//!   [`ground`] needs integer costs; [`ground_scaled`] also takes decimal
+//!   costs and scales them to integers by a power of ten it returns.
 //!
 //! Everything else (`or`, `imply`, numeric fluents, derived predicates,
 //! durative actions, preferences, constraints, …) is rejected with
@@ -94,6 +96,15 @@ pub enum GroundError {
         /// The ground action, e.g. `drive depot north`.
         action: String,
     },
+    /// An action's cost doesn't fit in a `u32`: as it is, or, with
+    /// [`ground_scaled`], scaled to the most decimal places of any cost.
+    #[error("action `{action}` costs more than a u32 holds at {places} decimal places")]
+    CostOutOfRange {
+        /// The ground action, e.g. `drive depot north`.
+        action: String,
+        /// The decimal places that every cost is scaled to.
+        places: u32,
+    },
     /// The goal is false in every reachable state.
     #[error("the goal is unreachable")]
     Unsolvable,
@@ -125,9 +136,51 @@ pub const MAX_DELETE_PIECES: usize = 1024;
 ///
 /// # Errors
 /// Returns a [`GroundError`] if the input uses an unsupported construct, refers
-/// to undeclared types, objects or variables, has an invalid action cost, or
-/// has a goal that no reachable state satisfies.
+/// to undeclared types, objects or variables, has an action cost that is not a
+/// non-negative integer ([`InvalidCost`](GroundError::InvalidCost)) or doesn't
+/// fit in a `u32` ([`CostOutOfRange`](GroundError::CostOutOfRange)), or has a
+/// goal that no reachable state satisfies.
 pub fn ground(domain: &Domain, problem: &Problem) -> Result<SasFile, GroundError> {
+    ground_with_costs(domain, problem, false).map(|task| task.file)
+}
+
+/// A SAS+ task whose operator costs are the action costs times
+/// [`cost_scale`](Self::cost_scale).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ScaledTask {
+    /// The task. Divide its operator and plan costs by `cost_scale` for the
+    /// costs the PDDL states.
+    pub file: SasFile,
+    /// `10^k` for the most decimal places `k` of any reachable action's cost:
+    /// 1 when every cost is an integer, 10 for costs such as `0.5` and `2`.
+    pub cost_scale: u32,
+}
+
+/// Like [`ground`], but accepts action costs with decimal places: it scales
+/// every cost by `10^k`, for the most decimal places `k` of any reachable
+/// action's cost, so that the costs stay exact integers, and returns the
+/// scale. `0.1` and `0.3` become 1 and 3 with a scale of 10. A problem with
+/// integer costs grounds to the same task as with [`ground`], with a scale of 1.
+///
+/// Costs are read from the numbers in the parsed PDDL, which are `f64`: each
+/// is taken as the shortest decimal that reads back as the same `f64`, which is
+/// the literal as written for up to 15 significant digits.
+///
+/// # Errors
+/// As [`ground`], except that decimal costs are accepted, and
+/// [`GroundError::CostOutOfRange`] if a scaled cost doesn't fit in a `u32`.
+pub fn ground_scaled(domain: &Domain, problem: &Problem) -> Result<ScaledTask, GroundError> {
+    ground_with_costs(domain, problem, true)
+}
+
+/// Grounds with every cost scaled to the most decimal places of any cost in
+/// the task; without `decimal_costs`, a cost with decimal places is an
+/// [`InvalidCost`](GroundError::InvalidCost).
+fn ground_with_costs(
+    domain: &Domain,
+    problem: &Problem,
+    decimal_costs: bool,
+) -> Result<ScaledTask, GroundError> {
     reject_unsupported(domain, problem)?;
     let world = World::new(domain, problem)?;
     let use_metric = uses_total_cost(problem)?;
@@ -169,7 +222,39 @@ pub fn ground(domain: &Domain, problem: &Problem) -> Result<SasFile, GroundError
     .preconditions(problem.goals(), &HashMap::new(), false, &mut goal_lits)?;
     let goal = ground_goal(&goal_lits, &grounder, &index)?;
 
-    Ok(SasFile {
+    // Only the operators that make it into the task set the scale.
+    let mut operators = Vec::new();
+    for op in &ops {
+        if let Some(operator) = op.to_sas(&index, 0)? {
+            operators.push((operator, op));
+        }
+    }
+    if let Some((_, op)) = operators.iter().find(|(_, op)| op.cost.places > 0) {
+        if !decimal_costs {
+            return Err(GroundError::InvalidCost {
+                action: op.name.clone(),
+            });
+        }
+    }
+    let places = operators
+        .iter()
+        .map(|(_, op)| op.cost.places)
+        .max()
+        .unwrap_or(0);
+    let operators = operators
+        .into_iter()
+        .map(|(mut operator, op)| {
+            operator.cost = op
+                .cost
+                .scaled(places)
+                .ok_or_else(|| GroundError::CostOutOfRange {
+                    action: op.name.clone(),
+                    places,
+                })?;
+            Ok(operator)
+        })
+        .collect::<Result<_, GroundError>>()?;
+    let file = SasFile {
         use_metric,
         variables: reachable
             .iter()
@@ -189,12 +274,75 @@ pub fn ground(domain: &Domain, problem: &Problem) -> Result<SasFile, GroundError
             .map(|atom| if init.contains(atom) { TRUE } else { FALSE })
             .collect(),
         goal,
-        operators: ops
-            .iter()
-            .filter_map(|op| op.to_sas(&index).transpose())
-            .collect::<Result<_, _>>()?,
+        operators,
         axioms: Vec::new(),
-    })
+    };
+    let cost_scale = 10u32.pow(places); // `scaled` checked that it fits
+    Ok(ScaledTask { file, cost_scale })
+}
+
+/// A non-negative decimal number, exact: `units / 10^places`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Decimal {
+    /// The value times `10^places`.
+    units: u128,
+    /// The number of decimal places.
+    places: u32,
+}
+
+impl Decimal {
+    /// A whole number.
+    const fn whole(units: u128) -> Self {
+        Self { units, places: 0 }
+    }
+
+    /// The shortest decimal that reads back as `value`, or `None` if it is
+    /// negative, not finite, or has more digits than fit.
+    fn from_f64(value: f64) -> Option<Self> {
+        if !value.is_finite() || value < 0.0 {
+            return None;
+        }
+        // `Display` for `f64` prints the shortest round-trip digits, never an exponent.
+        let text = value.to_string();
+        let (whole, fraction) = text.split_once('.').unwrap_or((&text, ""));
+        let places = u32::try_from(fraction.len()).ok()?;
+        let units = format!("{whole}{fraction}").parse().ok()?;
+        Some(Self { units, places })
+    }
+
+    /// The exact sum, or `None` if it doesn't fit.
+    fn checked_add(self, other: Self) -> Option<Self> {
+        let places = self.places.max(other.places);
+        let units = self
+            .units
+            .checked_mul(10u128.checked_pow(places - self.places)?)?
+            .checked_add(
+                other
+                    .units
+                    .checked_mul(10u128.checked_pow(places - other.places)?)?,
+            )?;
+        Some(Self { units, places }.normalized())
+    }
+
+    /// The same number without trailing zero places: `1.0` is `1`, so a sum
+    /// such as `0.5 + 0.5` counts as an integer.
+    fn normalized(mut self) -> Self {
+        while self.places > 0 && self.units % 10 == 0 {
+            self.units /= 10;
+            self.places -= 1;
+        }
+        self
+    }
+
+    /// The value times `10^places`, if that is a `u32` and `places` is at
+    /// least the number's own decimal places.
+    fn scaled(self, places: u32) -> Option<u32> {
+        10u32.checked_pow(places)?;
+        let units = self
+            .units
+            .checked_mul(10u128.checked_pow(places.checked_sub(self.places)?)?)?;
+        u32::try_from(units).ok()
+    }
 }
 
 /// The value of a binary variable whose atom holds.
@@ -776,8 +924,8 @@ struct GroundOp {
     pre: Vec<GLit>,
     /// The add and delete effects.
     effects: Vec<GEffect>,
-    /// The cost.
-    cost: u32,
+    /// The cost, exact.
+    cost: Decimal,
 }
 
 /// The state of binding the parameters of one schema.
@@ -1028,7 +1176,7 @@ impl Grounder<'_> {
                     action: name.clone(),
                 })?
         } else {
-            1
+            Decimal::whole(1)
         };
         out.push(GroundOp {
             name,
@@ -1039,23 +1187,21 @@ impl Grounder<'_> {
         Ok(())
     }
 
-    /// Sums the cost of a ground action, or `None` if it is not a
-    /// non-negative integer.
-    fn cost(&self, schema: &Schema, binding: &[String]) -> Option<u32> {
-        let mut total = 0.0;
+    /// Sums the cost of a ground action exactly, or `None` if a summand is
+    /// negative or refers to a function without a value.
+    fn cost(&self, schema: &Schema, binding: &[String]) -> Option<Decimal> {
+        let mut total = Decimal::whole(0);
         for term in &schema.cost {
-            total += match term {
+            let value = match term {
                 CostTerm::Number(n) => *n,
                 CostTerm::Function(symbol, args) => *self.functions.get(&(
                     symbol.clone(),
                     args.iter().map(|a| ground_arg(a, binding)).collect(),
                 ))?,
             };
+            total = total.checked_add(Decimal::from_f64(value)?)?;
         }
-        // The checks make the cast exact.
-        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-        (total >= 0.0 && total.fract() == 0.0 && total <= f64::from(u32::MAX))
-            .then_some(total as u32)
+        Some(total)
     }
 }
 
@@ -1155,7 +1301,11 @@ impl GroundOp {
     /// # Errors
     /// [`GroundError::ConflictingEffects`] if restricting a delete to where no
     /// add of the same atom fires needs more than [`MAX_DELETE_PIECES`] effects.
-    fn to_sas(&self, index: &HashMap<&Atom, VarId>) -> Result<Option<SasOperator>, GroundError> {
+    fn to_sas(
+        &self,
+        index: &HashMap<&Atom, VarId>,
+        cost: u32,
+    ) -> Result<Option<SasOperator>, GroundError> {
         let Some(pre) = resolve_all(index, &self.pre) else {
             return Ok(None);
         };
@@ -1218,7 +1368,7 @@ impl GroundOp {
                     post,
                 })
                 .collect(),
-            cost: self.cost,
+            cost,
         }))
     }
 }

@@ -27,6 +27,9 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   while it binds parameters, so groundings that can never apply are never
   built, and it fails with `GroundError::ConflictingEffects` instead of
   splitting a delete into more than `MAX_DELETE_PIECES` conditional effects.
+  `pddl::sas_plus::ground_scaled` also takes action costs with decimal places,
+  summed exactly, and scales them to integer operator costs by the power of ten
+  it returns as `ScaledTask::cost_scale`.
 
 ### Changed
 
