@@ -12,6 +12,8 @@ const {
 } = require("@vscode/test-electron");
 
 async function main() {
+  // The checks that need no VS Code.
+  require("./val.js");
   const extension = path.resolve(__dirname, "..");
   // A fresh profile, so the test neither sees nor changes the user's VS Code setup.
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), "pddl-vscode-test-"));
