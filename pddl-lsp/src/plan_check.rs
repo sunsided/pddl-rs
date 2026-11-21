@@ -5,7 +5,7 @@
 //! documents and in the WebAssembly build, which cannot read arbitrary files.
 
 use pddl::{Domain, Optimization, Parser as _, Problem};
-use pddl_validate::{ValidationStatus, Validator, ViolationKind};
+use pddl_validate::{Validator, ViolationKind};
 use serde::{Deserialize, Serialize};
 
 /// The method name of the request.
@@ -86,27 +86,18 @@ fn verdict(report: &pddl_validate::Report) -> PlanVerdict {
         metric: None,
         minimize: None,
     };
-    match report.status() {
-        ValidationStatus::Valid => {
-            if let Some(metric) = report.metric() {
-                verdict.metric = Some(metric.value);
-                verdict.minimize = Some(metric.optimization == Optimization::Minimize);
-            }
-        }
-        ValidationStatus::Invalid => {
-            verdict.status = Status::Invalid;
-            if let Some(violation) = report.violation() {
-                verdict.message = violation.to_string();
-                verdict.advice = Some(violation.advice());
-                verdict.line = violation_line(violation);
-            }
-        }
-        ValidationStatus::Unsupported => {
-            verdict.status = Status::Unsupported;
-            if let Some(unsupported) = report.unsupported() {
-                verdict.message = unsupported.to_string();
-            }
-        }
+    // An invalid report has a violation and an unsupported one its construct.
+    if let Some(violation) = report.violation() {
+        verdict.status = Status::Invalid;
+        verdict.message = violation.to_string();
+        verdict.advice = Some(violation.advice());
+        verdict.line = violation_line(violation);
+    } else if let Some(unsupported) = report.unsupported() {
+        verdict.status = Status::Unsupported;
+        verdict.message = unsupported.to_string();
+    } else if let Some(metric) = report.metric() {
+        verdict.metric = Some(metric.value);
+        verdict.minimize = Some(metric.optimization == Optimization::Minimize);
     }
 
     verdict
@@ -204,6 +195,18 @@ mod tests {
         assert_eq!(verdict.status, Status::Error);
         assert!(
             verdict.message.starts_with("cannot read the domain"),
+            "{}",
+            verdict.message
+        );
+
+        let verdict = validate(&ValidatePlanParams {
+            domain: DOMAIN.into(),
+            problem: "(define (problem".into(),
+            plan: String::new(),
+        });
+        assert_eq!(verdict.status, Status::Error);
+        assert!(
+            verdict.message.starts_with("cannot read the problem"),
             "{}",
             verdict.message
         );
