@@ -37,7 +37,7 @@ use lsp_types::{
     SemanticTokensServerCapabilities, ServerCapabilities, ServerInfo, SignatureHelp,
     SignatureHelpOptions, SignatureHelpParams, SignatureInformation, SymbolKind,
     TextDocumentIdentifier, TextDocumentPositionParams, TextDocumentSyncCapability,
-    TextDocumentSyncKind, TextEdit, Url, WorkspaceEdit, WorkspaceSymbolParams,
+    TextDocumentSyncKind, TextEdit, Uri, WorkspaceEdit, WorkspaceSymbolParams,
     WorkspaceSymbolResponse,
 };
 use lsp_types::{InlayHint, InlayHintKind, InlayHintLabel, InlayHintParams};
@@ -50,7 +50,7 @@ use crate::analysis::{node_range, Analysis, Definition, Expect, Kind, Occurrence
 use crate::format::format;
 use crate::line_index::Encoding;
 use crate::plan_check;
-use crate::workspace::{Document, Severity, Target, Workspace};
+use crate::workspace::{file_path, file_uri, Document, Severity, Target, Workspace};
 
 /// Files larger than this are not read from the workspace folders.
 const MAX_FILE_SIZE: u64 = 10 * 1024 * 1024;
@@ -183,7 +183,7 @@ pub struct Server {
     encoding: Encoding,
     /// The documents whose last published diagnostics may be non-empty, so
     /// that they get an empty list once they close or go away.
-    published: HashSet<Url>,
+    published: HashSet<Uri>,
 }
 
 /// The id of the `client/registerCapability` request that asks the client to
@@ -286,7 +286,7 @@ fn serve(
         None => params.root_uri.into_iter().collect::<Vec<_>>(),
     };
     for root in roots {
-        if let Ok(path) = root.to_file_path() {
+        if let Some(path) = file_path(&root) {
             server.scan(&path);
         }
     }
@@ -526,17 +526,14 @@ impl Server {
     }
 
     /// Sets the text of the open document `uri`.
-    pub fn open(&mut self, uri: Url, text: String) {
+    pub fn open(&mut self, uri: Uri, text: String) {
         let document = Document::new(text, self.encoding, true);
         self.workspace.documents.insert(uri, document);
     }
 
     /// Reads a closed document `uri` from the disk again, or forgets it if it's gone.
-    fn reload(&mut self, uri: &Url) {
-        let text = uri
-            .to_file_path()
-            .ok()
-            .and_then(|p| std::fs::read_to_string(p).ok());
+    fn reload(&mut self, uri: &Uri) {
+        let text = file_path(uri).and_then(|p| std::fs::read_to_string(p).ok());
         match text {
             Some(text) => {
                 let document = Document::new(text, self.encoding, false);
@@ -555,7 +552,7 @@ impl Server {
     /// shortcut: reads every closed file, which is fine for a rare request
     /// such as rename; track modification times if it gets called more often.
     fn refresh_closed(&mut self) {
-        let stale: Vec<Url> = self
+        let stale: Vec<Uri> = self
             .workspace
             .documents
             .iter()
@@ -598,9 +595,7 @@ impl Server {
                 if read == MAX_FILES {
                     return;
                 }
-                if let (Ok(text), Ok(uri)) =
-                    (std::fs::read_to_string(&path), Url::from_file_path(&path))
-                {
+                if let (Ok(text), Some(uri)) = (std::fs::read_to_string(&path), file_uri(&path)) {
                     let document = Document::new(text, self.encoding, false);
                     self.workspace.documents.insert(uri, document);
                     read += 1;
@@ -617,7 +612,7 @@ impl Server {
     /// diagnostics, so a change publishes nothing for them.
     #[must_use]
     pub fn diagnostics(&mut self) -> Vec<PublishDiagnosticsParams> {
-        let open: HashSet<Url> = self
+        let open: HashSet<Uri> = self
             .workspace
             .documents
             .iter()
@@ -645,7 +640,7 @@ impl Server {
     }
 
     /// The diagnostics of `document`, which is `uri`.
-    fn document_diagnostics(&self, uri: &Url, document: &Document) -> Vec<Diagnostic> {
+    fn document_diagnostics(&self, uri: &Uri, document: &Document) -> Vec<Diagnostic> {
         self.workspace
             .problems(uri)
             .into_iter()
@@ -679,7 +674,7 @@ impl Server {
     }
 
     /// The location of `span` in `uri`.
-    fn location(&self, uri: &Url, span: Range<usize>) -> Option<Location> {
+    fn location(&self, uri: &Uri, span: Range<usize>) -> Option<Location> {
         let document = self.workspace.documents.get(uri)?;
         Some(Location::new(uri.clone(), self.range(document, span)))
     }
@@ -815,7 +810,7 @@ impl Server {
                 definition.kind.label()
             ));
         }
-        let mut changes: HashMap<Url, Vec<TextEdit>> = HashMap::new();
+        let mut changes: HashMap<Uri, Vec<TextEdit>> = HashMap::new();
         for (uri, span) in self.workspace.references(&target) {
             if let Some(location) = self.location(&uri, span) {
                 let edit = TextEdit::new(location.range, new_name.clone());
@@ -1226,8 +1221,8 @@ impl Server {
 
 /// Whether the file of `uri` can't be read or holds something other than
 /// `text`. A URI that is not a file is never stale.
-fn on_disk_differs(uri: &Url, text: &str) -> bool {
-    let Ok(path) = uri.to_file_path() else {
+fn on_disk_differs(uri: &Uri, text: &str) -> bool {
+    let Some(path) = file_path(uri) else {
         return false;
     };
 

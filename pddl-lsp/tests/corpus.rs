@@ -6,11 +6,10 @@
 use std::path::Path;
 
 use assert2::check;
-use lsp_types::Url;
 use pddl::syntax::{self, Node};
 use pddl_lsp::format::format;
 use pddl_lsp::line_index::Encoding;
-use pddl_lsp::workspace::{Document, Workspace};
+use pddl_lsp::workspace::{file_uri, Document, Workspace};
 
 /// Problems in the corpus that are real mistakes, by file and message.
 const EXPECTED: &[(&str, &str)] = &[
@@ -37,19 +36,14 @@ fn the_corpus_has_no_unexpected_problems() {
                 continue;
             }
             let text = std::fs::read_to_string(&path).unwrap();
-            let uri = Url::from_file_path(&path).unwrap();
+            let uri = file_uri(&path).unwrap();
             workspace
                 .documents
                 .insert(uri, Document::new(text, Encoding::Utf8, true));
         }
         let mut found = Vec::new();
         for (uri, document) in &workspace.documents {
-            let name = uri
-                .path_segments()
-                .unwrap()
-                .next_back()
-                .unwrap()
-                .to_string();
+            let name = uri.as_str().rsplit('/').next().unwrap().to_string();
             for problem in workspace.problems(uri) {
                 let line = document
                     .lines
@@ -132,7 +126,7 @@ fn keeps_content_and_is_idempotent_on_the_corpus() {
 fn the_multiple_definitions_example_has_no_problems() {
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../examples/multiple-definitions.pddl");
     let text = std::fs::read_to_string(&path).unwrap();
-    let uri = Url::from_file_path(&path).unwrap();
+    let uri = file_uri(&path).unwrap();
     let mut workspace = Workspace::default();
     workspace.documents.insert(
         uri.clone(),

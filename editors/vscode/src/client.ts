@@ -123,7 +123,9 @@ async function start(
 async function startWasmServer(context: vscode.ExtensionContext, output: vscode.LogOutputChannel) {
   const wasm = await Wasm.load();
   const file = vscode.Uri.joinPath(context.extensionUri, ...WASM_SERVER);
-  const module = await WebAssembly.compile(await vscode.workspace.fs.readFile(file));
+  // `readFile` returns bytes in a fresh ArrayBuffer, never a SharedArrayBuffer.
+  const bytes = (await vscode.workspace.fs.readFile(file)) as Uint8Array<ArrayBuffer>;
+  const module = await WebAssembly.compile(bytes);
   const options: ProcessOptions = {
     stdio: createStdioOptions(),
     mountPoints: [{ kind: "workspaceFolder" }],

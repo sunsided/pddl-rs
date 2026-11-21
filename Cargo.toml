@@ -53,11 +53,11 @@ workspace = true
 
 [dependencies]
 miette = { version = "7", optional = true, default-features = false }
-pretty = { version = "0.12.1", optional = true }
+pretty = { version = "0.12.5", optional = true }
 serde = { version = "1", optional = true }
 sas-plus = { version = "0.2", optional = true }
 pddl-runtime = { version = "0.1.0", path = "pddl-runtime", optional = true }
-thiserror = "2.0.18"
+thiserror = "2.0.21"
 
 [[test]]
 name = "briefcase_world"

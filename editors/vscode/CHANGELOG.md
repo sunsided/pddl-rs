@@ -8,6 +8,8 @@ All notable changes to the PDDL (pddl-lsp) extension are documented in this file
 
 - Licensed under `EUPL-1.2 OR MPL-2.0`, at your option, instead of `EUPL-1.2`
   alone. Versions already published keep the licence they were published under.
+- Needs VS Code 1.146 or later, up from 1.91, and uses the stable
+  `vscode-languageclient` 11 instead of a 10.0 pre-release.
 
 ### Added
 

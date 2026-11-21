@@ -1,0 +1,3 @@
+# `lsp_types::Uri` wraps a `fluent_uri::Uri` with lazily cached parts, but hashes and
+# compares by its string, so it is a sound map key.
+ignore-interior-mutability = ["lsp_types::Uri"]
