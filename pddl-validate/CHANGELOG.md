@@ -5,6 +5,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [0.1.0] - 2026-11-21
+
+[0.1.0]: https://github.com/sunsided/pddl-rs/releases/tag/pddl-validate-v0.1.0
+
 ### Added
 
 - `Validator`, an independent validator for sequential classical plans on the
