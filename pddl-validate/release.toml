@@ -3,8 +3,9 @@
 # `cargo release <patch|minor|major> -p pddl-validate --execute` bumps the
 # version, turns the "## Unreleased" section of this crate's CHANGELOG.md into
 # the release's section, commits, tags pddl-validate-vX.Y.Z and pushes. The tag
-# triggers no workflow, and .github/workflows/release.yml does not publish this
-# crate yet.
+# starts .github/workflows/release.yml, which publishes this crate to crates.io
+# (via trusted publishing) and creates the GitHub Release, so cargo-release
+# itself does not publish.
 publish = false
 allow-branch = ["main"]
 tag = true
