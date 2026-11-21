@@ -17,6 +17,8 @@ pddl = { path = "../pddl", default-features = false, features = ["parser", "sas-
 pddl-runtime = { path = "../pddl-runtime", features = ["search"] }
 
 [dev-dependencies]
+pddl-validate = { path = "../pddl-validate" }
+proptest = "1"
 criterion = { version = "0.8", default-features = false, features = ["cargo_bench_support"] }
 
 [[bench]]

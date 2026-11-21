@@ -1,0 +1,48 @@
+# cargo-mutants configuration: https://mutants.rs/
+#
+# Mutants that no test can catch because they do not change behavior. Each entry
+# names the function and the replacement, not the line, so edits elsewhere in the
+# file keep it valid.
+exclude_re = [
+    # `x > 0.0 ? x : 0.0` and `x >= 0.0 ? x : 0.0` differ only for -0.0.
+    "replace > with >= in Validator<'a>::with_(tolerance|epsilon|duration_tolerance)",
+    # Equal values already returned `Equal` through the tolerance branch.
+    "pddl-validate/src/eval/numeric.rs:.*replace < with <= in compare",
+    # `skip(index * 1)` also compares a literal with itself, which never clashes.
+    "replace \\+ with \\* in contradictions",
+    # The model check rejects every construct that would make these errors fatal
+    # (preferences, object fluents) before validation, so an error that reaches them is
+    # always an unknown one.
+    "replace EvalError::is_unknown -> bool with true",
+    "replace match guard error.is_unknown\\(\\) with true in (finish|definitely_holds)",
+    # The parser writes `(not (p))` as `GoalDescription::Not`; the literal form only
+    # comes from a syntax tree built in code.
+    "pddl-validate/src/derived.rs:.*delete ! in occurrences",
+    # Levels grow by one per pass, so an unstratified cycle reaches `limit` and then
+    # `limit + 1`, while a stratified program stays below `limit`.
+    "replace > with (>=|==) in stratify",
+    # Happenings are more than SAME_TIME apart and the clock is either 0 or the previous
+    # happening, so the gap test holds for `-`, `+` and `/` alike.
+    # (Line-anchored: the same replacement two lines up groups events and matters.)
+    "pddl-validate/src/validator/temporal.rs:383:27: replace - with (\\+|/) in Timeline<'v, '_>::happenings",
+    # Boundary swaps on the fuzzy SAME_TIME and rounding-slack thresholds: no time
+    # lands exactly on them.
+    "replace < with <= in Span::overlapping",
+    "replace > with >= in Timeline<'v, '_>::(instance|timed_literals|happenings)",
+    # (Line-anchored: the event cascade limit in the same function is exact.)
+    "pddl-validate/src/validator/temporal/pddl_plus.rs:319:28: replace > with >= in Timeline<'v, '_>::hybrid_interval",
+    "replace < with <= in Timeline<'v, '_>::happenings",
+    "replace (> with >=|< with <=) in (Interval|Segment)<'_>::is_inside",
+    "replace > with >= in Interval<'_>::samples",
+    # The filter that drops parallel comparisons (`a - b != 0`): a root the mutant
+    # wrongly drops lies at the start or the midpoint, which are sampled anyway, and one
+    # it wrongly keeps is infinite or NaN, which `is_inside` rejects. (Line-anchored: the
+    # interval length in the same function matters.)
+    "pddl-validate/src/validator/temporal/continuous.rs:209:33: replace - with (\\+|/) in Interval<'_>::samples",
+    "pddl-validate/src/validator/temporal/pddl_plus.rs:462:33: replace - with / in Timeline<'v, '_>::breakpoints",
+    # Not merging breakpoints closer than SAME_TIME only evaluates some twice.
+    "pddl-validate/src/validator/temporal/pddl_plus.rs:467:35: replace - with (\\+|/) in Timeline<'v, '_>::breakpoints",
+    # Reporting a switch where none happens splits the segment at a breakpoint, and the
+    # next segment finds the same running processes: slower, same result.
+    "replace != with == in Timeline<'v, '_>::next_switch",
+]

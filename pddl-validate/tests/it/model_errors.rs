@@ -283,3 +283,73 @@ fn object_fluents_in_formulas_are_unsupported_not_malformed() {
         );
     }
 }
+
+#[test]
+fn a_quantified_variable_is_out_of_scope_after_its_quantifier() {
+    let action = "(:action a :parameters ()
+                    :precondition (and (forall (?y - block) (clear ?y)) (clear ?y))
+                    :effect (clear table))";
+    let error = model_error(&domain(action), &problem("(clear a)"));
+    assert_eq!(error.kind, ModelErrorKind::UnboundVariable("y".into()));
+}
+
+/// A domain with the durative action `act`, whose duration, condition and effect are
+/// `duration`, `condition` and `effect`, and the process `flow` with `process`.
+fn durative_domain(duration: &str, condition: &str, effect: &str, process: &str) -> String {
+    format!(
+        "(define (domain d) (:requirements :time) (:predicates (on)) (:functions (x))
+           (:durative-action act :parameters () :duration {duration}
+             :condition {condition} :effect {effect})
+           (:process flow :parameters () :precondition (on) :effect {process}))"
+    )
+}
+
+#[test]
+fn durative_actions_and_processes_check_their_names() {
+    let ok = [
+        "(= ?duration 1)",
+        "(at start (on))",
+        "(at end (on))",
+        "(increase (x) (* #t 1))",
+    ];
+    let cases = [
+        (
+            0,
+            "(= ?duration (y))",
+            ModelErrorKind::UnknownFunction("y".into()),
+        ),
+        (
+            1,
+            "(at start (off))",
+            ModelErrorKind::UnknownPredicate("off".into()),
+        ),
+        (
+            2,
+            "(at end (off))",
+            ModelErrorKind::UnknownPredicate("off".into()),
+        ),
+        (
+            2,
+            "(at end (increase (x) (* ?duration (y))))",
+            ModelErrorKind::UnknownFunction("y".into()),
+        ),
+        (
+            3,
+            "(increase (y) (* #t 1))",
+            ModelErrorKind::UnknownFunction("y".into()),
+        ),
+    ];
+    let problem = "(define (problem p) (:domain d) (:init (= (x) 0)) (:goal (on)))";
+    for (part, text, expected) in cases {
+        let mut parts = ok;
+        parts[part] = text;
+        let error = model_error(
+            &durative_domain(parts[0], parts[1], parts[2], parts[3]),
+            problem,
+        );
+        assert_eq!(error.kind, expected, "{text}");
+    }
+    let domain = Domain::from_str(&durative_domain(ok[0], ok[1], ok[2], ok[3])).unwrap();
+    let problem = Problem::from_str(problem).unwrap();
+    Validator::new(&domain, &problem).expect("the well-formed variant passes");
+}

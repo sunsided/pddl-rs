@@ -660,3 +660,52 @@ fn an_invariant_holds_at_the_instant_of_an_interior_step() {
     let report = task.run("0: (hold) [20]\n20: (reset)");
     assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
 }
+
+/// A tank that fills at one unit per time unit; `low` and `high` run once the level
+/// passes 5 and 6, and `count` fires while the level is at least 1 and `(n)` below `(k)`.
+const FILL: &str = "
+(define (domain fill) (:requirements :time)
+  (:functions (level) (low) (high) (n) (k))
+  (:action wait :parameters ())
+  (:process fill :parameters () :effect (increase (level) #t))
+  (:process low :parameters () :precondition (> (level) 5) :effect (increase (low) #t))
+  (:process high :parameters () :precondition (> (level) 6) :effect (increase (high) #t))
+  (:event count :parameters () :precondition (and (>= (level) 1) (< (n) (k)))
+    :effect (increase (n) 1)))";
+
+/// The [`FILL`] task with `(k)` as given and `goal`.
+fn fill(k: usize, goal: &str) -> Task {
+    Task::new(
+        FILL,
+        &format!(
+            "(define (problem p) (:domain fill)
+               (:init (= (level) 0) (= (low) 0) (= (high) 0) (= (n) 0) (= (k) {k}))
+               (:goal {goal}))"
+        ),
+    )
+}
+
+#[test]
+fn processes_switch_on_between_happenings() {
+    // `low` runs from 5 and `high` from 6, two breakpoints in one segment.
+    let task = fill(
+        0,
+        "(and (>= (low) 3) (<= (low) 3) (>= (high) 2) (<= (high) 2))",
+    );
+    let report = task.run("8: (wait)");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+}
+
+#[test]
+fn an_event_cascade_between_happenings_may_reach_the_limit() {
+    // The validator's cascade limit, 1000 rounds of events at one time.
+    let limit = 1000;
+    let report = fill(limit, "(>= (n) 1)").run("3: (wait)");
+    assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
+
+    let violation = fill(limit + 1, "(>= (n) 1)").violation("3: (wait)");
+    assert!(
+        matches!(violation.kind, ViolationKind::EventCascade { time, .. } if (time - 1.0).abs() < 1e-6),
+        "{violation:?}"
+    );
+}

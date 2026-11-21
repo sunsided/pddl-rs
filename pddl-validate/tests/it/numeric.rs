@@ -661,3 +661,26 @@ fn negated_connectives_follow_kleene_logic() {
     let report = negated_kleene("(not (and (q) (> (f) 0)))").run("(go)");
     assert_eq!(report.status(), ValidationStatus::Valid, "{report:?}");
 }
+
+#[test]
+fn the_tolerance_is_relative_and_settable() {
+    let eq = |x: &str, y: &str, tolerance: Option<f64>| {
+        let problem = format!(
+            "(define (problem p) (:domain compare) (:init (= (x) {x}) (= (y) {y})) (:goal (done)))"
+        );
+        let task = Task::new(COMPARE, &problem);
+        let validator = match tolerance {
+            Some(tolerance) => task.validator().with_tolerance(tolerance),
+            None => task.validator(),
+        };
+        validator.validate_text("(eq)").status() == ValidationStatus::Valid
+    };
+
+    // 1e-12 relative to 1e9 is 1e-3, so 1e-4 apart is equal.
+    assert!(eq("1000000000", "1000000000.0001", None));
+    assert!(!eq("1", "1.0005", None));
+    assert!(eq("1", "1.0005", Some(1e-3)));
+    // A negative tolerance counts as 0, which still finds equal values equal.
+    assert!(eq("1", "1", Some(-1.0)));
+    assert!(eq("1", "1", Some(f64::NAN)));
+}
