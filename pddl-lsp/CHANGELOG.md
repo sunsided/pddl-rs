@@ -14,6 +14,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- The custom request `pddl/validatePlan` checks a plan against a domain and a
+  problem, given as texts, with `pddl-validate`, and answers with a status,
+  a message, the plan line it belongs to, repair advice and the metric. The
+  VS Code extension's **PDDL: Validate Plan** uses it.
 - The server asks clients that support it to watch `**/*.pddl`, so closed
   files changed on disk stay current in editors other than VS Code, and it
   re-reads changed closed files before a rename.

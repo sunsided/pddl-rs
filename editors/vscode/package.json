@@ -192,6 +192,10 @@
         "enablement": "!isWeb"
       },
       {
+        "command": "pddl.checkPlan",
+        "title": "PDDL: Validate Plan"
+      },
+      {
         "command": "pddl.validatePlan",
         "title": "PDDL: Validate Plan with VAL",
         "enablement": "!isWeb"
@@ -212,6 +216,10 @@
         {
           "command": "pddl.solveWithPlanutils",
           "when": "!isWeb && editorLangId == pddl"
+        },
+        {
+          "command": "pddl.checkPlan",
+          "when": "editorLangId == pddl-plan"
         },
         {
           "command": "pddl.validatePlan",

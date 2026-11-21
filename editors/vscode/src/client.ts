@@ -3,6 +3,7 @@
 // Shared by the desktop entry point (extension.ts) and the web one (browser.ts).
 
 import * as vscode from "vscode";
+import { checkPlan } from "./check";
 import { planDefinitions } from "./plans";
 import { solveWithService } from "./service";
 import { Wasm, type ProcessOptions } from "@vscode/wasm-wasi/v1";
@@ -24,6 +25,12 @@ export type CreateClient = (
 ) => BaseLanguageClient;
 
 let client: BaseLanguageClient | undefined;
+
+/** The running language client, or `undefined` before it starts or in Restricted Mode. */
+export function languageClient(): BaseLanguageClient | undefined {
+  // `client` is set before `start()` resolves; a request then could not be served.
+  return client?.isRunning() ? client : undefined;
+}
 let createClient: CreateClient;
 let nativeAllowed: boolean;
 
@@ -36,8 +43,11 @@ export async function activateWith(
   createClient = create;
   nativeAllowed = native;
   const output = vscode.window.createOutputChannel("PDDL Language Server", { log: true });
+  const verdicts = vscode.languages.createDiagnosticCollection("pddl-validate");
   context.subscriptions.push(
     output,
+    verdicts,
+    vscode.commands.registerCommand("pddl.checkPlan", () => checkPlan(context, verdicts)),
     vscode.commands.registerCommand("pddl.restartServer", async () => {
       await stop();
       await start(context, output);

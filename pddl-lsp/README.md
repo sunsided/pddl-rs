@@ -50,6 +50,12 @@ that speaks the [Language Server Protocol](https://microsoft.github.io/language-
 - **Quick fixes** for misspelled keywords, such as `:predicats` → `:predicates`,
   and for missing requirements, which adds the key to `(:requirements ...)` or
   adds that section.
+- **Plan validation** with the custom request `pddl/validatePlan`, which
+  takes the texts `domain`, `problem` and `plan` and answers with a
+  `status` (`valid`, `invalid`, `unsupported` or `error`), a `message`, the
+  0-based plan `line` it belongs to, VAL-style `advice` and the `metric` of a
+  valid plan. It runs [`pddl-validate`](../pddl-validate), so it works in the
+  WebAssembly build too.
 - **Semantic highlighting**, so types, predicates, functions, actions, objects
   and variables each get their own color. Static predicates also carry the
   `readonly` modifier, and their hover says so.
@@ -255,7 +261,8 @@ Otherwise it uses the one whose file path sorts first.
 
 1. If the server uses parser changes that aren't on crates.io yet, release
    `pddl` first (`cargo release <level> -p pddl --execute`). That also raises
-   the `pddl` version `pddl-lsp` requires.
+   the `pddl` version `pddl-lsp` requires. Likewise, `pddl-validate` must be
+   on crates.io in the version `pddl-lsp` requires.
 2. On `main`, run `cargo release <level> -p pddl-lsp --execute`. It turns the
    "Unreleased" section of the changelog into the release's section, commits,
    tags `pddl-lsp-vX.Y.Z` and pushes.

@@ -16,6 +16,10 @@ All notable changes to the PDDL (pddl-lsp) extension are documented in this file
   asks before it sends the domain and problem to a server.
 - Plan files (`.plan`, `sas_plan`) are highlighted, and Go to Definition on
   a step's action opens it in the domain.
+- **PDDL: Validate Plan** checks the open plan with the built-in validator,
+  `pddl-validate`, through the language server: on the desktop and on the
+  web, with unsaved edits, and with the validator's message and repair hint
+  on the failing step.
 - **PDDL: Validate Plan with VAL** runs VAL (the new `pddl.validator`
   setting) on the open plan and shows its findings on the failing step.
   Desktop only.

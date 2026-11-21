@@ -99,6 +99,28 @@ exports.run = ((checks) => async function () {
   }
 })(exports.run);
 
+// The built-in validator: the server checks the plan with pddl-validate.
+exports.run = ((checks) => async function () {
+  await checks();
+  const root = vscode.workspace.workspaceFolders[0].uri;
+  const plan = vscode.Uri.joinPath(root, "trip", "trip.plan");
+  await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(plan));
+  const verdict = await vscode.commands.executeCommand("pddl.checkPlan");
+  assert.strictEqual(verdict.status, "invalid", JSON.stringify(verdict));
+  const found = vscode.languages.getDiagnostics(plan).filter((d) => d.source === "pddl-validate");
+  assert.strictEqual(found.length, 1, JSON.stringify(found));
+  assert.strictEqual(found[0].range.start.line, 2);
+  assert.ok(found[0].message.startsWith("step 2 (drive t1 home shop): unsatisfied precondition"), found[0].message);
+
+  // An unsaved edit counts: with one step the plan is valid, and the diagnostic goes.
+  const editor = vscode.window.activeTextEditor;
+  await editor.edit((edit) => edit.delete(editor.document.lineAt(2).rangeIncludingLineBreak));
+  const valid = await vscode.commands.executeCommand("pddl.checkPlan");
+  assert.strictEqual(valid.status, "valid", JSON.stringify(valid));
+  assert.strictEqual(vscode.languages.getDiagnostics(plan).filter((d) => d.source === "pddl-validate").length, 0);
+  await vscode.commands.executeCommand("workbench.action.files.revert");
+})(exports.run);
+
 // Planning-as-a-Service: off without a URL, asks before sending, then submits
 // the files and polls until the plan is there. Runs against a local stub.
 exports.run = ((checks) => async function () {

@@ -6,5 +6,6 @@
 pub mod analysis;
 pub mod format;
 pub mod line_index;
+pub mod plan_check;
 pub mod server;
 pub mod workspace;

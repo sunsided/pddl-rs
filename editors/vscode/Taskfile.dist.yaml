@@ -52,6 +52,8 @@ tasks:
       - ../../src/**/*.rs
       - ../../pddl-lsp/Cargo.toml
       - ../../pddl-lsp/src/**/*.rs
+      - ../../pddl-validate/Cargo.toml
+      - ../../pddl-validate/src/**/*.rs
     generates:
       - server/pddl-lsp.wasm
     cmds:

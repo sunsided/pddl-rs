@@ -49,6 +49,7 @@ use serde::Serialize;
 use crate::analysis::{node_range, Analysis, Definition, Expect, Kind, Occurrence};
 use crate::format::format;
 use crate::line_index::Encoding;
+use crate::plan_check;
 use crate::workspace::{Document, Severity, Target, Workspace};
 
 /// Files larger than this are not read from the workspace folders.
@@ -447,6 +448,11 @@ impl Server {
             FoldingRangeRequest::METHOD => call(self, params, Self::folding_ranges),
             SemanticTokensFullRequest::METHOD => call(self, params, Self::semantic_tokens),
             InlayHintRequest::METHOD => call(self, params, Self::inlay_hints),
+            plan_check::METHOD => {
+                call(self, params, |_, params: plan_check::ValidatePlanParams| {
+                    plan_check::validate(&params)
+                })
+            }
             _ => {
                 return Response::new_err(
                     request.id,

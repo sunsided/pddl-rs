@@ -1,0 +1,5 @@
+(define (problem trip)
+  (:domain logistics)
+  (:objects t1 - truck home shop - place)
+  (:init (at t1 home))
+  (:goal (at t1 shop)))
