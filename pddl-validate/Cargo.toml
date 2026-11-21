@@ -18,7 +18,7 @@ rust-version = "1.86.0"
 workspace = true
 
 [dependencies]
-pddl = { version = "0.4.0", path = "../pddl", default-features = false }
+pddl = { version = "0.5.0", path = "../pddl", default-features = false }
 
 [dev-dependencies]
 # Tests and doctests parse PDDL text. Path-only, so the published manifest

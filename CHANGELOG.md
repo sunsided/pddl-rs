@@ -5,6 +5,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [0.5.0] - 2026-11-21
+
+[0.5.0]: https://github.com/sunsided/pddl-rs/releases/tag/v0.5.0
+
 ### Added
 
 - `pddl-macros`, a new crate in this repository, checks PDDL at compile time

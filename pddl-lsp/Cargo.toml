@@ -17,7 +17,7 @@ rust-version = "1.86.0"
 workspace = true
 
 [dependencies]
-pddl = { version = "0.4.0", path = "../pddl", default-features = false, features = ["parser"] }
+pddl = { version = "0.5.0", path = "../pddl", default-features = false, features = ["parser"] }
 # Answers `pddl/validatePlan`.
 pddl-validate = { version = "0.1.0", path = "../pddl-validate" }
 lsp-server = "0.7.9"
