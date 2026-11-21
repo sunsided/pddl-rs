@@ -4,6 +4,8 @@ All notable changes to the PDDL (pddl-lsp) extension are documented in this file
 
 ## Unreleased
 
+## 0.3.0 - 2026-11-21
+
 ### Changed
 
 - Licensed under `EUPL-1.2 OR MPL-2.0`, at your option, instead of `EUPL-1.2`
