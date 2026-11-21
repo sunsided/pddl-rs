@@ -5,6 +5,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [0.3.0] - 2026-11-21
+
+[0.3.0]: https://github.com/sunsided/pddl-rs/releases/tag/pddl-lsp-v0.3.0
+
 ### Changed
 
 - Licensed under `EUPL-1.2 OR MPL-2.0`, at your option, instead of `EUPL-1.2`

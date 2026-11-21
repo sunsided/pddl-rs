@@ -1,6 +1,6 @@
 [package]
 name = "pddl-lsp"
-version = "0.2.0"
+version = "0.3.0"
 description = "A language server for PDDL: diagnostics, navigation, completion and formatting"
 license = "EUPL-1.2 OR MPL-2.0"
 categories = ["development-tools", "science"]
