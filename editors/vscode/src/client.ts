@@ -28,7 +28,8 @@ let client: BaseLanguageClient | undefined;
 
 /** The running language client, or `undefined` before it starts or in Restricted Mode. */
 export function languageClient(): BaseLanguageClient | undefined {
-  return client;
+  // `client` is set before `start()` resolves; a request then could not be served.
+  return client?.isRunning() ? client : undefined;
 }
 let createClient: CreateClient;
 let nativeAllowed: boolean;

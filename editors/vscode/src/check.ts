@@ -47,11 +47,19 @@ export async function checkPlan(
   }
   // Open documents give their current text, unsaved edits included.
   const text = async (uri: vscode.Uri) => (await vscode.workspace.openTextDocument(uri)).getText();
-  const verdict = await client.sendRequest<PlanVerdict>("pddl/validatePlan", {
-    domain: await text(domain),
-    problem: await text(problem),
-    plan: plan.getText(),
-  });
+  let verdict: PlanVerdict;
+  try {
+    verdict = await client.sendRequest<PlanVerdict>("pddl/validatePlan", {
+      domain: await text(domain),
+      problem: await text(problem),
+      plan: plan.getText(),
+    });
+  } catch (error) {
+    // An older `pddl.server.path` server answers MethodNotFound; the last verdict no longer holds.
+    diagnostics.delete(plan.uri);
+    vscode.window.showErrorMessage(`The language server could not validate the plan: ${error}`);
+    return undefined;
+  }
   diagnostics.set(plan.uri, toDiagnostics(verdict, plan));
   if (verdict.status === "valid") {
     const metric = verdict.metric === null ? "" : ` (metric: ${verdict.metric})`;
