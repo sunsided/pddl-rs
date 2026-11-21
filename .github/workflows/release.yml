@@ -5,12 +5,20 @@ name: Release
 # pddl/release.toml). Publishes, each only if its version is not on crates.io
 # yet: pddl-runtime, pddl-core, pddl-codegen, pddl-macros, then pddl, which
 # re-exports them. pddl-core and pddl carry the same version; the others have
-# their own. Only plain X.Y.Z versions are released; pre-release
-# tags such as v1.0.0-rc.1 don't match.
+# their own.
+#
+# Also runs when `cargo release -p pddl-validate` pushes a pddl-validate-vX.Y.Z
+# tag (see pddl-validate/release.toml), and then publishes only pddl-validate,
+# whose release notes come from pddl-validate/CHANGELOG.md. Its trusted
+# publisher on crates.io names this workflow too.
+#
+# Only plain X.Y.Z versions are released; pre-release tags such as
+# v1.0.0-rc.1 don't match.
 on:
   push:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'pddl-validate-v[0-9]+.[0-9]+.[0-9]+'
 
 permissions: {}
 
@@ -40,28 +48,46 @@ jobs:
       - name: Check that the tag matches the crate versions and is on main
         run: |
           metadata=$(cargo metadata --no-deps --format-version 1)
-          version=$(jq -r '.packages[] | select(.name == "pddl") | .version' <<< "$metadata")
-          core_version=$(jq -r '.packages[] | select(.name == "pddl-core") | .version' <<< "$metadata")
-          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match the version $version in pddl/Cargo.toml"
-            exit 1
-          fi
-          if [ "$core_version" != "$version" ]; then
-            echo "::error::pddl-core is at $core_version, but pddl is at $version; release them together"
-            exit 1
-          fi
+          version_of() { jq -r --arg crate "$1" '.packages[] | select(.name == $crate) | .version' <<< "$metadata"; }
+          case "$GITHUB_REF_NAME" in
+            pddl-validate-v*)
+              version=$(version_of pddl-validate)
+              if [ "pddl-validate-v$version" != "$GITHUB_REF_NAME" ]; then
+                echo "::error::Tag $GITHUB_REF_NAME does not match the version $version in pddl-validate/Cargo.toml"
+                exit 1
+              fi
+              echo "CRATES=pddl-validate" >> "$GITHUB_ENV"
+              ;;
+            *)
+              version=$(version_of pddl)
+              core_version=$(version_of pddl-core)
+              if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+                echo "::error::Tag $GITHUB_REF_NAME does not match the version $version in pddl/Cargo.toml"
+                exit 1
+              fi
+              if [ "$core_version" != "$version" ]; then
+                echo "::error::pddl-core is at $core_version, but pddl is at $version; release them together"
+                exit 1
+              fi
+              echo "CRATES=pddl-runtime pddl-core pddl-codegen pddl-macros pddl" >> "$GITHUB_ENV"
+              ;;
+          esac
           if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
             echo "::error::Tag $GITHUB_REF_NAME points at a commit that is not on main"
             exit 1
           fi
       # The same feature combinations as the Rust CI workflow.
       - name: Run tests
+        if: env.CRATES != 'pddl-validate'
         run: |
           cargo test --all-features
           cargo test --no-default-features
           cargo test --no-default-features --features pretty
           cargo test --no-default-features --features parser
           cargo test -p pddl --all-features
+      - name: Run the pddl-validate tests
+        if: env.CRATES == 'pddl-validate'
+        run: cargo test -p pddl-validate
       # Re-runs skip crates whose version is already on crates.io, so a release
       # that published pddl-core but failed on pddl can be finished. The same
       # check publishes pddl-runtime, pddl-codegen and pddl-macros only when
@@ -71,7 +97,7 @@ jobs:
         run: |
           metadata=$(cargo metadata --no-deps --format-version 1)
           pending=""
-          for crate in pddl-runtime pddl-core pddl-codegen pddl-macros pddl; do
+          for crate in $CRATES; do
             version=$(jq -r --arg crate "$crate" '.packages[] | select(.name == $crate) | .version' <<< "$metadata")
             response="$RUNNER_TEMP/crates-io-$crate.json"
             # --retry covers timeouts, 429 and 5xx; a 404 means "not published yet".
@@ -117,9 +143,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Extract release notes from CHANGELOG.md
+      - name: Extract release notes from the changelog
         run: |
-          version="${GITHUB_REF_NAME#v}"
+          case "$GITHUB_REF_NAME" in
+            pddl-validate-v*) version="${GITHUB_REF_NAME#pddl-validate-v}"; changelog=pddl-validate/CHANGELOG.md ;;
+            *) version="${GITHUB_REF_NAME#v}"; changelog=CHANGELOG.md ;;
+          esac
           # The section from "## [X.Y.Z]" up to the next "## " heading, without
           # the heading itself and without link definitions like "[X.Y.Z]: https://...".
           awk -v heading="## [$version]" '
@@ -127,7 +156,7 @@ jobs:
             found && /^## / { exit }
             found && /^\[[^]]+\]: / { next }
             found { print }
-          ' CHANGELOG.md > release-notes.md
+          ' "$changelog" > release-notes.md
       - name: Create the release
         run: |
           if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
