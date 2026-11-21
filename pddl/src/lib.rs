@@ -1,17 +1,23 @@
 //! # A PDDL 3.1 parser, strongly typed
 //!
-//! This crate provides a PDDL 3.1 parser and a strongly typed syntax tree.
+//! This crate provides a PDDL 3.1 parser and a strongly typed syntax tree, with
+//! optional pretty-printing, serde support, grounding to SAS+, compile-time checked
+//! PDDL macros and generated planning code.
 //!
 //! ## Default crate features
 //!
 //! * `parser` - Enables parsing of PDDL types through the [`Parser`] trait.
 //! * `interning` - Enables string interning for [`Name`] types to reduce memory footprint.
-//! * `pretty` - Enables pretty-printing of PDDL types via the
-//!   `Pretty` extension trait. The feature provides round-trip-safe
-//!   rendering: `parse → pretty() → parse` preserves AST equality.
 //!
 //! ## Optional crate features
 //!
+//! * `pretty` - Enables pretty-printing of PDDL types via the
+//!   `Pretty` extension trait. The feature provides round-trip-safe
+//!   rendering: `parse → pretty() → parse` preserves AST equality.
+//! * `serde` - Implements `serde::Serialize` and `serde::Deserialize` for the PDDL
+//!   types, using a JSON-friendly schema that mirrors PDDL.
+//! * `sas-plus` - Grounds a domain and problem into a Fast Downward SAS+ task
+//!   (`sas_plus::fdr::SasFile`), see the `sas_plus` module.
 //! * `miette` - Implements `miette::Diagnostic` for [`ParseError`], so parse errors
 //!   render with the offending input marked.
 //! * `macros` - Re-exports the `domain!`, `problem!`, `pddl!` and `validated!` macros

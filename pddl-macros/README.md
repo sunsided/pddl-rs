@@ -4,12 +4,31 @@ Compile-time checked PDDL for the [`pddl`](https://crates.io/crates/pddl) crate.
 The macros parse your PDDL while the crate compiles, so a syntax error fails
 the build instead of a run. At run time, the PDDL is parsed once, on first use.
 
-Use them through the `pddl` crate's `macros` feature, which re-exports them:
+With the `codegen` feature, the `#[task]` attribute also turns a domain into
+typed Rust planning code (see
+[`pddl-codegen`](https://github.com/sunsided/pddl-rs/tree/main/pddl-codegen)).
+
+## Who this is for
+
+- Rust developers who embed PDDL domains and problems in their program, as
+  inline literals or files next to the source, and want a typo in the PDDL to
+  fail the build with a pointer to the offending line.
+- Tools and tests that need a parsed `Domain` or `Problem` in a `static`
+  without writing the parse-and-unwrap boilerplate.
+- To parse PDDL that only arrives at run time, use the parser in
+  [`pddl`](https://github.com/sunsided/pddl-rs) directly; to check plans
+  against a domain, use [`pddl-validate`](https://github.com/sunsided/pddl-rs/tree/main/pddl-validate).
+
+## Installation
+
+Use the macros through the `pddl` crate's `macros` feature, which re-exports them:
 
 ```toml
 [dependencies]
-pddl = { version = "0.4", features = ["macros"] }
+pddl = { version = "0.5", features = ["macros"] }
 ```
+
+## Usage
 
 ```rust
 use std::sync::LazyLock;

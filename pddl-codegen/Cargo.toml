@@ -1,10 +1,10 @@
 [package]
 name = "pddl-codegen"
 version = "0.1.0"
-description = "Generates typed Rust planning code from PDDL domains, for pddl's #[task] attribute and build scripts"
+description = "Generates typed Rust planning code from PDDL domains and problems, for pddl's #[task] attribute and build scripts"
 license = "EUPL-1.2 OR MPL-2.0"
-categories = ["science", "simulation", "development-tools::build-utils"]
-keywords = ["pddl", "planning", "codegen"]
+categories = ["development-tools::build-utils", "artificial-intelligence", "science"]
+keywords = ["pddl", "planning", "codegen", "code-generation", "ai-planning"]
 repository = "https://github.com/sunsided/pddl-rs"
 readme = "README.md"
 exclude = ["release.toml"]

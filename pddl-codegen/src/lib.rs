@@ -1,6 +1,7 @@
 //! Generates typed Rust planning code from PDDL.
 //!
-//! [`lifted`] turns a domain into the items of a module (level B1 of #132):
+//! [`lifted`] turns a domain into the items of a module; the domain is fixed
+//! when the crate compiles and problems load at run time:
 //!
 //! - `types::Block` and so on: one id type per PDDL type. Objects are numbered
 //!   so that each type's objects, subtypes included, are one range, which makes
@@ -43,6 +44,10 @@
 //! `forall` and `when` in effects), numeric fluents with action costs, and
 //! stratified derived predicates.
 //! Anything else is an [`Error`] that names it.
+//!
+//! [`grounded`] fixes the problem too: it grounds the task at build time into
+//! bit masks over a `[u64; WORDS]` state, for STRIPS with negative
+//! preconditions.
 
 #![forbid(unsafe_code)]
 

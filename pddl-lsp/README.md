@@ -3,6 +3,22 @@
 A language server for the Planning Domain Definition Language (PDDL 3.1), built
 on the [`pddl`](https://crates.io/crates/pddl) parser. It works with any editor
 that speaks the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/).
+It reports every syntax error and a range of semantic errors as you type,
+checks problems against their domain across files, and adds navigation,
+rename, completion, formatting, quick fixes and plan validation. It also runs
+as WebAssembly inside the VS Code extension.
+
+## Who this is for
+
+- Anyone who writes PDDL domains and problems by hand, in courses, research or
+  planning-based products, and wants the editor to catch unknown names, wrong
+  argument types and impossible goals before a planner does.
+- Editor users of VS Code, Neovim, Vim, Helix, Emacs or Sublime Text; setup for
+  each is below.
+- To check PDDL from Rust code or a build instead of an editor, use the parser
+  in [`pddl`](https://github.com/sunsided/pddl-rs) or the compile-time macros
+  in [`pddl-macros`](https://github.com/sunsided/pddl-rs/tree/main/pddl-macros); to validate plans from a
+  program, [`pddl-validate`](https://github.com/sunsided/pddl-rs/tree/main/pddl-validate).
 
 ## Features
 
@@ -54,7 +70,7 @@ that speaks the [Language Server Protocol](https://microsoft.github.io/language-
   takes the texts `domain`, `problem` and `plan` and answers with a
   `status` (`valid`, `invalid`, `unsupported` or `error`), a `message`, the
   0-based plan `line` it belongs to, VAL-style `advice` and the `metric` of a
-  valid plan. It runs [`pddl-validate`](../pddl-validate), so it works in the
+  valid plan. It runs [`pddl-validate`](https://github.com/sunsided/pddl-rs/tree/main/pddl-validate), so it works in the
   WebAssembly build too.
 - **Semantic highlighting**, so types, predicates, functions, actions, objects
   and variables each get their own color. Static predicates also carry the
@@ -67,12 +83,6 @@ be on your `PATH`:
 
 ```shell
 cargo install --locked pddl-lsp
-```
-
-Or, for unreleased changes, from a checkout of this repository:
-
-```shell
-cargo install --locked --path pddl-lsp
 ```
 
 Check that it works:
@@ -91,7 +101,7 @@ binary's full path instead.
 
 ### VS Code
 
-Use the extension in [`editors/vscode`](../editors/vscode). It adds syntax
+Use the extension in [`editors/vscode`](https://github.com/sunsided/pddl-rs/tree/main/editors/vscode). It adds syntax
 highlighting and bundles this server compiled to WebAssembly, so you don't need
 to install the binary. Install it from the Marketplace as
 [`sunsided.pddl-lsp`](https://marketplace.visualstudio.com/items?itemName=sunsided.pddl-lsp),
@@ -105,7 +115,7 @@ task vscode:install
 
 This packages the extension and the server as a `.vsix` file and installs it
 into VS Code. To only build the `.vsix`, run `task vscode:package`. The
-[extension's CONTRIBUTING.md](../editors/vscode/CONTRIBUTING.md#building-and-installing) lists every task and
+[extension's CONTRIBUTING.md](https://github.com/sunsided/pddl-rs/blob/main/editors/vscode/CONTRIBUTING.md#building-and-installing) lists every task and
 the equivalent commands.
 
 To use a native binary instead of the bundled one, set `pddl.server.path` to
@@ -257,7 +267,7 @@ Otherwise it uses the one whose file path sorts first.
 ## Releasing
 
 `pddl-lsp` is versioned separately from `pddl`, with tags named
-`pddl-lsp-vX.Y.Z` and its own [CHANGELOG](CHANGELOG.md).
+`pddl-lsp-vX.Y.Z` and its own [CHANGELOG](https://github.com/sunsided/pddl-rs/blob/main/pddl-lsp/CHANGELOG.md).
 
 1. If the server uses parser changes that aren't on crates.io yet, release
    `pddl` first (`cargo release <level> -p pddl --execute`). That also raises
@@ -266,18 +276,16 @@ Otherwise it uses the one whose file path sorts first.
 2. On `main`, run `cargo release <level> -p pddl-lsp --execute`. It turns the
    "Unreleased" section of the changelog into the release's section, commits,
    tags `pddl-lsp-vX.Y.Z` and pushes.
-3. The tag starts [`release-pddl-lsp.yml`](../.github/workflows/release-pddl-lsp.yml).
+3. The tag starts [`release-pddl-lsp.yml`](https://github.com/sunsided/pddl-rs/blob/main/.github/workflows/release-pddl-lsp.yml).
    It runs the tests, publishes the crate to crates.io, creates a GitHub
    Release with the changelog section, and attaches binaries for Linux
    (x86-64 and ARM64), macOS (Apple silicon) and Windows (x86-64), each with
    a SHA-256 checksum and a build provenance attestation. Check a download
    with `gh attestation verify <file> --repo sunsided/pddl-rs`.
 
-The workflow publishes with crates.io's trusted publishing, which can only be
-set up for a crate that already exists. Before the first release, publish
-once by hand (`cargo publish -p pddl-lsp`). Then, in the crate's settings on
-crates.io, add a trusted publisher for the repository `sunsided/pddl-rs`,
-workflow `release-pddl-lsp.yml` and environment `release`.
+The workflow publishes with crates.io's trusted publishing, configured for the
+repository `sunsided/pddl-rs`, workflow `release-pddl-lsp.yml` and environment
+`release`.
 
 ## License
 

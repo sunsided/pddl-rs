@@ -1,7 +1,7 @@
 # Design: generated planning code (levels B1 and B2)
 
-Status: implemented. Covers #123 to #131 under the tracking issue #132; Level A
-(#122) is in [`pddl-macros.md`](pddl-macros.md).
+Covers #123 to #131 under the tracking issue #132; Level A (#122) is in
+[`pddl-macros.md`](https://github.com/sunsided/pddl-rs/blob/main/docs/design/pddl-macros.md).
 
 ## 1. Crates
 
