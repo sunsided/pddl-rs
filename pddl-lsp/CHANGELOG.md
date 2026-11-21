@@ -11,6 +11,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   alone. Versions already published keep the licence they were published under.
 - `Server::request` and `Server::diagnostics` take `&mut self`: the server
   remembers which documents it published diagnostics for.
+- Built on `lsp-server` 0.10 and `lsp-types` 0.97, so the public API takes
+  `lsp_types::Uri` where it took `lsp_types::Url`. `workspace::file_path` and
+  `workspace::file_uri` convert between `file:` URIs and paths, which `Uri`
+  itself doesn't.
 
 ### Added
 

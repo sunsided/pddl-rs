@@ -73,9 +73,10 @@ impl Client {
 
     /// Sends a request and returns its result, which must not be an error.
     fn request(&mut self, method: &str, params: Value) -> Value {
-        let Response { result, error, .. } = self.response(method, params);
-        check!(error.is_none(), "{method}: {error:?}");
-        result.unwrap_or(Value::Null)
+        match self.response(method, params).response_result {
+            Ok(result) => result,
+            Err(error) => panic!("{method}: {error:?}"),
+        }
     }
 
     /// The next message from the server, failing rather than hanging if it
@@ -523,7 +524,10 @@ fn navigates_variables_and_symbols() {
     let mut params = at(d, 3, 16);
     params["newName"] = json!("not a name");
     let response = client.response("textDocument/rename", params);
-    check!(response.error.unwrap().message == "`not a name` is not a valid predicate name");
+    check!(
+        response.response_result.unwrap_err().message
+            == "`not a name` is not a valid predicate name"
+    );
 
     let symbols = client.request("workspace/symbol", json!({ "query": "DELIV" }));
     let names: Vec<_> = symbols
@@ -554,11 +558,11 @@ fn navigates_variables_and_symbols() {
 fn answers_unknown_requests_and_bad_parameters_with_errors() {
     let mut client = Client::start();
     let unknown = client.response("pddl/unknown", json!({}));
-    check!(unknown.error.unwrap().code == -32601);
+    check!(unknown.response_result.unwrap_err().code == -32601);
     let bad = client.response("textDocument/hover", json!({ "nonsense": true }));
-    check!(bad.error.unwrap().code == -32602);
+    check!(bad.response_result.unwrap_err().code == -32602);
     let bad = client.response("textDocument/rename", json!({ "nonsense": true }));
-    check!(bad.error.unwrap().code == -32602);
+    check!(bad.response_result.unwrap_err().code == -32602);
 }
 
 /// A folder under the system's temporary directory, removed when dropped.
@@ -572,7 +576,7 @@ impl TempDir {
     }
 
     fn uri(&self, file: &str) -> String {
-        lsp_types::Url::from_file_path(self.0.join(file))
+        pddl_lsp::workspace::file_uri(&self.0.join(file))
             .unwrap()
             .to_string()
     }
@@ -691,7 +695,8 @@ fn rename_rejects_reserved_and_taken_names() {
         params["newName"] = json!(name);
         client
             .response("textDocument/rename", params)
-            .error
+            .response_result
+            .err()
             .map(|e| e.message)
     };
     check!(rename("and").as_deref() == Some("`and` is a reserved word of PDDL"));
@@ -768,5 +773,5 @@ fn validates_plans_over_the_protocol() {
     check!(invalid["line"] == 0);
 
     let bad = client.response("pddl/validatePlan", json!({ "domain": DOMAIN }));
-    check!(bad.error.unwrap().code == -32602);
+    check!(bad.response_result.unwrap_err().code == -32602);
 }

@@ -8,13 +8,25 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fmt::Write as _;
 use std::ops::Range;
 
-use lsp_types::Url;
+use lsp_types::Uri;
 use pddl::{syntax, Requirement};
 
 use crate::analysis::{
     Analysis, Definition, Expect, Kind, Need, Occurrence, Place, RequirementsAt, VariableUse,
 };
 use crate::line_index::{Encoding, LineIndex};
+
+/// The local path of a `file:` URI, or `None` for any other URI.
+#[must_use]
+pub fn file_path(uri: &Uri) -> Option<std::path::PathBuf> {
+    url::Url::parse(uri.as_str()).ok()?.to_file_path().ok()
+}
+
+/// The `file:` URI of an absolute `path`, or `None` if it has none.
+#[must_use]
+pub fn file_uri(path: &std::path::Path) -> Option<Uri> {
+    url::Url::from_file_path(path).ok()?.as_str().parse().ok()
+}
 
 /// A PDDL file and its names.
 #[derive(Debug, Clone)]
@@ -49,7 +61,7 @@ impl Document {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Target {
     /// The document.
-    pub uri: Url,
+    pub uri: Uri,
     /// The index of the definition in its document's [`Analysis::definitions`].
     pub index: usize,
 }
@@ -93,13 +105,13 @@ pub struct Fix {
 #[derive(Debug, Default)]
 pub struct Workspace {
     /// Every known document by its URI.
-    pub documents: BTreeMap<Url, Document>,
+    pub documents: BTreeMap<Uri, Document>,
 }
 
 impl Workspace {
     /// The definition the name at `offset` in `uri` refers to, or defines.
     #[must_use]
-    pub fn target_at(&self, uri: &Url, offset: usize) -> Option<Target> {
+    pub fn target_at(&self, uri: &Uri, offset: usize) -> Option<Target> {
         let document = self.documents.get(uri)?;
         match document.analysis.occurrence_at(offset)? {
             Occurrence::Definition(index) => Some(Target {
@@ -130,7 +142,7 @@ impl Workspace {
 
     /// The definition reference `index` in `uri` refers to.
     #[must_use]
-    pub fn resolve(&self, uri: &Url, index: usize) -> Option<Target> {
+    pub fn resolve(&self, uri: &Uri, index: usize) -> Option<Target> {
         let document = self.documents.get(uri)?;
         let reference = &document.analysis.references[index];
         let matches = |d: &Definition, kind: Kind| {
@@ -164,9 +176,9 @@ impl Workspace {
     /// those in `first` before those in other documents.
     fn domains<'w>(
         &'w self,
-        first: &'w Url,
+        first: &'w Uri,
         domain: &'w str,
-    ) -> impl Iterator<Item = (&'w Url, &'w Document, usize)> + 'w {
+    ) -> impl Iterator<Item = (&'w Uri, &'w Document, usize)> + 'w {
         let preferred = self.documents.get_key_value(first);
         let others = self.documents.iter().filter(move |(uri, _)| *uri != first);
         preferred
@@ -191,9 +203,9 @@ impl Workspace {
     /// domain its `(:domain ...)` names, those in `uri` first.
     fn seen_from<'w>(
         &'w self,
-        uri: &'w Url,
+        uri: &'w Uri,
         context: usize,
-    ) -> impl Iterator<Item = (&'w Url, &'w Document, usize)> + 'w {
+    ) -> impl Iterator<Item = (&'w Uri, &'w Document, usize)> + 'w {
         let found = self.documents.get_key_value(uri).map(|(uri, document)| {
             let own = &document.analysis.contexts[context];
             let itself = (own.kind == Kind::Domain).then_some((uri, document, context));
@@ -210,7 +222,7 @@ impl Workspace {
     /// which `accept` holds.
     fn in_domain(
         &self,
-        first: &Url,
+        first: &Uri,
         context: usize,
         accept: impl Fn(&Definition) -> bool,
     ) -> Option<Target> {
@@ -220,7 +232,7 @@ impl Workspace {
     /// The first definition in a domain named `domain` for which `accept` holds.
     fn in_domain_named(
         &self,
-        first: &Url,
+        first: &Uri,
         domain: &str,
         accept: impl Fn(&Definition) -> bool,
     ) -> Option<Target> {
@@ -230,7 +242,7 @@ impl Workspace {
     /// The definitions usable in `context` of `uri`: its own objects, and the
     /// definitions of the domain it sees, except variables.
     #[must_use]
-    pub fn visible<'w>(&'w self, uri: &'w Url, context: usize) -> Vec<&'w Definition> {
+    pub fn visible<'w>(&'w self, uri: &'w Uri, context: usize) -> Vec<&'w Definition> {
         let Some(document) = self.documents.get(uri) else {
             return Vec::new();
         };
@@ -261,13 +273,13 @@ impl Workspace {
     }
 
     /// Whether the domain that `context` in `uri` sees is known.
-    fn domain_known(&self, uri: &Url, context: usize) -> bool {
+    fn domain_known(&self, uri: &Uri, context: usize) -> bool {
         self.seen_from(uri, context).next().is_some()
     }
 
     /// Every name defining or referring to `target`, the definition first.
     #[must_use]
-    pub fn references(&self, target: &Target) -> Vec<(Url, Range<usize>)> {
+    pub fn references(&self, target: &Target) -> Vec<(Uri, Range<usize>)> {
         let Some(definition) = self.definition(target) else {
             return Vec::new();
         };
@@ -303,7 +315,7 @@ impl Workspace {
 
     /// The mistakes in `uri`: parse errors, then names that don't resolve.
     #[must_use]
-    pub fn problems(&self, uri: &Url) -> Vec<Problem> {
+    pub fn problems(&self, uri: &Uri) -> Vec<Problem> {
         let Some(document) = self.documents.get(uri) else {
             return Vec::new();
         };
@@ -405,7 +417,7 @@ impl Workspace {
     /// Literals of a problem's `:goal` that can never hold: their predicate is
     /// static, so a positive one must be in `:init` and a negated one must not.
     /// `targets` holds what each reference in `uri` resolves to.
-    fn impossible_goals(&self, uri: &Url, targets: &[Option<Target>]) -> Vec<Problem> {
+    fn impossible_goals(&self, uri: &Uri, targets: &[Option<Target>]) -> Vec<Problem> {
         let document = &self.documents[uri];
         let analysis = &document.analysis;
         let heads: HashMap<usize, usize> = analysis
@@ -501,7 +513,7 @@ impl Workspace {
     /// only reported when its type, the parameter's type and the type hierarchy
     /// are all known: untyped names, nested function terms and types of a
     /// domain outside the workspace are not checked.
-    fn argument_types(&self, uri: &Url, targets: &[Option<Target>]) -> Vec<Problem> {
+    fn argument_types(&self, uri: &Uri, targets: &[Option<Target>]) -> Vec<Problem> {
         let analysis = &self.documents[uri].analysis;
         let variables: HashMap<usize, &VariableUse> = analysis
             .variables
@@ -574,7 +586,7 @@ impl Workspace {
 
     /// The parent types of each type defined in `context` of `uri`, by
     /// lowercase name.
-    fn type_parents(&self, uri: &Url, context: usize) -> HashMap<String, Vec<String>> {
+    fn type_parents(&self, uri: &Uri, context: usize) -> HashMap<String, Vec<String>> {
         self.documents[uri]
             .analysis
             .definitions
@@ -587,7 +599,7 @@ impl Workspace {
     /// Constructs in `uri` that need a requirement its domain or problem
     /// doesn't declare. A problem also has its domain's requirements, so its
     /// constructs aren't checked if that domain is not known.
-    fn missing_requirements(&self, uri: &Url) -> Vec<Problem> {
+    fn missing_requirements(&self, uri: &Uri) -> Vec<Problem> {
         let analysis = &self.documents[uri].analysis;
         let mut declared = HashMap::new();
         let mut problems = Vec::new();
@@ -618,7 +630,7 @@ impl Workspace {
 
     /// The requirements in effect in `context` of `uri`, with shorthands such as
     /// `:adl` expanded, or `None` for a problem whose domain is not known.
-    fn declared_requirements(&self, uri: &Url, context: usize) -> Option<HashSet<Requirement>> {
+    fn declared_requirements(&self, uri: &Uri, context: usize) -> Option<HashSet<Requirement>> {
         let own = &self.documents[uri].analysis.contexts[context];
         let mut declared = own.requirements.clone();
         if own.kind == Kind::Problem {
@@ -645,7 +657,7 @@ impl Workspace {
     /// within their own problem or form. Actions, domains and problems are
     /// used from outside PDDL, and a predicate's or function's parameters
     /// only name its arguments, so they are never reported.
-    fn unused(&self, uri: &Url) -> Vec<Problem> {
+    fn unused(&self, uri: &Uri) -> Vec<Problem> {
         let Some(document) = self.documents.get(uri) else {
             return Vec::new();
         };
@@ -708,7 +720,7 @@ impl Workspace {
 /// The first definition for which `accept` holds in `domains`, each given as
 /// its document and context index.
 fn first_accepted<'w>(
-    mut domains: impl Iterator<Item = (&'w Url, &'w Document, usize)>,
+    mut domains: impl Iterator<Item = (&'w Uri, &'w Document, usize)>,
     accept: impl Fn(&Definition) -> bool,
 ) -> Option<Target> {
     domains.find_map(|(uri, document, context)| {
@@ -846,15 +858,15 @@ mod tests {
     fn workspace(files: &[(&str, &str)]) -> Workspace {
         let mut workspace = Workspace::default();
         for (name, text) in files {
-            let uri = Url::parse(&format!("file:///{name}")).unwrap();
+            let uri = format!("file:///{name}").parse().unwrap();
             let document = Document::new((*text).to_string(), Encoding::Utf8, true);
             workspace.documents.insert(uri, document);
         }
         workspace
     }
 
-    fn uri(name: &str) -> Url {
-        Url::parse(&format!("file:///{name}")).unwrap()
+    fn uri(name: &str) -> Uri {
+        format!("file:///{name}").parse().unwrap()
     }
 
     fn messages(workspace: &Workspace, name: &str) -> Vec<String> {
