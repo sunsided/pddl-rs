@@ -20,8 +20,8 @@ workspace = true
 pddl = { version = "0.5.0", path = "../pddl", default-features = false, features = ["parser"] }
 # Answers `pddl/validatePlan`.
 pddl-validate = { version = "0.1.0", path = "../pddl-validate" }
-lsp-server = "0.7.9"
-lsp-types = "0.95.1"
+lsp-server = "0.10.0"
+lsp-types = "0.97.0"
 serde = "1"
 serde_json = "1"
 
