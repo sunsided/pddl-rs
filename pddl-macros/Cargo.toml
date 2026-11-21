@@ -27,7 +27,7 @@ workspace = true
 # the program, so the parser that checks and the one that parses are the same.
 # An exact pin would make every pddl-core release break `pddl`'s `macros`
 # feature until pddl-macros is re-released.
-pddl-core = { version = "0.4.0", path = "..", default-features = false, features = ["parser"] }
+pddl-core = { version = "0.5.0", path = "..", default-features = false, features = ["parser"] }
 proc-macro2 = "1.0.107"
 quote = "1.0.47"
 syn = { version = "3.0.10", default-features = false, features = ["parsing", "printing", "proc-macro", "full"] }
