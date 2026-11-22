@@ -24,6 +24,8 @@ a planner over the generated `Task` monomorphizes per domain.
 
 Anything unsupported is an `Error` that names the construct.
 
+Part of the [planning and search crates](https://sunsided.github.io/planning-and-search/).
+
 ## Who this is for
 
 - Rust developers who plan in one known PDDL domain (a game, a robot cell, a

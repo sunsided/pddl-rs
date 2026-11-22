@@ -7,6 +7,7 @@ documentation = "https://docs.rs/pddl-validate"
 categories = ["artificial-intelligence", "science", "development-tools"]
 keywords = ["pddl", "planning", "validation", "val", "ai-planning"]
 repository = "https://github.com/sunsided/pddl-rs"
+homepage = "https://sunsided.github.io/planning-and-search/crates/pddl-validate/"
 readme = "README.md"
 # Reads the pddl crate's test corpus, which is not part of this crate.
 exclude = ["tests/corpus.rs", "release.toml", "benches/"]

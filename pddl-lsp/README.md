@@ -20,6 +20,8 @@ as WebAssembly inside the VS Code extension.
   in [`pddl-macros`](https://github.com/sunsided/pddl-rs/tree/main/pddl-macros); to validate plans from a
   program, [`pddl-validate`](https://github.com/sunsided/pddl-rs/tree/main/pddl-validate).
 
+Part of the [planning and search crates](https://sunsided.github.io/planning-and-search/).
+
 ## Features
 
 - **Diagnostics**: every syntax error in a file, not just the first, plus:

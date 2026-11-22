@@ -34,6 +34,8 @@ pddl-validate = "0.1"
 
 ## Usage
 
+The workspace is in turn part of the [planning and search crates](https://sunsided.github.io/planning-and-search/); see also this crate's [overview page](https://sunsided.github.io/planning-and-search/crates/pddl-validate/).
+
 ```rust
 use pddl::{Domain, Parser, Problem};
 use pddl_validate::{ValidationStatus, Validator};

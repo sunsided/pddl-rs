@@ -6,6 +6,7 @@ license = "EUPL-1.2 OR MPL-2.0"
 categories = ["development-tools", "text-editors", "artificial-intelligence", "science"]
 keywords = ["pddl", "planning", "lsp", "language-server", "ai-planning"]
 repository = "https://github.com/sunsided/pddl-rs"
+homepage = "https://sunsided.github.io/planning-and-search/"
 readme = "README.md"
 # Reads the pddl crate's test corpus, which is not part of this crate.
 exclude = ["tests/corpus.rs", "release.toml"]

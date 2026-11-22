@@ -5,6 +5,8 @@ The planning-task trait and the fact storage that code generated from PDDL
 `codegen` feature) builds on. It has no dependencies and does not depend on the
 PDDL parser.
 
+Part of the [planning and search crates](https://sunsided.github.io/planning-and-search/).
+
 - `Task`: initial state, successors, goal test and action costs. Planners are
   generic over it and monomorphize per domain; there is no `dyn` on the hot
   path.
