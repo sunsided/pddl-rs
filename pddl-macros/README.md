@@ -8,6 +8,8 @@ With the `codegen` feature, the `#[task]` attribute also turns a domain into
 typed Rust planning code (see
 [`pddl-codegen`](https://github.com/sunsided/pddl-rs/tree/main/pddl-codegen)).
 
+Part of the [planning and search crates](https://sunsided.github.io/planning-and-search/).
+
 ## Who this is for
 
 - Rust developers who embed PDDL domains and problems in their program, as

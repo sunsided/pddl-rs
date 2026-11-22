@@ -6,6 +6,7 @@ license = "EUPL-1.2 OR MPL-2.0"
 categories = ["data-structures", "artificial-intelligence", "science"]
 keywords = ["pddl", "planning", "bitset", "search", "ai-planning"]
 repository = "https://github.com/sunsided/pddl-rs"
+homepage = "https://sunsided.github.io/planning-and-search/"
 readme = "README.md"
 exclude = ["release.toml"]
 authors = ["Markus Mayer <widemeadows@gmail.com>"]

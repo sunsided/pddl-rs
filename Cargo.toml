@@ -7,6 +7,7 @@ documentation = "https://docs.rs/pddl-core"
 categories = ["parser-implementations", "artificial-intelligence", "science"]
 keywords = ["pddl", "planning", "parser", "ai-planning", "strips"]
 repository = "https://github.com/sunsided/pddl-rs"
+homepage = "https://sunsided.github.io/planning-and-search/"
 readme = "README.md"
 # Third-party test inputs under their own licences; not part of the published crate.
 exclude = ["tests/data/", "tests/example_files.rs", "tests/corpus_snapshots.rs", "tests/sas_plus.rs", "benches/"]

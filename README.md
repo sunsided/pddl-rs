@@ -8,6 +8,8 @@ A parser for the Planning Domain Definition Language version 3.1, written in Rus
 ![Crates.io](https://img.shields.io/crates/v/pddl)
 ![Crates.io](https://img.shields.io/crates/l/pddl)
 
+Part of the [planning and search crates](https://sunsided.github.io/planning-and-search/); the workspace's plan validator, pddl-validate, has its own [overview page](https://sunsided.github.io/planning-and-search/crates/pddl-validate/).
+
 Crate documentation is available on [docs.rs/pddl](https://docs.rs/pddl).
 
 ## Who this is for
