@@ -1,10 +1,10 @@
 [package]
 name = "pddl-validate"
 version = "0.1.0"
-description = "Independent PDDL plan validator: classical, numeric and temporal plans with precise diagnostics"
+description = "Independent PDDL plan validator for classical, numeric, temporal and PDDL+ plans, with VAL-style diagnostics"
 license = "EUPL-1.2 OR MPL-2.0"
 documentation = "https://docs.rs/pddl-validate"
-categories = ["science", "development-tools", "parser-implementations"]
+categories = ["artificial-intelligence", "science", "development-tools"]
 keywords = ["pddl", "planning", "validation", "val", "ai-planning"]
 repository = "https://github.com/sunsided/pddl-rs"
 readme = "README.md"

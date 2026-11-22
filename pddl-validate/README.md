@@ -7,7 +7,32 @@ diagnostics.
 It is part of the [pddl-rs](https://github.com/sunsided/pddl-rs) workspace and
 depends only on the `pddl` syntax tree. It implements the validation semantics
 itself and shares no grounding or search code with any planner, so it does not
-share their bugs either.
+share their bugs either. It covers classical, numeric and temporal plans and
+PDDL+ processes and events with linear dynamics, and explains the first step
+that fails in the style of VAL's plan repair advice.
+
+## Who this is for
+
+- Planner developers who want to check every plan their planner emits in tests
+  or CI, without shelling out to VAL.
+- Teachers and students of PDDL, who get a precise explanation of why a plan
+  fails: the step, the condition and the values involved.
+- Tools that need machine-readable verdicts, such as editors; the
+  [`pddl-lsp`](https://github.com/sunsided/pddl-rs/tree/main/pddl-lsp) language server runs this crate for its
+  `pddl/validatePlan` request.
+- To parse PDDL only, use [`pddl`](https://github.com/sunsided/pddl-rs); to
+  find a plan in the first place, see
+  [`miniplan`](https://github.com/sunsided/miniplan).
+
+## Installation
+
+```toml
+[dependencies]
+pddl = "0.5"
+pddl-validate = "0.1"
+```
+
+## Usage
 
 ```rust
 use pddl::{Domain, Parser, Problem};

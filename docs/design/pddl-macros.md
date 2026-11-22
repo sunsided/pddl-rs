@@ -1,8 +1,8 @@
 # Design: compile-time PDDL macros (Level A)
 
-Status: v1 implemented in `pddl-macros` (sections 6-8). The problem-against-domain check (8.4) is still open. Covers #122 (Level A) and the parts of #121
-it needs. Takes #132 and #131 into account. Line references are to the tree as of
-`feature/sas-plus-grounding` (1381c8f).
+Implemented in `pddl-macros` (sections 6-8), except the problem-against-domain
+check (8.4). Covers #122 (Level A) and the parts of #121 it needs. Takes #132
+and #131 into account. Line references are to commit 1381c8f.
 
 ## 1. What the issues ask for
 

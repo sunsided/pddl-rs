@@ -1,11 +1,11 @@
 [package]
 name = "pddl"
 version = "0.5.0"
-description = "A PDDL 3.1 parser, strongly typed"
+description = "Strongly typed PDDL 3.1 parser with pretty-printing, serde, SAS+ grounding, compile-time checked PDDL and generated planning code"
 license = "EUPL-1.2 OR MPL-2.0"
 documentation = "https://docs.rs/pddl"
-categories = ["parser-implementations", "science", "simulation"]
-keywords = ["pddl", "planning", "parser"]
+categories = ["parser-implementations", "artificial-intelligence", "science"]
+keywords = ["pddl", "planning", "parser", "ai-planning", "strips"]
 repository = "https://github.com/sunsided/pddl-rs"
 readme = "../README.md"
 # `tests/macros.rs` reads the pddl-core test corpus, which is not part of this crate.

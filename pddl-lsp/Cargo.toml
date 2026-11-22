@@ -3,8 +3,8 @@ name = "pddl-lsp"
 version = "0.3.0"
 description = "A language server for PDDL: diagnostics, navigation, completion and formatting"
 license = "EUPL-1.2 OR MPL-2.0"
-categories = ["development-tools", "science"]
-keywords = ["pddl", "planning", "lsp", "language-server"]
+categories = ["development-tools", "text-editors", "artificial-intelligence", "science"]
+keywords = ["pddl", "planning", "lsp", "language-server", "ai-planning"]
 repository = "https://github.com/sunsided/pddl-rs"
 readme = "README.md"
 # Reads the pddl crate's test corpus, which is not part of this crate.
