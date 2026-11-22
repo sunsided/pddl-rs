@@ -47,3 +47,30 @@ jobs:
         env:
           # Enables zizmor's online audits (e.g. known-vulnerable actions, impostor commits).
           GH_TOKEN: ${{ github.token }}
+
+  # Reporting only: SARIF output never fails on findings; the blocking `lint` job above gates merges.
+  zizmor-sarif:
+    name: zizmor (code scanning)
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install zizmor
+        uses: taiki-e/install-action@ab49d3c64680143e184118bed66a46419fc15519 # v2.90.5
+        with:
+          tool: zizmor@1.32.0
+      - name: Run zizmor
+        run: zizmor --format=sarif .github/workflows/ > zizmor.sarif
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Upload SARIF to code scanning
+        uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
+        with:
+          sarif_file: zizmor.sarif
+          category: zizmor
